@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typcoon.com/sitemap.xml

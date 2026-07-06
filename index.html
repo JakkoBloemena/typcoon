@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typcoon — het typespel waar je een muntenfabriek bouwt | Gratis leren typen</title>
+    <meta name="description" content="Typcoon is een gratis typespel voor kinderen (8–12): typ woorden, verdien munten en bouw je eigen muntenfabriek. Leer ondertussen écht blind typen — zonder account, zonder reclame." />
+    <link rel="canonical" href="https://typcoon.com/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#0d1430" />
+
+    <!-- Open Graph / socials -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Typcoon" />
+    <meta property="og:title" content="Typcoon — typ munten, bouw je fabriek" />
+    <meta property="og:description" content="Het typespel waar je typwerk munten maakt. Bouw je muntenfabriek en leer ondertussen blind typen. Gratis, zonder account." />
+    <meta property="og:url" content="https://typcoon.com/" />
+    <meta property="og:image" content="https://typcoon.com/og.png" />
+    <meta property="og:locale" content="nl_NL" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Typcoon — typ munten, bouw je fabriek" />
+    <meta name="twitter:description" content="Het typespel waar je typwerk munten maakt. Gratis, zonder account." />
+    <meta name="twitter:image" content="https://typcoon.com/og.png" />
+
+    <!-- Structured data: spel + FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Typcoon",
+      "url": "https://typcoon.com/",
+      "description": "Gratis typespel voor kinderen: typ woorden, verdien munten en bouw je eigen muntenfabriek terwijl je blind leert typen.",
+      "genre": ["Educational", "Simulation", "Tycoon"],
+      "gamePlatform": "Web browser",
+      "applicationCategory": "Game",
+      "inLanguage": "nl",
+      "isAccessibleForFree": true,
+      "audience": { "@type": "PeopleAudience", "suggestedMinAge": 8, "suggestedMaxAge": 12 },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Typcoon gratis?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Ja. Typcoon is helemaal gratis: geen account, geen reclame en geen aankopen in het spel. Je voortgang wordt op je eigen computer bewaard." }
+        },
+        {
+          "@type": "Question",
+          "name": "Leert mijn kind hier echt blind typen?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Ja. Onder het spel draait een adaptieve leer-engine: letters komen er één voor één bij zodra je kind eraan toe is, zwakke letters worden slim herhaald (spaced repetition) en nauwkeurigheid gaat vóór snelheid. Typen is de enige manier om munten te verdienen — en netjes typen levert tot 3× zoveel op." }
+        },
+        {
+          "@type": "Question",
+          "name": "Voor welke leeftijd is Typcoon?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Typcoon is gemaakt voor kinderen van ongeveer 8 tot 12 jaar, maar iedereen die blind wil leren typen kan meespelen." }
+        },
+        {
+          "@type": "Question",
+          "name": "Heb ik een account nodig?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Nee. Je typt een naam en speelt meteen. Alles wordt lokaal in de browser opgeslagen — privacyvriendelijk, er gaan geen gegevens naar een server." }
+        },
+        {
+          "@type": "Question",
+          "name": "Kan Typcoon op een tablet?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Typcoon speel je met een echt toetsenbord, dus op een laptop of computer. Zo leert je kind de juiste vingerzetting." }
+        }
+      ]
+    }
+    </script>
+
+    <style>
+      :root {
+        --bg: #0d1430; --ink: #eef3ff; --ink-soft: #9fb0d8;
+        --accent: #f5b301; --accent-2: #ffd34d; --good: #23d19b;
+        --surface: #1e2a5c; --surface-2: #182353; --line: #2d3b78;
+        --grad: linear-gradient(135deg, #ffd34d, #f5b301);
+        --glass: rgba(24, 35, 83, 0.62); --glass-brd: rgba(245, 179, 1, 0.28);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; color: var(--ink); font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+        background:
+          radial-gradient(1100px 620px at 80% -8%, rgba(245,179,1,0.14), transparent 60%),
+          radial-gradient(900px 560px at 8% 108%, rgba(35,209,155,0.12), transparent 60%),
+          var(--bg);
+      }
+      main { max-width: 880px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1, h2 { font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif; }
+      .hero { text-align: center; padding: 6vh 0 30px; }
+      .hero .logo { font-size: 4.6rem; }
+      .hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 8px 0 6px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.5px; }
+      .hero p.sub { color: var(--ink-soft); font-weight: 700; font-size: 1.15rem; margin: 0 0 26px; }
+      .cta {
+        display: inline-block; background: var(--grad); color: #4a3600; text-decoration: none;
+        font-weight: 800; font-size: 1.3rem; padding: 16px 42px; border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(245,179,1,0.4);
+      }
+      .cta:hover { filter: brightness(1.06); }
+      .cta-note { display: block; margin-top: 12px; color: var(--ink-soft); font-size: 0.9rem; font-weight: 700; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 34px 0; }
+      .card { background: var(--glass); border: 1px solid var(--glass-brd); border-radius: 20px; padding: 20px; }
+      .card .ic { font-size: 2rem; }
+      .card h3 { margin: 8px 0 4px; font-size: 1.05rem; }
+      .card p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; font-weight: 600; line-height: 1.5; }
+      section.text { margin: 44px 0; }
+      section.text h2 { font-size: 1.6rem; margin-bottom: 8px; }
+      section.text p, section.text li { color: var(--ink-soft); font-weight: 600; line-height: 1.65; }
+      section.text strong { color: var(--ink); }
+      details { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
+      details summary { font-weight: 800; cursor: pointer; }
+      details p { margin: 10px 0 0; }
+      footer { text-align: center; color: var(--ink-soft); font-size: 0.85rem; font-weight: 600; margin-top: 60px; }
+      footer a { color: var(--accent-2); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="logo" aria-hidden="true">🏭</div>
+        <h1>Typcoon</h1>
+        <p class="sub">Typ munten. Bouw je fabriek. Word tycoon — en leer ondertussen blind typen.</p>
+        <a class="cta" href="/speel/">▶ &nbsp;Speel gratis</a>
+        <span class="cta-note">Geen account · geen reclame · geen aankopen</span>
+      </header>
+
+      <div class="cards">
+        <div class="card">
+          <span class="ic">⌨️</span>
+          <h3>Typen = munten</h3>
+          <p>Elke opdracht die je typt levert munten op. Hoe <strong>netter</strong> je typt, hoe meer je verdient — tot 3× zoveel bij foutloos werk.</p>
+        </div>
+        <div class="card">
+          <span class="ic">🏭</span>
+          <h3>Bouw je fabriek</h3>
+          <p>Koop typemachines, drukpersen en robotarmen. Ze maken munten voor je — maar alleen zolang <strong>jij</strong> typt.</p>
+        </div>
+        <div class="card">
+          <span class="ic">🔤</span>
+          <h3>Elke letter een machine</h3>
+          <p>Nieuwe letters leren = nieuwe machines ontgrendelen. Zo groeit je fabriek precies mee met wat je leert.</p>
+        </div>
+        <div class="card">
+          <span class="ic">⭐</span>
+          <h3>Verkoop &amp; word sterker</h3>
+          <p>Verkoop je fabriek voor een ster: daarna verdient alles blijvend sneller. Hoe ver kom jij?</p>
+        </div>
+      </div>
+
+      <section class="text">
+        <h2>Een typespel, geen typecursus</h2>
+        <p>
+          De meeste programma's om te <strong>leren typen</strong> zijn een cursus met een spelletje
+          als beloning. Typcoon draait het om: het <strong>is</strong> een tycoon-game — zoals de
+          spellen waar kinderen toch al uren in bouwen en optimaliseren — waarin typen de enige
+          manier is om vooruit te komen. Geen auto-clickers, geen trucjes: wie netjes en steeds
+          vlotter typt, bouwt de grootste fabriek.
+        </p>
+      </section>
+
+      <section class="text">
+        <h2>Voor ouders: er wordt hier écht geleerd</h2>
+        <ul>
+          <li><strong>Adaptief curriculum</strong> — letters komen er één voor één bij, precies wanneer je kind eraan toe is.</li>
+          <li><strong>Nauwkeurigheid eerst</strong> — slordig rammen levert vrijwel niets op; netjes typen is de grote hefboom. Snelheid komt vanzelf daarna.</li>
+          <li><strong>Slimme herhaling</strong> — zwakke letters en lettercombinaties komen vaker terug (spaced repetition), zodat ze blijven hangen.</li>
+          <li><strong>Directe feedback</strong> — bij elke aanslag, elke opdracht. Zo slijten er geen foute gewoontes in.</li>
+          <li><strong>Privacyvriendelijk</strong> — geen account, geen tracking; alle voortgang blijft op het eigen apparaat.</li>
+        </ul>
+      </section>
+
+      <section class="text">
+        <h2>Veelgestelde vragen</h2>
+        <details>
+          <summary>Is Typcoon gratis?</summary>
+          <p>Ja, helemaal. Geen account, geen reclame en geen aankopen in het spel.</p>
+        </details>
+        <details>
+          <summary>Leert mijn kind hier echt blind typen?</summary>
+          <p>Ja. Onder het spel draait een adaptieve leer-engine: letters komen er stap voor stap bij, zwakke letters worden slim herhaald en nauwkeurigheid gaat vóór snelheid. Typen is de enige manier om munten te verdienen.</p>
+        </details>
+        <details>
+          <summary>Voor welke leeftijd is het?</summary>
+          <p>Gemaakt voor kinderen van ongeveer 8 tot 12 jaar — maar iedereen die blind wil leren typen kan meespelen.</p>
+        </details>
+        <details>
+          <summary>Kan het op een tablet?</summary>
+          <p>Typcoon speel je met een echt toetsenbord, dus op een laptop of computer — zo leert je kind de juiste vingerzetting.</p>
+        </details>
+      </section>
+
+      <header class="hero" style="padding-top:0">
+        <a class="cta" href="/speel/">▶ &nbsp;Start je fabriek</a>
+      </header>
+
+      <footer>
+        <p>© 2026 Typcoon · Gratis blind leren typen als tycoon-game · <a href="/speel/">Speel nu</a></p>
+      </footer>
+    </main>
+  </body>
+</html>
