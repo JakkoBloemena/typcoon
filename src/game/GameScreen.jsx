@@ -29,6 +29,27 @@ import { gt } from './strings.js';
 const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden getypt is
 const fmt = (n) => Math.floor(n).toLocaleString('nl-NL');
 
+// Koopknop met vasthouden-om-te-herhalen: één klik = één keer; ingedrukt houden
+// (na ~420ms) blijft kopen zolang het kan. Zo hoeft een kind niet 25× te klikken.
+function BuyButton({ onBuy, disabled, className = 'btn buy', children, label }) {
+  const t = useRef(null);
+  const stop = () => { clearTimeout(t.current); t.current = null; };
+  const begin = () => {
+    onBuy();
+    const rep = () => { onBuy(); t.current = setTimeout(rep, 130); };
+    t.current = setTimeout(rep, 420);
+  };
+  useEffect(() => stop, []);
+  return (
+    <button
+      className={className} disabled={disabled} aria-label={label}
+      onPointerDown={(e) => { if (!disabled) { e.preventDefault(); begin(); } }}
+      onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
+      onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onBuy(); } }}
+    >{children}</button>
+  );
+}
+
 export default function GameScreen({ state, setGame, onBack }) {
   const layout = useMemo(() => getLayout(state.profile.layout), [state.profile.layout]);
 
@@ -262,7 +283,7 @@ export default function GameScreen({ state, setGame, onBack }) {
                       {level > 0 && nextMs && <em className="ms-teaser"> · {gt('play.nextMilestone', { n: nextMs })}</em>}
                     </span>
                   </div>
-                  <button className="btn buy" disabled={!can} onClick={() => buy(b.id)}><Coin className="btn-coin" /> {fmt(cost)}</button>
+                  <BuyButton onBuy={() => buy(b.id)} disabled={!can} label={gt('building.' + b.id) + ' kopen'}><Coin className="btn-coin" /> {fmt(cost)}</BuyButton>
                 </li>
               );
             })}
