@@ -110,3 +110,12 @@ goal) instead of the absolute threshold; scan mid-game for any pacing sag.
 always visible. 18/18 tests, clean build, zero console errors.
 **Next cycle:** tighten the combo-flash / golden-banner vertical position so they
 never overlap the meters; sweep focus-visible states on all controls.
+
+## Cycle 8 — combo-flash placement
+**Shipped:** the combo-milestone burst now floats free at mid-screen (38vh)
+instead of sitting on top of the accuracy/combo meters — reads as a clean
+celebratory pop over the typing area, meters stay legible.
+**Result:** 18/18 tests, clean build, zero console errors.
+**State:** the game is in strong shape end-to-end — illustrated machines/coin/
+star/mascot, juicy feedback (coin pop, combo burst, celebrations), hold-to-buy,
+compact numbers, robust save/load, mute, clear first-run + shrinking goals.
