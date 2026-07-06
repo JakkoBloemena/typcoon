@@ -56,6 +56,23 @@ button { font-family: inherit; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
+/* ---------- Geïllustreerde assets (uit de Design-kit) ---------- */
+.svg-machine, .svg-coin, .svg-star, .svg-mascot { display: inline-flex; line-height: 0; }
+.svg-machine svg, .svg-coin svg, .svg-star svg, .svg-mascot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.anim { transform-box: fill-box; transform-origin: center; }
+@keyframes coinPop { 0% { transform: translateY(8px); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-26px); opacity: 0; } }
+@keyframes press { 0%, 100% { transform: translateY(0); } 45%, 55% { transform: translateY(8px); } }
+@keyframes glowPulse { 0%, 100% { opacity: 0.16; transform: scale(1); } 50% { opacity: 0.36; transform: scale(1.1); } }
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes armSwing { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(9deg); } }
+@keyframes spinX { 0% { transform: scaleX(1); } 49% { transform: scaleX(0.06); } 50% { transform: scaleX(-0.06); } 100% { transform: scaleX(-1); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes riseStar { 0% { transform: translateY(26px) scale(0.5); opacity: 0; } 55% { opacity: 1; } 100% { transform: translateY(-8px) scale(1); opacity: 1; } }
+@keyframes bobM { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+@keyframes sparkle { 0%, 100% { opacity: 0; transform: scale(0.4); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes flash { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes drift { 0% { transform: translateX(0); } 100% { transform: translateX(-40px); } }
+
 /* ---------- Knoppen: drukken écht in ---------- */
 .btn {
   --edge: var(--brass-deep);
@@ -81,6 +98,10 @@ button { font-family: inherit; }
 
 /* ---------- Tellers & pillen (LED-gevoel: cijfers verspringen niet) ---------- */
 .coin-pill, .cps-pill, .star-pill { font-variant-numeric: tabular-nums; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.pill-coin { width: 21px; height: 21px; }
+.coin-pill.big .pill-coin { width: 26px; height: 26px; }
+.btn.buy { display: inline-flex; align-items: center; gap: 5px; }
+.btn-coin { width: 17px; height: 17px; }
 .coin-pill {
   font-weight: 900; font-size: 1.15rem; color: #3d2c00;
   background: linear-gradient(180deg, var(--brass-hi), var(--brass) 60%);
@@ -102,11 +123,12 @@ button { font-family: inherit; }
 .home { display: flex; flex-direction: column; align-items: center; gap: 28px; padding-top: 5vh; }
 .home-hero { text-align: center; }
 .home-logo {
-  width: 118px; height: 118px; margin: 0 auto; display: flex; align-items: center; justify-content: center;
-  font-size: 3.6rem; background: var(--panel); border: 3px solid var(--line); border-radius: 32px;
+  width: 132px; height: 128px; margin: 0 auto; padding: 10px 14px; display: flex; align-items: center; justify-content: center;
+  background: var(--panel); border: 3px solid var(--line); border-radius: 32px;
   box-shadow: 0 8px 0 #0c1430, inset 0 2px 0 rgba(255, 255, 255, 0.08);
   animation: dropIn 0.6s var(--pop) backwards;
 }
+.home-logo svg { width: 100%; height: 100%; }
 .home-title {
   margin: 14px 0 4px; font-size: clamp(3rem, 8vw, 4.2rem); color: var(--brass);
   text-shadow: 0 4px 0 var(--brass-deep), 0 10px 24px rgba(0, 0, 0, 0.45);
@@ -167,18 +189,14 @@ button { font-family: inherit; }
   transition: opacity 0.4s ease, border-color 0.4s ease;
 }
 .floor.running .floor-tile { opacity: 1; border-color: #46589f; }
-.floor-icon { font-size: 1.8rem; }
-.floor.running .floor-icon { animation: chug 0.85s ease-in-out infinite; }
-@keyframes chug { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-2px) rotate(-2deg); } 75% { transform: translateY(1px) rotate(2deg); } }
+.floor-machine { width: 72px; height: 60px; }
 .floor-level { font-size: 0.72rem; font-weight: 900; color: var(--ink-dim); letter-spacing: 0.4px; }
 .floor-mult {
   position: absolute; top: -10px; right: -8px; background: var(--brass); color: #3d2c00;
   font-size: 0.72rem; font-weight: 900; padding: 3px 8px; border-radius: 999px;
-  box-shadow: 0 3px 0 var(--brass-deep); transform: rotate(6deg);
+  box-shadow: 0 3px 0 var(--brass-deep); transform: rotate(6deg); z-index: 2;
 }
 .floor-rate { font-size: 0.74rem; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; }
-.floor-coin { position: absolute; top: 2px; left: 50%; font-size: 0.9rem; animation: coinup 1.3s linear infinite; pointer-events: none; }
-@keyframes coinup { 0% { opacity: 0; transform: translate(-50%, 10px) scale(0.6); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -24px) scale(1.05); } }
 
 /* ---------- Typ-zone: de pers ---------- */
 .type-pane { display: flex; flex-direction: column; gap: 14px; align-items: center; position: relative; }
@@ -242,8 +260,11 @@ button { font-family: inherit; }
   pointer-events: none; animation: coinrise 1.4s var(--pop) forwards; z-index: 40; text-align: center;
   font-variant-numeric: tabular-nums;
 }
+.coin-flash .flash-amount { display: inline-flex; align-items: center; gap: 8px; }
+.coin-flash .flash-coin { width: 34px; height: 34px; }
 .coin-flash small { font-family: 'Nunito', sans-serif; font-size: 0.85rem; color: var(--ink-dim); font-weight: 800; text-shadow: none; }
 .coin-flash.gold { font-size: 2.7rem; filter: drop-shadow(0 0 18px rgba(255, 185, 21, 0.9)); }
+.coin-flash.gold .flash-coin { width: 42px; height: 42px; }
 @keyframes coinrise { 0% { opacity: 0; transform: translate(-50%, 14px) scale(0.6); } 18% { opacity: 1; transform: translate(-50%, -4px) scale(1.15); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -58px) scale(1); } }
 
 /* ---------- Winkel: het bedieningspaneel ---------- */
@@ -260,7 +281,8 @@ button { font-family: inherit; }
 }
 .shop-item.owned { border-color: var(--mint-deep); }
 .shop-item.locked { opacity: 0.45; }
-.shop-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shop-thumb { width: 46px; height: 40px; flex: none; }
+.shop-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .shop-name { font-weight: 900; font-size: 0.95rem; color: var(--paper); }
 .shop-name b { color: var(--brass); margin-left: 4px; font-variant-numeric: tabular-nums; }
 .shop-meta { color: var(--ink-dim); font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -291,6 +313,10 @@ button { font-family: inherit; }
 }
 .card.celebrate { border-color: var(--brass); box-shadow: 0 12px 0 #6b4d00, 0 0 44px rgba(255, 185, 21, 0.3); }
 .card-icon { font-size: 3.6rem; animation: cardPop 0.6s var(--pop) 0.05s backwards; }
+.card-machine { width: 128px; height: 106px; animation: cardPop 0.6s var(--pop) 0.05s backwards; }
+.card-mascot { width: 96px; height: 96px; animation: cardPop 0.6s var(--pop) 0.05s backwards; }
+.card-star { width: 84px; height: 84px; animation: cardPop 0.6s var(--pop) 0.05s backwards; }
+.card-star.big { width: 116px; height: 116px; }
 .card h3 { margin: 0; color: var(--brass); font-size: 1.5rem; letter-spacing: 0.5px; }
 .card p { margin: 0 0 8px; color: var(--ink-dim); font-weight: 700; line-height: 1.5; }
 @keyframes cardPop { 0% { transform: scale(0.6) rotate(-3deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }

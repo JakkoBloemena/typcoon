@@ -8,6 +8,7 @@ import { newTycoon, coinsPerSecond, prestigeMultiplier } from './economy.js';
 import { ACHIEVEMENTS } from './achievements.js';
 import nlPack from '../data/nl/index.js';
 import { loadGame, saveGame, clearGame } from './store.js';
+import { Mascot, Coin } from './assets.jsx';
 import { gt } from './strings.js';
 import GameScreen from './GameScreen.jsx';
 
@@ -55,7 +56,7 @@ export default function App() {
     return (
       <div className="home">
         <div className="home-hero">
-          <div className="home-logo">🏭</div>
+          <Mascot pose={0} className="home-logo" />
           <h1 className="home-title">{gt('brand.name')}</h1>
           <p className="home-tagline">{gt('desktop.title')}</p>
           <p className="home-how">{gt('desktop.body')}</p>
@@ -73,7 +74,7 @@ export default function App() {
   return (
     <div className="home">
       <div className="home-hero">
-        <div className="home-logo">🏭</div>
+        <Mascot pose={1} className="home-logo" />
         <h1 className="home-title">{gt('brand.name')}</h1>
         <p className="home-tagline">{gt('brand.tagline')}</p>
       </div>
@@ -84,7 +85,7 @@ export default function App() {
             {game.tycoon.rebirths > 0 && (
               <span className="star-pill big" title={gt('play.stars', { mult: prestigeMultiplier(game.tycoon).toFixed(2) })}>⭐ {game.tycoon.rebirths}</span>
             )}
-            <span className="coin-pill big">🪙 {fmt(game.tycoon.coins)}</span>
+            <span className="coin-pill big"><Coin className="pill-coin" /> {fmt(game.tycoon.coins)}</span>
             <span className="cps-pill big">⚙️ {fmt(coinsPerSecond(game.tycoon))}/s</span>
           </div>
           {badges.length > 0 && (

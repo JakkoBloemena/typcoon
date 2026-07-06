@@ -23,6 +23,7 @@ import { sound, setMuted, unlockAudio } from '../ui/sound.js';
 import TypingSurface from '../ui/TypingSurface.jsx';
 import Keyboard from '../ui/Keyboard.jsx';
 import FactoryFloor from './FactoryFloor.jsx';
+import { Machine, Coin, Star, Mascot } from './assets.jsx';
 import { gt } from './strings.js';
 
 const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden getypt is
@@ -183,7 +184,7 @@ export default function GameScreen({ state, setGame, onBack }) {
           {state.tycoon.rebirths > 0 && (
             <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
           )}
-          <span className="coin-pill" title={gt('play.coins')}>🪙 {fmt(coins)}</span>
+          <span className="coin-pill" title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>
           <span className="cps-pill" title={gt('play.perSec')}>⚙️ {fmt(cps)}/s</span>
         </div>
       </header>
@@ -224,7 +225,7 @@ export default function GameScreen({ state, setGame, onBack }) {
 
           {coinFlash && (
             <div className={'coin-flash' + (coinFlash.golden ? ' gold' : '')} key={step} onAnimationEnd={() => setCoinFlash(null)}>
-              +{fmt(coinFlash.gained)} 🪙
+              <span className="flash-amount"><Coin className="flash-coin" /> +{fmt(coinFlash.gained)}</span>
               <small>
                 ×{coinFlash.acc.toFixed(1)} netjes
                 {coinFlash.comboMult > 1 && <> · ×{coinFlash.comboMult.toFixed(1)} combo</>}
@@ -253,14 +254,15 @@ export default function GameScreen({ state, setGame, onBack }) {
               }
               return (
                 <li className={'shop-item' + (level ? ' owned' : '')} key={b.id}>
+                  <Machine id={b.id} running={level > 0} className="shop-thumb" />
                   <div className="shop-info">
-                    <span className="shop-name">{b.icon} {gt('building.' + b.id)} {level > 0 && <b>Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</b>}</span>
+                    <span className="shop-name">{gt('building.' + b.id)} {level > 0 && <b>Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</b>}</span>
                     <span className="shop-meta">
                       +{fmt(b.rate * milestoneMultiplier(level))}/s · {gt('building.' + b.id + '.desc')}
                       {level > 0 && nextMs && <em className="ms-teaser"> · {gt('play.nextMilestone', { n: nextMs })}</em>}
                     </span>
                   </div>
-                  <button className="btn buy" disabled={!can} onClick={() => buy(b.id)}>🪙 {fmt(cost)}</button>
+                  <button className="btn buy" disabled={!can} onClick={() => buy(b.id)}><Coin className="btn-coin" /> {fmt(cost)}</button>
                 </li>
               );
             })}
@@ -279,7 +281,7 @@ export default function GameScreen({ state, setGame, onBack }) {
                   </div>
                   {owned
                     ? <span className="owned-tag">✓</span>
-                    : <button className="btn buy" disabled={!can} onClick={() => buyUpg(u.id)}>🪙 {fmt(u.cost)}</button>}
+                    : <button className="btn buy" disabled={!can} onClick={() => buyUpg(u.id)}><Coin className="btn-coin" /> {fmt(u.cost)}</button>}
                 </li>
               );
             })}
@@ -301,7 +303,7 @@ export default function GameScreen({ state, setGame, onBack }) {
       {rebirthAsk && (
         <div className="overlay" onClick={() => setRebirthAsk(false)}>
           <div className="card" onClick={(e) => e.stopPropagation()}>
-            <div className="card-icon">⭐</div>
+            <Star className="card-star" />
             <h3>{gt('rebirth.title')}</h3>
             <p>{gt('rebirth.body', { mult: (prestige + 0.25).toFixed(2) })}</p>
             <button className="btn" onClick={doRebirth}>{gt('rebirth.confirm')}</button>
@@ -314,17 +316,17 @@ export default function GameScreen({ state, setGame, onBack }) {
         <div className="overlay" onClick={showNextMoment}>
           <div className="card celebrate" onClick={(e) => e.stopPropagation()}>
             {moment.kind === 'letter' && (<>
-              <div className="card-icon">🔤</div>
+              <Mascot pose={0} className="card-mascot" />
               <h3>{gt('play.newLetterTitle')}</h3>
               <p>{gt('play.newLetterBody', { keys: moment.keys.filter((k) => k !== 'shift').join(' en ').toUpperCase() })}</p>
             </>)}
             {moment.kind === 'machine' && (<>
-              <div className="card-icon">{buildingIcon(moment.id)}</div>
+              <Machine id={moment.id} running className="card-machine" />
               <h3>{gt('play.newMachineTitle')}</h3>
               <p>{gt('play.newMachineBody', { name: gt('building.' + moment.id) })}</p>
             </>)}
             {moment.kind === 'milestone' && (<>
-              <div className="card-icon">🎉</div>
+              <Machine id={moment.id} running className="card-machine" />
               <h3>Lv {moment.level}!</h3>
               <p>{gt('play.milestoneReached', { name: gt('building.' + moment.id) })}</p>
             </>)}
@@ -334,7 +336,7 @@ export default function GameScreen({ state, setGame, onBack }) {
               <p>{gt('ach.' + moment.id)}</p>
             </>)}
             {moment.kind === 'rebirth' && (<>
-              <div className="card-icon">⭐</div>
+              <Star className="card-star big" />
               <h3>{gt('rebirth.doneTitle')}</h3>
               <p>{gt('rebirth.doneBody', { mult: moment.mult.toFixed(2) })}</p>
             </>)}
@@ -344,8 +346,4 @@ export default function GameScreen({ state, setGame, onBack }) {
       )}
     </div>
   );
-}
-
-function buildingIcon(id) {
-  return BUILDINGS.find((b) => b.id === id)?.icon || '🏭';
 }
