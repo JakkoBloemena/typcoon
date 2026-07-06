@@ -58,3 +58,17 @@ math exact (1.648.500 coins/s at max). All five machine characters render with
 **Result:** 18/18 tests, clean build, zero errors.
 **Next cycle:** coin-counter number-pop on payout; combo-milestone flash at
 25/50; confirm audio cues actually fire on buy/complete/milestone.
+
+## Cycle 4 — feedback juice
+**Shipped:**
+- **Coin-counter pop**: the top-bar coin jewel bumps (scale 1.18, springy) on
+  every exercise payout — a discrete "number went up" cue. Production ticks don't
+  trigger it (keyed remount only on payout), so it never jitters.
+- **Combo-milestone burst**: hitting 25 / 50 / 100 flawless keystrokes fires a
+  "🔥 N COMBO!" burst + sound; the combo meter already glows "hot" with its live
+  ×-bonus. Rewards sustained accuracy with a visible spike.
+**Tested:** typed perfectly across exercises → burst fired exactly at 25, combo
+meter ×1.2, payout flash showed the combo bonus. Zero console errors, 18/18 tests.
+**Next cycle:** re-check the first-load onboarding clarity for a brand-new player
+(is the "type to earn" loop obvious with an empty floor?); consider a one-line
+first-run coach mark; audit sound cues end to end.

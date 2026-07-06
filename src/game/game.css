@@ -100,6 +100,23 @@ button { font-family: inherit; }
 .coin-pill, .cps-pill, .star-pill { font-variant-numeric: tabular-nums; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
 .pill-coin { width: 21px; height: 21px; }
 .coin-pill.big .pill-coin { width: 26px; height: 26px; }
+.game-bar .coin-pill { animation: coinBump 0.4s var(--pop); }
+@keyframes coinBump { 0% { transform: scale(1); } 35% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* combo-mijlpaal: korte burst midden op de typ-zone */
+.combo-flash {
+  position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+  font-family: 'Lilita One', sans-serif; font-size: 1.9rem; color: var(--brass-hi);
+  text-shadow: 0 3px 0 var(--brass-deep), 0 0 20px rgba(255, 185, 21, 0.6);
+  pointer-events: none; white-space: nowrap; z-index: 45;
+  animation: comboBurst 1.1s var(--pop) forwards;
+}
+@keyframes comboBurst {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.5) rotate(-4deg); }
+  25% { opacity: 1; transform: translateX(-50%) scale(1.15) rotate(2deg); }
+  70% { opacity: 1; transform: translateX(-50%) scale(1) rotate(0); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1) translateY(-14px); }
+}
 .btn.buy { display: inline-flex; align-items: center; gap: 5px; }
 .btn-coin { width: 17px; height: 17px; }
 .coin-pill {

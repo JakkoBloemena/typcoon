@@ -63,11 +63,14 @@ export default function GameScreen({ state, setGame, onBack }) {
   const [moment, setMoment] = useState(null); // huidig vier-moment (overlay)
   const [rebirthAsk, setRebirthAsk] = useState(false);
   const [live, setLive] = useState({ keys: 0, correct: 0 }); // sessie-nauwkeurigheid
+  const [coinPop, setCoinPop] = useState(0); // teller-pop bij een uitbetaling
+  const [comboFlash, setComboFlash] = useState(null); // { n } bij een combo-mijlpaal
 
   const engineRef = useRef(state);
   engineRef.current = state;
   const lastKeyRef = useRef(0);
   const lastTickRef = useRef(0);
+  const comboRef = useRef(0); // bron-van-waarheid voor de combo (mijlpaal-detectie)
   const exStreakRef = useRef(0); // langste foutloze reeks binnen déze opdracht
   const momentsRef = useRef([]); // wachtrij van vier-momenten
 
@@ -114,11 +117,14 @@ export default function GameScreen({ state, setGame, onBack }) {
       if (!lastTickRef.current) lastTickRef.current = lastKeyRef.current;
       setGame((e) => processKeystroke(e, { expected, actual, dtMs, correct }).state);
       setLive((l) => ({ keys: l.keys + 1, correct: l.correct + (correct ? 1 : 0) }));
-      setCombo((c) => {
-        const next = correct ? c + 1 : 0;
-        exStreakRef.current = Math.max(exStreakRef.current, next);
-        return next;
-      });
+      const next = correct ? comboRef.current + 1 : 0;
+      comboRef.current = next;
+      exStreakRef.current = Math.max(exStreakRef.current, next);
+      setCombo(next);
+      if (correct && (next === 25 || next === 50 || next === 100)) {
+        sound.unlock?.();
+        setComboFlash({ n: next });
+      }
     },
     [setGame],
   );
@@ -152,6 +158,7 @@ export default function GameScreen({ state, setGame, onBack }) {
       if (gained > 0) sound.complete();
       if (golden && gained > 0) setTimeout(() => sound.cheer('cheer-classic'), 150);
       setCoinFlash({ gained, acc: accuracyMultiplier(exAcc), comboMult: comboMultiplier(bestStreak), golden });
+      if (gained > 0) setCoinPop((k) => k + 1); // munt-teller pop
       if (momentsRef.current.length) setTimeout(showNextMoment, 1200);
       setStep((s) => s + 1);
     },
@@ -205,7 +212,7 @@ export default function GameScreen({ state, setGame, onBack }) {
           {state.tycoon.rebirths > 0 && (
             <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
           )}
-          <span className="coin-pill" title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>
+          <span className="coin-pill" key={coinPop} title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>
           <span className="cps-pill" title={gt('play.perSec')}>⚙️ {fmt(cps)}/s</span>
         </div>
       </header>
@@ -252,6 +259,12 @@ export default function GameScreen({ state, setGame, onBack }) {
                 {coinFlash.comboMult > 1 && <> · ×{coinFlash.comboMult.toFixed(1)} combo</>}
                 {coinFlash.golden && <> · ×3 goud</>}
               </small>
+            </div>
+          )}
+
+          {comboFlash && (
+            <div className="combo-flash" key={'cf' + comboFlash.n} onAnimationEnd={() => setComboFlash(null)}>
+              🔥 {comboFlash.n} COMBO!
             </div>
           )}
         </section>
