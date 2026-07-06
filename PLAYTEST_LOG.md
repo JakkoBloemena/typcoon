@@ -98,3 +98,15 @@ badges + "Verder bouwen". No dead-ends; floor and shop rebuild from the save.
 **Result:** 18/18 tests, clean build, zero console errors.
 **Next cycle:** make the "next machine" lock show *remaining* letters (a shrinking
 goal) instead of the absolute threshold; scan mid-game for any pacing sag.
+
+## Cycle 7 — shrinking unlock goal + hint hardening
+**Shipped:**
+- Locked machine rows now show the **remaining** letters ("Nog 3 letters leren"),
+  a shrinking goal (goal-gradient) instead of a static threshold — with correct
+  singular ("Nog 1 letter"). The next thing to work toward is always concrete.
+- First-run hint is now also gated on owning no machines, so a returning player
+  never sees it even if a save predates the exercises counter.
+**Verified:** mid-game offers 5/7 buyable actions at once — no pacing sag; goals
+always visible. 18/18 tests, clean build, zero console errors.
+**Next cycle:** tighten the combo-flash / golden-banner vertical position so they
+never overlap the meters; sweep focus-visible states on all controls.

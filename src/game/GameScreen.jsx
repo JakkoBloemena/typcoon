@@ -207,7 +207,9 @@ export default function GameScreen({ state, setGame, onBack }) {
   const accPct = Math.round(liveAcc * 100);
   const rbCost = rebirthCost(state.tycoon.rebirths);
   const overlayOpen = !!moment || rebirthAsk;
-  const firstRun = state.tycoon.exercisesDone === 0 && live.keys === 0; // brand-nieuwe speler
+  // brand-nieuwe speler: nog nooit getypt én nog geen fabriek gebouwd
+  const firstRun = state.tycoon.exercisesDone === 0 && live.keys === 0
+    && Object.keys(state.tycoon.buildings).length === 0;
 
   return (
     <div className={'game' + (golden ? ' gold-run' : '')}>
@@ -289,10 +291,11 @@ export default function GameScreen({ state, setGame, onBack }) {
               const can = coins >= cost;
               const nextMs = nextMilestone(level);
               if (!unlocked) {
+                const remaining = Math.max(1, b.unlockAt - lettersLearned);
                 return (
                   <li className="shop-item locked" key={b.id}>
                     <span className="shop-name">🔒 {gt('building.' + b.id)}</span>
-                    <span className="shop-meta">{gt('play.unlockAt', { n: b.unlockAt })}</span>
+                    <span className="shop-meta">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</span>
                   </li>
                 );
               }

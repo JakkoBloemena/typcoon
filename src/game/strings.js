@@ -31,6 +31,8 @@ const STRINGS = {
   'play.typeHint': 'Typ de letters om je eerste munten te maken',
   'play.golden': '✨ GOUDEN OPDRACHT — 3× munten! ✨',
   'play.unlockAt': 'Leer {n} letters om te ontgrendelen',
+  'play.unlockIn': 'Nog {n} letters leren om te ontgrendelen',
+  'play.unlockIn1': 'Nog 1 letter leren om te ontgrendelen',
   'play.nextMilestone': 'Lv {n} → tempo ×2',
   'play.milestoneReached': 'MIJLPAAL! {name} draait nu 2× zo snel!',
   'play.newMachineTitle': 'Nieuwe machine ontdekt!',
