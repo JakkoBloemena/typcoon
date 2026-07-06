@@ -203,6 +203,7 @@ export default function GameScreen({ state, setGame, onBack }) {
   const accPct = Math.round(liveAcc * 100);
   const rbCost = rebirthCost(state.tycoon.rebirths);
   const overlayOpen = !!moment || rebirthAsk;
+  const firstRun = state.tycoon.exercisesDone === 0 && live.keys === 0; // brand-nieuwe speler
 
   return (
     <div className={'game' + (golden ? ' gold-run' : '')}>
@@ -239,6 +240,8 @@ export default function GameScreen({ state, setGame, onBack }) {
               </div>
             </div>
           </div>
+
+          {firstRun && <div className="type-hint">{gt('play.typeHint')} 👇</div>}
 
           {exercise && (
             <TypingSurface

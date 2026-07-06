@@ -26,6 +26,7 @@ const STRINGS = {
   'play.tabShop': '🛒 Winkel',
   'play.accuracyLever': '{pct}% netjes — netter typen = meer munten!',
   'play.combo': 'combo',
+  'play.typeHint': 'Typ de letters om je eerste munten te maken',
   'play.golden': '✨ GOUDEN OPDRACHT — 3× munten! ✨',
   'play.unlockAt': 'Leer {n} letters om te ontgrendelen',
   'play.nextMilestone': 'Lv {n} → tempo ×2',

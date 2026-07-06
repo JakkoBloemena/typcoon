@@ -72,3 +72,17 @@ meter ×1.2, payout flash showed the combo bonus. Zero console errors, 18/18 tes
 **Next cycle:** re-check the first-load onboarding clarity for a brand-new player
 (is the "type to earn" loop obvious with an empty floor?); consider a one-line
 first-run coach mark; audit sound cues end to end.
+
+## Cycle 5 — first-run clarity + string audit
+**Found & fixed (would have shipped):** the new first-run hint referenced
+`play.typeHint`, which was **missing** from strings.js — it rendered the raw key
+to the player. Added the string, then audited all gt() calls: 76 static + 29
+dynamic (building/upgrade/achievement) keys — no other missing strings.
+**Shipped:**
+- **First-run coach hint** above the typing card ("Typ de letters om je eerste
+  munten te maken 👇"), pulsing brass, shown only for a brand-new player and
+  removed the instant they press their first key. With the green next-key and
+  finger hint, the type-to-earn loop is now unmissable from second one.
+**Result:** 18/18 tests, clean build, zero console errors.
+**Next cycle:** verify refresh/save-load integrity mid-progression; sanity-check
+the menu/back flow and returning-player home stats; look for any dead-end states.

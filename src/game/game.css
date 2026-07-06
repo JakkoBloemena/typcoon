@@ -239,6 +239,13 @@ button { font-family: inherit; }
 @keyframes goldpulse { 0%, 100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.05) rotate(1deg); } }
 .gold-run .typing-surface { border-color: var(--brass); box-shadow: 0 8px 0 #6b4d00, 0 0 34px rgba(255, 185, 21, 0.25); }
 
+/* eerste-keer hint: verdwijnt zodra het kind de eerste toets aanslaat */
+.type-hint {
+  font-family: 'Lilita One', sans-serif; font-size: 1.15rem; color: var(--brass);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); animation: hintPulse 1.3s ease-in-out infinite;
+}
+@keyframes hintPulse { 0%, 100% { transform: translateY(0); opacity: 0.85; } 50% { transform: translateY(3px); opacity: 1; } }
+
 /* ---------- Typvlak ---------- */
 .typing-surface {
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
