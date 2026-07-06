@@ -7,7 +7,7 @@
     <meta name="description" content="Typcoon is een gratis typespel voor kinderen (8–12): typ woorden, verdien munten en bouw je eigen muntenfabriek. Leer ondertussen écht blind typen — zonder account, zonder reclame." />
     <link rel="canonical" href="https://typcoon.com/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#0d1430" />
+    <meta name="theme-color" content="#101a3d" />
 
     <!-- Open Graph / socials -->
     <meta property="og:type" content="website" />
@@ -73,58 +73,115 @@
     }
     </script>
 
+    <link rel="preload" href="/fonts/lilita-one-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/nunito-var-latin.woff2" as="font" type="font/woff2" crossorigin />
+
     <style>
+      /* Zelf-gehost (GDPR-schoon, geen render-flits) */
+      @font-face {
+        font-family: 'Lilita One'; font-style: normal; font-weight: 400; font-display: swap;
+        src: url('/fonts/lilita-one-latin.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Nunito'; font-style: normal; font-weight: 200 1000; font-display: swap;
+        src: url('/fonts/nunito-var-latin.woff2') format('woff2');
+      }
+      /* "De Muntpers" — zelfde ontwerptaal als het spel: blueprint-navy werkplaats,
+         messing accent, knoppen met een harde onderrand die écht indrukken. */
       :root {
-        --bg: #0d1430; --ink: #eef3ff; --ink-soft: #9fb0d8;
-        --accent: #f5b301; --accent-2: #ffd34d; --good: #23d19b;
-        --surface: #1e2a5c; --surface-2: #182353; --line: #2d3b78;
-        --grad: linear-gradient(135deg, #ffd34d, #f5b301);
-        --glass: rgba(24, 35, 83, 0.62); --glass-brd: rgba(245, 179, 1, 0.28);
+        --night: #101a3d; --panel: #1b2650; --panel-2: #16204a; --line: #33407c;
+        --brass: #ffb915; --brass-hi: #ffd25e; --brass-deep: #c67f00;
+        --mint: #33e6a0; --sky: #5fa8ff; --paper: #f4f7ff; --ink-dim: #93a2d8;
+        --pop: cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       * { box-sizing: border-box; }
       body {
-        margin: 0; color: var(--ink); font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+        margin: 0; color: var(--paper); font-family: 'Nunito', system-ui, sans-serif;
         background:
-          radial-gradient(1100px 620px at 80% -8%, rgba(245,179,1,0.14), transparent 60%),
-          radial-gradient(900px 560px at 8% 108%, rgba(35,209,155,0.12), transparent 60%),
-          var(--bg);
+          linear-gradient(180deg, rgba(255, 185, 21, 0.06), transparent 320px),
+          repeating-linear-gradient(0deg, transparent 0 47px, rgba(95, 128, 220, 0.07) 47px 48px),
+          repeating-linear-gradient(90deg, transparent 0 47px, rgba(95, 128, 220, 0.07) 47px 48px),
+          var(--night);
       }
-      main { max-width: 880px; margin: 0 auto; padding: 40px 20px 80px; }
-      h1, h2 { font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif; }
-      .hero { text-align: center; padding: 6vh 0 30px; }
-      .hero .logo { font-size: 4.6rem; }
-      .hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 8px 0 6px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.5px; }
-      .hero p.sub { color: var(--ink-soft); font-weight: 700; font-size: 1.15rem; margin: 0 0 26px; }
+      main { max-width: 900px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1, h2, h3 { font-family: 'Lilita One', 'Nunito', system-ui, sans-serif; font-weight: 400; letter-spacing: 0.3px; text-wrap: balance; }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+      /* hero: de pers zelf — keycaps die TYPCOON spellen */
+      .hero { text-align: center; padding: 5vh 0 34px; }
+      .keycaps { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 26px; }
+      .keycaps span {
+        width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;
+        font-family: 'Lilita One', sans-serif; font-size: 1.7rem; color: var(--paper);
+        background: var(--panel); border: 2px solid var(--line); border-bottom-width: 6px; border-radius: 12px;
+        animation: keyDrop 0.5s var(--pop) backwards;
+      }
+      .keycaps span.gold { color: #3d2c00; background: linear-gradient(180deg, var(--brass-hi), var(--brass)); border-color: var(--brass-deep); }
+      .keycaps span:nth-child(1) { animation-delay: 0.05s } .keycaps span:nth-child(2) { animation-delay: 0.12s }
+      .keycaps span:nth-child(3) { animation-delay: 0.19s } .keycaps span:nth-child(4) { animation-delay: 0.26s }
+      .keycaps span:nth-child(5) { animation-delay: 0.33s } .keycaps span:nth-child(6) { animation-delay: 0.40s }
+      .keycaps span:nth-child(7) { animation-delay: 0.47s }
+      @keyframes keyDrop { from { opacity: 0; transform: translateY(-30px); } 70% { transform: translateY(4px); } to { opacity: 1; transform: none; } }
+      @media (max-width: 520px) {
+        .keycaps { gap: 5px; }
+        .keycaps span { width: 44px; height: 44px; font-size: 1.25rem; border-radius: 9px; border-bottom-width: 5px; }
+      }
+      .hero h1 {
+        font-size: clamp(2.6rem, 7vw, 4rem); margin: 0 0 8px; color: var(--brass);
+        text-shadow: 0 4px 0 var(--brass-deep), 0 12px 28px rgba(0, 0, 0, 0.5);
+      }
+      .hero p.sub { color: var(--ink-dim); font-weight: 800; font-size: 1.2rem; margin: 0 auto 30px; max-width: 34ch; text-wrap: balance; }
       .cta {
-        display: inline-block; background: var(--grad); color: #4a3600; text-decoration: none;
-        font-weight: 800; font-size: 1.3rem; padding: 16px 42px; border-radius: 16px;
-        box-shadow: 0 8px 24px rgba(245,179,1,0.4);
+        display: inline-block; text-decoration: none; cursor: pointer;
+        font-family: 'Lilita One', sans-serif; font-size: 1.45rem; letter-spacing: 0.5px;
+        color: #3d2c00; background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%);
+        padding: 17px 46px; border-radius: 20px; box-shadow: 0 7px 0 var(--brass-deep);
+        transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.12s ease;
       }
-      .cta:hover { filter: brightness(1.06); }
-      .cta-note { display: block; margin-top: 12px; color: var(--ink-soft); font-size: 0.9rem; font-weight: 700; }
-      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 34px 0; }
-      .card { background: var(--glass); border: 1px solid var(--glass-brd); border-radius: 20px; padding: 20px; }
-      .card .ic { font-size: 2rem; }
-      .card h3 { margin: 8px 0 4px; font-size: 1.05rem; }
-      .card p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; font-weight: 600; line-height: 1.5; }
-      section.text { margin: 44px 0; }
-      section.text h2 { font-size: 1.6rem; margin-bottom: 8px; }
-      section.text p, section.text li { color: var(--ink-soft); font-weight: 600; line-height: 1.65; }
-      section.text strong { color: var(--ink); }
-      details { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
-      details summary { font-weight: 800; cursor: pointer; }
+      .cta:hover { filter: brightness(1.07); }
+      .cta:active { transform: translateY(7px); box-shadow: 0 0 0 var(--brass-deep); }
+      .cta-note { display: block; margin-top: 16px; color: var(--ink-dim); font-size: 0.92rem; font-weight: 800; }
+
+      /* kaarten */
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 38px 0; }
+      .card {
+        background: var(--panel); border: 3px solid var(--line); border-radius: 20px; padding: 22px;
+        box-shadow: 0 7px 0 #0c1430;
+      }
+      .card .ic { font-size: 2.1rem; }
+      .card h3 { margin: 10px 0 6px; font-size: 1.12rem; color: var(--paper); }
+      .card p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; font-weight: 700; line-height: 1.55; }
+      .card strong { color: var(--brass); }
+
+      section.text { margin: 48px 0; }
+      section.text h2 { font-size: 1.7rem; margin-bottom: 10px; color: var(--brass); text-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+      section.text p, section.text li { color: var(--ink-dim); font-weight: 700; line-height: 1.7; max-width: 66ch; }
+      section.text strong { color: var(--paper); }
+      section.text ul { padding-left: 22px; }
+      section.text li::marker { color: var(--brass); }
+
+      details {
+        background: var(--panel); border: 2px solid var(--line); border-radius: 16px;
+        padding: 15px 20px; margin-bottom: 10px; box-shadow: 0 4px 0 #0c1430;
+      }
+      details summary { font-weight: 900; cursor: pointer; color: var(--paper); }
+      details summary::marker { color: var(--brass); }
       details p { margin: 10px 0 0; }
-      footer { text-align: center; color: var(--ink-soft); font-size: 0.85rem; font-weight: 600; margin-top: 60px; }
-      footer a { color: var(--accent-2); }
+      details[open] { border-color: var(--brass-deep); }
+
+      footer { text-align: center; color: var(--ink-dim); font-size: 0.86rem; font-weight: 700; margin-top: 64px; }
+      footer a { color: var(--brass); }
     </style>
   </head>
   <body>
     <main>
       <header class="hero">
-        <div class="logo" aria-hidden="true">🏭</div>
-        <h1>Typcoon</h1>
-        <p class="sub">Typ munten. Bouw je fabriek. Word tycoon — en leer ondertussen blind typen.</p>
-        <a class="cta" href="/speel/">▶ &nbsp;Speel gratis</a>
+        <div class="keycaps" aria-hidden="true">
+          <span>T</span><span>Y</span><span>P</span><span class="gold">C</span><span>O</span><span>O</span><span>N</span>
+        </div>
+        <h1>Typ munten. Bouw je fabriek.</h1>
+        <p class="sub">Het typespel waar élke letter geld waard is — en je ondertussen blind leert typen.</p>
+        <a class="cta" href="/speel/">▶&nbsp; Speel gratis</a>
         <span class="cta-note">Geen account · geen reclame · geen aankopen</span>
       </header>
 
@@ -194,7 +251,7 @@
       </section>
 
       <header class="hero" style="padding-top:0">
-        <a class="cta" href="/speel/">▶ &nbsp;Start je fabriek</a>
+        <a class="cta" href="/speel/">▶&nbsp; Start je fabriek</a>
       </header>
 
       <footer>
