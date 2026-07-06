@@ -17,6 +17,8 @@ const STRINGS = {
   'home.how3': '⭐ Verkoop je fabriek voor een ster: alles gaat daarna sneller!',
 
   'play.back': '← Menu',
+  'play.soundOff': 'Geluid uit',
+  'play.soundOn': 'Geluid aan',
   'play.coins': 'Munten',
   'play.perSec': 'Munten per seconde (zolang je typt)',
   'play.stars': 'Sterren: alles ×{mult}',

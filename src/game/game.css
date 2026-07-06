@@ -181,6 +181,8 @@ button { font-family: inherit; }
   padding: 10px 14px; min-height: 60px; box-shadow: 0 8px 0 #0c1430;
   position: sticky; top: 10px; z-index: 20;
 }
+.bar-left { display: flex; gap: 8px; align-items: center; }
+.icon-btn { padding: 8px 12px; font-size: 1.1rem; line-height: 1; }
 .wallet { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .game-main { display: grid; grid-template-columns: 1fr 350px; gap: 16px; align-items: start; }
 @media (max-width: 920px) { .game-main { grid-template-columns: 1fr; } }

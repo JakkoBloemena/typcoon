@@ -86,3 +86,15 @@ dynamic (building/upgrade/achievement) keys — no other missing strings.
 **Result:** 18/18 tests, clean build, zero console errors.
 **Next cycle:** verify refresh/save-load integrity mid-progression; sanity-check
 the menu/back flow and returning-player home stats; look for any dead-end states.
+
+## Cycle 6 — save/load integrity + mute
+**Verified (no bugs):** hard-refresh mid-progression preserves every field —
+coins, totalCoins, lifetimeCoins, rebirths, upgrades, badges, all machine levels,
+curriculumIndex. Returning-home shows correct star/coin/production pills + earned
+badges + "Verder bouwen". No dead-ends; floor and shop rebuild from the save.
+**Shipped:**
+- **Sound toggle** (🔊/🔇) in the game bar, next to Menu — flips and persists
+  `geluidAan`. A must-have for classroom/living-room use.
+**Result:** 18/18 tests, clean build, zero console errors.
+**Next cycle:** make the "next machine" lock show *remaining* letters (a shrinking
+goal) instead of the absolute threshold; scan mid-game for any pacing sag.

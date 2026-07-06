@@ -187,6 +187,10 @@ export default function GameScreen({ state, setGame, onBack }) {
     });
   }, [setGame]);
 
+  const toggleSound = useCallback(() => {
+    setGame((e) => ({ ...e, profile: { ...e.profile, geluidAan: e.profile.geluidAan === false } }));
+  }, [setGame]);
+
   const doRebirth = useCallback(() => {
     setRebirthAsk(false);
     setGame((e) => {
@@ -208,7 +212,10 @@ export default function GameScreen({ state, setGame, onBack }) {
   return (
     <div className={'game' + (golden ? ' gold-run' : '')}>
       <header className="game-bar">
-        <button className="btn-ghost" onClick={onBack}>{gt('play.back')}</button>
+        <div className="bar-left">
+          <button className="btn-ghost" onClick={onBack}>{gt('play.back')}</button>
+          <button className="btn-ghost icon-btn" onClick={toggleSound} aria-label={soundOn ? gt('play.soundOff') : gt('play.soundOn')} title={soundOn ? gt('play.soundOff') : gt('play.soundOn')}>{soundOn ? '🔊' : '🔇'}</button>
+        </div>
         <div className="wallet">
           {state.tycoon.rebirths > 0 && (
             <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
