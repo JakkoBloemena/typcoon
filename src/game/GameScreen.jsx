@@ -24,10 +24,10 @@ import TypingSurface from '../ui/TypingSurface.jsx';
 import Keyboard from '../ui/Keyboard.jsx';
 import FactoryFloor from './FactoryFloor.jsx';
 import { Machine, Coin, Star, Mascot } from './assets.jsx';
+import { fmt } from './format.js';
 import { gt } from './strings.js';
 
 const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden getypt is
-const fmt = (n) => Math.floor(n).toLocaleString('nl-NL');
 
 // Koopknop met vasthouden-om-te-herhalen: één klik = één keer; ingedrukt houden
 // (na ~420ms) blijft kopen zolang het kan. Zo hoeft een kind niet 25× te klikken.

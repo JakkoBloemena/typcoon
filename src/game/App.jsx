@@ -9,10 +9,11 @@ import { ACHIEVEMENTS } from './achievements.js';
 import nlPack from '../data/nl/index.js';
 import { loadGame, saveGame, clearGame } from './store.js';
 import { Mascot, Coin } from './assets.jsx';
+import { fmt } from './format.js';
 import { gt } from './strings.js';
 import GameScreen from './GameScreen.jsx';
 
-const fmt = (n) => Math.floor(n).toLocaleString('nl-NL');
+
 
 // Typcoon speel je met een echt toetsenbord; op alleen-touch tonen we een lieve hint.
 function touchOnly() {

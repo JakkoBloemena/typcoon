@@ -5,9 +5,10 @@
 
 import { BUILDINGS, milestoneMultiplier } from './economy.js';
 import { Machine } from './assets.jsx';
+import { fmt } from './format.js';
 import { gt } from './strings.js';
 
-const fmt = (n) => Math.floor(n).toLocaleString('nl-NL');
+
 
 export default function FactoryFloor({ tycoon, active }) {
   const owned = BUILDINGS.filter((b) => (tycoon.buildings[b.id] || 0) > 0);

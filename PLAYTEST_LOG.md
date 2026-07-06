@@ -43,3 +43,18 @@ card shows the Typemachine *character* celebrating, achievement card clean.
 **Next cycle:** push to a fully-maxed factory (all machines Lv 50, all upgrades,
 multiple rebirths) and check late-game balance + number formatting at large
 values; add a number-pop on the coin counter and a combo-milestone flash.
+
+## Cycle 3 — maxed factory + big-number formatting
+**Tested:** fully-maxed factory — all 5 machines Lv 50 (×8 milestone), all 4
+upgrades, 3 rebirths, ~10 miljard munten.
+**Verified:** no NaN, no overflow, no soft-lock, no horizontal scroll; economy
+math exact (1.648.500 coins/s at max). All five machine characters render with
+×8 badges and per-machine rates. Zero console errors.
+**Shipped:**
+- **Compact numbers** (`format.js`): full with thousands-dots below a million
+  (concrete for kids — "9.876"), then idle-game style above ("1,65 mln",
+  "9,88 mld", "1,23 bjn"). Coin pill shrank 188→140px at 10-figure balances;
+  tellers stay tidy and readable. Shared across game bar, shop, floor, home.
+**Result:** 18/18 tests, clean build, zero errors.
+**Next cycle:** coin-counter number-pop on payout; combo-milestone flash at
+25/50; confirm audio cues actually fire on buy/complete/milestone.
