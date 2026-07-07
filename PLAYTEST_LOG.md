@@ -152,3 +152,20 @@ referral guarded in start(). 36/36 tests (5 new), clean build, zero errors.
 **Watch:** that the referrer reward never rivals typing income (floored + cps-scaled +
 diminishing + capped keeps it modest); if this ever moves real money or coins could buy
 premium, the SERVER-SEAM must be implemented before launch.
+
+## Leaderboards (Workstream 3) — analysis → "weekly records + beat-your-ghost"
+**Analysis:** a real leaderboard needs a backend (shared scores); a fake/bot board is
+dishonest and a public global board of kids adds name-moderation + child-safety burden.
+Ranking on lifetime coins/prestige rewards grind + premium and demotivates newcomers. So:
+ship an honest local layer that ranks nothing public — you compete against your OWN past
+week (resets Monday, so you can always win again). Friends-only weekly league = the clean
+backend-upgrade path (also amplifies referral).
+**Built:** weekly.js (Monday-anchored week key, rollover, vs-last-week), weekly totals
+(coins/exercises/combo) accumulated per exercise, week rollover on session start with an
+all-time records update, Records.jsx ("Deze week" vs "vorige week" + all-time: best week,
+highest combo, longest streak, letters), home entry.
+**Verified in-browser:** weekly totals accumulate; "Je bent 220 munten vóór op vorige
+week!" computes correctly; per-row this-week vs last-week; rollover + records unit-tested.
+41/41 tests (5 new weekly), clean build, zero errors.
+**Watch:** weekly reset timing across timezones (uses local Monday — fine for a local
+game); if a social/friends board is ever added, it needs the backend + name moderation.

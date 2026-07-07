@@ -27,6 +27,7 @@ import { Machine, Coin, Star, Mascot } from './assets.jsx';
 import { FREE_LETTER_CAP, machineLocked } from './premium.js';
 import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
 import { makeThanksToken, ownCode, REFERRAL_MILESTONE_LETTERS } from './referral.js';
+import { checkWeek } from './weekly.js';
 import Unlock from './Unlock.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
@@ -94,17 +95,21 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   // een muntbonus toekennen. Eén keer per sessie-start; idempotent binnen dezelfde dag.
   useEffect(() => {
     const r = checkDailyReturn(engineRef.current.tycoon);
-    if (!r.isNewDay) return;
-    const reward = r.milestone ? milestoneReward(r.milestone, engineRef.current.tycoon) : 0;
+    const reward = r.isNewDay && r.milestone ? milestoneReward(r.milestone, engineRef.current.tycoon) : 0;
     setGame((e) => {
-      // idempotent: is vandaag al verwerkt (StrictMode/remount voor de flush), niets doen —
-      // anders zou de mijlpaalbonus dubbel uitbetalen.
-      if (e.tycoon.lastDay === r.lastDay) return e;
-      let ty = { ...e.tycoon, streak: r.streak, lastDay: r.lastDay, boostLeft: r.boostLeft };
-      if (reward > 0) ty = { ...ty, coins: ty.coins + reward, lifetimeCoins: (e.tycoon.lifetimeCoins || 0) + reward };
-      return { ...e, tycoon: ty };
+      let ty = e.tycoon;
+      // dagelijkse terugkeer (idempotent: lastDay-guard voorkomt dubbele bonus bij StrictMode)
+      if (r.isNewDay && ty.lastDay !== r.lastDay) {
+        ty = { ...ty, streak: r.streak, lastDay: r.lastDay, boostLeft: r.boostLeft };
+        if (reward > 0) ty = { ...ty, coins: ty.coins + reward, lifetimeCoins: (ty.lifetimeCoins || 0) + reward };
+      }
+      // weekbord: initialiseer/rol de week (elke sessie-start); langste-streak-record bijwerken
+      const w = checkWeek(ty);
+      const nextRecords = { ...w.records, longestStreak: Math.max(w.records.longestStreak, ty.streak || 0) };
+      ty = { ...ty, weekly: w.weekly, lastWeekly: w.lastWeekly, records: nextRecords };
+      return ty === e.tycoon ? e : { ...e, tycoon: ty };
     });
-    setWelcome({ streak: r.streak, mult: boostMultiplier(r.streak), reward, milestone: r.milestone });
+    if (r.isNewDay) setWelcome({ streak: r.streak, mult: boostMultiplier(r.streak), reward, milestone: r.milestone });
   }, [setGame]);
 
   // nieuwe opdracht per stap; af en toe een gouden (variabele beloning, niet de
@@ -169,7 +174,12 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       const boostActive = (next.tycoon.boostLeft || 0) > 0;
       const dailyBoost = boostActive ? boostMultiplier(next.tycoon.streak) : 1;
       const { tycoon, gained } = earnFromExercise(next.tycoon, exAcc, { golden, bestStreak, dailyBoost });
-      next = { ...next, tycoon: boostActive ? { ...tycoon, boostLeft: Math.max(0, tycoon.boostLeft - 1) } : tycoon };
+      let ty2 = boostActive ? { ...tycoon, boostLeft: Math.max(0, tycoon.boostLeft - 1) } : tycoon;
+      // weekbord: tel deze opdracht mee voor "deze week"
+      if (ty2.weekly) {
+        ty2 = { ...ty2, weekly: { ...ty2.weekly, coins: ty2.weekly.coins + gained, exercises: ty2.weekly.exercises + 1, combo: Math.max(ty2.weekly.combo, bestStreak) } };
+      }
+      next = { ...next, tycoon: ty2 };
 
       // gratis leer-grens (Hoofdstuk 1): een promotie die vóór de 11e letter zou
       // uitkomen wordt teruggedraaid en vervangen door de paywall. Leren zelf blijft

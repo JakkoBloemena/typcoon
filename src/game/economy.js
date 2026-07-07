@@ -51,6 +51,9 @@ export function newTycoon() {
     welcomeClaimed: false, // welkomstbonus al toegekend?
     thanksShown: false, // bedankcode al aan de vriend getoond na de mijlpaal?
     refClaims: [], // vriend-codes die deze speler als referrer heeft beloond (dedup/cap)
+    weekly: null, // deze week: { key, coins, exercises, combo } (zie weekly.js)
+    lastWeekly: null, // vorige week (voor "versla jezelf")
+    records: { bestWeekCoins: 0, longestStreak: 0 }, // all-time records
     badges: [], // behaalde prestatie-id's (zie achievements.js)
   };
 }

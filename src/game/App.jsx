@@ -16,6 +16,7 @@ import { gt } from './strings.js';
 import GameScreen from './GameScreen.jsx';
 import Dashboard from './Dashboard.jsx';
 import Friends from './Friends.jsx';
+import Records from './Records.jsx';
 import Unlock from './Unlock.jsx';
 
 
@@ -105,6 +106,10 @@ export default function App() {
     return <Friends game={game} onBack={() => setView('home')} onClaim={claimReferral} />;
   }
 
+  if (view === 'records' && game) {
+    return <Records game={game} onBack={() => setView('home')} />;
+  }
+
   const badges = game?.tycoon?.badges || [];
 
   return (
@@ -133,6 +138,7 @@ export default function App() {
           )}
           <button className="btn btn-big" onClick={() => setView('play')}>{gt('home.continue')}</button>
           <div className="home-links">
+            <button className="link-parents" onClick={() => setView('records')}>🏆 {gt('home.records')}</button>
             <button className="link-parents" onClick={() => setView('friends')}>🎁 {gt('home.invite')}</button>
             <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
             {!unlocked && <button className="link-unlock" onClick={() => setShowUnlock(true)}>🔓 {gt('premium.unlockShort')}</button>}

@@ -262,5 +262,11 @@ marked TODO where the Stripe/Paddle call goes):
 - **Parent dashboard** (lever #1) — real stats from play; free preview, full view premium.
 - Landing-page trust/pricing line.
 
-Deferred (recommended next, not built here): the daily-return streak (lever #2) and the
-school-license motion.
+Deferred (recommended next, not built here): the school-license motion.
+
+**Update — retention & virality shipped (see PLAYTEST_LOG.md):**
+- **Daily-return hook** (lever #2) — streak + warm-up boost + milestones, forgiving freeze.
+- **Referral** — invite-a-friend for coins, milestone-gated, local (SERVER-SEAM marked for
+  fraud-proof attribution if it ever moves real value).
+- **Records / weekly "beat-your-ghost"** — an honest local competitive layer instead of a
+  fake global board; a friends-only weekly league is the clean backend-upgrade path.
