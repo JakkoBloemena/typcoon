@@ -169,3 +169,34 @@ week!" computes correctly; per-row this-week vs last-week; rollover + records un
 41/41 tests (5 new weekly), clean build, zero errors.
 **Watch:** weekly reset timing across timezones (uses local Monday — fine for a local
 game); if a social/friends board is ever added, it needs the backend + name moderation.
+
+## Onboarding — correcte handhouding vanaf dag één
+**Ontwerp (eerst gepresenteerd, toen gebouwd):** leer de thuisrij + vinger↔toets vóór het
+eerste echte woord, kleur-gecodeerd (elke vinger een kleur, dezelfde kleur op de toetsen),
+als een spelletje. De thuisrij-drill is een POORT: een nieuw kind komt pas bij het echte
+bouwen na het aantonen van de plaatsing. Waarom-in-kindertaal: blind typen = superkracht
+die de fabriek later vanzelf laat draaien.
+**Eerlijk kader:** een toetsenbord meldt de TOETS, niet de VINGER — verkeerde-vinger-op-
+juiste-toets is fysiek niet detecteerbaar. In-spel-hints leunen dus op méétbare proxy's
+(nauwkeurigheid zakt weg, of aanslagen worden structureel traag), nooit op vingerdetectie.
+En bewust terughoudend, want een betuttelde 9-jarige haakt af: geen hint als het goed gaat
+(acc ≥ 0,9), cooldown 90 s, max 2 per sessie, korte vriendelijke toon. Een denkpauze
+(> 5 s) telt niet als "traag".
+**Gebouwd:** handmap.js (vingernamen, thuisrij-kaart, drill), reminders.js (puur, signaal-
+gedreven), onboard.js (persistente `typcoon:onboarded`-sleutel, overleeft "opnieuw
+beginnen"), Hands.jsx (SVG twee handen, elke vinger z'n kleur + thuistoets op de vingertop,
+actieve vinger licht op), Onboarding.jsx (4 stappen: werkers → thuisrij → DRILL-poort →
+superkracht; plus een korte, overslaanbare opfris-beurt), Keyboard.jsx uitgebreid met
+`showFingers` (heel bord in vingerkleuren) + `markHome` (thuisrij-ring + F/J-bultjes).
+Wiring: nieuw kind → 'onboarding' vóór 'play'; een bestaande save wordt gegrandfatherd
+(nooit de volledige tutorial afdwingen); in-spel zachte houding-nudge + één "check je
+handen"-cue per sessie; Handen-check-knop op het startscherm voor de opfris-beurt.
+**Geverifieerd in-browser (Playwright):** nieuw kind belandt in de tutorial, NIET in het
+spel; de drill-poort heeft geen enkele overslaan/verder-knop; Enter/Escape brengt je niet
+verder; pas ná het typen van "fj dk sl a; fdsa jkl;" verschijnt de superkracht-stap en
+daarna het spel; `typcoon:onboarded` blijft staan; een terugkerend kind slaat de volledige
+tutorial over en krijgt de Handen-check-opfris (overslaanbaar). 53/53 tests (12 nieuw:
+handmap + reminders), schone build, nul console-fouten.
+**Watch:** de nudge-drempels (acc < 0,7 / ≥ 50 % traag) op écht kindertypwerk — liever te
+stil dan te streng; als er ooit hardware-vingerdetectie bijkomt (camera), kan de eerlijke
+proxy-tekst worden vervangen door echte begeleiding.

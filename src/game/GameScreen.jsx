@@ -28,6 +28,7 @@ import { FREE_LETTER_CAP, machineLocked } from './premium.js';
 import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
 import { makeThanksToken, ownCode, REFERRAL_MILESTONE_LETTERS } from './referral.js';
 import { checkWeek } from './weekly.js';
+import { newFormState, pushKeystroke } from './reminders.js';
 import Unlock from './Unlock.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
@@ -72,6 +73,8 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const [live, setLive] = useState({ keys: 0, correct: 0 }); // sessie-nauwkeurigheid
   const [coinPop, setCoinPop] = useState(0); // teller-pop bij een uitbetaling
   const [comboFlash, setComboFlash] = useState(null); // { n } bij een combo-mijlpaal
+  const [nudge, setNudge] = useState(null); // zachte houding-hint { key, text }
+  const [checkHands, setCheckHands] = useState(false); // korte tussen-level opfris
 
   const engineRef = useRef(state);
   engineRef.current = state;
@@ -80,6 +83,8 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const comboRef = useRef(0); // bron-van-waarheid voor de combo (mijlpaal-detectie)
   const exStreakRef = useRef(0); // langste foutloze reeks binnen déze opdracht
   const momentsRef = useRef([]); // wachtrij van vier-momenten
+  const formRef = useRef(newFormState()); // signaal-venster voor houding-hints
+  const sessionExRef = useRef(0); // opdrachten in déze sessie (voor de opfris-cue)
 
   const soundOn = state.profile.geluidAan !== false;
   useEffect(() => { setMuted(!soundOn); }, [soundOn]);
@@ -156,6 +161,11 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
         sound.unlock?.();
         setComboFlash({ n: next });
       }
+      // houding-hint: alleen op méétbare signalen (nauwkeurigheid/tempo), spaarzaam.
+      // Een moment-overlay blokkeert het typen, dus hints komen nooit middenin een viering.
+      const fr = pushKeystroke(formRef.current, { correct, dtMs, now: performance.now() });
+      formRef.current = fr.state;
+      if (fr.hint) setNudge(fr.hint);
     },
     [setGame],
   );
@@ -216,6 +226,10 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       setCoinFlash({ gained, acc: accuracyMultiplier(exAcc), comboMult: comboMultiplier(bestStreak), golden, boost: dailyBoost });
       if (gained > 0) setCoinPop((k) => k + 1); // munt-teller pop
       if (momentsRef.current.length) setTimeout(showNextMoment, 1200);
+      // optionele "check je handen"-cue tussen levels: één keer per sessie, vroeg,
+      // en alleen als er geen viering wacht (nooit stapelen op een moment-overlay).
+      sessionExRef.current += 1;
+      if (sessionExRef.current === 3 && momentsRef.current.length === 0) setCheckHands(true);
       setStep((s) => s + 1);
     },
     [setGame, golden, showNextMoment, unlocked],
@@ -316,6 +330,11 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
           </div>
 
           {firstRun && <div className="type-hint">{gt('play.typeHint')} 👇</div>}
+          {checkHands && (
+            <div className="checkhands-chip" onAnimationEnd={() => setCheckHands(false)}>
+              {gt('play.checkHands')}
+            </div>
+          )}
 
           {exercise && (
             <TypingSurface
@@ -343,6 +362,12 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
           {comboFlash && (
             <div className="combo-flash" key={'cf' + comboFlash.n} onAnimationEnd={() => setComboFlash(null)}>
               🔥 {comboFlash.n} COMBO!
+            </div>
+          )}
+
+          {nudge && (
+            <div className="form-nudge" key={'nudge' + step} onAnimationEnd={() => setNudge(null)}>
+              {gt(nudge.key)}
             </div>
           )}
         </section>

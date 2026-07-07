@@ -9,11 +9,14 @@ import { ACHIEVEMENTS } from './achievements.js';
 import nlPack from '../data/nl/index.js';
 import { loadGame, saveGame, clearGame } from './store.js';
 import { isUnlocked } from './premium.js';
+import { isOnboarded, markOnboarded } from './onboard.js';
 import { readRefParam, ownCode, WELCOME_BONUS } from './referral.js';
+import { getLayout } from '../layouts/index.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
 import GameScreen from './GameScreen.jsx';
+import Onboarding from './Onboarding.jsx';
 import Dashboard from './Dashboard.jsx';
 import Friends from './Friends.jsx';
 import Records from './Records.jsx';
@@ -41,6 +44,9 @@ export default function App() {
     if (saved?.profile) {
       const s = hydrateState(saved, nlPack.curriculumTail);
       setGame({ ...s, tycoon: { ...newTycoon(), ...(s.tycoon || {}) } });
+      // een speler met een save heeft duidelijk al gespeeld: nooit de volledige
+      // tutorial afdwingen (opfrissen kan altijd via de Handen-check).
+      if (!isOnboarded()) markOnboarded();
     }
   }, []);
 
@@ -57,8 +63,14 @@ export default function App() {
       tycoon = { ...tycoon, referredBy: ref, welcomeClaimed: true, coins: tycoon.coins + WELCOME_BONUS, lifetimeCoins: WELCOME_BONUS };
     }
     setGame({ ...newState(profile, nlPack.curriculumTail), tycoon });
-    setView('play');
+    // nieuw kind: eerst de vingers op hun plek (poort) — pas dan het echte spel.
+    setView(isOnboarded() ? 'play' : 'onboarding');
   }, [name]);
+
+  const finishOnboarding = useCallback(() => {
+    markOnboarded();
+    setView('play');
+  }, []);
 
   const claimReferral = useCallback((friend, reward) => {
     setGame((e) => e ? { ...e, tycoon: { ...e.tycoon, coins: e.tycoon.coins + reward, lifetimeCoins: (e.tycoon.lifetimeCoins || 0) + reward, refClaims: [...(e.tycoon.refClaims || []), friend] } } : e);
@@ -82,6 +94,14 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  if (view === 'onboarding' && game) {
+    return <Onboarding layout={getLayout(game.profile.layout)} onDone={finishOnboarding} />;
+  }
+
+  if (view === 'refresh' && game) {
+    return <Onboarding layout={getLayout(game.profile.layout)} onDone={() => setView('home')} refresh />;
   }
 
   if (view === 'play' && game) {
@@ -138,6 +158,7 @@ export default function App() {
           )}
           <button className="btn btn-big" onClick={() => setView('play')}>{gt('home.continue')}</button>
           <div className="home-links">
+            <button className="link-parents" onClick={() => setView('refresh')}>✋ {gt('home.handsCheck')}</button>
             <button className="link-parents" onClick={() => setView('records')}>🏆 {gt('home.records')}</button>
             <button className="link-parents" onClick={() => setView('friends')}>🎁 {gt('home.invite')}</button>
             <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
