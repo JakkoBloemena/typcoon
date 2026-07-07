@@ -8,10 +8,13 @@ import { newTycoon, coinsPerSecond, prestigeMultiplier } from './economy.js';
 import { ACHIEVEMENTS } from './achievements.js';
 import nlPack from '../data/nl/index.js';
 import { loadGame, saveGame, clearGame } from './store.js';
+import { isUnlocked } from './premium.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
 import GameScreen from './GameScreen.jsx';
+import Dashboard from './Dashboard.jsx';
+import Unlock from './Unlock.jsx';
 
 
 
@@ -24,8 +27,10 @@ function touchOnly() {
 
 export default function App() {
   const [game, setGame] = useState(null); // engine-state + .tycoon, of null
-  const [view, setView] = useState('home'); // 'home' | 'play'
+  const [view, setView] = useState('home'); // 'home' | 'play' | 'dashboard'
   const [name, setName] = useState('');
+  const [unlocked, setUnlocked] = useState(() => isUnlocked()); // familie-unlock
+  const [showUnlock, setShowUnlock] = useState(false);
 
   // bestaande save laden
   useEffect(() => {
@@ -67,7 +72,21 @@ export default function App() {
   }
 
   if (view === 'play' && game) {
-    return <GameScreen state={game} setGame={setGame} onBack={() => setView('home')} />;
+    return (
+      <GameScreen
+        state={game} setGame={setGame} onBack={() => setView('home')}
+        unlocked={unlocked} onUnlock={() => setUnlocked(true)}
+      />
+    );
+  }
+
+  if (view === 'dashboard' && game) {
+    return (
+      <Dashboard
+        game={game} unlocked={unlocked} onBack={() => setView('home')}
+        onOpenUnlock={() => setShowUnlock(true)}
+      />
+    );
   }
 
   const badges = game?.tycoon?.badges || [];
@@ -97,6 +116,10 @@ export default function App() {
             </div>
           )}
           <button className="btn btn-big" onClick={() => setView('play')}>{gt('home.continue')}</button>
+          <div className="home-links">
+            <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
+            {!unlocked && <button className="link-unlock" onClick={() => setShowUnlock(true)}>🔓 {gt('premium.unlockShort')}</button>}
+          </div>
           <button className="link-reset" onClick={reset}>{gt('home.reset')}</button>
         </div>
       ) : (
@@ -115,7 +138,15 @@ export default function App() {
             onKeyDown={(e) => { if (e.key === 'Enter') start(); }}
           />
           <button className="btn btn-big" onClick={start}>{gt('home.start')}</button>
+          <div className="home-trust">{gt('home.trust')}</div>
         </div>
+      )}
+
+      {showUnlock && (
+        <Unlock
+          onClose={() => setShowUnlock(false)}
+          onPurchased={() => { setUnlocked(true); setShowUnlock(false); }}
+        />
       )}
     </div>
   );

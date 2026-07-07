@@ -24,6 +24,8 @@ import TypingSurface from '../ui/TypingSurface.jsx';
 import Keyboard from '../ui/Keyboard.jsx';
 import FactoryFloor from './FactoryFloor.jsx';
 import { Machine, Coin, Star, Mascot } from './assets.jsx';
+import { FREE_LETTER_CAP, machineLocked } from './premium.js';
+import Unlock from './Unlock.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
 
@@ -50,7 +52,7 @@ function BuyButton({ onBuy, disabled, className = 'btn buy', children, label }) 
   );
 }
 
-export default function GameScreen({ state, setGame, onBack }) {
+export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock }) {
   const layout = useMemo(() => getLayout(state.profile.layout), [state.profile.layout]);
 
   const [exercise, setExercise] = useState(null);
@@ -61,6 +63,7 @@ export default function GameScreen({ state, setGame, onBack }) {
   const [combo, setCombo] = useState(0);
   const [coinFlash, setCoinFlash] = useState(null); // { gained, acc, comboMult, golden }
   const [moment, setMoment] = useState(null); // huidig vier-moment (overlay)
+  const [unlockOffer, setUnlockOffer] = useState(null); // null | 'offer' | 'plain' → paywall open
   const [rebirthAsk, setRebirthAsk] = useState(false);
   const [live, setLive] = useState({ keys: 0, correct: 0 }); // sessie-nauwkeurigheid
   const [coinPop, setCoinPop] = useState(0); // teller-pop bij een uitbetaling
@@ -115,7 +118,10 @@ export default function GameScreen({ state, setGame, onBack }) {
       unlockAudio();
       lastKeyRef.current = performance.now();
       if (!lastTickRef.current) lastTickRef.current = lastKeyRef.current;
-      setGame((e) => processKeystroke(e, { expected, actual, dtMs, correct }).state);
+      setGame((e) => {
+        const s = processKeystroke(e, { expected, actual, dtMs, correct }).state;
+        return { ...s, tycoon: { ...s.tycoon, totalKeys: (s.tycoon.totalKeys || 0) + 1, correctKeys: (s.tycoon.correctKeys || 0) + (correct ? 1 : 0) } };
+      });
       setLive((l) => ({ keys: l.keys + 1, correct: l.correct + (correct ? 1 : 0) }));
       const next = correct ? comboRef.current + 1 : 0;
       comboRef.current = next;
@@ -136,17 +142,28 @@ export default function GameScreen({ state, setGame, onBack }) {
       const exAcc = att ? 1 - err / att : 1;
       const bestStreak = exStreakRef.current;
 
+      const prevIndex = engineRef.current.profile.curriculumIndex;
       const before = activeLetters(engineRef.current.curriculum, engineRef.current.profile.curriculumIndex).length;
       let { state: next, promoted } = finalizeExercise(engineRef.current, results);
       const { tycoon, gained } = earnFromExercise(next.tycoon, exAcc, { golden, bestStreak });
       next = { ...next, tycoon };
 
+      // gratis leer-grens (Hoofdstuk 1): een promotie die vóór de 11e letter zou
+      // uitkomen wordt teruggedraaid en vervangen door de paywall. Leren zelf blijft
+      // gratis tot hier; premium opent de rest van het alfabet + machines.
+      let afterLetters = activeLetters(next.curriculum, next.profile.curriculumIndex).length;
+      if (!unlocked && promoted && afterLetters > FREE_LETTER_CAP) {
+        next = { ...next, profile: { ...next.profile, curriculumIndex: prevIndex } };
+        afterLetters = before;
+        promoted = null;
+        momentsRef.current.push({ kind: 'paywall' });
+      }
+
       // vier-momenten verzamelen (één voor één tonen, na de munt-flash)
       if (promoted) {
-        const after = activeLetters(next.curriculum, next.profile.curriculumIndex).length;
         momentsRef.current.push({ kind: 'letter', keys: promoted });
-        const machine = BUILDINGS.find((b) => b.unlockAt > before && b.unlockAt <= after);
-        if (machine) momentsRef.current.push({ kind: 'machine', id: machine.id });
+        const machine = BUILDINGS.find((b) => b.unlockAt > before && b.unlockAt <= afterLetters);
+        if (machine && !machineLocked(machine.id, unlocked)) momentsRef.current.push({ kind: 'machine', id: machine.id });
       }
       const ach = pendingAchievements({ tycoon: next.tycoon, lettersLearned: activeLetters(next.curriculum, next.profile.curriculumIndex).length });
       if (ach.length) {
@@ -162,7 +179,7 @@ export default function GameScreen({ state, setGame, onBack }) {
       if (momentsRef.current.length) setTimeout(showNextMoment, 1200);
       setStep((s) => s + 1);
     },
-    [setGame, golden, showNextMoment],
+    [setGame, golden, showNextMoment, unlocked],
   );
 
   const buy = useCallback((id) => {
@@ -217,6 +234,9 @@ export default function GameScreen({ state, setGame, onBack }) {
         <div className="bar-left">
           <button className="btn-ghost" onClick={onBack}>{gt('play.back')}</button>
           <button className="btn-ghost icon-btn" onClick={toggleSound} aria-label={soundOn ? gt('play.soundOff') : gt('play.soundOn')} title={soundOn ? gt('play.soundOff') : gt('play.soundOn')}>{soundOn ? '🔊' : '🔇'}</button>
+          {!unlocked && (
+            <button className="unlock-pill" onClick={() => setUnlockOffer('plain')}>🔓 {gt('premium.unlockShort')}</button>
+          )}
         </div>
         <div className="wallet">
           {state.tycoon.rebirths > 0 && (
@@ -286,11 +306,25 @@ export default function GameScreen({ state, setGame, onBack }) {
           <ul className="shop-list">
             {BUILDINGS.map((b) => {
               const level = state.tycoon.buildings[b.id] || 0;
-              const unlocked = buildingUnlocked(b.id, lettersLearned);
+              const available = buildingUnlocked(b.id, lettersLearned);
+              const premiumLock = machineLocked(b.id, unlocked);
               const cost = buildingCost(b.id, level);
               const can = coins >= cost;
               const nextMs = nextMilestone(level);
-              if (!unlocked) {
+              // premium-machine voor een gratis speler: toon de unlock-CTA
+              if (premiumLock) {
+                return (
+                  <li className="shop-item locked premium-lock" key={b.id} onClick={() => setUnlockOffer('plain')}>
+                    <Machine id={b.id} className="shop-thumb" />
+                    <div className="shop-info">
+                      <span className="shop-name">🔒 {gt('building.' + b.id)}</span>
+                      <span className="shop-meta">{gt('premium.inFull')}</span>
+                    </div>
+                    <span className="premium-cta">{gt('premium.unlockShort')}</span>
+                  </li>
+                );
+              }
+              if (!available) {
                 const remaining = Math.max(1, b.unlockAt - lettersLearned);
                 return (
                   <li className="shop-item locked" key={b.id}>
@@ -359,7 +393,19 @@ export default function GameScreen({ state, setGame, onBack }) {
         </div>
       )}
 
-      {moment && (
+      {moment && moment.kind === 'paywall' && (
+        <div className="overlay">
+          <div className="card celebrate paywall-card" onClick={(e) => e.stopPropagation()}>
+            <div className="card-icon">🏭✨</div>
+            <h3>{gt('premium.chapterTitle')}</h3>
+            <p>{gt('premium.chapterBody')}</p>
+            <button className="btn btn-big" onClick={() => { setUnlockOffer('offer'); showNextMoment(); }}>{gt('premium.chapterCta')}</button>
+            <button className="btn-ghost" onClick={showNextMoment}>{gt('unlock.later')}</button>
+          </div>
+        </div>
+      )}
+
+      {moment && moment.kind !== 'paywall' && (
         <div className="overlay" onClick={showNextMoment}>
           <div className="card celebrate" onClick={(e) => e.stopPropagation()}>
             {moment.kind === 'letter' && (<>
@@ -390,6 +436,14 @@ export default function GameScreen({ state, setGame, onBack }) {
             <button className="btn" onClick={showNextMoment}>{gt('play.nice')}</button>
           </div>
         </div>
+      )}
+
+      {unlockOffer && (
+        <Unlock
+          offer={unlockOffer === 'offer'}
+          onClose={() => setUnlockOffer(null)}
+          onPurchased={() => { setUnlockOffer(null); onUnlock?.(); }}
+        />
       )}
     </div>
   );

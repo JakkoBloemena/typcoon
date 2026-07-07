@@ -42,6 +42,8 @@ export function newTycoon() {
     exercisesDone: 0,
     goldenDone: 0, // aantal gouden oefeningen gepakt
     bestCombo: 0, // langste foutloze reeks ooit
+    totalKeys: 0, // alle aanslagen ooit (voor ouder-dashboard: nauwkeurigheid)
+    correctKeys: 0, // correcte aanslagen ooit
     badges: [], // behaalde prestatie-id's (zie achievements.js)
   };
 }
