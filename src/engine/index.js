@@ -2,7 +2,7 @@
 // Het engine-contract (§10.4): processKeystroke, generateExercise, finalizeExercise.
 // Alles hier is PUUR en TAAL-NEUTRAAL. Taalpakket + layout komen als parameter binnen.
 
-import { buildCurriculum, activeKeys, gatingKeys, nextStage, META_KEYS } from './curriculumCore.js';
+import { buildCurriculum, activeKeys, gatingKeys, nextStage, META_KEYS, MIN_KEY_REPS } from './curriculumCore.js';
 import { newKeyStat, recordKey } from './keyModel.js';
 import { newBigramStat, recordBigram } from './bigramModel.js';
 import { ensureSrs, reviewSrs } from './srs.js';
@@ -119,22 +119,39 @@ export function finalizeExercise(state, results = []) {
   return { state: next, promoted: promo.promoted ? promo.newKeys : null };
 }
 
-// Promotieregel (§5.4): alle actieve toetsen confident genoeg + governor staat het toe.
+function clampAcc(x, lo, hi) {
+  return Math.max(lo, Math.min(hi, x));
+}
+
+// Is deze ene toets 'lang genoeg' geoefend om een nieuwe letter toe te laten?
+//   a) minstens MIN_KEY_REPS correcte herhalingen (praktijk = "lang genoeg"), én
+//   b) een blijvende nauwkeurigheid rond de flow-band (nauwkeurigheid eerst, §2.2).
+// Snelheid gaten we NIET af (dat komt vanzelf; elders is het de "3e ster") — zo loopt een
+// net-niet-supersnel kind nooit vast. Humane klep: wie véél oefent (≥2× de drempel) maar net
+// onder de band blijft hangen, mag met iets meer marge tóch door — geen eeuwige muur.
+function keyReady(st, accGate) {
+  if (!st) return false;
+  const reps = st.reps ?? 0;
+  const acc = st.accuracy ?? 0;
+  if (reps >= MIN_KEY_REPS && acc >= accGate) return true;
+  if (reps >= 2 * MIN_KEY_REPS && acc >= accGate - 0.05) return true;
+  return false;
+}
+
+// Promotieregel (§5.4): elke actieve toets genoeg geoefend, en het kind worstelt niet.
 export function tryPromote(state) {
   const { profile, governor } = state;
   const stage = nextStage(state.curriculum, profile.curriculumIndex);
   if (!stage) return { promoted: false };
 
-  // Voorwaarde 2: governor mag niet in 'frustrated' staan (kind worstelt).
-  if (!governor.allowPromotion || governor.state === 'frustrated') {
-    return { promoted: false };
-  }
+  // Voorwaarde 2: governor mag niet in 'frustrated' staan (kind worstelt → eerst rust).
+  if (governor.state === 'frustrated') return { promoted: false };
 
-  // Voorwaarde 1: alle gating-toetsen (actief minus meta) >= promotiedrempel.
+  // Voorwaarde 1: elke gating-toets (actief minus meta) is 'lang genoeg' geoefend.
   const gating = gatingKeys(state.curriculum, profile.curriculumIndex);
-  const drempel = profile.promotieDrempel ?? 0.8;
-  const allConfident = gating.every((k) => (state.keyStats[k]?.confidence ?? 0) >= drempel);
-  if (!allConfident) return { promoted: false };
+  const accGate = clampAcc((profile.doelAccuratesse ?? 0.9) - 0.05, 0.7, 0.95);
+  const ready = gating.every((k) => keyReady(state.keyStats[k], accGate));
+  if (!ready) return { promoted: false };
 
   // Promoveer: index omhoog + keyStats voor nieuwe (niet-meta) toetsen aanmaken.
   const keyStats = { ...state.keyStats };

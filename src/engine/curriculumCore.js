@@ -32,6 +32,12 @@ export function buildCurriculum(tail = []) {
   return out;
 }
 
+// Genoeg-geoefend-drempel (§5.4): minimaal aantal CORRECTE herhalingen per toets vóór
+// een nieuwe letter erbij komt. Bewust op herhaling gebaseerd — een echte typcursus laat
+// een letter pas los als hij door en door zit. Gedeeld door de promotie-poort (index.js)
+// én de generator (die deze toetsen gericht laat oefenen zodat de drempel haalbaar blijft).
+export const MIN_KEY_REPS = 45;
+
 // Meta-toetsen zijn ontgrendelbaar maar nooit los te typen (bv. Shift). Ze tellen
 // niet mee in de promotie-poort en krijgen geen keyStats — anders blokkeren ze het
 // curriculum (confidence blijft 0 want er komen nooit losse samples binnen).

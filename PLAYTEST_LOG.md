@@ -200,3 +200,39 @@ handmap + reminders), schone build, nul console-fouten.
 **Watch:** de nudge-drempels (acc < 0,7 / ≥ 50 % traag) op écht kindertypwerk — liever te
 stil dan te streng; als er ooit hardware-vingerdetectie bijkomt (camera), kan de eerlijke
 proxy-tekst worden vervangen door echte begeleiding.
+
+## Promotie-tempo — een letter écht inoefenen vóór de volgende (indicator: een echte cursus)
+**Aanleiding:** een ouder gaf een concreet ijkpunt — zijn kind deed 12 uur klassikale
+typles + 4×30 min oefenen per week. Een echte cursus over-oefent bewust vóór een nieuwe
+letter. Vraag: laat kinderen lang genoeg oefenen voordat er een letter bij komt.
+**Gevonden (simulatie van de échte engine, 3 vaardigheidsniveaus):** het oude tempo was
+op twee manieren stuk. (1) Véél te snel vroeg: de eerste letters promoveerden al na 2-3
+oefeningen (~7-8 aanslagen per letter) — de promotie-poort vroeg alleen `confidence ≥ 0,8`,
+en `confidence` is voor 30 % snelheid. (2) Softlock later: de flow-governor verlaagt het
+snelheidsdoel elke keer dat het kind het goed doet (750→280 ms). Zodra dat doel onder het
+tempo van een gewoon kind zakt, kan `confidence` de 0,8 nooit meer halen → stage 8 kostte
+500-1200 oefeningen (muur). Tempo was dus grillig, niet "lang genoeg".
+**Fix (accuratesse + herhaling, snelheid gatet niet):**
+- keyModel.js: een levenslange `reps`-teller per toets (correcte herhalingen, niet begrensd
+  door de 30-ringbuffer).
+- Promotie-poort (index.js): elke gating-toets moet ≥ `MIN_KEY_REPS` (45) correcte
+  herhalingen hebben én een blijvende buffer-nauwkeurigheid rond de flow-band. Snelheid is
+  géén poort meer (blijft de "3e ster"/munt-mechaniek) → geen softlock meer mogelijk.
+  Humane klep: wie ≥ 2× de drempel oefent maar net onder de band blijft, mag met iets meer
+  marge tóch door — nooit een eeuwige muur.
+- generator.js: de onder-geoefende gating-toetsen (minst-geoefend eerst, meestal de nieuwste
+  letter, óók het zeldzame `;`) krijgen nu een gegarandeerde focus-drill per oefening, zodat
+  de herhalings-drempel voorspelbaar en gelijkmatig haalbaar is i.p.v. af te hangen van
+  toevallige woordfrequentie.
+**Resultaat (na de fix, simulatie):** consistent tempo, geen muren. Sterk kind ~28 min
+puur typen tot 10 letters, typisch kind ~63 min, worstelend kind maakt nu overal voortgang
+(voorheen: vast). Elke nieuwe letter krijgt minimaal ~3 oefeningen (snelst mogelijke kind),
+typisch 5-15 — echt inoefenen vóór de volgende.
+**Geverifieerd in-browser (Playwright, foutloos typend):** eerste promotie pas bij oefening
+4 (voorheen ~1-2); nette progressie f,j → d,k → s,l → a … elk paar ~3 oefeningen; na 22
+oefeningen de hele thuisrij geleerd en nu de pinken (a, ;) aan het inoefenen; nul console-
+fouten. 57/57 tests (4 nieuwe promotie-tests borgen: te weinig herhalingen promoveert niet,
+elke toets moet de drempel halen, traag-maar-accuraat loopt niet vast, te veel fouten wacht).
+**Watch:** MIN_KEY_REPS (45) is de knop om strenger/losser te zetten; 45 ≈ 1,5-2 min per
+letter voor een typisch kind. Als het in de praktijk te traag of te snel voelt, is dit één
+getal. De accuratesse-poort volgt de leeftijdsband (doelAccuratesse − 0,05).

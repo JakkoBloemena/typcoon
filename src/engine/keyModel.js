@@ -19,6 +19,7 @@ export function newKeyStat(key, at = Date.now()) {
     key,
     introducedAt: at,
     samples: [],
+    reps: 0, // levenslange CORRECTE herhalingen (niet begrensd door de ringbuffer) — §5.4
     accuracy: 0,
     medianMs: 0,
     confidence: 0,
@@ -28,6 +29,7 @@ export function newKeyStat(key, at = Date.now()) {
 // Voeg één aanslag toe en herbereken de afgeleide waarden.
 // targetMs = het huidige snelheidsdoel voor deze toets (uit de governor).
 export function recordKey(stat, { ok, t, at = Date.now() }, targetMs) {
+  const reps = (stat.reps ?? 0) + (ok ? 1 : 0); // telt op, wordt nooit gewist
   const samples = [...stat.samples, { t, ok, at }].slice(-BUFFER);
   const total = samples.length;
   const correct = samples.filter((s) => s.ok).length;
@@ -43,5 +45,5 @@ export function recordKey(stat, { ok, t, at = Date.now() }, targetMs) {
   const warmup = clamp(total / 8, 0, 1);
   const confidence = (0.7 * accuracy + 0.3 * speedScore) * warmup;
 
-  return { ...stat, samples, accuracy, medianMs, confidence };
+  return { ...stat, samples, reps, accuracy, medianMs, confidence };
 }

@@ -7,7 +7,7 @@
 // (zodra Shift ontgrendeld is) hoofdletters. Elke typbare actieve toets MOET
 // voorkomen, anders kan de promotie-poort (§5.4) nooit voldaan worden.
 
-import { activeLetters, activeSymbols, shiftUnlocked } from './curriculumCore.js';
+import { activeLetters, activeSymbols, shiftUnlocked, MIN_KEY_REPS } from './curriculumCore.js';
 import { rollingAccuracy } from './difficulty.js';
 import { dueItems } from './srs.js';
 import { weakestBigram } from './bigramModel.js';
@@ -141,6 +141,23 @@ function assembleSentence(tokens, shift, symbols, rng) {
   return s;
 }
 
+// Gericht oefenen van een toets die nog niet 'lang genoeg' geoefend is: bouw een kort
+// rijtje waarin de focus-toets ~3-4× voorkomt, gedragen door al beheerste letters. Zo
+// groeit elke (ook zeldzame) letter/leesteken voorspelbaar naar de herhalings-drempel,
+// i.p.v. af te hangen van toevallige woordfrequentie. Nauwkeurig geplaatst → geen straf-sfeer.
+function focusDrill(k, letters, symbols, keyStats, bigrams, rng) {
+  const strong = letters.filter((L) => L !== k && (keyStats[L]?.confidence ?? 0) >= 0.45);
+  const pool = strong.length ? strong : letters.filter((L) => L !== k);
+  const carrier = () => (pool.length ? pool[Math.floor(rng() * pool.length)] : k);
+  if (/^[a-z]$/.test(k)) {
+    // bv. focus 'a': "ad af as aa" → de focusletter 4× tussen sterke dragers
+    return `${k}${carrier()} ${k}${carrier()} ${k}${carrier()} ${k}${k}`;
+  }
+  if (/^[0-9]$/.test(k)) return `${k}${k}${k}`;
+  // leesteken/accent: "a; s; d;" → het teken 3× gedragen door sterke letters
+  return `${carrier()}${k} ${carrier()}${k} ${carrier()}${k}`;
+}
+
 // Drill-token voor een due SRS-element ("key:x", "key:.", "bigram:xy").
 function srsDrill(el, letters, symbols, keyStats, bigrams, rng) {
   if (el.length === 1 && (symbols.includes(el) || /^[0-9]$/.test(el))) {
@@ -203,6 +220,18 @@ export function generateExercise(state, localePack, layout, rng = Math.random) {
     }
     const len = wordLen + (rng() < 0.25 ? 1 : 0);
     words.push(buildWord(len, letters, weights, bigrams, rng));
+  }
+
+  // 2b) Gericht oefenen: gating-toetsen die nog niet 'lang genoeg' geoefend zijn (reps
+  // onder de drempel) krijgen gegarandeerd herhaling — de minst-geoefende (meestal de
+  // nieuwste letter) eerst. Zo is de promotie-poort haalbaar en voorspelbaar, en oefent
+  // een kind een nieuwe letter écht in vóór de volgende erbij komt.
+  const focusKeys = [...letters, ...symbols]
+    .filter((k) => (keyStats[k]?.reps ?? 0) < MIN_KEY_REPS)
+    .sort((a, b) => (keyStats[a]?.reps ?? 0) - (keyStats[b]?.reps ?? 0))
+    .slice(0, 3);
+  for (const fk of focusKeys) {
+    words.push(focusDrill(fk, letters, symbols, keyStats, bigrams, rng));
   }
 
   // 3) Eén due SRS-item (zwakste) erbij zodat herhaling beklijft (§5.5)
