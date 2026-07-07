@@ -134,3 +134,21 @@ coins 500→800 (no double), flash shows "×2 opwarm", boostLeft 5→4 per exerc
 pill, all persists. 31/31 tests (8 new daily tests), clean build, zero errors.
 **Watch:** boost size vs. balance at very high streaks; that the milestone coin bonus
 never dwarfs typing income (floored + cps-scaled keeps it proportional).
+
+## Referral (Workstream 2) — invite a friend for coins
+**Design (honest local version):** referred player gets a welcome bonus on arrival
+(safe, one-time); referrer is paid only after the friend reaches a real milestone
+(5 letters), via a checksum-verified "bedankcode" the friend's game produces at that
+milestone; capped at 5 friends, diminishing, dedup by friend code. Real fraud-proof
+attribution needs a server (marked SERVER-SEAM) — but coins are single-player and
+can't buy the €19,99 unlock, so worst-case "abuse" is a kid cheating their own factory
+(no external/monetization harm). Guardrails here are for BALANCE, not fraud.
+**Built:** referral.js (codes, token make/validate, scaled+capped+diminishing reward,
+?ref parsing, invite link), Friends.jsx (share link/code + redeem field), welcome grant
+on ref-link start, thank-you moment at the milestone, App claim handler.
+**Verified in-browser:** referred → +250 coins + attribution; thank-you token generated
+at 5 letters; referrer redeem 0→200; bad token rejected; dedup blocks re-claim; self-
+referral guarded in start(). 36/36 tests (5 new), clean build, zero errors.
+**Watch:** that the referrer reward never rivals typing income (floored + cps-scaled +
+diminishing + capped keeps it modest); if this ever moves real money or coins could buy
+premium, the SERVER-SEAM must be implemented before launch.

@@ -26,6 +26,7 @@ import FactoryFloor from './FactoryFloor.jsx';
 import { Machine, Coin, Star, Mascot } from './assets.jsx';
 import { FREE_LETTER_CAP, machineLocked } from './premium.js';
 import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
+import { makeThanksToken, ownCode, REFERRAL_MILESTONE_LETTERS } from './referral.js';
 import Unlock from './Unlock.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
@@ -191,6 +192,12 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       if (ach.length) {
         next = { ...next, tycoon: { ...next.tycoon, badges: [...(next.tycoon.badges || []), ...ach] } };
         for (const id of ach) momentsRef.current.push({ kind: 'achievement', id });
+      }
+
+      // uitgenodigde speler bereikt de mijlpaal → toon de bedankcode voor de vriend
+      if (next.tycoon.referredBy && !next.tycoon.thanksShown && afterLetters >= REFERRAL_MILESTONE_LETTERS) {
+        next = { ...next, tycoon: { ...next.tycoon, thanksShown: true } };
+        momentsRef.current.push({ kind: 'thanks', token: makeThanksToken(next.tycoon.referredBy, ownCode()) });
       }
 
       setGame(next);
@@ -461,6 +468,12 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
               <Star className="card-star big" />
               <h3>{gt('rebirth.doneTitle')}</h3>
               <p>{gt('rebirth.doneBody', { mult: moment.mult.toFixed(2) })}</p>
+            </>)}
+            {moment.kind === 'thanks' && (<>
+              <div className="card-icon">🎁</div>
+              <h3>{gt('friends.thanksTitle')}</h3>
+              <p>{gt('friends.thanksBody')}</p>
+              <div className="thanks-token">{moment.token}</div>
             </>)}
             <button className="btn" onClick={showNextMoment}>{gt('play.nice')}</button>
           </div>

@@ -430,3 +430,24 @@ button { font-family: inherit; }
   padding: 10px 16px; color: var(--paper); font-weight: 800; line-height: 1.6;
 }
 .welcome-bonus b { color: var(--brass); font-size: 1.2rem; display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- Vrienden / referral ---------- */
+.friends-card { gap: 12px; max-width: 460px; }
+.friends-label { color: var(--ink-dim); font-weight: 800; font-size: 0.85rem; align-self: flex-start; }
+.friends-code { font-family: 'Lilita One', sans-serif; font-size: 2rem; letter-spacing: 3px; color: var(--brass); }
+.friends-linkrow { display: flex; gap: 8px; width: 100%; }
+.friends-input {
+  font: inherit; font-weight: 700; flex: 1; min-width: 0; padding: 10px 12px; border-radius: var(--r-sm);
+  border: 2px solid var(--line); background: var(--panel-2); color: var(--paper); font-variant-numeric: tabular-nums;
+}
+.friends-input:focus { outline: none; border-color: var(--brass); }
+.friends-count { color: var(--ink-dim); font-weight: 800; font-size: 0.9rem; }
+.friends-redeem { width: 100%; display: flex; flex-direction: column; gap: 8px; border-top: 2px solid var(--line); padding-top: 14px; margin-top: 4px; }
+.friends-msg { font-weight: 800; font-size: 0.9rem; }
+.friends-msg.ok { color: var(--mint); }
+.friends-msg.bad { color: var(--flame); }
+.thanks-token {
+  font-family: 'Lilita One', sans-serif; font-size: 1.4rem; letter-spacing: 2px; color: var(--brass);
+  background: var(--panel-2); border: 2px dashed var(--brass-deep); border-radius: var(--r-md);
+  padding: 10px 18px; user-select: all; font-variant-numeric: tabular-nums;
+}

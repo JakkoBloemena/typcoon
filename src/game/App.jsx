@@ -9,11 +9,13 @@ import { ACHIEVEMENTS } from './achievements.js';
 import nlPack from '../data/nl/index.js';
 import { loadGame, saveGame, clearGame } from './store.js';
 import { isUnlocked } from './premium.js';
+import { readRefParam, ownCode, WELCOME_BONUS } from './referral.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
 import GameScreen from './GameScreen.jsx';
 import Dashboard from './Dashboard.jsx';
+import Friends from './Friends.jsx';
 import Unlock from './Unlock.jsx';
 
 
@@ -47,9 +49,19 @@ export default function App() {
   const start = useCallback(() => {
     const profile = newProfile({ naam: name.trim() || 'Speler' });
     profile.onboardingGezien = true;
-    setGame({ ...newState(profile, nlPack.curriculumTail), tycoon: newTycoon() });
+    let tycoon = newTycoon();
+    // uitgenodigd via een vriend-link? welkomstbonus voor de nieuwe speler.
+    const ref = readRefParam();
+    if (ref && ref !== ownCode()) {
+      tycoon = { ...tycoon, referredBy: ref, welcomeClaimed: true, coins: tycoon.coins + WELCOME_BONUS, lifetimeCoins: WELCOME_BONUS };
+    }
+    setGame({ ...newState(profile, nlPack.curriculumTail), tycoon });
     setView('play');
   }, [name]);
+
+  const claimReferral = useCallback((friend, reward) => {
+    setGame((e) => e ? { ...e, tycoon: { ...e.tycoon, coins: e.tycoon.coins + reward, lifetimeCoins: (e.tycoon.lifetimeCoins || 0) + reward, refClaims: [...(e.tycoon.refClaims || []), friend] } } : e);
+  }, []);
 
   const reset = useCallback(() => {
     if (!window.confirm(gt('home.resetConfirm'))) return;
@@ -89,6 +101,10 @@ export default function App() {
     );
   }
 
+  if (view === 'friends' && game) {
+    return <Friends game={game} onBack={() => setView('home')} onClaim={claimReferral} />;
+  }
+
   const badges = game?.tycoon?.badges || [];
 
   return (
@@ -117,6 +133,7 @@ export default function App() {
           )}
           <button className="btn btn-big" onClick={() => setView('play')}>{gt('home.continue')}</button>
           <div className="home-links">
+            <button className="link-parents" onClick={() => setView('friends')}>🎁 {gt('home.invite')}</button>
             <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
             {!unlocked && <button className="link-unlock" onClick={() => setShowUnlock(true)}>🔓 {gt('premium.unlockShort')}</button>}
           </div>

@@ -47,6 +47,10 @@ export function newTycoon() {
     streak: 0, // dagelijkse terugkeer-streak (zie daily.js)
     lastDay: null, // laatste speeldag (YYYY-MM-DD, lokaal)
     boostLeft: 0, // resterende opdrachten met de dag-opwarmboost
+    referredBy: null, // vriend-code die deze speler uitnodigde (zie referral.js)
+    welcomeClaimed: false, // welkomstbonus al toegekend?
+    thanksShown: false, // bedankcode al aan de vriend getoond na de mijlpaal?
+    refClaims: [], // vriend-codes die deze speler als referrer heeft beloond (dedup/cap)
     badges: [], // behaalde prestatie-id's (zie achievements.js)
   };
 }
