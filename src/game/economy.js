@@ -44,6 +44,9 @@ export function newTycoon() {
     bestCombo: 0, // langste foutloze reeks ooit
     totalKeys: 0, // alle aanslagen ooit (voor ouder-dashboard: nauwkeurigheid)
     correctKeys: 0, // correcte aanslagen ooit
+    streak: 0, // dagelijkse terugkeer-streak (zie daily.js)
+    lastDay: null, // laatste speeldag (YYYY-MM-DD, lokaal)
+    boostLeft: 0, // resterende opdrachten met de dag-opwarmboost
     badges: [], // behaalde prestatie-id's (zie achievements.js)
   };
 }
@@ -143,7 +146,8 @@ export function coinsPerSecond(tycoon) {
 }
 
 // Munt-uitbetaling voor één afgeronde oefening.
-// opts: { golden, bestStreak } — gouden oefening en langste foutloze reeks erin.
+// opts: { golden, bestStreak, dailyBoost } — gouden oefening, langste foutloze reeks
+// erin, en de dagelijkse opwarm-boost (×1 als niet actief).
 export function payoutForExercise(accuracy, tycoon, opts = {}) {
   const golden = opts.golden ? GOLDEN_MULT : 1;
   return Math.round(
@@ -152,7 +156,8 @@ export function payoutForExercise(accuracy, tycoon, opts = {}) {
       payoutMultiplier(tycoon) *
       prestigeMultiplier(tycoon) *
       comboMultiplier(opts.bestStreak) *
-      golden,
+      golden *
+      (opts.dailyBoost || 1),
   );
 }
 

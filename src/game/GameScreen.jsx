@@ -25,6 +25,7 @@ import Keyboard from '../ui/Keyboard.jsx';
 import FactoryFloor from './FactoryFloor.jsx';
 import { Machine, Coin, Star, Mascot } from './assets.jsx';
 import { FREE_LETTER_CAP, machineLocked } from './premium.js';
+import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
 import Unlock from './Unlock.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
@@ -64,6 +65,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const [coinFlash, setCoinFlash] = useState(null); // { gained, acc, comboMult, golden }
   const [moment, setMoment] = useState(null); // huidig vier-moment (overlay)
   const [unlockOffer, setUnlockOffer] = useState(null); // null | 'offer' | 'plain' → paywall open
+  const [welcome, setWelcome] = useState(null); // dagelijkse terugkeer-panel { streak, mult, reward }
   const [rebirthAsk, setRebirthAsk] = useState(false);
   const [live, setLive] = useState({ keys: 0, correct: 0 }); // sessie-nauwkeurigheid
   const [coinPop, setCoinPop] = useState(0); // teller-pop bij een uitbetaling
@@ -86,6 +88,23 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const prestige = prestigeMultiplier(state.tycoon);
   const liveAcc = live.keys ? live.correct / live.keys : 1;
   const liveMult = accuracyMultiplier(liveAcc);
+
+  // dagelijkse terugkeer: streak bijwerken, opwarm-boost aanzetten en (bij een mijlpaal)
+  // een muntbonus toekennen. Eén keer per sessie-start; idempotent binnen dezelfde dag.
+  useEffect(() => {
+    const r = checkDailyReturn(engineRef.current.tycoon);
+    if (!r.isNewDay) return;
+    const reward = r.milestone ? milestoneReward(r.milestone, engineRef.current.tycoon) : 0;
+    setGame((e) => {
+      // idempotent: is vandaag al verwerkt (StrictMode/remount voor de flush), niets doen —
+      // anders zou de mijlpaalbonus dubbel uitbetalen.
+      if (e.tycoon.lastDay === r.lastDay) return e;
+      let ty = { ...e.tycoon, streak: r.streak, lastDay: r.lastDay, boostLeft: r.boostLeft };
+      if (reward > 0) ty = { ...ty, coins: ty.coins + reward, lifetimeCoins: (e.tycoon.lifetimeCoins || 0) + reward };
+      return { ...e, tycoon: ty };
+    });
+    setWelcome({ streak: r.streak, mult: boostMultiplier(r.streak), reward, milestone: r.milestone });
+  }, [setGame]);
 
   // nieuwe opdracht per stap; af en toe een gouden (variabele beloning, niet de
   // allereerste opdrachten — eerst rustig starten)
@@ -145,8 +164,11 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       const prevIndex = engineRef.current.profile.curriculumIndex;
       const before = activeLetters(engineRef.current.curriculum, engineRef.current.profile.curriculumIndex).length;
       let { state: next, promoted } = finalizeExercise(engineRef.current, results);
-      const { tycoon, gained } = earnFromExercise(next.tycoon, exAcc, { golden, bestStreak });
-      next = { ...next, tycoon };
+      // dagelijkse opwarm-boost: eerste opdrachten van de dag leveren extra op
+      const boostActive = (next.tycoon.boostLeft || 0) > 0;
+      const dailyBoost = boostActive ? boostMultiplier(next.tycoon.streak) : 1;
+      const { tycoon, gained } = earnFromExercise(next.tycoon, exAcc, { golden, bestStreak, dailyBoost });
+      next = { ...next, tycoon: boostActive ? { ...tycoon, boostLeft: Math.max(0, tycoon.boostLeft - 1) } : tycoon };
 
       // gratis leer-grens (Hoofdstuk 1): een promotie die vóór de 11e letter zou
       // uitkomen wordt teruggedraaid en vervangen door de paywall. Leren zelf blijft
@@ -174,7 +196,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       setGame(next);
       if (gained > 0) sound.complete();
       if (golden && gained > 0) setTimeout(() => sound.cheer('cheer-classic'), 150);
-      setCoinFlash({ gained, acc: accuracyMultiplier(exAcc), comboMult: comboMultiplier(bestStreak), golden });
+      setCoinFlash({ gained, acc: accuracyMultiplier(exAcc), comboMult: comboMultiplier(bestStreak), golden, boost: dailyBoost });
       if (gained > 0) setCoinPop((k) => k + 1); // munt-teller pop
       if (momentsRef.current.length) setTimeout(showNextMoment, 1200);
       setStep((s) => s + 1);
@@ -239,6 +261,9 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
           )}
         </div>
         <div className="wallet">
+          {state.tycoon.streak > 0 && (
+            <span className="streak-pill" title={gt('daily.streakTip', { n: state.tycoon.streak })}>🔥 {state.tycoon.streak}</span>
+          )}
           {state.tycoon.rebirths > 0 && (
             <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
           )}
@@ -252,6 +277,9 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       <div className="game-main">
         <section className="type-pane">
           {golden && <div className="golden-banner">{gt('play.golden')}</div>}
+          {state.tycoon.boostLeft > 0 && (
+            <div className="boost-chip">{gt('daily.boostChip', { mult: boostMultiplier(state.tycoon.streak), n: state.tycoon.boostLeft })}</div>
+          )}
 
           <div className="meters">
             <div className="meter mult-meter" aria-live="polite">
@@ -290,6 +318,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
                 ×{coinFlash.acc.toFixed(1)} netjes
                 {coinFlash.comboMult > 1 && <> · ×{coinFlash.comboMult.toFixed(1)} combo</>}
                 {coinFlash.golden && <> · ×3 goud</>}
+                {coinFlash.boost > 1 && <> · ×{coinFlash.boost} opwarm</>}
               </small>
             </div>
           )}
@@ -444,6 +473,20 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
           onClose={() => setUnlockOffer(null)}
           onPurchased={() => { setUnlockOffer(null); onUnlock?.(); }}
         />
+      )}
+
+      {welcome && (
+        <div className="overlay" onClick={() => setWelcome(null)}>
+          <div className="card celebrate welcome-card" onClick={(e) => e.stopPropagation()}>
+            <div className="welcome-flame">🔥</div>
+            <h3>{gt('daily.welcomeTitle', { n: welcome.streak })}</h3>
+            <p>{gt('daily.welcomeBoost', { mult: welcome.mult, n: BOOST_EXERCISES })}</p>
+            {welcome.reward > 0 && (
+              <div className="welcome-bonus">🎉 {gt('daily.welcomeBonus', { streak: welcome.milestone })}<br /><b><Coin className="btn-coin" /> +{fmt(welcome.reward)}</b></div>
+            )}
+            <button className="btn btn-big" onClick={() => setWelcome(null)}>{gt('daily.welcomeGo')}</button>
+          </div>
+        </div>
       )}
     </div>
   );

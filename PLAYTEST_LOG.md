@@ -119,3 +119,18 @@ celebratory pop over the typing area, meters stay legible.
 **State:** the game is in strong shape end-to-end — illustrated machines/coin/
 star/mascot, juicy feedback (coin pop, combo burst, celebrations), hold-to-buy,
 compact numbers, robust save/load, mute, clear first-run + shrinking goals.
+
+## Retention hook (Workstream 1) — daily-return
+**Design:** warm-up boost (protects "typing is the only faucet") + streak milestones,
+forgiving freeze. Local-only, reuses the engine's dayKey/dayGap.
+**Built:** streak (grows daily, freezes on a 1-day miss, resets after 2+), a daily
+**opwarm-boost** (first 5 exercises pay a streak-scaled ×1.5→×3), **streak milestones**
+at 3/7/14/30 (coin bonus floored + production-scaled), a once-per-day welcome panel,
+a streak flame pill + boost chip, and the boost shown in the payout flash.
+**Found & fixed:** milestone bonus double-applied under React StrictMode (mount effect
+ran twice before flush) — made the grant idempotent in the setGame updater.
+**Verified in-browser:** streak 2→3 on return, welcome panel + "3-dagen bonus +300",
+coins 500→800 (no double), flash shows "×2 opwarm", boostLeft 5→4 per exercise, streak
+pill, all persists. 31/31 tests (8 new daily tests), clean build, zero errors.
+**Watch:** boost size vs. balance at very high streaks; that the milestone coin bonus
+never dwarfs typing income (floored + cps-scaled keeps it proportional).

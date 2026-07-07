@@ -56,6 +56,13 @@ const STRINGS = {
   'play.back': '← Menu',
   'play.soundOff': 'Geluid uit',
   'play.soundOn': 'Geluid aan',
+
+  'daily.streakTip': 'Je bent {n} dagen op rij bezig! Kom morgen terug om je streak te laten groeien.',
+  'daily.boostChip': '🔥 Opwarm-boost ×{mult} — nog {n} opdrachten',
+  'daily.welcomeTitle': 'Welkom terug! Dag {n} 🔥',
+  'daily.welcomeBoost': 'Je eerste {n} opdrachten vandaag leveren ×{mult} munten op — warm die vingers op!',
+  'daily.welcomeBonus': '{streak}-dagen streak-bonus!',
+  'daily.welcomeGo': 'Aan de slag!',
   'play.coins': 'Munten',
   'play.perSec': 'Munten per seconde (zolang je typt)',
   'play.stars': 'Sterren: alles ×{mult}',
