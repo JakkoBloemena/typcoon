@@ -236,3 +236,20 @@ elke toets moet de drempel halen, traag-maar-accuraat loopt niet vast, te veel f
 **Watch:** MIN_KEY_REPS (45) is de knop om strenger/losser te zetten; 45 ≈ 1,5-2 min per
 letter voor een typisch kind. Als het in de praktijk te traag of te snel voelt, is dit één
 getal. De accuratesse-poort volgt de leeftijdsband (doelAccuratesse − 0,05).
+
+## Bugfix — de toets die zegt WELKE letter je moet indrukken stond scheef
+**Gemeld:** het toetsenbord dat kinderen laat zien welke letter ze moeten typen was qua
+design stuk — meteen bij de start zichtbaar.
+**Ontdekt (testloop met screenshots):** de te-typen toets (de groene "volgende" F, plus de
+hele thuisrij) toonde de letter half afgekapt onderaan de keycap. DOM-inspectie: die keys
+kregen `flex-direction: column` + `padding-top: 45px`. Oorzaak: een class-naam-botsing —
+de thuisrij-keys krijgen de class `home`, en de generieke startscherm-selector
+`.home { flex-direction: column; padding-top: 5vh }` (5vh ≈ 45px bij 900px hoog) lekte over
+op elke `.kb-key.home`. Juist de letter waar het kind naar kijkt, werd weggedrukt.
+**Fix:** de keyboard-class hernoemd naar `kb-home` (gescoped, kan nooit meer botsen met de
+pagina-`.home`), CSS meegewijzigd, én `.kb-key` defensief hardgemaakt met expliciete
+`flex-direction: row; padding: 0` zodat geen enkele generieke class dit ooit nog kan kapen.
+**Geverifieerd in-browser:** de F/J-letters staan nu gecentreerd; computed `padding-top: 0`,
+`flex-direction: row`, keycap terug op 44px; thuisrij netjes uitgelijnd — zowel in het spel
+als in de onboarding (ring + groene volgende-toets intact). Onboarding-poort nog steeds
+volledig groen, 57/57 tests, nul console-fouten.

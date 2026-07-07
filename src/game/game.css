@@ -266,13 +266,14 @@ button { font-family: inherit; }
 .keyboard { display: flex; flex-direction: column; gap: 7px; align-items: center; user-select: none; }
 .kb-row { display: flex; gap: 7px; }
 .kb-key {
-  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; display: flex; flex-direction: row; align-items: center; justify-content: center;
+  padding: 0; /* expliciet: nooit afhankelijk van generieke class-namen (bv. .home) */
   border-radius: 10px; background: var(--panel); border: 2px solid var(--line); border-bottom-width: 4px;
   font-weight: 900; font-size: 0.95rem; color: var(--paper); text-transform: uppercase;
   transition: transform 0.08s ease, background 0.1s ease, opacity 0.1s ease;
 }
 .kb-key.locked { opacity: 0.18; }
-.kb-key.home { border-bottom-color: #4a5da8; }
+.kb-key.kb-home { border-bottom-color: #4a5da8; }
 .kb-key.next { color: #14203f; transform: translateY(2px) scale(1.1); border-color: rgba(0, 0, 0, 0.25); box-shadow: 0 0 16px rgba(255, 255, 255, 0.15); }
 .kb-key.space { width: 270px; }
 .finger-hint { color: var(--ink-dim); font-weight: 800; font-size: 0.85rem; padding: 5px 14px; background: var(--panel-2); border: 2px solid var(--line); border-radius: 999px; }

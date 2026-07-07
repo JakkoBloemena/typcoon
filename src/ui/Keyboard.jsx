@@ -51,7 +51,7 @@ export default function Keyboard({ layout, activeKeys, nextKey, showFingers = fa
                   'kb-key' +
                   (isActive ? ' active' : ' locked') +
                   (isNext ? ' next' : '') +
-                  (isHome ? ' home' : '') +
+                  (isHome ? ' kb-home' : '') +
                   (markHome && isHome ? ' home-lit' : '') +
                   (isAnchor ? ' anchor' : '') +
                   (key === ' ' ? ' space' : '')
