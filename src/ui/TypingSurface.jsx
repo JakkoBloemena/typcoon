@@ -81,6 +81,9 @@ export default function TypingSurface({ text, active = true, onKeystroke, onComp
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [active, pos, text, onKeystroke, onComplete]);
 
+  const total = text.length || 1;
+  const pct = Math.round((pos / total) * 100);
+
   return (
     <div className="typing-surface" role="textbox" aria-label="Typ hier">
       <div className="typing-text">
@@ -94,6 +97,10 @@ export default function TypingSurface({ text, active = true, onKeystroke, onComp
             </span>
           );
         })}
+      </div>
+      {/* zichtbare finish-lijn: het kind ziet hoeveel er nog komt en wanneer het klaar is */}
+      <div className="typing-progress" aria-hidden="true">
+        <span className="typing-progress-fill" style={{ width: pct + '%' }} />
       </div>
     </div>
   );

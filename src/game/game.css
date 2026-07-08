@@ -255,6 +255,9 @@ button { font-family: inherit; }
   padding: 24px 32px; box-shadow: 0 8px 0 #0c1430; min-width: min(580px, 92vw); text-align: center;
 }
 .typing-text { font-size: 2.1rem; letter-spacing: 5px; font-weight: 900; word-break: break-word; font-variant-numeric: tabular-nums; }
+/* Finish-lijn: vult mee terwijl het kind typt, kleurt groen als het bijna klaar is. */
+.typing-progress { margin: 16px auto 0; height: 8px; width: min(320px, 70%); background: var(--panel-2); border: 2px solid var(--line); border-radius: 999px; overflow: hidden; }
+.typing-progress-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--brass), var(--mint)); border-radius: 999px; transition: width 0.1s ease; }
 .tchar { color: var(--ink-dim); opacity: 0.6; transition: color 0.06s ease; }
 .tchar.done { color: var(--mint); opacity: 1; }
 .tchar.current { color: var(--paper); opacity: 1; border-bottom: 4px solid var(--brass); animation: blink 1s steps(1) infinite; }

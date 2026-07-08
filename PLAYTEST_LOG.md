@@ -283,3 +283,21 @@ melding, geen crash) en het spel speelt gewoon door; login-scherm rendert; schon
 **Watch:** de wekelijk-digest en herinnering leunen op de gesyncte state; day/week-sleutels rekenen
 op Europe/Amsterdam (matcht een NL-kind). Betalingen zijn de volgende stap — `accounts.plan` +
 `paid_at` staan al klaar; dan een checkout + webhook die 'free'→'paid' zet.
+
+## Kortere opdrachten + zichtbare finish-lijn (ouder-feedback: "eindeloos, stopt dan ineens")
+**Feedback:** de opdrachten voelden eindeloos en stopten dan opeens; het kind zou beter zien
+wanneer het klaar is als een opdracht een korte, overzichtelijke regel is.
+**Oorzaak:** een beginner-opdracht was ~7-8 tokens (open + kern + meerdere focus-drills + srs +
+bigram + slot), en de flow-governor rekte woorden tot 7 tekens voor een vlotte typer → een lap
+van ~47 tekens die naar twee regels ombrak, zonder zichtbaar eindpunt.
+**Gewijzigd:**
+- **Eén korte regel per opdracht.** Kern-tokens terug, nog maar één focus-drill per opdracht
+  (i.p.v. tot 3), en die staat nu VOORAAN zodat de belangrijkste oefenstof altijd binnen de regel
+  valt. Een hard teken-budget (~20 beginner .. ~36 gevorderd) trimt achterste flavor-tokens weg →
+  de opdracht past altijd op één regel (nu ~18-36 i.p.v. 47+).
+- **Zichtbare finish-lijn.** Een slanke voortgangsbalk onder de tekst vult mee (messing→mint)
+  terwijl het kind typt, zodat het altijd ziet hoeveel er nog komt en wanneer het klaar is.
+**Belangrijk:** de herhaling per letter (promotie-drempel MIN_KEY_REPS) blijft gelijk — dezelfde
+oefenstof, verdeeld over méér, kórtere opdrachten (meer "klaar!"-momenten + muntflashes). Sim:
+sterk ~17 min, typisch ~33 min tot 10 letters; geen softlock, consistent. 70/70 tests, schone
+build, nul console-fouten; in-browser bevestigd dat opdrachten op één regel passen + de balk vult.

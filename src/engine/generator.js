@@ -197,7 +197,9 @@ export function generateExercise(state, localePack, layout, rng = Math.random) {
   // oefeningen (niet ontmoedigend), een gevorderde wat langere. `confidence` bevat
   // al zowel nauwkeurigheid als snelheid (§5.2), dus dit schaalt ook met tempo.
   const avgConf = letters.reduce((s, L) => s + (keyStats[L]?.confidence ?? 0), 0) / letters.length;
-  const coreTokens = Math.round(3 + avgConf * 3); // 3 (beginner) .. 6 (gevorderd)
+  // Bewust KORT: een opdracht is één regel die het kind in één oogopslag overziet, zodat
+  // het altijd ziet hoeveel er nog komt en wanneer het klaar is (niet een eindeloze lap).
+  const coreTokens = Math.round(2 + avgConf * 2); // 2 (beginner) .. 4 (gevorderd)
   const realIdx = Math.floor(coreTokens / 2);
   const words = [];
 
@@ -207,6 +209,18 @@ export function generateExercise(state, localePack, layout, rng = Math.random) {
 
   // 1) Open makkelijk (§7.1 stap 8)
   words.push(easyWord(wordLen - 1, letters, keyStats, bigrams, rng));
+
+  // 1b) Gericht oefenen: de minst-geoefende gating-toets (reps onder de drempel; meestal
+  // de nieuwste letter, óók een zeldzaam leesteken) krijgt gegarandeerd herhaling. Staat
+  // BEWUST vooraan zodat de belangrijkste oefenstof altijd binnen de korte regel past.
+  // Hooguit één per opdracht — de herhaling stapelt over meer, kórtere opdrachten.
+  const focusKeys = [...letters, ...symbols]
+    .filter((k) => (keyStats[k]?.reps ?? 0) < MIN_KEY_REPS)
+    .sort((a, b) => (keyStats[a]?.reps ?? 0) - (keyStats[b]?.reps ?? 0))
+    .slice(0, 1);
+  for (const fk of focusKeys) {
+    words.push(focusDrill(fk, letters, symbols, keyStats, bigrams, rng));
+  }
 
   // 2) Korte kern: tokens schalen met vaardigheid — pseudo-woorden, soms een echt woord
   const due = dueItems(srsItems);
@@ -220,18 +234,6 @@ export function generateExercise(state, localePack, layout, rng = Math.random) {
     }
     const len = wordLen + (rng() < 0.25 ? 1 : 0);
     words.push(buildWord(len, letters, weights, bigrams, rng));
-  }
-
-  // 2b) Gericht oefenen: gating-toetsen die nog niet 'lang genoeg' geoefend zijn (reps
-  // onder de drempel) krijgen gegarandeerd herhaling — de minst-geoefende (meestal de
-  // nieuwste letter) eerst. Zo is de promotie-poort haalbaar en voorspelbaar, en oefent
-  // een kind een nieuwe letter écht in vóór de volgende erbij komt.
-  const focusKeys = [...letters, ...symbols]
-    .filter((k) => (keyStats[k]?.reps ?? 0) < MIN_KEY_REPS)
-    .sort((a, b) => (keyStats[a]?.reps ?? 0) - (keyStats[b]?.reps ?? 0))
-    .slice(0, 3);
-  for (const fk of focusKeys) {
-    words.push(focusDrill(fk, letters, symbols, keyStats, bigrams, rng));
   }
 
   // 3) Eén due SRS-item (zwakste) erbij zodat herhaling beklijft (§5.5)
@@ -280,10 +282,24 @@ export function generateExercise(state, localePack, layout, rng = Math.random) {
   // 7) Sluit makkelijk → laatste indruk = succes (§6 vangrail)
   words.push(easyWord(wordLen - 1, letters, keyStats, bigrams, rng));
 
-  const text = words.join(' ');
+  // 8) Houd de opdracht op ÉÉN korte regel: het kind moet in één oogopslag zien hoeveel
+  // er nog komt en wanneer het klaar is (geen eindeloze lap die opeens stopt). De eerste
+  // tokens (open + focus + kern) bevatten de belangrijkste oefenstof en blijven staan;
+  // achterste flavor-tokens vallen boven het budget weg. Budget schaalt licht met niveau.
+  const BUDGET = 20 + Math.round(avgConf * 16); // ~20 (beginner) .. ~36 (gevorderd) tekens
+  const trimmed = [];
+  let used = 0;
+  for (const w of words) {
+    const add = (used ? 1 : 0) + w.length;
+    if (used && used + add > BUDGET) break;
+    trimmed.push(w);
+    used += add;
+  }
+
+  const text = (trimmed.length ? trimmed : words.slice(0, 1)).join(' ');
   return {
     text,
-    words,
+    words: text.split(' '),
     speedTargets: speedTargetsFor(text, keyStats, governor),
     meta: {
       reason: 'core',
