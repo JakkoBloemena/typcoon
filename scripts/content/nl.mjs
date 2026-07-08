@@ -153,5 +153,106 @@ export default {
         { q: 'Moet ik echt elke vinger op zijn eigen toetsen houden?', a: 'Ja, dat is de kern van blind typen. Het voelt eerst onhandig, maar het spiergeheugen maakt het al snel vanzelfsprekend — en veel sneller dan zoeken.' },
       ],
     },
+    {
+      slug: 'hoe-lang-duurt-leren-typen',
+      title: 'Hoe lang duurt het om te leren typen?',
+      description: 'Hoe lang duurt blind leren typen voor een kind? Realistische verwachtingen per fase, en waarom dagelijks kort oefenen het snelst werkt.',
+      h1: 'Hoe lang duurt het om te leren typen?',
+      date: '2026-07-08', updated: '2026-07-08', readMin: 4,
+      lead: 'Het eerlijke antwoord: dat hangt af van hoe vaak je kind oefent. Maar met een realistische planning zie je sneller resultaat dan je denkt.',
+      sections: [
+        { h2: 'De grote lijn', html: `<p>Met <strong>10–15 minuten oefenen per dag</strong> zien de meeste kinderen binnen <strong>een paar weken</strong> dat ze de thuisrij en de eerste letters blind kunnen typen. <strong>Vlot</strong> blind typen — zonder te kijken, met redelijk tempo — duurt doorgaans <strong>2 tot 4 maanden</strong>.</p>` },
+        { h2: 'Waarom regelmaat sneller is dan intensiteit', html: `<p>Typen is spiergeheugen. Elke dag een beetje bouwt dat sneller op dan één lange sessie per week. Vijf keer 10 minuten verslaat één keer 50 minuten — ruimschoots.</p>` },
+        { h2: 'Wat de snelheid bepaalt', html: `<ul>
+          <li><strong>Frequentie:</strong> dagelijks > een paar keer per week > weekend-only.</li>
+          <li><strong>Nauwkeurigheid:</strong> netjes oefenen voorkomt dat je fouten moet afleren.</li>
+          <li><strong>Motivatie:</strong> een kind dat het leuk vindt, oefent langer en vaker.</li>
+        </ul>` },
+        { h2: 'Houd het vol met een spelvorm', html: `<p>De grootste vijand is niet moeilijkheid, maar afhaken. In Typcoon houdt een dagelijkse reeks (streak) en een groeiende muntenfabriek de motivatie hoog, zodat die 10 minuten per dag vanzelf gaan.</p>` },
+      ],
+      faq: [{ q: 'Kan mijn kind in een week leren typen?', a: 'In een week leg je de basis van de thuisrij, maar vlot blind typen kost een paar maanden dagelijks oefenen. Verwacht groei, geen wonder.' }],
+    },
+    {
+      slug: 'beste-gratis-typspelletjes-kinderen',
+      title: 'De beste gratis typspelletjes voor kinderen',
+      description: 'Op zoek naar een gratis typspel dat je kind écht leert typen? Waar je op let, en waarom een spel dat typen beloont beter werkt dan losse spelletjes.',
+      h1: 'De beste gratis typspelletjes voor kinderen',
+      date: '2026-07-08', updated: '2026-07-08', readMin: 5,
+      lead: 'Typspelletjes zijn een leuke manier om te oefenen — maar niet elk spel leert je kind ook echt typen. Dit is waar je op let, en wat een goed typspel onderscheidt.',
+      sections: [
+        { h2: 'De valkuil van "leuke" typspelletjes', html: `<p>Veel gratis typspelletjes zijn vooral vermaak: je kind klikt en speelt, maar typt nauwelijks. Dan is het lol zonder leerwinst. Een goed typspel maakt <strong>typen de enige manier om vooruit te komen</strong> — zo oefent je kind terwijl het speelt.</p>` },
+        { h2: 'Waar let je op?', html: `<ul>
+          <li><strong>Leert het van nul af aan?</strong> Begint het bij de thuisrij en bouwt het letter voor letter op?</li>
+          <li><strong>Nauwkeurigheid vóór snelheid?</strong> Beloont het netjes typen, niet alleen snel klikken?</li>
+          <li><strong>Past het zich aan?</strong> Komen zwakke letters vaker terug (slimme herhaling)?</li>
+          <li><strong>Geen naar-de-toetsen-kijken?</strong> Licht de volgende toets op het scherm op?</li>
+          <li><strong>Kindveilig?</strong> Zonder advertenties, zonder in-app aankopen die je kind zelf doet, privacyvriendelijk.</li>
+        </ul>` },
+        { h2: 'Onze aanrader: Typcoon', html: `<p>Typcoon is een gratis tycoon-typspel: elke letter die je typt levert munten op waarmee je een fabriek bouwt. Netjes typen levert tot 3× zoveel op, en onder de motorkap draait een adaptieve leer-engine die letters op het juiste moment introduceert en zwakke letters slim herhaalt. Zo vallen spelen en leren samen — zonder advertenties, zonder account.</p>` },
+      ],
+      faq: [{ q: 'Zijn typspelletjes genoeg om te leren typen?', a: 'Alleen als het spel je echt laat oefenen met goede techniek. Een spel dat typen beloont en zich aanpast, werkt; puur vermaak niet.' }],
+    },
+    {
+      slug: 'typen-oefenen-10-minuten-per-dag',
+      title: 'Typen oefenen: waarom 10 minuten per dag genoeg is',
+      description: 'Hoeveel moet een kind typen oefenen? Waarom korte dagelijkse sessies van 10 minuten beter werken dan lange sessies af en toe.',
+      h1: 'Typen oefenen: waarom 10 minuten per dag genoeg is',
+      date: '2026-07-08', updated: '2026-07-08', readMin: 4,
+      lead: 'Je hoeft je kind niet uren achter het toetsenbord te zetten. Korte, dagelijkse oefening is niet alleen genoeg — het werkt zelfs beter.',
+      sections: [
+        { h2: 'Spiergeheugen bouw je met herhaling', html: `<p>Blind typen zit in je vingers, niet in je hoofd. Dat soort geheugen bouw je op door <strong>vaak korte herhaling</strong>, niet door lange, vermoeiende sessies. Tien geconcentreerde minuten per dag zetten meer zoden aan de dijk dan een uur in het weekend.</p>` },
+        { h2: 'Kort houdt de kwaliteit hoog', html: `<p>Na een kwartier zakt de concentratie van een kind en sluipen er fouten in — precies wat je niet wilt inslijpen. Stoppen terwijl het nog goed en leuk is, houdt de nauwkeurigheid hoog én de zin om morgen terug te komen.</p>` },
+        { h2: 'Maak er een dagelijkse gewoonte van', html: `<p>Koppel het aan een vast moment (na school, voor het avondeten). Een zichtbare reeks — "je bent al 6 dagen op rij bezig" — helpt enorm. Typcoon gebruikt precies die dagelijkse streak om je kind terug te laten komen, met een kleine bonus voor de eerste opdrachten van de dag.</p>` },
+      ],
+      faq: [{ q: 'Is 10 minuten per dag echt genoeg?', a: 'Voor een kind: ja. Dagelijks 10–15 minuten geconcentreerd oefenen bouwt sneller op dan lange, onregelmatige sessies.' }],
+    },
+    {
+      slug: 'leren-typen-groep-6-7-8',
+      title: 'Leren typen in groep 6, 7 en 8',
+      description: 'Wanneer leren kinderen typen op de basisschool? Waarom groep 6–8 een goed moment is en hoe je je kind thuis helpt.',
+      h1: 'Leren typen in groep 6, 7 en 8',
+      date: '2026-07-08', updated: '2026-07-08', readMin: 5,
+      lead: 'De bovenbouw van de basisschool (groep 6–8) is een uitgelezen moment om te leren blind typen. Kinderen zijn er klaar voor, en het betaalt zich uit op de middelbare school.',
+      sections: [
+        { h2: 'Waarom juist groep 6–8?', html: `<p>Rond 9–12 jaar hebben kinderen genoeg handgrootte, letterkennis en concentratie om echt te leren blind typen. Ze gaan bovendien richting de middelbare school, waar vrijwel alles wordt getypt — dan is de investering meteen nuttig.</p>` },
+        { h2: 'Op school of thuis?', html: `<p>Sommige scholen bieden typles of raden een cursus aan, maar lang niet allemaal. Veel ouders regelen het zelf. Het goede nieuws: thuis kan het prima, mits het programma adaptief is en je kind regelmatig oefent. Lees ook <a href="/voor-scholen/">Typcoon voor scholen</a>.</p>` },
+        { h2: 'Zo help je thuis', html: `<ul>
+          <li>Kies een vast, kort moment (10–15 min per dag).</li>
+          <li>Let op nauwkeurigheid, niet op snelheid.</li>
+          <li>Houd het leuk en vier de vooruitgang.</li>
+        </ul>
+        <p>Meer achtergrond in de <a href="/leren-typen-voor-kinderen/">complete gids: leren typen voor kinderen</a>.</p>` },
+      ],
+      faq: [{ q: 'Krijgen kinderen op de basisschool typles?', a: 'Soms, maar het staat niet standaard in het lesprogramma. Veel ouders regelen het zelf, thuis, met een cursus of leerspel.' }],
+    },
+  ],
+
+  // Standalone landingpagina's (geen blogartikel): bv. de scholen-pagina.
+  pages: [
+    {
+      slug: 'voor-scholen',
+      navLabel: 'Voor scholen',
+      title: 'Typcoon voor scholen — gratis blind typen in de klas',
+      description: 'Gebruik Typcoon gratis in de klas: kinderen leren spelenderwijs blind typen, zonder account, zonder advertenties, privacyvriendelijk (AVG). Ook een schoollicentie mogelijk.',
+      h1: 'Typcoon voor scholen',
+      updated: '2026-07-08', readMin: 4,
+      lead: 'Typcoon laat kinderen spelenderwijs blind leren typen — een vaardigheid waar ze op de middelbare school en daarna dagelijks profijt van hebben. Gratis te gebruiken in de klas, zonder account en zonder advertenties.',
+      sections: [
+        { h2: 'Waarom Typcoon in de klas werkt', html: `<ul>
+          <li><strong>Meteen te gebruiken:</strong> geen installatie, geen accounts nodig. Open de browser en spelen maar.</li>
+          <li><strong>Het leert écht typen:</strong> een adaptieve engine introduceert letters op het juiste moment, herhaalt zwakke letters slim en zet nauwkeurigheid vóór snelheid.</li>
+          <li><strong>Motiverend:</strong> typen is de enige manier om munten te verdienen en een fabriek te bouwen — leerlingen blijven vanzelf oefenen.</li>
+          <li><strong>Zelfstandig:</strong> ieder kind werkt op zijn eigen niveau; de opdrachten passen zich per leerling aan.</li>
+        </ul>` },
+        { h2: 'Privacy & veiligheid (AVG)', html: `<p>Typcoon is met privacy in gedachten gebouwd: <strong>geen advertenties</strong>, <strong>geen tracking</strong> en <strong>geen aankopen die een kind zelf kan doen</strong>. Gratis spelen kan volledig zonder account — er wordt geen persoonsgegeven van het kind naar een server gestuurd; de voortgang blijft op het apparaat. Een ouder- of leerkracht-account (voor voortgang op meerdere apparaten) is optioneel en vraagt alleen een e-mailadres van de volwassene.</p>` },
+        { h2: 'Gratis in de klas + schoollicentie', html: `<p>De basis — de thuisrij en de eerste machines — is gratis voor iedereen. Wil je een hele klas het volledige alfabet en alle functies geven, of een leerkracht-overzicht van de voortgang? Dan denken we graag mee over een <strong>schoollicentie</strong>.</p>
+        <p>Interesse of een vraag? Mail ons op <a href="mailto:scholen@typcoon.com">scholen@typcoon.com</a>.</p>` },
+      ],
+      faq: [
+        { q: 'Is Typcoon gratis voor scholen?', a: 'De basis is gratis voor iedereen, ook in de klas — zonder account en zonder advertenties. Voor het volledige alfabet, alle functies en een voortgangsoverzicht is een schoollicentie mogelijk.' },
+        { q: 'Hebben leerlingen een account nodig?', a: 'Nee. Gratis spelen kan volledig zonder account; er blijven geen persoonsgegevens van het kind op een server staan. Een account is optioneel en gebruikt alleen het e-mailadres van een volwassene.' },
+        { q: 'Werkt het op Chromebooks?', a: 'Ja. Typcoon draait in de browser op elke laptop of computer met een echt toetsenbord — ideaal voor Chromebooks in de klas.' },
+      ],
+    },
   ],
 };

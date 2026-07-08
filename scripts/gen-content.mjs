@@ -22,6 +22,7 @@ const prefix = (loc) => (loc === DEFAULT ? '' : `/${loc}`);
 const pillarUrl = (pack) => `${prefix(pack.locale)}/${pack.pillar.slug}/`;
 const blogUrl = (pack) => `${prefix(pack.locale)}/blog/`;
 const articleUrl = (pack, slug) => `${prefix(pack.locale)}/blog/${slug}/`;
+const pageUrl = (pack, slug) => `${prefix(pack.locale)}/${slug}/`;
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -107,6 +108,7 @@ function nav(pack) {
       <a class="brand" href="${p || '/'}">🏭 <span>Typcoon</span></a>
       <a href="${blogUrl(pack)}">${pack.ui.blog}</a>
       <a href="${pillarUrl(pack)}">${pack.ui.guide}</a>
+      ${(pack.pages || []).filter((pg) => pg.navLabel).map((pg) => `<a href="${pageUrl(pack, pg.slug)}">${esc(pg.navLabel)}</a>`).join('\n      ')}
       <a class="cta" href="/speel/">${pack.ui.tryFree}</a>
     </nav>`;
 }
@@ -196,6 +198,24 @@ function renderPillar(pack) {
   return url;
 }
 
+function renderPage(pack, pg) {
+  const url = pageUrl(pack, pg.slug);
+  const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pg.h1, url }];
+  const bc = breadcrumb(pack, trail);
+  const fq = faqBlock(pack, pg.faq);
+  const webpage = {
+    '@context': 'https://schema.org', '@type': 'WebPage', name: pg.title, description: pg.description,
+    inLanguage: pack.htmlLang, url: SITE + url, dateModified: pg.updated,
+  };
+  const graph = [webpage, bc.schema, fq.schema].filter(Boolean);
+  const html = head(pack, { title: pg.title, description: pg.description, url, jsonLd: { '@context': 'https://schema.org', '@graph': graph } })
+    + nav(pack)
+    + `\n    <main>\n      ${bc.html}\n      <h1>${esc(pg.h1)}</h1>\n      <p class="lead">${esc(pg.lead)}</p>\n      ${sectionsHtml(pg.sections)}\n      ${fq.html}\n      ${ctaBox(pack)}\n    </main>\n    `
+    + footer(pack);
+  write(url, html);
+  return url;
+}
+
 function renderBlogIndex(pack) {
   const url = blogUrl(pack);
   const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pack.ui.blog, url }];
@@ -227,6 +247,12 @@ for (const pack of LOCALES) {
     const u = renderArticle(pack, a);
     sm.push({ loc: u, lastmod: a.updated || a.date, changefreq: 'monthly', priority: '0.7' });
   }
+  for (const pg of pack.pages || []) {
+    const u = renderPage(pack, pg);
+    sm.push({ loc: u, lastmod: pg.updated, changefreq: 'monthly', priority: '0.8' });
+  }
 }
 sitemap(sm);
-console.log(`gen-content: ${sm.length} URLs (pijler + blog + ${LOCALES.reduce((n, l) => n + l.articles.length, 0)} artikelen) + sitemap`);
+const nA = LOCALES.reduce((n, l) => n + l.articles.length, 0);
+const nP = LOCALES.reduce((n, l) => n + (l.pages || []).length, 0);
+console.log(`gen-content: ${sm.length} URLs (pijler + blog + ${nA} artikelen + ${nP} pagina's) + sitemap`);
