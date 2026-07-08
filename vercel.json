@@ -1,6 +1,9 @@
 {
   "cleanUrls": true,
   "trailingSlash": true,
+  "crons": [
+    { "path": "/api/cron/notify", "schedule": "0 * * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

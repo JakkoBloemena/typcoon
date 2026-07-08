@@ -12,6 +12,8 @@ import { isUnlocked } from './premium.js';
 import { isOnboarded, markOnboarded } from './onboard.js';
 import { readRefParam, ownCode, WELCOME_BONUS } from './referral.js';
 import { getLayout } from '../layouts/index.js';
+import { getSession, clearAccount } from '../net/session.js';
+import { saveProgress } from '../net/account.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
@@ -21,6 +23,8 @@ import Dashboard from './Dashboard.jsx';
 import Friends from './Friends.jsx';
 import Records from './Records.jsx';
 import Unlock from './Unlock.jsx';
+import ParentEmail from './ParentEmail.jsx';
+import Login from './Login.jsx';
 
 
 
@@ -37,6 +41,9 @@ export default function App() {
   const [name, setName] = useState('');
   const [unlocked, setUnlocked] = useState(() => isUnlocked()); // familie-unlock
   const [showUnlock, setShowUnlock] = useState(false);
+  const [session, setSession] = useState(() => getSession()); // ouder-account + token, of null
+  const [showAccount, setShowAccount] = useState(false); // "voortgang per e-mail"
+  const [showLogin, setShowLogin] = useState(false); // ander apparaat
 
   // bestaande save laden
   useEffect(() => {
@@ -52,6 +59,17 @@ export default function App() {
 
   // opslaan bij elke wijziging
   useEffect(() => { if (game) saveGame(game); }, [game]);
+
+  // voortgang naar de server synchroniseren (alleen mét account/token): één kant op,
+  // ontdubbeld met een korte debounce. Zonder token/backend gebeurt er niets.
+  useEffect(() => {
+    if (!game || !session?.token) return undefined;
+    const id = setTimeout(() => {
+      const { curriculum, ...persisted } = game; // afgeleide curriculum niet meesturen
+      saveProgress(session.kidUsername, session.token, persisted);
+    }, 2500);
+    return () => clearTimeout(id);
+  }, [game, session]);
 
   const start = useCallback(() => {
     const profile = newProfile({ naam: name.trim() || 'Speler' });
@@ -81,6 +99,27 @@ export default function App() {
     clearGame();
     setGame(null);
     setName('');
+  }, []);
+
+  // ouder koppelde e-mail (account aangemaakt) → onthoud de sessie; de sync-effect pusht.
+  const onLinked = useCallback((sess) => { setSession(sess); setShowAccount(false); }, []);
+
+  // ingelogd op dit apparaat (ander apparaat / gewiste browser) → server-voortgang laden.
+  const onLoggedIn = useCallback((sess) => {
+    setSession({ kidUsername: sess.kidUsername, token: sess.token });
+    if (sess.state?.profile) {
+      const s = hydrateState(sess.state, nlPack.curriculumTail);
+      setGame({ ...s, tycoon: { ...newTycoon(), ...(s.tycoon || {}) } });
+      markOnboarded(); // heeft duidelijk al gespeeld
+    }
+    setShowLogin(false);
+    setView('home');
+  }, []);
+
+  const unlink = useCallback(() => {
+    if (!window.confirm(gt('acc.unlinkConfirm'))) return;
+    clearAccount();
+    setSession(null);
   }, []);
 
   if (touchOnly()) {
@@ -162,6 +201,9 @@ export default function App() {
             <button className="link-parents" onClick={() => setView('records')}>🏆 {gt('home.records')}</button>
             <button className="link-parents" onClick={() => setView('friends')}>🎁 {gt('home.invite')}</button>
             <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
+            {session
+              ? <button className="link-parents" onClick={unlink} title={session.kidUsername}>✅ {gt('home.emailLinked')}</button>
+              : <button className="link-parents" onClick={() => setShowAccount(true)}>📧 {gt('home.emailProgress')}</button>}
             {!unlocked && <button className="link-unlock" onClick={() => setShowUnlock(true)}>🔓 {gt('premium.unlockShort')}</button>}
           </div>
           <button className="link-reset" onClick={reset}>{gt('home.reset')}</button>
@@ -182,6 +224,7 @@ export default function App() {
             onKeyDown={(e) => { if (e.key === 'Enter') start(); }}
           />
           <button className="btn btn-big" onClick={start}>{gt('home.start')}</button>
+          <button className="link-parents home-login" onClick={() => setShowLogin(true)}>💻 {gt('home.otherDevice')}</button>
           <div className="home-trust">{gt('home.trust')}</div>
         </div>
       )}
@@ -191,6 +234,14 @@ export default function App() {
           onClose={() => setShowUnlock(false)}
           onPurchased={() => { setUnlocked(true); setShowUnlock(false); }}
         />
+      )}
+
+      {showAccount && (
+        <ParentEmail game={game} onClose={() => setShowAccount(false)} onLinked={onLinked} />
+      )}
+
+      {showLogin && (
+        <Login onClose={() => setShowLogin(false)} onLoggedIn={onLoggedIn} />
       )}
     </div>
   );

@@ -253,3 +253,33 @@ pagina-`.home`), CSS meegewijzigd, én `.kb-key` defensief hardgemaakt met expli
 `flex-direction: row`, keycap terug op 44px; thuisrij netjes uitgelijnd — zowel in het spel
 als in de onboarding (ring + groene volgende-toets intact). Onboarding-poort nog steeds
 volledig groen, 57/57 tests, nul console-fouten.
+
+## Accounts, voortgang-sync & ouder-mails (Resend + Supabase) — betalingen bewust uitgesteld
+**Opdracht:** het account/e-mail-deel bouwen zoals voorgesteld (betalingen nog niet). Kinderen
+starten zonder account; een account ontstaat pas als de ouder voortgang per e-mail wil of op een
+ander apparaat verder wil. Stack overgenomen uit typie-fun (bewezen): Vercel serverless functions
++ Supabase (PostgREST, service-role) + Resend + Vercel-cron, passwordless (geen wachtwoorden).
+**Gebouwd — backend (`api/`):** `_db/_email/_token/_ratelimit` helpers; `account/create` (maakt
+account + welkomstmail + sessietoken), `account/login-request` + `login-verify` (6-cijferige code
+naar de ouder), `account/progress-save` + `progress-load` (token-gated JSON-blob), `prefs`
+(HMAC-getekende meldingen-link), `cron/notify` (uurlijks; wekelijkse voortgangsdigest zondagavond
++ oefen-herinnering bij een streak-in-gevaar) met de beslislogica puur in `cron/_report.js`.
+`supabase/schema.sql` (accounts/auth_codes/sessions/progress/rate_limits, RLS aan zonder policies;
+`plan` staat klaar op 'free' voor latere betaling). `public/prefs/` self-service pagina.
+**Gebouwd — client:** `src/net/account.js` + `src/net/session.js` (falen netjes zonder backend),
+`ParentEmail.jsx` (opt-in → account) en `Login.jsx` (cross-device), in App.jsx gekoppeld met een
+gedebouncede één-kant-op voortgang-push en een server-authoritative load bij inloggen. Strings +
+CSS + `vercel.json` cron + `.env.example` + DEPLOY.md-setup.
+**Aanpassingen t.o.v. typie:** account pas bij opt-in (niet vóór spelen — beschermt de funnel);
+ouder-mail is een WEKELIJKSE digest (i.p.v. dagelijks — minder inboxmoeheid) + een streak-in-gevaar
+herinnering, berekend uit typcoon's eigen state (tycoon.weekly, streak, lastDay, correctKeys) i.p.v.
+per-sessie-timers; nl-only en Typcoon-thema ("je fabriek staat stil 🏭").
+**Geverifieerd:** 70/70 tests (13 nieuw) — waarvan een INTEGRATIE-harness die de échte handlers tegen
+een in-memory PostgREST/Resend-shim draait: account maken → dubbele naam 409 → voortgang opslaan
+(token vereist) → laden (exacte state terug) → passwordless code aanvragen/verifiëren (eenmalig) →
+prefs (HMAC-gated) → cron (401 zonder secret, schoon met). Plus pure unit-tests voor de mail-
+beslislogica. In-browser: het account-scherm rendert, faalt NETJES zonder backend (vriendelijke
+melding, geen crash) en het spel speelt gewoon door; login-scherm rendert; schone build.
+**Watch:** de wekelijk-digest en herinnering leunen op de gesyncte state; day/week-sleutels rekenen
+op Europe/Amsterdam (matcht een NL-kind). Betalingen zijn de volgende stap — `accounts.plan` +
+`paid_at` staan al klaar; dan een checkout + webhook die 'free'→'paid' zet.

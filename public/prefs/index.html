@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Meldingen — Typcoon</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f4f5fa; color: #1b2650; }
+    .wrap { max-width: 440px; margin: 8vh auto; background: #fff; border: 1px solid #e8e9f2; border-radius: 16px; overflow: hidden; }
+    .head { background: #1b2650; padding: 16px 22px; font-weight: 800; font-size: 18px; color: #ffb915; }
+    .body { padding: 22px; }
+    h1 { font-size: 20px; margin: 0 0 6px; }
+    p { color: #5b6493; line-height: 1.5; }
+    label { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0; font-weight: 600; line-height: 1.4; cursor: pointer; }
+    input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; accent-color: #6f4fe6; flex: none; }
+    button { font: inherit; font-weight: 800; background: #ffb915; color: #3d2c00; border: none; border-radius: 12px; padding: 12px 22px; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    .msg { margin-top: 14px; font-weight: 700; }
+    .ok { color: #17a06b; } .bad { color: #c0392b; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">🏭 Typcoon</div>
+    <div class="body">
+      <h1>Meldingen aanpassen</h1>
+      <p id="intro">Even laden…</p>
+      <div id="form" hidden>
+        <label><input type="checkbox" id="weekly" /> <span>Wekelijks voortgangsrapport per e-mail</span></label>
+        <label><input type="checkbox" id="reminders" /> <span>Herinnering als een reeks dreigt te breken</span></label>
+        <button id="save">Opslaan</button>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const p = new URLSearchParams(location.search);
+    const u = p.get('u') || '', t = p.get('t') || '';
+    const intro = document.getElementById('intro'), form = document.getElementById('form');
+    const weekly = document.getElementById('weekly'), reminders = document.getElementById('reminders');
+    const msg = document.getElementById('msg'), saveBtn = document.getElementById('save');
+    const qs = 'u=' + encodeURIComponent(u) + '&t=' + encodeURIComponent(t);
+
+    async function load() {
+      if (!u || !t) { intro.textContent = 'Deze link is onvolledig.'; return; }
+      try {
+        const r = await fetch('/api/prefs?' + qs);
+        if (!r.ok) throw 0;
+        const d = await r.json();
+        weekly.checked = !!d.weeklyReport;
+        reminders.checked = !!d.reminders;
+        intro.textContent = 'Kies welke e-mails je wilt ontvangen.';
+        form.hidden = false;
+      } catch { intro.textContent = 'Deze link is verlopen of ongeldig.'; }
+    }
+    saveBtn.onclick = async () => {
+      saveBtn.disabled = true; msg.textContent = '';
+      try {
+        const r = await fetch('/api/prefs', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ u, t, weeklyReport: weekly.checked, reminders: reminders.checked }),
+        });
+        const ok = r.ok && (await r.json()).ok;
+        msg.textContent = ok ? 'Opgeslagen ✓' : 'Opslaan mislukt — probeer later opnieuw.';
+        msg.className = 'msg ' + (ok ? 'ok' : 'bad');
+      } catch { msg.textContent = 'Opslaan mislukt.'; msg.className = 'msg bad'; }
+      saveBtn.disabled = false;
+    };
+    load();
+  </script>
+</body>
+</html>
