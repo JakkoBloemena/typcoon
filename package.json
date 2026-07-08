@@ -5,7 +5,10 @@
   "type": "module",
   "description": "Typcoon — het typespel waar je typwerk munten maakt. Bouw je muntenfabriek door blind te leren typen.",
   "scripts": {
+    "gen:content": "node scripts/gen-content.mjs",
+    "predev": "node scripts/gen-content.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/gen-content.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test test/*.test.js",
