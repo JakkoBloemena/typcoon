@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import { issueToken } from '../_token.js';
 import { ipHash, rateLimited } from '../_ratelimit.js';
 import { sendEmail, emailShell } from '../_email.js';
+import { tg } from '../_telegram.js';
 import { supa } from '../_db.js';
 
 const prefsToken = (u) => crypto.createHmac('sha256', process.env.CRON_SECRET || '').update(u.toLowerCase()).digest('hex').slice(0, 32);
@@ -59,6 +60,10 @@ export default async function handler(req, res) {
       `<a href="${manageUrl}" style="color:#6f4fe6;text-decoration:none;">Meldingen aanpassen</a>`,
     );
     try { await sendEmail(email, 'Welkom bij Typcoon 🏭', html); } catch { /* mag falen */ }
+
+    // Ops-melding naar Telegram (best-effort): een nieuw account = een nieuwe familie.
+    const masked = email.replace(/^(.).*(@.*)$/, '$1•••$2');
+    await tg(`🎉 <b>Nieuw Typcoon-account</b>\n👤 ${username}\n📧 ${masked}\n📬 weekrapport: ${row.pref_weekly_report ? 'aan' : 'uit'} · herinnering: ${row.pref_reminders ? 'aan' : 'uit'}`);
 
     return res.status(200).json({ ok: true, token });
   } catch {
