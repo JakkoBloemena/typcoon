@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-07-22 #2 — OPEN
+- opened: 2026-07-22 21:38
+- claimed: 001, 004, 005, 006, 007, 008, 011 — verification pass (statuses stay needs_verification; this ledger entry is the claim)
+- worktrees: one per lane, C:\companies\typcoon-lanes\v001 … v011 (branches verify/001 … verify/011); main checkout: dispatcher/integration only
+- ids allocated: none to lanes — testers report defects to the dispatcher, who files them from 012
+- notes: 006's GSC/Bing criterion was transferred to assignment 009 by CEO decision (tick #1); testers verify the remainder. 003/009/010 blocked, 002 done — nothing else eligible.
+- closed:
+- retro:
+
 ## Tick 2026-07-22 #1 — CLOSED
 - opened: 2026-07-22 15:20
 - claimed: 001, 002, 004, 005; 006 claimed mid-tick (edee18b) after 001's merge cleared the index.html collision
