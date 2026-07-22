@@ -2,7 +2,7 @@
 id: 004
 title: School/B2B licence motion — plan and decompose
 owner: product-owner
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -39,3 +39,17 @@ A school licence sale almost certainly needs an invoicing-capable entity — lik
 same Shareholder decision as 002; do not let this plan silently assume it. Classroom
 reality already partly served: sound toggle exists for classroom use
 (PLAYTEST_LOG.md cycle 6).
+
+**2026-07-22 (product-owner) — plan delivered, needs_verification.** Full plan at
+`research/school-licence-plan.md`: offer (free classroom tier — already live — + paid
+annual school licence unlocking the full game for a whole class/school); price €99/yr
+klas / €249/yr school (within REVENUE.md's €99–299 range) + a founding-school free/half
+pilot; MV scope = a manually-issued unlock code reusing `premium.js`, sold concierge, with
+an explicit NOT-building list (no per-pupil teacher dashboard, no roster/SSO/LMS, no seat
+enforcement, no self-serve checkout). 002 dependency called out explicitly: the paid SALE
+depends on 002 (invoicing entity/VAT), but the free tier, the outreach, and the unlock
+mechanism do NOT and can start now (build-ahead, sell-after). 16 concrete NL outreach
+targets with the be-helpful-never-spam guardrail. Four follow-up build assignments drafted
+inside the plan at priority 3–4 (TBD-A unlock code, TBD-B licence record, TBD-C
+/voor-scholen/ price copy, TBD-D outreach) plus a deferred TBD-E teacher dashboard — ids
+left for the next dispatcher; no assignment files created.
