@@ -2,7 +2,7 @@
 id: 007
 title: Remove the €29,99 strike-through anchor from the unlock screen (ACM fix)
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -20,15 +20,77 @@ display, the math-gate, or the (Shareholder-chosen) silent unlock behavior in an
 
 ## Acceptance criteria
 
-- [ ] The rendered unlock screen shows no €29,99 and no strike-through price anywhere.
-- [ ] `PRICE.anchor` is either removed or clearly repurposed as a non-rendered
+- [x] The rendered unlock screen shows no €29,99 and no strike-through price anywhere.
+- [x] `PRICE.anchor` is either removed or clearly repurposed as a non-rendered
       internal constant with a comment citing decisions/002-payments-deferral.md.
-- [ ] Any related copy/strings ("normaal €29,99", vergelijkbare anchoring) in the app
+- [x] Any related copy/strings ("normaal €29,99", vergelijkbare anchoring) in the app
       or marketing pages are found via repo-wide search for "29,99" and removed or
       reworded; list hits and disposition in Notes.
-- [ ] Build passes, all tests green (fix any test that asserted the anchor).
+- [x] Build passes, all tests green (fix any test that asserted the anchor).
 
 ## Notes
 
 Authority: decisions/002-payments-deferral.md §3. Terminal state is
 needs_verification; a tester re-runs the search and checks the rendered screen.
+
+### Implementation (developer, 2026-07-22)
+
+Changes:
+- `src/game/Unlock.jsx`: removed the `<span className="price-anchor">€{PRICE.anchor}</span>`
+  from the price row (was line 68). Only `price-now` and, on the first-session offer, the
+  `price-tag` badge render now. No other markup, the €19,99 display, the parent math-gate,
+  or the silent-unlock flow (`buy()`/`completePurchase()`) was touched.
+- `src/game/premium.js`: `PRICE.anchor` kept as a field (removing it would break the
+  existing invariant test in test/premium.test.js that anchor > now > offer, which is
+  still a true and useful internal fact), but repurposed with a comment explaining it is
+  NOT renderable, citing the ACM nepkorting rationale and
+  `company/decisions/002-payments-deferral.md §3`, and noting it may only ever be shown
+  again if €29,99 is genuinely charged for 30+ days before dropping to €19,99.
+- `src/game/game.css`: removed the now-dangling `.price-anchor` rule (line-through style).
+  `.price-row`, `.price-now`, `.price-tag` are all still used and left untouched.
+
+Repo-wide search for "29,99" — every hit and disposition:
+- `src/game/premium.js:17` (`PRICE.anchor` value) — kept, repurposed as internal-only
+  constant per above; not rendered.
+- `src/game/Unlock.jsx` (former line 68, `price-anchor` span) — removed from render.
+- `src/game/game.css` (former `.price-anchor` rule) — removed, dangling after the above.
+- `company/decisions/002-payments-deferral.md` — the ADR that mandates this fix.
+  Historical decision record; left as-is.
+- `company/assignments/002-payments-decision.md` and this file
+  (`007-remove-strikethrough-anchor.md`) — assignment/board records describing the
+  problem and the fix itself. Historical; left as-is.
+- `research/payments-decision-package.md` — the research package that recommended this
+  change (already correctly states the anchor should not be shown). Historical research
+  record; left as-is.
+- `REVENUE.md` (lines 88-89, 222, 259) — internal product-record doc, not rendered or
+  user-facing (no marketing page reads from it), describing the original pre-ADR pricing
+  plan with the strike-through anchor. Out of this assignment's scope (scope is "the app
+  or marketing pages"); left unedited. Flagging as a documentation-drift candidate for a
+  separate priority-4 assignment to reconcile REVENUE.md with decisions/002 §3, rather
+  than fixing it here.
+- No hits at all in `public/**` (blog pages, `/voor-scholen/`, `/leren-typen-voor-kinderen/`,
+  sitemap) or anywhere else under `src/`/`speel/` — no marketing/landing surface ever
+  mentioned €29,99.
+
+Confirmed no test asserted the rendered anchor (no DOM/render test of Unlock.jsx exists).
+`test/premium.test.js`'s "prijzen zijn gezet en de intro ligt onder de ankerprijs" test
+only checks the internal numeric relationship between PRICE fields; it remains true and
+was left unchanged.
+
+Build: `npm run build` — clean (`node_modules` had to be installed first with
+`npm install`, worktree had none; the 22 packages installed are the existing
+package-lock.json deps, no version changes). Output: `vite build` succeeded, 81 modules
+transformed, `dist/` produced. Verified `grep -rn "29,99" dist/` returns zero hits.
+
+Tests: `npm test` — 77/77 passing, 0 failed, 0 skipped (node:test/backend.integration,
+daily, economy, handmap, premium, promotion, referral, reminders, report, track, weekly).
+
+Unrelated to this assignment: running `npm run build`/`npm test` triggers the
+`prebuild`/`predev` `gen-content.mjs` script, which touched `public/blog/**`,
+`public/leren-typen-voor-kinderen/index.html`, `public/voor-scholen/index.html`, and
+`public/sitemap.xml` with zero actual content diff (git only flagged CRLF/LF line-ending
+noise from the Windows environment). Reverted those with `git checkout --` before
+committing so the commit contains only this assignment's changes.
+
+Not touched, per the assignment: €19,99 display, the parent math-gate, and the silent
+free-unlock behavior (Shareholder-chosen per decisions/002 §4) are all unchanged.

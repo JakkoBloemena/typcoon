@@ -65,7 +65,6 @@ export default function Unlock({ offer = false, onClose, onPurchased }) {
             <li>👨‍👩‍👧‍👦 {gt('unlock.perkFamily')}</li>
           </ul>
           <div className="price-row">
-            <span className="price-anchor">€{PRICE.anchor}</span>
             <span className="price-now">€{price}</span>
             {offer && <span className="price-tag">{gt('unlock.today')}</span>}
           </div>

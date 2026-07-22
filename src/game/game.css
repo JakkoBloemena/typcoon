@@ -383,7 +383,6 @@ button { font-family: inherit; }
 .unlock-list { list-style: none; margin: 4px 0 6px; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; }
 .unlock-list li { color: var(--paper); font-weight: 700; font-size: 0.95rem; }
 .price-row { display: flex; align-items: baseline; justify-content: center; gap: 12px; margin: 6px 0; }
-.price-anchor { color: var(--ink-dim); text-decoration: line-through; font-weight: 800; font-size: 1.1rem; }
 .price-now { font-family: 'Lilita One', sans-serif; font-size: 2.4rem; color: var(--brass); }
 .price-tag { background: var(--flame); color: #fff; font-weight: 900; font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; }
 .trust-line { color: var(--ink-dim); font-size: 0.8rem; font-weight: 700; max-width: 320px; }

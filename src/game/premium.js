@@ -13,7 +13,15 @@ const KEY = 'typcoon:unlocked';
 export const FREE_LETTER_CAP = 10; // tot en met 10 letters gratis leren
 export const FREE_MACHINES = ['typewriter', 'printer'];
 
-// Prijzen (Dutch notatie). Eenmalig, hele gezin. Zie REVENUE.md §2 voor de anchoring.
+// Prijzen (Dutch notatie). Eenmalig, hele gezin.
+//
+// PRICE.anchor is GEEN renderbare prijs: het doorgestreepte-ankerprijs op het
+// unlock-scherm was een ACM "nepkorting" (een referentieprijs die nooit
+// daadwerkelijk gerekend is mag niet als korting getoond worden) en is uit de
+// UI verwijderd — zie company/decisions/002-payments-deferral.md §3. Het veld
+// blijft alleen intern staan als de beoogde toekomstige reguliere prijs; het
+// mag pas weer als anker getoond worden als €29,99 ooit 30+ dagen echt is
+// gerekend en we daarna terugzakken naar €19,99.
 export const PRICE = { now: '19,99', anchor: '29,99', offer: '14,99' };
 
 export function isUnlocked() {
