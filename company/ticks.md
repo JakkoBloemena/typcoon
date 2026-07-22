@@ -27,7 +27,7 @@ Entry format:
 - opened: 2026-07-22 21:38
 - claimed: 001, 004, 005, 006, 007, 008, 011 — verification pass (statuses stay needs_verification; this ledger entry is the claim)
 - worktrees: one per lane, C:\companies\typcoon-lanes\v001 … v011 (branches verify/001 … verify/011); main checkout: dispatcher/integration only
-- ids allocated: none to lanes — testers report defects to the dispatcher, who files them from 012
+- ids allocated: none to verify lanes. Mid-tick after 004/005 verified done: 012–017 materialized from en-locale-scope §7 (A–F), 018–022 from school-licence-plan §6 (TBD-A–E), 023–024 from the charter's known-open-threads list. 012, 018, 023 claimed in_progress and dispatched (worktrees b012/b018/b023, branches build/012 build/018 build/023); 024 carries a file-collision guard behind 012. Next free assignment id 025, next decision id 004
 - notes: 006's GSC/Bing criterion was transferred to assignment 009 by CEO decision (tick #1); testers verify the remainder. 003/009/010 blocked, 002 done — nothing else eligible.
 - closed:
 - retro:
