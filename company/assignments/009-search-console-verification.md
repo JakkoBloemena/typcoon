@@ -29,7 +29,15 @@ assignment exists so the human bottleneck is on the board, not in the void.
 Blocked on: Shareholder's Google account access. Full step-by-step is in assignment
 006's Notes. Asked directly in the /ceo channel 2026-07-22 (tick #1 exit report).
 
-Also folded in (same class — Shareholder-console access): apply the new `events`
-table from `supabase/schema.sql` in the Supabase dashboard (SQL editor, run the
-CREATE TABLE for `events` + its RLS statement). Until then the deployed beacon
-degrades silently and no funnel data lands.
+~~Also folded in: apply the `events` table in Supabase.~~ **DONE 2026-07-22 (CEO,
+via Shareholder-authenticated Supabase CLI):** the Shareholder granted CLI access
+in the /ceo channel; the project is `typie-fun` (ref emtdeyllvcunklxmpcch — hosts
+all typcoon tables). Migration `supabase/migrations/20260722000001_events_table.sql`
+pushed; verified: REST resolves `events` (RLS blocks anon, correct), and a live
+POST to typcoon.com/api/track returned 204. Funnel data lands as of now. One CEO
+test pageview (session 00000000-…) is in this week's counts.
+
+Remaining: ONLY the Search Console / Bing verification (Shareholder's Google
+account) — https://search.google.com/search-console, add `https://typcoon.com`,
+submit `https://typcoon.com/sitemap.xml`; then https://www.bing.com/webmasters →
+"Import from GSC".
