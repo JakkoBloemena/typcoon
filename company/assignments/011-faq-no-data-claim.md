@@ -2,7 +2,7 @@
 id: 011
 title: Fix FAQ "geen gegevens naar een server" claim vs the anonymous beacon
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -25,16 +25,90 @@ now invalidates.
 
 ## Acceptance criteria
 
-- [ ] index.html FAQ (JSON-LD and any visible duplicate) no longer claims zero data
+- [x] index.html FAQ (JSON-LD and any visible duplicate) no longer claims zero data
       reaches a server; new wording: no persoonsgegevens, anonymous non-traceable
       usage statistics only, parent account optional.
-- [ ] Repo-wide search for "geen gegevens" / "naar een server" / "geen server":
+- [x] Repo-wide search for "geen gegevens" / "naar een server" / "geen server":
       every user-facing hit is compatible with the beacon's existence; hits and
       disposition in Notes.
-- [ ] JSON-LD still parses; Dutch stays natural; build passes, tests green.
+- [x] JSON-LD still parses; Dutch stays natural; build passes, tests green.
 
 ## Notes
 
 Found by the 008 lane (2026-07-22), out of its literal scope. Authority: charter
 guardrail 4; wording precedent: assignments 001 and 008. Terminal state
 needs_verification.
+
+### Changes made
+
+- `index.html:65` (FAQPage JSON-LD, "Heb ik een account nodig?") — was: "...
+  zonder ouderaccount gaan er geen gegevens naar een server." (false since
+  assignment 006: `public/track.js` fires an anonymous, cookieless pageview
+  beacon to `api/track.js` on every load of this very page, ouderaccount or
+  not). Now: "... zonder ouderaccount gaan er geen persoonsgegevens naar een
+  server; alleen anonieme, niet-herleidbare gebruiksstatistieken worden
+  geteld." — narrows the claim to persoonsgegevens (true: `track.js` sends no
+  PII, only a per-visit anonymous session id + path + aggregated country, per
+  006's Notes) and names the anonymous statistics using the exact phrase
+  already established by assignment 008 (`index.html:248`,
+  `scripts/content/nl.mjs:247`: "anonieme, niet-herleidbare
+  gebruiksstatistieken"). Kept 001's account-optionality sentence
+  (e-mailadres/ouderaccount/voortgang-sync/wekelijkse voortgangsmail) verbatim
+  — only the final clause changed.
+
+  Checked for a visible HTML duplicate of this specific FAQ answer (the
+  "Veelgestelde vragen" `<details>` section at `index.html:253-271` duplicates
+  the JSON-LD FAQ for "Is Typcoon gratis?", "Leert mijn kind hier echt blind
+  typen?", "Voor welke leeftijd is het?" and "Kan het op een tablet?", but the
+  "Heb ik een account nodig?" question is present only in the JSON-LD block,
+  never rendered as visible HTML) — there is no visible duplicate of this
+  answer to update.
+
+### Repo-wide search: hits and disposition
+
+Searched the whole repo (excluding `node_modules`/`.git`) case-insensitively
+for `geen gegevens`, `naar een server`, `geen server`.
+
+**Updated:**
+- `index.html:65` — FAQ JSON-LD, fixed as above.
+
+**Kept as-is — verifiably compatible with the beacon's existence:**
+- `public/voor-scholen/index.html:82` and `scripts/content/nl.mjs:247` (same
+  generated line, "Privacy & veiligheid (AVG)" section) — "... er wordt geen
+  persoonsgegeven van het kind naar een server gestuurd ..." already scopes
+  the claim to persoonsgegevens (assignment 001/008 left this alone as
+  already-honest; re-confirmed here). This page's own preceding sentence
+  already names the anonymous, cookieless usage statistics honestly ("We
+  meten alleen anonieme, niet-herleidbare gebruiksstatistieken ... zonder
+  cookies en zonder dat een individueel kind te herkennen is."). No change
+  needed.
+- `src/game/store.js:2` — code comment on the local-save module ("alles
+  blijft in de browser, geen account, geen server"), scoped to what that one
+  module does (save-game data never leaves the device, which remains true —
+  `track.js` is a separate, unrelated beacon). Not a marketing surface, not
+  user-facing, and true within its own scope; kept as-is per the 001/008
+  precedent of leaving accurate code comments untouched.
+- `company/assignments/001-privacy-copy-reconciliation.md`,
+  `company/assignments/008-qualify-geen-tracking-claims.md`,
+  `company/assignments/011-faq-no-data-claim.md` (this file) — quote the
+  pre-fix/problem-statement wording in their own Goal sections; historical
+  record, left untouched per the same precedent as 001 and 008.
+
+No other hits found. No user-facing surface overclaims beyond what's listed
+as "updated" above.
+
+### Build / test verification
+
+- `npm install` — clean (22 packages, same as prior lanes; 2 known
+  pre-existing audit advisories, unrelated to this change).
+- `npm run build` — passes: `prebuild` (`gen-content.mjs`) regenerates 13 URLs
+  + sitemap, then `vite build` succeeds, 81 modules transformed, no errors.
+  Confirmed with `git -c core.autocrlf=false diff --stat -- public/` that
+  regeneration produced **zero** actual content diff (pure CRLF/LF churn);
+  reverted `public/**` with `git checkout -- public/` before committing, same
+  as assignments 001/008.
+- `npm test` — **77/77 pass, 0 fail** (`node --test test/*.test.js`). No test
+  or engine/account/track code touched.
+- Verified all 4 JSON-LD `<script type="application/ld+json">` blocks in
+  `index.html` still parse as valid JSON after the edit (checked with a small
+  Node script that regex-extracts each block and `JSON.parse`s it).
