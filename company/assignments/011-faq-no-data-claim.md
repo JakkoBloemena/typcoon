@@ -2,7 +2,7 @@
 id: 011
 title: Fix FAQ "geen gegevens naar een server" claim vs the anonymous beacon
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -112,3 +112,54 @@ as "updated" above.
 - Verified all 4 JSON-LD `<script type="application/ld+json">` blocks in
   `index.html` still parse as valid JSON after the edit (checked with a small
   Node script that regex-extracts each block and `JSON.parse`s it).
+
+### Verification (tester, 2026-07-22)
+
+Independently re-ran everything rather than trusting the diff/notes.
+
+- **Repo-wide search** for `geen gegevens`, `naar een server`, `geen server`,
+  plus my own variants `geen data`, `niets naar`, `geen tracking`, `zonder
+  data` (case-insensitive, whole tree, excluding `node_modules`/`.git`) —
+  same hit set as the developer's disposition table. `index.html:65` is the
+  only fixed occurrence; `public/voor-scholen/index.html:82` /
+  `scripts/content/nl.mjs:247` already scope to persoonsgegeven (unchanged,
+  correctly left alone); `src/game/store.js:2` is a non-user-facing code
+  comment about the local-save module, true in its own scope (unchanged,
+  correctly left alone); the only other hits are historical prose inside
+  `company/assignments/001-*.md`, `008-*.md`, this file, and
+  `company/retro/2026-07-22-tick1.md`. No user-facing overclaim left.
+- **index.html:65 (JSON-LD FAQ, "Heb ik een account nodig?")** now reads "...
+  zonder ouderaccount gaan er geen persoonsgegevens naar een server; alleen
+  anonieme, niet-herleidbare gebruiksstatistieken worden geteld." Checked this
+  against `api/track.js` and `public/track.js` directly: `public/track.js`
+  posts only `{ type: 'pageview', path: location.pathname, sessionId: <fresh
+  crypto.randomUUID() per page load, never persisted> }`, no cookies. `api/
+  track.js` writes a row of `{ type, path, session_id, country }` to
+  Supabase — `country` comes server-side from the `x-vercel-ip-country`
+  header (coarse, not from the client payload), and the requester's IP is
+  only ever SHA-256-hashed (`ipHash` in `api/_ratelimit.js`) as a rate-limit
+  bucket key, never stored on the event row. No email, no name, no
+  persistent identifier reaches the server without an account. Claim is
+  true.
+- **No visible HTML duplicate**: read `index.html:253-271` (`<details>`
+  "Veelgestelde vragen" block) in full — it duplicates 4 of the 5 JSON-LD
+  FAQ entries but never renders "Heb ik een account nodig?" as visible HTML.
+  Confirmed there is nothing to fix there.
+- **JSON-LD parses**: wrote a throwaway Node script (in my own scratchpad,
+  not the repo) that regex-extracts every `<script type="application/
+  ld+json">` block from `index.html` and `JSON.parse`s it — all 4 blocks
+  (VideoGame, FAQPage, Organization, WebSite) parsed cleanly.
+- **001/008 wording intact**: `index.html:65` still has the full
+  e-mailadres/ouderaccount/voortgang-op-meerdere-apparaten/wekelijkse-
+  voortgangsmail sentence verbatim; `index.html:248` still has the exact
+  001/008 phrase "anonieme, niet-herleidbare gebruiksstatistieken" and "geen
+  tracking door derden".
+- **Build/test, run fresh in this worktree**: `npm install` — clean, 22
+  packages added, 2 pre-existing audit advisories (unrelated). `npm run
+  build` — `prebuild` regenerates 13 URLs + sitemap, `vite build` succeeds,
+  81 modules transformed, no errors; confirmed via `git diff --stat --
+  public/` that regeneration is pure CRLF/LF churn (zero content diff, same
+  as the developer reported), reverted with `git checkout -- public/` before
+  anything else. `npm test` — **77/77 pass, 0 fail**.
+
+Verdict: all acceptance criteria independently confirmed met. Status → done.
