@@ -3,7 +3,8 @@
 // zodat een kind vinger ↔ toets koppelt via kleur. `highlight` licht één vinger op
 // (de vinger die nú aan de beurt is). Puur visueel; a11y-tekst vat het samen.
 
-import { FINGER_LABEL, FINGER_HOME_KEY } from './handmap.js';
+import { FINGER_HOME_KEY } from './handmap.js';
+import { gt } from './strings.js';
 
 // Vingers per hand, van links naar rechts zoals je je eigen handen ziet (palm omlaag).
 // h = lengte van de vingercapsule (pink kort, middel het langst).
@@ -53,8 +54,8 @@ export default function Hands({ layout, highlight = null, className = '' }) {
   const thumbLit = highlight === 'thumb';
 
   const summary = highlight && highlight !== 'thumb'
-    ? `Gebruik je ${FINGER_LABEL[highlight]}.`
-    : 'Beide handen op de thuisrij: linkerhand A S D F, rechterhand J K L ;, duimen op de spatie.';
+    ? gt('fingers.use', { finger: gt('fingers.' + highlight) })
+    : gt('fingers.bothHome');
 
   return (
     <svg className={'hands ' + className} viewBox="0 0 460 250" role="img" aria-label={summary}>
