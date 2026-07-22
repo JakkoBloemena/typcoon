@@ -43,9 +43,10 @@ decisions/001-adoption.md.
 
 ## Budget ceiling
 
-**€25/month — PROVISIONAL, pending Shareholder confirmation.**
+**€50/month — confirmed by the Shareholder 2026-07-22 (decisions/003).**
 
-Current known costs: domain renewal ~€10–15/yr; Vercel, Supabase, and Resend all on
+Current known costs: domain renewal (auto-renews on the Shareholder's registrar
+account, cost immaterial per decisions/003); Vercel, Supabase, and Resend all on
 free tiers. Anything above the ceiling, and any *new* recurring commitment, is a
 Shareholder decision recorded in decisions/ and metrics/spend.md.
 
