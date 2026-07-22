@@ -6,7 +6,7 @@ import { newProfile } from '../engine/profile.js';
 import { newState, hydrateState } from '../engine/index.js';
 import { newTycoon, coinsPerSecond, prestigeMultiplier } from './economy.js';
 import { ACHIEVEMENTS } from './achievements.js';
-import nlPack from '../data/nl/index.js';
+import { getPack } from '../data/packs.js';
 import { loadGame, saveGame, clearGame } from './store.js';
 import { isUnlocked } from './premium.js';
 import { isOnboarded, markOnboarded } from './onboard.js';
@@ -17,7 +17,7 @@ import { saveProgress } from '../net/account.js';
 import { trackPageview, trackGameStart, trackParentOptIn, markSession } from '../net/track.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
-import { gt } from './strings.js';
+import { gt, setLocale } from './strings.js';
 import GameScreen from './GameScreen.jsx';
 import Onboarding from './Onboarding.jsx';
 import Dashboard from './Dashboard.jsx';
@@ -36,6 +36,20 @@ function touchOnly() {
     && !window.matchMedia?.('(pointer: fine)').matches;
 }
 
+// Locale-signaal voor een NIEUWE speler (§3.7): de en-landing hangt ?lang=en aan
+// de "Speel gratis"-link. /speel/ blijft één build — dit is een runtime-keuze,
+// geen aparte bundel. Een bestaand profiel (uit de save) is altijd leidend; dit
+// detecteert alleen de taal vóórdat er een profiel bestaat.
+function detectLocale() {
+  if (typeof window === 'undefined') return 'nl';
+  const lang = new URLSearchParams(window.location.search).get('lang');
+  return lang === 'en' ? 'en' : 'nl';
+}
+
+function layoutForLocale(locale) {
+  return locale === 'en' ? 'qwerty-us' : 'qwerty-nl';
+}
+
 export default function App() {
   const [game, setGame] = useState(null); // engine-state + .tycoon, of null
   const [view, setView] = useState('home'); // 'home' | 'play' | 'dashboard'
@@ -46,6 +60,12 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false); // "voortgang per e-mail"
   const [showLogin, setShowLogin] = useState(false); // ander apparaat
 
+  // UI-taal (§3.7): een bestaand profiel is leidend; zonder profiel (nog geen
+  // save) telt het ?lang=en-signaal van de en-landing. Dit is een module-brede
+  // instelling (gt() leest 'm), bewust vóór elke gt()-aanroep in deze render gezet
+  // — geen effect, anders flitst het eerste scherm even Nederlands.
+  setLocale(game?.profile?.uiTaal ?? loadGame()?.profile?.uiTaal ?? detectLocale());
+
   // meting (assignment 006): bezoek + "betrokken" (≥2 sessies) — één keer bij het openen.
   useEffect(() => { trackPageview('/speel/'); markSession(); }, []);
 
@@ -53,7 +73,7 @@ export default function App() {
   useEffect(() => {
     const saved = loadGame();
     if (saved?.profile) {
-      const s = hydrateState(saved, nlPack.curriculumTail);
+      const s = hydrateState(saved, getPack(saved.profile.trainTaal).curriculumTail);
       setGame({ ...s, tycoon: { ...newTycoon(), ...(s.tycoon || {}) } });
       // een speler met een save heeft duidelijk al gespeeld: nooit de volledige
       // tutorial afdwingen (opfrissen kan altijd via de Handen-check).
@@ -77,7 +97,11 @@ export default function App() {
 
   const start = useCallback(() => {
     trackGameStart();
-    const profile = newProfile({ naam: name.trim() || 'Speler' });
+    const locale = detectLocale();
+    const profile = newProfile({
+      naam: name.trim() || 'Speler',
+      uiTaal: locale, trainTaal: locale, layout: layoutForLocale(locale),
+    });
     profile.onboardingGezien = true;
     let tycoon = newTycoon();
     // uitgenodigd via een vriend-link? welkomstbonus voor de nieuwe speler.
@@ -85,7 +109,7 @@ export default function App() {
     if (ref && ref !== ownCode()) {
       tycoon = { ...tycoon, referredBy: ref, welcomeClaimed: true, coins: tycoon.coins + WELCOME_BONUS, lifetimeCoins: WELCOME_BONUS };
     }
-    setGame({ ...newState(profile, nlPack.curriculumTail), tycoon });
+    setGame({ ...newState(profile, getPack(locale).curriculumTail), tycoon });
     // nieuw kind: eerst de vingers op hun plek (poort) — pas dan het echte spel.
     setView(isOnboarded() ? 'play' : 'onboarding');
   }, [name]);
@@ -113,7 +137,7 @@ export default function App() {
   const onLoggedIn = useCallback((sess) => {
     setSession({ kidUsername: sess.kidUsername, token: sess.token });
     if (sess.state?.profile) {
-      const s = hydrateState(sess.state, nlPack.curriculumTail);
+      const s = hydrateState(sess.state, getPack(sess.state.profile.trainTaal).curriculumTail);
       setGame({ ...s, tycoon: { ...newTycoon(), ...(s.tycoon || {}) } });
       markOnboarded(); // heeft duidelijk al gespeeld
     }

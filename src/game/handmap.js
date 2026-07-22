@@ -4,19 +4,8 @@
 // dus nooit zien met welke vinger een kind typt. Deze module levert alleen de
 // leer-kaart (welke vinger hóórt bij welke toets) en de thuisrij-drill; de
 // in-spel-hints (reminders.js) leunen op meetbare signalen, niet op vingerdetectie.
-
-// Nederlandse vingernamen per hand (voor de handles-uitleg).
-export const FINGER_LABEL = {
-  'left-pinky': 'pink',
-  'left-ring': 'ringvinger',
-  'left-middle': 'middelvinger',
-  'left-index': 'wijsvinger',
-  'right-index': 'wijsvinger',
-  'right-middle': 'middelvinger',
-  'right-ring': 'ringvinger',
-  'right-pinky': 'pink',
-  thumb: 'duim',
-};
+// Vingernamen zelf zijn taalafhankelijk en leven daarom in strings.js (fingers.*),
+// niet hier.
 
 // Waar elke vinger 'thuis' rust op de middelste rij. F en J zijn de ankers
 // (voelbare bultjes op een echt toetsenbord) — daarom staan ze eerst in de drill.

@@ -1,5 +1,11 @@
-// strings.js — Alle zichtbare speltekst van Typcoon (Nederlands). Eén plek, zodat
-// een tweede taal later één extra bestand is. Mini-API: gt('sleutel', { vars }).
+// strings.js — Alle zichtbare speltekst van Typcoon. Twee kaarten (nl + en, hier
+// in één bestand) achter dezelfde sleutels, zodat gt() taal-bewust is zonder dat
+// elke call site een taal hoeft mee te geven (assignment 012, §3.7). setLocale()
+// zet de actieve taal (uit profile.uiTaal); gt('sleutel', { vars }) leest daaruit.
+// De en-kaart hieronder dekt de sleutels die in de speel-flow (home → onboarding
+// → gameplay) daadwerkelijk gebruikt worden; de resterende sleutels (ouder-
+// koppeling, dashboard, records, vrienden, inloggen) zijn assignment 013's volle
+// sleutel-pariteitstaak.
 
 const STRINGS = {
   'brand.name': 'Typcoon',
@@ -218,10 +224,216 @@ const STRINGS = {
 
   'desktop.title': 'Pak een toetsenbord erbij!',
   'desktop.body': 'Typcoon speel je met een echt toetsenbord — op een laptop of computer. Tot zo!',
+
+  // kleine taal-neutrale bouwstenen die in JS-logica (niet in strings.js zelf)
+  // een taal-specifiek woordje nodig hadden — hoorden hier al thuis, waren
+  // per ongeluk hardgecodeerd in GameScreen.jsx (zie assignment 012).
+  'common.and': 'en',
+  'play.buyLabel': '{name} kopen',
+
+  // vingernamen voor de handen-uitleg + het toetsenbord-hintje (§3.6): dezelfde
+  // sleutels als de `finger`-waarden in de layouts, zodat de hint vertaalbaar is.
+  'fingers.left-pinky': 'linker pink',
+  'fingers.left-ring': 'linker ringvinger',
+  'fingers.left-middle': 'linker middelvinger',
+  'fingers.left-index': 'linker wijsvinger',
+  'fingers.right-index': 'rechter wijsvinger',
+  'fingers.right-middle': 'rechter middelvinger',
+  'fingers.right-ring': 'rechter ringvinger',
+  'fingers.right-pinky': 'rechter pink',
+  'fingers.thumb': 'duim',
+  'fingers.use': 'Gebruik je {finger}.',
+  'fingers.bothHome': 'Beide handen op de thuisrij: linkerhand A S D F, rechterhand J K L ;, duimen op de spatie.',
 };
 
+// en — Engelse speltekst (assignment 012, §3.7). Dekt de sleutels die de
+// home → onboarding → gameplay-flow gebruikt (zie strings.test.js voor de
+// exacte dekking); de resterende sleutels vallen terug op deze NL-kaart totdat
+// assignment 013 de volle en-kaart met sleutel-pariteit levert.
+const STRINGS_EN = {
+  'brand.name': 'Typcoon',
+  'brand.tagline': 'Type coins. Build your factory. Become a tycoon.',
+
+  'home.start': 'Start your factory',
+  'home.continue': '▶ Keep building',
+  'home.namePlaceholder': 'Your name',
+  'home.coins': 'coins',
+  'home.stars': 'stars',
+  'home.reset': 'Start over',
+  'home.resetConfirm': 'Are you sure? Your whole factory and your stars will be gone.',
+  'home.how1': '⌨️ Type words and earn coins — the neater you type, the more you earn.',
+  'home.how2': '🏭 Buy machines that make coins as long as you keep typing.',
+  'home.how3': '⭐ Sell your factory for a star: everything after that goes faster!',
+  'home.parents': 'For parents',
+  'home.invite': 'Invite a friend',
+  'home.records': 'Your records',
+  'home.handsCheck': 'Hand check',
+  'home.emailProgress': 'Progress by email',
+  'home.emailLinked': 'Email linked',
+  'home.otherDevice': 'Played before? Log in on this computer',
+  'home.trust': 'Free to try · no ads · no in-app purchases for your child',
+
+  'acc.unlinkConfirm': 'Unlink from this device? Your progress stays saved locally.',
+
+  'premium.unlockShort': 'Unlock',
+  'premium.inFull': 'In the full factory',
+  'premium.chapterTitle': 'Chapter 1 complete! 🎉',
+  'premium.chapterBody': 'Wow — you know your first letters and built a real factory! In the full factory you learn ALL the letters and get every machine, star and theme.',
+  'premium.chapterCta': 'See the full factory',
+
+  'unlock.gateTitle': 'Grab a grown-up',
+  'unlock.gateBody': 'Ask mom or dad to solve this sum.',
+  'unlock.gateGo': 'Next',
+  'unlock.later': 'Not right now',
+  'unlock.buyTitle': 'The full factory',
+  'unlock.perkLetters': 'Learn the whole alphabet (all 26 letters, capitals, punctuation)',
+  'unlock.perkMachines': 'All 5 machines + unlimited stars',
+  'unlock.perkPrestige': 'Every theme and factory expansion',
+  'unlock.perkDashboard': 'Parent dashboard: see progress and accuracy',
+  'unlock.perkFamily': 'Pay once — for the whole family, forever',
+  'unlock.today': 'today only',
+  'unlock.trust': 'One-time · no subscription · no ads · no purchases for your child',
+  'unlock.buy': 'Unlock for €{price}',
+  'unlock.doneTitle': 'The factory is yours! 🎉',
+  'unlock.doneBody': 'Everything is unlocked. Have fun learning to touch type!',
+  'unlock.doneGo': 'Keep playing',
+
+  'play.back': '← Menu',
+  'play.soundOff': 'Sound off',
+  'play.soundOn': 'Sound on',
+  'play.coins': 'Coins',
+  'play.perSec': 'Coins per second (while you type)',
+  'play.stars': 'Stars: everything ×{mult}',
+  'play.factory': 'Machines',
+  'play.upgrades': 'Upgrades',
+  'play.accuracyLever': '{pct}% neat — neater typing = more coins!',
+  'play.combo': 'combo',
+  'play.typeHint': 'Type the letters to make your first coins',
+  'play.golden': '✨ GOLDEN TASK — 3× coins! ✨',
+  'play.unlockAt': 'Learn {n} letters to unlock',
+  'play.unlockIn': '{n} more letters to unlock',
+  'play.unlockIn1': '1 more letter to unlock',
+  'play.nextMilestone': 'Lv {n} → speed ×2',
+  'play.milestoneReached': 'MILESTONE! {name} now runs 2× as fast!',
+  'play.newMachineTitle': 'New machine discovered!',
+  'play.newMachineBody': 'You learned a new letter and unlocked the {name}. Buy it for more coins!',
+  'play.newLetterTitle': 'New letter!',
+  'play.newLetterBody': 'You can now also type {keys}. More letters = more machines!',
+  'play.nice': 'Nice!',
+  'play.checkHands': '🏠 Quick check: fingers back on the home row?',
+  'play.idleFloor': 'The machines are waiting for you — type to switch them on!',
+  'play.floorEmpty': 'No machines yet. Earn coins by typing and buy your first one!',
+  'play.achievement': 'Achievement unlocked!',
+  'play.buyLabel': 'Buy {name}',
+
+  'reminders.home': 'Fingers back on the home row! 🏠',
+  'reminders.peek': "Don't peek — feel the bumps on F and J 👀",
+
+  'onb.introTitle': 'Your fingers are the workers 🧤',
+  'onb.introBody': 'Every finger has its own colour and its own spot on the keyboard. See the same colours on the keys? That is how each finger knows exactly where it belongs.',
+  'onb.introGo': 'Show me! →',
+  'onb.homeTitle': 'Find your home 🏠',
+  'onb.homeBody': 'Rest your left hand on A S D F and your right hand on J K L ;. Feel the little bumps on F and J? Those are your two index fingers — that is how you find the home row without looking.',
+  'onb.homeGo': 'I feel the bumps!',
+  'onb.drillTitle': 'Your turn! 💪',
+  'onb.drillBody': 'Type this row. Keep your fingers on their colour spot and bring them back home after every key. Take it slow — this is about neat, not fast.',
+  'onb.drillHint': "Tip: look at the screen, not at your hands. You've got this! 🌟",
+  'onb.powerTitle': 'That is your superpower! ⚡',
+  'onb.powerBody': "See? You didn't need to look at your hands. Touch typing is your secret superpower: you'll get super fast, and that keeps your factory making coins on its own. Ready to build?",
+  'onb.powerGo': "I'm ready! 🚀",
+  'onb.refreshTitle': 'Quick refresher ✋',
+  'onb.refreshBody': 'Hands on the home row — index fingers on the bumps of F and J. Type this row to wake your fingers up.',
+  'onb.skip': 'Skip',
+
+  'daily.streakTip': "You've kept it up for {n} days in a row! Come back tomorrow to grow your streak.",
+  'daily.boostChip': '🔥 Warm-up boost ×{mult} — {n} tasks left',
+  'daily.welcomeTitle': 'Welcome back! Day {n} 🔥',
+  'daily.welcomeBoost': 'Your first {n} tasks today earn ×{mult} coins — warm up those fingers!',
+  'daily.welcomeBonus': '{streak}-day streak bonus!',
+  'daily.welcomeGo': "Let's go!",
+
+  'rebirth.button': '⭐ Sell your factory',
+  'rebirth.locked': 'Earn {n} coins to be able to sell your factory',
+  'rebirth.title': 'Sell the factory?',
+  'rebirth.body': 'Your coins, machines and upgrades go away — but you get a STAR: everything you earn after this is forever ×{mult}. You keep your learned letters, of course!',
+  'rebirth.confirm': 'Sell — give me that star! ⭐',
+  'rebirth.cancel': 'Keep building a bit longer',
+  'rebirth.doneTitle': 'Star earned! ⭐',
+  'rebirth.doneBody': "Your factory is sold. Everything you earn now is ×{mult}. Build it back faster than ever!",
+
+  'building.typewriter': 'Typewriter',
+  'building.typewriter.desc': 'Taps out coins slowly',
+  'building.printer': 'Printing press',
+  'building.printer.desc': 'Prints coins in stacks',
+  'building.robotarm': 'Robot arm',
+  'building.robotarm.desc': 'Works tirelessly on',
+  'building.assembly': 'Conveyor belt',
+  'building.assembly.desc': 'A whole hall full of coins',
+  'building.megafab': 'Mega factory',
+  'building.megafab.desc': 'Coins by the bucketload',
+
+  'upgrade.oil': 'Oil can',
+  'upgrade.turbo': 'Turbo engine',
+  'upgrade.precision': 'Precision tools',
+  'upgrade.golden': 'Golden keys',
+  'upgrade.prod': 'Every machine ×{x} faster',
+  'upgrade.payout': 'Every task ×{x} coins',
+
+  'ach.eerste-munt': 'First coin',
+  'ach.eerste-machine': 'First machine',
+  'ach.duizend': '1,000 coins earned',
+  'ach.tienduizend': '10,000 coins earned',
+  'ach.honderdduizend': '100,000 coins earned',
+  'ach.combo-25': 'Combo of 25',
+  'ach.combo-50': 'Combo of 50',
+  'ach.eerste-goud': 'First golden task',
+  'ach.goud-10': '10 golden tasks',
+  'ach.vijf-letters': '5 letters learned',
+  'ach.tien-letters': '10 letters learned',
+  'ach.alle-letters': 'All letters learned!',
+  'ach.eerste-rebirth': 'First star',
+  'ach.drie-rebirths': 'Three stars',
+  'ach.honderd-oefeningen': '100 tasks done',
+
+  'friends.thanksTitle': 'Your friend gets a bonus too! 🎁',
+  'friends.thanksBody': 'Nice work! Give this thank-you code to the friend who invited you — then they get coins too:',
+
+  'desktop.title': 'Grab a keyboard!',
+  'desktop.body': 'Typcoon is played with a real keyboard — on a laptop or computer. See you there!',
+
+  'common.and': 'and',
+
+  'fingers.left-pinky': 'left pinky',
+  'fingers.left-ring': 'left ring finger',
+  'fingers.left-middle': 'left middle finger',
+  'fingers.left-index': 'left index finger',
+  'fingers.right-index': 'right index finger',
+  'fingers.right-middle': 'right middle finger',
+  'fingers.right-ring': 'right ring finger',
+  'fingers.right-pinky': 'right pinky',
+  'fingers.thumb': 'thumb',
+  'fingers.use': 'Use your {finger}.',
+  'fingers.bothHome': 'Both hands on the home row: left hand A S D F, right hand J K L ;, thumbs on the space bar.',
+};
+
+const LOCALES = { nl: STRINGS, en: STRINGS_EN };
+let activeLocale = 'nl';
+
+// Actieve UI-taal zetten (uit profile.uiTaal). Onbekende locale valt terug op nl.
+export function setLocale(locale) {
+  activeLocale = LOCALES[locale] ? locale : 'nl';
+}
+
+export function getLocale() {
+  return activeLocale;
+}
+
 export function gt(key, vars) {
-  const raw = STRINGS[key];
+  const table = LOCALES[activeLocale] || STRINGS;
+  // en is niet (nog) compleet (assignment 013 levert volle sleutel-pariteit).
+  // Val NOOIT terug op de NL-tekst — dat zou juist Nederlands laten zien in een
+  // en-sessie. Een ontbrekende sleutel toont (net als voorheen) de kale sleutel.
+  const raw = table[key];
   if (raw == null) return key;
   if (!vars) return raw;
   return raw.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));

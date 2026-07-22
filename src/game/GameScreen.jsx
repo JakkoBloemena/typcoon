@@ -17,7 +17,7 @@ import {
   rebirthCost, canRebirth, rebirth,
 } from './economy.js';
 import { pendingAchievements, achievementDef } from './achievements.js';
-import nlPack from '../data/nl/index.js';
+import { getPack } from '../data/packs.js';
 import { getLayout } from '../layouts/index.js';
 import { sound, setMuted, unlockAudio } from '../ui/sound.js';
 import TypingSurface from '../ui/TypingSurface.jsx';
@@ -58,6 +58,7 @@ function BuyButton({ onBuy, disabled, className = 'btn buy', children, label }) 
 
 export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock }) {
   const layout = useMemo(() => getLayout(state.profile.layout), [state.profile.layout]);
+  const pack = useMemo(() => getPack(state.profile.trainTaal), [state.profile.trainTaal]);
 
   const [exercise, setExercise] = useState(null);
   const [golden, setGolden] = useState(false);
@@ -120,10 +121,10 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   // nieuwe opdracht per stap; af en toe een gouden (variabele beloning, niet de
   // allereerste opdrachten — eerst rustig starten)
   useEffect(() => {
-    setExercise(generateExercise(engineRef.current, nlPack, layout));
+    setExercise(generateExercise(engineRef.current, pack, layout));
     exStreakRef.current = 0;
     setGolden(engineRef.current.tycoon.exercisesDone >= 3 && Math.random() < GOLDEN_CHANCE);
-  }, [step, layout]);
+  }, [step, layout, pack]);
 
   // productie-tick: machines produceren alleen vlak na een aanslag (geen idle winst)
   useEffect(() => {
@@ -414,7 +415,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
                       {level > 0 && nextMs && <em className="ms-teaser"> · {gt('play.nextMilestone', { n: nextMs })}</em>}
                     </span>
                   </div>
-                  <BuyButton onBuy={() => buy(b.id)} disabled={!can} label={gt('building.' + b.id) + ' kopen'}><Coin className="btn-coin" /> {fmt(cost)}</BuyButton>
+                  <BuyButton onBuy={() => buy(b.id)} disabled={!can} label={gt('play.buyLabel', { name: gt('building.' + b.id) })}><Coin className="btn-coin" /> {fmt(cost)}</BuyButton>
                 </li>
               );
             })}
@@ -482,7 +483,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
             {moment.kind === 'letter' && (<>
               <Mascot pose={0} className="card-mascot" />
               <h3>{gt('play.newLetterTitle')}</h3>
-              <p>{gt('play.newLetterBody', { keys: moment.keys.filter((k) => k !== 'shift').join(' en ').toUpperCase() })}</p>
+              <p>{gt('play.newLetterBody', { keys: moment.keys.filter((k) => k !== 'shift').join(` ${gt('common.and')} `).toUpperCase() })}</p>
             </>)}
             {moment.kind === 'machine' && (<>
               <Machine id={moment.id} running className="card-machine" />

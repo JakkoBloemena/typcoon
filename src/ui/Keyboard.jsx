@@ -1,5 +1,7 @@
 // Keyboard.jsx — On-screen toetsenbord met vinger-/toetshint. Aangepaste kopie voor
-// Typcoon: geen i18n-afhankelijkheid, vingernamen staan hier direct in het Nederlands.
+// Typcoon (bewust NIET gesynchroniseerd, zie sync-engine.mjs): vingernamen komen
+// uit strings.js (fingers.*) zodat de hint per taal meegaat (assignment 012, §3.7)
+// — voorheen stond hier hardgecodeerd Nederlands, wat een en-sessie liet lekken.
 // Alleen een hint: het kind kijkt naar het scherm, niet naar de handen. De volgende
 // te typen toets licht op in de vingerkleur; niet-ontgrendelde toetsen zijn gedimd.
 //
@@ -7,17 +9,7 @@
 //  - showFingers: kleur ELKE toets in zijn vingerkleur (voor de handles-uitleg).
 //  - markHome:    ring om de thuisrij + bultjes op F/J (de ankers).
 
-export const FINGERS = {
-  'left-pinky': 'linker pink',
-  'left-ring': 'linker ringvinger',
-  'left-middle': 'linker middelvinger',
-  'left-index': 'linker wijsvinger',
-  'right-index': 'rechter wijsvinger',
-  'right-middle': 'rechter middelvinger',
-  'right-ring': 'rechter ringvinger',
-  'right-pinky': 'rechter pink',
-  thumb: 'duim',
-};
+import { gt } from '../game/strings.js';
 
 export default function Keyboard({ layout, activeKeys, nextKey, showFingers = false, markHome = false }) {
   const active = new Set(activeKeys);
@@ -67,7 +59,7 @@ export default function Keyboard({ layout, activeKeys, nextKey, showFingers = fa
       ))}
       {nextFinger && !showFingers && (
         <div className="finger-hint">
-          {FINGERS[nextFinger] || nextFinger}
+          {gt('fingers.' + nextFinger)}
           {needsShift && <span className="shift-hint"> + Shift</span>}
         </div>
       )}
