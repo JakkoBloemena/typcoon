@@ -8,6 +8,7 @@
 // testfunctie zelf.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 
 function mockRes() {
   return {
@@ -87,13 +88,15 @@ test('track: zonder backend-env-vars faalt het endpoint stil (204), spel hangt h
   assert.equal(fetchCalled, false, 'zonder Supabase-env-vars mag er geen netwerkcall gebeuren');
 });
 
-test('track: verkeerde method (405) en onbekend event-type (400) worden geweigerd, ook zonder backend', async () => {
+test('track: verkeerde method (405) wordt geweigerd; onbekend event-type valt stil (204), ook zonder backend', async () => {
   noBackend();
   const track = (await import('../api/track.js')).default;
   const wrongMethod = await call(track, { method: 'GET' });
   assert.equal(wrongMethod.statusCode, 405);
+  // onbekend type: 204, niet 400 — geen aftastbaar verschil met een geslaagd event
+  // (assignment 025: rejecting means silently dropping, never an error the client can probe)
   const badType = await call(track, { body: { type: 'nonsense' } });
-  assert.equal(badType.statusCode, 400);
+  assert.equal(badType.statusCode, 204);
 });
 
 // --- met backend (in-memory shim): events landen, rate-limit, admin-readout --------
@@ -101,13 +104,69 @@ test('track: pageview/game_start/engaged_session/parent_opt_in landen anoniem in
   const DB = withBackend();
   const track = (await import('../api/track.js')).default;
   for (const type of ['pageview', 'game_start', 'engaged_session', 'parent_opt_in']) {
-    const r = await call(track, { body: { type, path: '/speel/', sessionId: 'sid-' + type }, headers: { 'x-forwarded-for': '198.51.100.1' } });
+    const r = await call(track, { body: { type, path: '/speel/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': '198.51.100.1' } });
     assert.equal(r.statusCode, 204);
   }
   assert.equal(DB.events.length, 4);
   assert.deepEqual(DB.events.map((e) => e.type).sort(), ['engaged_session', 'game_start', 'pageview', 'parent_opt_in']);
-  // geen PII: alleen type/pad/anonieme sessie-id/land — geen e-mail, geen IP bewaard
-  for (const e of DB.events) assert.equal(Object.keys(e).some((k) => /email|ip/i.test(k)), false);
+  // geen PII: alleen type/pad/anonieme sessie-id/land — geen e-mail, geen IP bewaard, en
+  // niet alleen de sleutels checken (die zouden hier toch nooit email/ip heten) maar de
+  // daadwerkelijk opgeslagen *waarden* — een e-mail-vormige string onder een onschuldige
+  // sleutelnaam (path/session_id) is precies het lek dat assignment 025 dichtzet.
+  for (const e of DB.events) {
+    assert.equal(Object.keys(e).some((k) => /email|ip/i.test(k)), false);
+    for (const v of Object.values(e)) assert.equal(/@/.test(String(v)), false, `waarde bevat '@': ${v}`);
+  }
+});
+
+// --- shape-validatie (assignment 025): defense-in-depth tegen PII-smuggling op de
+// unauthenticated /api/track-grens. Afwijzen = stil laten vallen (204, niets opgeslagen),
+// nooit een aftastbare foutcode — precies zoals de rest van dit fire-and-forget-endpoint.
+test('track: niet-canonieke sessionId (e-mail-vormig of vrije tekst) wordt stil geweigerd, niets opgeslagen', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  for (const sessionId of ['not-a-uuid', 'attacker@evil.com', 'sid-pageview', '', '123-456', randomUUID().toUpperCase().slice(0, -1)]) {
+    const r = await call(track, { body: { type: 'pageview', path: '/', sessionId } });
+    assert.equal(r.statusCode, 204); // zelfde 204 als een geslaagd event: niet aftastbaar
+  }
+  assert.equal(DB.events.length, 0);
+});
+
+test('track: pad zonder rooted/conservatief charset (e-mail-vormig, spaties, relatief) wordt stil geweigerd, niets opgeslagen', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const sessionId = randomUUID();
+  for (const path of ['speel', 'attacker@evil.com', '/hello world', '/foo?x=1', 'no-leading-slash/', '/<script>', '/foo#bar']) {
+    const r = await call(track, { body: { type: 'pageview', path, sessionId } });
+    assert.equal(r.statusCode, 204);
+  }
+  assert.equal(DB.events.length, 0);
+});
+
+test('track: onbekend event-type wordt stil geweigerd (204), niets landt in de (geshimde) store', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const r = await call(track, { body: { type: 'nonsense', path: '/', sessionId: randomUUID() } });
+  assert.equal(r.statusCode, 204);
+  assert.equal(DB.events.length, 0);
+});
+
+test('track: elk pad dat de echte clients versturen (nl-marketingpaginas + /speel/) landt gewoon', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const realPaths = [
+    '/', // index.html
+    '/blog/op-welke-leeftijd-leren-typen/', // gen-content.mjs articleUrl(): geneste blogslug
+    '/voor-scholen/', // pageUrl()
+    '/speel/', // src/game/App.jsx trackPageview('/speel/')
+    '/leren-typen-voor-kinderen/', // pillarUrl()
+  ];
+  for (const path of realPaths) {
+    const r = await call(track, { body: { type: 'pageview', path, sessionId: randomUUID() } });
+    assert.equal(r.statusCode, 204);
+  }
+  assert.equal(DB.events.length, realPaths.length);
+  assert.deepEqual(DB.events.map((e) => e.path), realPaths);
 });
 
 test('track: rate-limit per IP blokkeert na de limiet (429), zoals de account-API\'s', async () => {
@@ -132,7 +191,7 @@ test('admin/funnel: met CRON_SECRET (header of ?token=) geeft wekelijkse telling
   const funnel = (await import('../api/admin/funnel.js')).default;
 
   for (const type of ['pageview', 'game_start', 'engaged_session', 'parent_opt_in']) {
-    await call(track, { body: { type }, headers: { 'x-forwarded-for': '198.51.100.77' } });
+    await call(track, { body: { type, sessionId: randomUUID() }, headers: { 'x-forwarded-for': '198.51.100.77' } });
   }
   assert.equal(DB.events.length, 4);
 
