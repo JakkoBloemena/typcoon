@@ -20,7 +20,9 @@ npm test         # pure economie-tests (node:test)
 npm run build    # productie-bundel naar dist/
 ```
 
-Geen backend, geen account: alle voortgang blijft lokaal in de browser.
+Speelt volledig zonder account: alle voortgang blijft lokaal in de browser. Optioneel een
+serverless backend (`api/*`, zie [DEPLOY.md](DEPLOY.md)) voor een ouderaccount — alleen
+e-mail, voor voortgang op meerdere apparaten en een wekelijkse voortgangsmail.
 
 ## Structuur
 
