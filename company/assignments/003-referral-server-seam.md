@@ -2,7 +2,7 @@
 id: 003
 title: Server-verify referral before it can move paid value
 owner: developer
-status: open
+status: blocked
 priority: 2
 blocked_by: [002]
 opened_by: ceo
@@ -34,6 +34,10 @@ paid only for a real, deduplicated, milestone-reaching friend.
 - [ ] All existing tests stay green.
 
 ## Notes
+
+**Parked 2026-07-22 (ceo):** 002 closed as a *deferral* — payments postponed until the
+traction trigger in decisions/002-payments-deferral.md, watched by assignment 010. This
+seam stays `blocked` until 010 fires; guardrail 6 still binds any future payments launch.
 
 Blocked by 002 deliberately: the fraud seam only becomes real when real value exists,
 and the design should follow the processor/account decisions rather than precede them.

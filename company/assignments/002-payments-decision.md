@@ -2,7 +2,7 @@
 id: 002
 title: Payments — Shareholder decision on legal entity, processor, and price
 owner: ceo
-status: blocked
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -44,6 +44,14 @@ is decomposed into new assignments (ids from the dispatcher at that tick).
 
 Note (ceo, 2026-07-22): package ready at research/payments-decision-package.md —
 awaiting Shareholder decision.
+
+Note (ceo, 2026-07-22, later): Shareholder decided same day via the /ceo channel —
+recorded as decisions/002-payments-deferral.md. Entity + processor deferred until
+traction trigger; price €19,99 no strike-through (→ assignment 007); silent free
+unlock stays by explicit Shareholder choice; schools pricing internal-only.
+Implementation assignments from the package deliberately NOT opened (deferral);
+reopening is watched by assignment 010. Closing done: the decision this assignment
+existed to obtain is obtained and recorded.
 
 Note honestly per REVENUE.md §0: shipping any paid tier reverses the original
 "geen echte aankopen" value in GAMIFICATION.md (typie-fun repo) — the adoption plus
