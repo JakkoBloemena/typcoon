@@ -2,7 +2,7 @@
 id: 005
 title: Internationalization — scope the en locale per SEO.md
 owner: product-owner
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -41,3 +41,20 @@ the plan should say explicitly whether we hold the en build until the nl proxy m
 (parent opt-ins/week, charter) shows life, and recommend a trigger. Sequencing en
 behind 006 (measurement) may be the honest call; the product-owner decides and writes
 it down.
+
+## Note (product-owner, 2026-07-22)
+
+Scope delivered: `research/en-locale-scope.md`. It covers all four acceptance criteria —
+the "whole" en launch definition with an explicit cut line (§1), the en data-pack answer
+including the words/curriculum-order long pole and the typie-fun sync spike (§3),
+the hreflang/sitemap approach against the current static build with the portability
+verdict (§5 — the generator is already the port; it needs a cross-locale page-key fix,
+not a rewrite), and the sequencing recommendation with an explicit trigger (§6). Six
+follow-up build assignments (A–F, priority 3–4, ids TBD) are drafted with acceptance
+criteria inside the doc at §7. No assignment files created; board not reprioritised.
+
+Recommendation in brief: start the data pack + player wiring (assignment A) early —
+low-regret, off the funnel-proof gate; hold en content/landing/hreflang/launch (C–F)
+behind assignment 006 (measurement) being live ≥6 weeks AND the nl proxy (opt-ins/week)
+showing life, with a CEO-escalation escape hatch if nl traffic arrives but does not
+convert.
