@@ -23,14 +23,15 @@ Entry format:
 
 ---
 
-## Tick 2026-07-22 #1 — OPEN
+## Tick 2026-07-22 #1 — CLOSED
 - opened: 2026-07-22 15:20
 - claimed: 001, 002, 004, 005; 006 claimed mid-tick (edee18b) after 001's merge cleared the index.html collision
 - worktrees: 001 → C:\companies\typcoon-lanes\a001 (branch lane/001); 002 → C:\companies\typcoon-lanes\a002 (lane/002); 004 → C:\companies\typcoon-lanes\a004 (lane/004); 005 → C:\companies\typcoon-lanes\a005 (lane/005); 006 → C:\companies\typcoon-lanes\a006 (lane/006); main checkout: dispatcher/integration only
 - ids allocated: decisions/002 (payments-deferral ADR, written), decisions/003 (budget/domain ADR, written); assignments 007–010 opened mid-tick by the CEO (007/008 claimed in_progress this tick; 009/010 blocked-on-human/trigger); 011 opened+claimed after the 008 lane surfaced a stale FAQ claim — next free assignment id 012, next decision id 004
 - notes: 006 deliberately deferred — would collide with 001 in index.html; 003 blocked_by 002
-- closed:
-- retro:
+- closed: 2026-07-22 16:55
+- outcomes: 001 needs_verification (privacy copy fixed, 70/70→77/77 tests across tick); 002 done (Shareholder decided same tick — decisions/002-payments-deferral.md; implementation deliberately not opened); 004 needs_verification (research/school-licence-plan.md); 005 needs_verification (research/en-locale-scope.md); 006 needs_verification (measurement stack, claimed mid-tick); 007 needs_verification (anchor removed, mid-tick); 008 needs_verification (tracking claims qualified, mid-tick); 011 needs_verification (FAQ persoonsgegevens claim, mid-tick, found by 008 lane). Board additions: 009 (blocked — Shareholder: GSC/Bing + Supabase events migration), 010 (blocked — traction tripwire). 003 parked per decisions/002. Decisions recorded: 002 (payments deferral), 003 (budget €50/mo + domain auto-renew). All lanes merged to main, worktrees removed, pushed to origin.
+- retro: clean — see retro/2026-07-22-tick1.md (live-Shareholder latency, claim-space reconciliation chain 001→008→011, recorded dissent)
 
 *(board established at adoption, 2026-07-22; ids 001–006 allocated by the adopting
 dispatcher)*

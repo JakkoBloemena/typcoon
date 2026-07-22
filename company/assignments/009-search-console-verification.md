@@ -28,3 +28,8 @@ assignment exists so the human bottleneck is on the board, not in the void.
 
 Blocked on: Shareholder's Google account access. Full step-by-step is in assignment
 006's Notes. Asked directly in the /ceo channel 2026-07-22 (tick #1 exit report).
+
+Also folded in (same class — Shareholder-console access): apply the new `events`
+table from `supabase/schema.sql` in the Supabase dashboard (SQL editor, run the
+CREATE TABLE for `events` + its RLS statement). Until then the deployed beacon
+degrades silently and no funnel data lands.
