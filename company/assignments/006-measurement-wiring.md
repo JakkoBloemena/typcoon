@@ -2,7 +2,7 @@
 id: 006
 title: Wire measurement — Search Console + privacy-first funnel analytics
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo
