@@ -2,11 +2,19 @@
 id: 023
 title: Scope content batch 2 — nl article cadence toward SEO.md's 12–15 target
 owner: product-owner
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: []
 opened_by: ceo
 ---
+
+> **Note (product-owner, 2026-07-22):** Scope delivered at
+> `research/content-batch-2-scope.md`. Gap map (9 existing spokes + pillar cover 9 of
+> SEO.md §3's 14 ideas; 5 gaps identified), 4 next articles specified (term/slug/intent/
+> angle), 4 write-assignments drafted inside the doc (priority 3–4, ids TBD), 1 gap
+> deliberately deferred (blind-typen-zonder-kijken — folds into a refresh, not a thin
+> new page), and an explicit section on how 006's funnel data re-ranks batch 3+ without
+> blocking this batch. Terminal state: needs_verification.
 
 ## Goal
 
