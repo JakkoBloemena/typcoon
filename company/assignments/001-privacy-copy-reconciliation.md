@@ -2,7 +2,7 @@
 id: 001
 title: Reconcile privacy claims with shipped opt-in accounts
 owner: developer
-status: needs_verification
+status: done
 priority: 1
 blocked_by: []
 opened_by: ceo
@@ -157,3 +157,58 @@ code was touched.
 - Checked meta/OG/Twitter description lengths after edits: description 184 chars
   (was 180 before this change), og:description 137, twitter:description 82,
   speel meta description 108 — all in the same ballpark as before, no blowout.
+
+### Tester verification (2026-07-22, worktree C:\companies\typcoon-lanes\v001 @ verify/001)
+
+Verified independently, adversarially, from the diff and current repo state — did not
+take the developer's word for anything.
+
+- **Isolated the 001-only diff** (`git show f638103`) to separate what this assignment
+  actually changed from later assignments (008, 011) that also touched `index.html`'s
+  privacy bullet / FAQ answer in this same branch. Confirmed 001's diff touches only
+  `index.html` (lines 7, 16, 22, 65, 248), `speel/index.html:8`, and `README.md` — no
+  account code (`src/net/account.js`, `src/net/session.js`, `src/game/ParentEmail.jsx`,
+  `src/game/Login.jsx`, `src/game/strings.js`) touched, as required.
+- **AC1–4** (index.html:65/:248, meta/OG/Twitter, speel/index.html:8, README.md):
+  read every line in the current tree — none claims "no account" or "no server" as a
+  blanket statement; all correctly scope to "plays without account" / "optional parent
+  account, email only". README now accurately describes the `api/*` serverless backend
+  per DEPLOY.md. Confirmed against source, not against the Notes' description of it.
+- **AC5 (repo-wide search)** — independently reran the developer's exact term list
+  plus my own additional variants (`persoonsgegeven`, `no data`, `geen data`, "nooit
+  verstuurd/verzonden/gedeeld", "blijft altijd priv-", "never leaves/shares/sends",
+  "not shared", "stays on your/the device") across `*.html *.md *.mjs *.js *.jsx *.xml
+  *.json *.txt`, repo-wide, excluding node_modules/dist. Found the identical hit set
+  the developer logged — no additional overclaiming surface, no missed hit. Their
+  disposition (updated / verifiably-honest-as-is / historical-record) checks out for
+  every hit I re-read in context, including `public/voor-scholen/index.html`,
+  `scripts/content/nl.mjs`, and the generated `public/blog/*` pages.
+- **AC6 (no claim stronger than the code)** — per instruction, did not count assignments
+  008 (tracking qualification) or 011 (FAQ persoonsgegevens narrowing) as 001 defects;
+  both are later, separately-owned edits to the same lines, already merged into this
+  branch, and their combined effect with 001 is still honest (verified current
+  `index.html:65` and `:248` wording end-to-end, and cross-checked the live site at
+  https://typcoon.com, which shows matching wording — informative only, repo is
+  authoritative). charter.md guardrail 4 read; current copy matches its "honest
+  position" reference text.
+- **AC7 (natural Dutch / SEO length / build / tests)** — Dutch phrasing reads naturally,
+  parent-appropriate. Description lengths independently measured from the live file:
+  184 / 137 / 82 / 108 chars — matches developer's reported figures exactly. All 4
+  JSON-LD blocks in `index.html` independently re-parsed as valid JSON.
+- **Build**: `npm install` (22 packages, clean) → `npm run build` — passes, 81 modules
+  transformed (vs. developer's 80; harmless drift from later-merged assignments, not a
+  001 regression). Build regenerates `public/**` + `sitemap.xml`; diffed with
+  `git -c core.autocrlf=false diff -b -- public/` → **zero** content diff (line-ending
+  noise only, as the developer described), then `git checkout -- public/` to leave the
+  worktree clean.
+- **Tests**: `npm test` — **77/77 pass, 0 fail** (higher than the developer's 70/70
+  because 006/008/011 added tests in commits merged after 001 on this branch; consistent
+  with `company/ticks.md`'s recorded "70/70→77/77 tests across tick"). No test or
+  account/engine code modified by 001.
+
+**Verdict: all acceptance criteria independently verified met.** No discrepancies found
+against the developer's Notes; their repo-wide search and disposition list hold up under
+an independently-run, broader search. Flipping to `done`.
+
+No new defects found in scope or out of scope worth filing as separate assignments —
+this reconciliation is clean.
