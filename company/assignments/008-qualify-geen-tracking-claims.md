@@ -2,7 +2,7 @@
 id: 008
 title: Qualify "geen tracking" claims now that first-party analytics ships
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -144,3 +144,58 @@ follow-up lands.
   or engine/account/track code touched.
 - Verified all 4 JSON-LD `<script type="application/ld+json">` blocks in
   `index.html` still parse as valid JSON after the edit.
+
+### Tester verification (2026-07-22)
+
+Independently re-ran, in worktree `verify/008` (branch off the merged state, so this
+also covers the later 011 lane touching the adjacent FAQ claim):
+
+- Repo-wide case-insensitive search for `tracking|track|volgen|meten` (48 files hit;
+  ripgrep). On user-facing surfaces (`index.html`, `speel/index.html`,
+  `scripts/content/nl.mjs`, `public/**`) the only "tracking"-bearing lines are
+  `index.html:248` and `scripts/content/nl.mjs:247`/`public/voor-scholen/index.html:82`
+  (same generated line) — both already carry the qualified wording ("geen tracking
+  door derden, geen cookies, geen advertenties — alleen anonieme, niet-herleidbare
+  gebruiksstatistieken" / "geen tracking door derden", "geen cookies" + the added "We
+  meten alleen anonieme, niet-herleidbare gebruiksstatistieken ... zonder cookies en
+  zonder dat een individueel kind te herkennen is."). No bare/unqualified "geen
+  tracking" survives anywhere in `speel/index.html` or any of the 9 generated blog
+  pages. No `volgen`/`meten` hit anywhere else on a marketing surface.
+- Confirmed the disposition list in Notes above (SEO.md, REVENUE.md, research/*,
+  assignment-history quotes) — re-read each, agree none is user-facing/overclaiming.
+- voor-scholen AVG section: read both the source (`nl.mjs:247`) and the built output
+  (`public/voor-scholen/index.html:82`, plus the FAQPage JSON-LD block at line 23) —
+  identical text, honestly names the anonymous cookieless statistics with a concrete
+  example ("hoeveel bezoekers een pagina krijgt"), explicit "zonder cookies".
+- `npm install` — clean, 22 packages. `npm run build` — `prebuild` regenerates 13
+  URLs + sitemap, `vite build` succeeds (81 modules, no errors). Diffed `public/**`
+  against the pre-build commit with `git -c core.autocrlf=false diff --stat --
+  public/`: **zero** real content diff (only CRLF/LF churn under plain `git status`,
+  reverted with `git checkout -- public/`) — source and generated output agree
+  exactly, including the qualified line.
+- `npm test` — **77/77 pass, 0 fail** (`node --test test/*.test.js`).
+- Cross-checked assignment 001's account wording was not disturbed: `index.html:248`'s
+  trailing "Optioneel een ouderaccount (alleen e-mail) voor sync en een wekelijkse
+  voortgangsmail." is verbatim 001's phrasing; `README.md:23`, `speel/index.html:8`,
+  and the FAQ JSON-LD account sentence (`index.html:65`, now also carrying 011's
+  persoonsgegevens narrowing) all still read local-first-play + optional-parent-account
+  honestly — nothing reverted.
+- Read `src/net/track.js` and `api/track.js` directly (not just trusting the Notes):
+  session id is generated fresh per page load via `crypto.randomUUID()`, held only in
+  memory, never written to a cookie or localStorage; the endpoint stores only
+  `type`/`path`/`session_id`/aggregated `country` (4-char ISO code from Vercel's geo
+  header) — no PII fields, no cookies set anywhere. Grepped `index.html`,
+  `speel/index.html`, all generated pages, and the content/build scripts for
+  GA/gtag/Meta-pixel/Hotjar/Clarity/doubleclick signatures — none present. This makes
+  "geen tracking door derden" and "alleen anonieme, niet-herleidbare
+  gebruiksstatistieken" both verifiably true against the shipped code, not just
+  plausible.
+- Guardrail-4 read as a skeptical parent: the reworded sentence discloses — inline, in
+  the same breath as the "no ads/no cookies" claims a parent already trusts — that
+  *some* anonymous, non-traceable usage counting happens, rather than burying it. It
+  does not claim zero data collection; it names what is and isn't collected (no
+  third-party, no cookies, no PII) and stays in plain, natural Dutch. This is a
+  stronger, more honest position than the bare "geen tracking" it replaces, and matches
+  the code. Passes.
+
+**Verdict: all 5 acceptance criteria independently confirmed met. Status → `done`.**
