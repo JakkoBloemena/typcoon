@@ -2,7 +2,7 @@
 id: 006
 title: Wire measurement — Search Console + privacy-first funnel analytics
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -167,3 +167,90 @@ of the assignment on it. Everything the Shareholder needs:
   `src/net/track.js`, `public/track.js`, `test/track.test.js` files and the small,
   targeted edits to `index.html`, `scripts/gen-content.mjs`, `src/game/App.jsx`,
   `supabase/schema.sql`, `DEPLOY.md`, `.env.example` described above.
+
+## Tester verification — 2026-07-22
+
+**Scope note**: the Google Search Console / Bing Webmaster criterion was formally
+transferred to assignment 009 by CEO decision (tick #1, `company/ticks.md`); it is
+out of scope here and not re-checked. Every other criterion re-verified independently
+in the worktree (`C:\companies\typcoon-lanes\v006`, branch `verify/006`) — code read,
+software actually run, not reasoned about from the diff.
+
+**Build/test, re-run myself:**
+- `npm install` — clean, 22 packages, no drift.
+- `npm test` — **77/77 pass, 0 fail** (`node --test test/*.test.js`), matches the
+  developer's reported number.
+- `npm run build` — clean: `prebuild` regenerates 13 URLs + sitemap, `vite build`
+  81 modules, no errors/warnings.
+- `dist/` inspected after build: `track.js` present at `dist/track.js`; every
+  generated marketing page (`index.html`, `blog/` × 10, `voor-scholen/`,
+  `leren-typen-voor-kinderen/`) has `<script src="/track.js" defer>`. `dist/speel/`
+  (the React SPA) correctly has no static beacon tag — it tracks via
+  `src/net/track.js`'s `trackPageview()` call in `App.jsx`'s mount effect instead, by
+  design. Noted but not a defect: `dist/prefs/index.html` (the e-mail-preferences
+  utility page, `noindex`, not part of `gen-content.mjs`'s generated set) carries no
+  beacon either — low-traffic utility page, outside "generated blog/pillar/
+  voor-scholen pages" as scoped, informational only.
+
+**Privacy guarantees, adversarially checked (not just read):**
+- No cookies anywhere: `grep`'d the whole source tree for `document.cookie`/
+  `Set-Cookie` — zero hits. Confirmed live in Chromium via Playwright against the
+  built `dist/` (served locally): `context.cookies()` returns `[]` on every page
+  (`/`, `/blog/`, `/voor-scholen/`, `/leren-typen-voor-kinderen/`, `/speel/`).
+- No third-party requests: `grep`'d for GA/gtag/Meta Pixel/Plausible/Fathom/Segment/
+  Mixpanel/etc. — zero hits anywhere in source. Confirmed live: captured every
+  network request per page in Chromium, zero requests to any non-same-origin host.
+- Visit-counter carries no identity and is never sent: read `src/net/track.js` —
+  `typcoon:visits` is a bare integer in localStorage, referenced only to compare
+  `n === 2`, never included in any `send()` payload. Confirmed live: after loading
+  `/speel/` in a real browser, `localStorage` contained exactly
+  `{"typcoon:visits":"1"}` and `sessionStorage` exactly
+  `{"typcoon:visit-counted":"1"}` — no UUID, no fingerprint, nothing else.
+- Session id is genuinely non-persistent: captured the actual POST body sent to
+  `/api/track` from a real page load —
+  `{"type":"pageview","path":"/","sessionId":"<uuid>"}` — a fresh
+  `crypto.randomUUID()`, present only in that request, never written to storage.
+- Silent degradation is real, not just claimed: re-ran the existing hard-assertion
+  test (`fetch` must never be called without `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`)
+  — passes. Additionally tried a case the suite didn't cover — **partial** config
+  (only `SUPABASE_URL` set, key missing) — still degrades to 204 with zero `fetch`
+  calls. Also confirmed live in-browser against the statically-served `dist/`
+  (no API function running): the beacon POST 404s silently and the page still
+  renders and functions with no console-fatal error.
+- Rate limiting equivalent to the account endpoints: re-ran the 429-after-120/hour
+  test; confirmed `api/track.js` uses the same `api/_ratelimit.js` bucket pattern as
+  `api/account/create.js` (per-IP bucket + a global hourly cap), documented in
+  `.env.example`/`DEPLOY.md` (`MAX_TRACK_HOUR`, default 2000).
+- `admin/funnel` auth: confirmed 401 with no token, 200 with Bearer or `?token=`, and
+  additionally checked a case the suite didn't: `CRON_SECRET` entirely unset still
+  yields 401 (fails closed, no `Bearer undefined` bypass) and the response never
+  returns individual rows — types + weekly counts only, matching the "no individual
+  events" claim in the code comments.
+- €0 marginal cost: plausible — one more Postgres table on the existing free-tier
+  Supabase project, two more serverless functions on the existing free-tier Vercel
+  project. No new service, no new paid tier, nothing in `package.json` pulls in a
+  paid SDK.
+
+**Attacks I constructed that the test suite does not cover — reported as new
+findings below (out of scope for this assignment's pass/fail, per the dispatcher's
+instructions), not blocking `done`:**
+1. `api/track.js` truncates `path` (200 chars) and `sessionId` (64 chars) but never
+   validates their *shape* — only that a value exists. POSTing directly to the
+   (unauthenticated, public) endpoint with `path` or `sessionId` containing a raw
+   email address / SSN-shaped string / credit-card-shaped string is accepted (204)
+   and stored verbatim in the `events` table. The existing test only asserts no
+   `email`/`ip`-named *keys* land in a row; it never checks free-text *values*, so it
+   would not catch this. Reproduced directly against `api/track.js`'s handler with
+   an in-memory Supabase shim — filed as a new defect for the dispatcher (see my
+   return message), not a criterion of this assignment.
+2. `dist/prefs/index.html` — a static utility page, not part of the generated
+   marketing set — has no analytics beacon at all. Informational only; not a
+   criterion of this assignment (it is not one of "every generated page").
+
+None of the above are regressions of what this assignment promised — the acceptance
+criteria are about first-party wiring, silent degradation, rate limiting, the
+readout, and €0 cost, all of which hold up under direct adversarial testing, not
+just code reading.
+
+**Verdict: all in-scope criteria met.** Status set to `done`. The GSC/Bing criterion
+remains correctly tracked under assignment 009 and is untouched by this verification.
