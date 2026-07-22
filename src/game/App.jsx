@@ -11,6 +11,7 @@ import { loadGame, saveGame, clearGame } from './store.js';
 import { isUnlocked } from './premium.js';
 import { isOnboarded, markOnboarded } from './onboard.js';
 import { readRefParam, ownCode, WELCOME_BONUS } from './referral.js';
+import { readSchoolCodeParam } from './schoolLicence.js';
 import { getLayout } from '../layouts/index.js';
 import { getSession, clearAccount } from '../net/session.js';
 import { saveProgress } from '../net/account.js';
@@ -24,6 +25,7 @@ import Dashboard from './Dashboard.jsx';
 import Friends from './Friends.jsx';
 import Records from './Records.jsx';
 import Unlock from './Unlock.jsx';
+import SchoolCode from './SchoolCode.jsx';
 import ParentEmail from './ParentEmail.jsx';
 import Login from './Login.jsx';
 
@@ -40,8 +42,9 @@ export default function App() {
   const [game, setGame] = useState(null); // engine-state + .tycoon, of null
   const [view, setView] = useState('home'); // 'home' | 'play' | 'dashboard'
   const [name, setName] = useState('');
-  const [unlocked, setUnlocked] = useState(() => isUnlocked()); // familie-unlock
+  const [unlocked, setUnlocked] = useState(() => isUnlocked()); // familie-unlock (of school-licentie)
   const [showUnlock, setShowUnlock] = useState(false);
+  const [showSchoolCode, setShowSchoolCode] = useState(() => !!readSchoolCodeParam()); // licentielink geopend
   const [session, setSession] = useState(() => getSession()); // ouder-account + token, of null
   const [showAccount, setShowAccount] = useState(false); // "voortgang per e-mail"
   const [showLogin, setShowLogin] = useState(false); // ander apparaat
@@ -210,6 +213,7 @@ export default function App() {
               ? <button className="link-parents" onClick={unlink} title={session.kidUsername}>✅ {gt('home.emailLinked')}</button>
               : <button className="link-parents" onClick={() => setShowAccount(true)}>📧 {gt('home.emailProgress')}</button>}
             {!unlocked && <button className="link-unlock" onClick={() => setShowUnlock(true)}>🔓 {gt('premium.unlockShort')}</button>}
+            {!unlocked && <button className="link-parents" onClick={() => setShowSchoolCode(true)}>🏫 {gt('school.linkLabel')}</button>}
           </div>
           <button className="link-reset" onClick={reset}>{gt('home.reset')}</button>
         </div>
@@ -230,6 +234,7 @@ export default function App() {
           />
           <button className="btn btn-big" onClick={start}>{gt('home.start')}</button>
           <button className="link-parents home-login" onClick={() => setShowLogin(true)}>💻 {gt('home.otherDevice')}</button>
+          {!unlocked && <button className="link-parents home-login" onClick={() => setShowSchoolCode(true)}>🏫 {gt('school.linkLabel')}</button>}
           <div className="home-trust">{gt('home.trust')}</div>
         </div>
       )}
@@ -238,6 +243,13 @@ export default function App() {
         <Unlock
           onClose={() => setShowUnlock(false)}
           onPurchased={() => { setUnlocked(true); setShowUnlock(false); }}
+        />
+      )}
+
+      {showSchoolCode && (
+        <SchoolCode
+          onClose={() => setShowSchoolCode(false)}
+          onUnlocked={() => { setUnlocked(true); setShowSchoolCode(false); }}
         />
       )}
 
