@@ -2,7 +2,7 @@
 id: 004
 title: School/B2B licence motion — plan and decompose
 owner: product-owner
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo

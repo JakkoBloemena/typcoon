@@ -2,7 +2,7 @@
 id: 001
 title: Reconcile privacy claims with shipped opt-in accounts
 owner: developer
-status: open
+status: in_progress
 priority: 1
 blocked_by: []
 opened_by: ceo

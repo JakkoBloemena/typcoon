@@ -2,7 +2,7 @@
 id: 002
 title: Payments — Shareholder decision on legal entity, processor, and price
 owner: ceo
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: ceo

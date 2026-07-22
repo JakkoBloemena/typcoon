@@ -23,5 +23,14 @@ Entry format:
 
 ---
 
-*(no ticks yet — board established at adoption, 2026-07-22; ids 001–006 allocated by
-the adopting dispatcher, next free id 007)*
+## Tick 2026-07-22 #1 — OPEN
+- opened: 2026-07-22 15:20
+- claimed: 001, 002, 004, 005
+- worktrees: 001 → C:\companies\typcoon-lanes\a001 (branch lane/001); 002 → C:\companies\typcoon-lanes\a002 (lane/002); 004 → C:\companies\typcoon-lanes\a004 (lane/004); 005 → C:\companies\typcoon-lanes\a005 (lane/005); main checkout: dispatcher/integration only
+- ids allocated: decisions/002 reserved for the payments ADR (002 lane / post-decision); lanes draft any follow-up assignments inside their plan docs with ids TBD — next free assignment id remains 007
+- notes: 006 deliberately deferred — would collide with 001 in index.html; 003 blocked_by 002
+- closed:
+- retro:
+
+*(board established at adoption, 2026-07-22; ids 001–006 allocated by the adopting
+dispatcher)*

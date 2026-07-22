@@ -2,7 +2,7 @@
 id: 005
 title: Internationalization — scope the en locale per SEO.md
 owner: product-owner
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo
