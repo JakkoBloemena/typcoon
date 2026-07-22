@@ -23,14 +23,15 @@ Entry format:
 
 ---
 
-## Tick 2026-07-22 #2 — OPEN
+## Tick 2026-07-22 #2 — CLOSED
 - opened: 2026-07-22 21:38
 - claimed: 001, 004, 005, 006, 007, 008, 011 — verification pass (statuses stay needs_verification; this ledger entry is the claim)
 - worktrees: one per lane, C:\companies\typcoon-lanes\v001 … v011 (branches verify/001 … verify/011); main checkout: dispatcher/integration only
 - ids allocated: none to verify lanes. Mid-tick after 004/005 verified done: 012–017 materialized from en-locale-scope §7 (A–F), 018–022 from school-licence-plan §6 (TBD-A–E), 023–024 from the charter's known-open-threads list. 012, 018, 023 claimed in_progress and dispatched (worktrees b012/b018/b023, branches build/012 build/018 build/023); 024 carries a file-collision guard behind 012. Next free assignment id 025, next decision id 004
-- notes: 006's GSC/Bing criterion was transferred to assignment 009 by CEO decision (tick #1); testers verify the remainder. 003/009/010 blocked, 002 done — nothing else eligible.
-- closed:
-- retro:
+- notes: 006's GSC/Bing criterion was transferred to assignment 009 by CEO decision (tick #1); testers verify the remainder. 003/009/010 blocked, 002 done — nothing else eligible at open; saturation grew mid-tick from verified plans.
+- closed: 2026-07-22 23:59
+- outcomes: verification — ALL SEVEN verified done by independent testers (001, 004, 005, 006, 007, 008, 011; zero bounces; 007 browser-tested end-to-end incl. math-gate). One reproduced defect from 006's verification filed as 025 and FIXED same tick (needs_verification, 81/81). Mid-tick builds: 012 en data pack + locale wiring needs_verification (spike: typie-fun has no en locale — authored fresh; 3 hardcoded-Dutch leaks fixed, 1 upstream leak noted); 018 school unlock-code mechanism needs_verification (HMAC-signed codes, seam for 019 documented); 023 content batch 2 scope needs_verification (4 articles, gratis-leren-typen is the headline gap). Board materialized 012–024 from the two verified plans + charter threads. Integration: 012+018 auto-merged in App.jsx/strings.js; combined suite 111/111 and clean build on main; known gap (school.* keys missing from en map) noted in 013. Pushed to origin.
+- retro: clean — one process note appended to retro/2026-07-22-tick1.md territory: predicted-disjoint lanes (012/018) both grew into App.jsx/strings.js; auto-merge held but the dispatcher must always re-run the combined suite after multi-lane integration (done, caught nothing this time)
 
 ## Tick 2026-07-22 #1 — CLOSED
 - opened: 2026-07-22 15:20

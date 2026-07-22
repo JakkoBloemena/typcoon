@@ -23,3 +23,8 @@ The checklist under "### B —" in research/en-locale-scope.md §7 is normative.
 ## Notes
 
 Authority: assignment 005. Terminal state needs_verification.
+
+Note (dispatcher, tick #2): assignment 018 landed new `school.*` keys in
+src/game/strings.js after 012's en map was authored — in a forced-en flow the
+school-code UI currently renders raw keys. The key-set parity test this assignment
+adds must cover them; this is the known first gap it should close.
