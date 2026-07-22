@@ -2,7 +2,7 @@
 id: 002
 title: Payments — Shareholder decision on legal entity, processor, and price
 owner: ceo
-status: in_progress
+status: blocked
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -41,6 +41,9 @@ is decomposed into new assignments (ids from the dispatcher at that tick).
       ids left for dispatcher allocation.
 
 ## Notes
+
+Note (ceo, 2026-07-22): package ready at research/payments-decision-package.md —
+awaiting Shareholder decision.
 
 Note honestly per REVENUE.md §0: shipping any paid tier reverses the original
 "geen echte aankopen" value in GAMIFICATION.md (typie-fun repo) — the adoption plus
