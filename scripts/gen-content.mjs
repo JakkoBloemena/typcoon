@@ -118,6 +118,7 @@ function footer(pack) {
       <p>${pack.ui.footerTag}</p>
       <p><a href="${p(pack) || '/'}">${pack.ui.home}</a> · <a href="${blogUrl(pack)}">${pack.ui.blog}</a> · <a href="${pillarUrl(pack)}">${pack.ui.guide}</a> · <a href="/speel/">${pack.ui.tryFree.replace('▶ ', '')}</a></p>
     </footer>
+    <script src="/track.js" defer></script>
   </body>
 </html>`;
 }

@@ -58,6 +58,7 @@ op je domein (bv. `hallo@typcoon.com`).
 | `CRON_SECRET` | zelf een lange random string (beveiligt de cron + tekent de prefs-links) |
 | `SITE_URL` | `https://typcoon.com` |
 | `MAX_CREATE_HOUR` / `MAX_EMAIL_HOUR` | optioneel; standaard 100 / 60 |
+| `MAX_TRACK_HOUR` | optioneel; standaard 2000 (meting, zie hieronder) |
 
 **4. Cron.** `vercel.json` bevat al de uurlijkse cron (`/api/cron/notify`). Vercel stuurt
 `CRON_SECRET` automatisch mee als Bearer-token. De cron stuurt zondagavond een wekelijkse
@@ -67,6 +68,26 @@ voortgangsdigest en een vriendelijke oefen-herinnering als een reeks dreigt te b
 service-role functions raken data aan. We bewaren geen wachtwoord en geen kind-PII behalve
 de door de ouder gekozen gebruikersnaam; alleen de ouder-e-mail voor login + mails.
 Betalingen zijn (bewust) nog niet gebouwd — `accounts.plan` staat klaar op `'free'`.
+
+## Meting: trechter zonder cookies (assignment 006)
+
+`api/track.js` (server) + `src/net/track.js`/`public/track.js` (client) meten de
+REVENUE.md-trechter — `bezoek → spel-start → betrokken (≥2 sessies) → ouder-opt-in` —
+eerste-partij en cookieless: geen cookies, geen fingerprinting, geen PII. Alleen een
+anonieme sessie-id die de client per paginabezoek genereert en nooit bewaart. Landt in
+de `events`-tabel (`supabase/schema.sql`); zonder `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`
+faalt het endpoint stil (204) — precies zoals `api/account/*`. Rate-limited zoals de
+account-API's (`MAX_TRACK_HOUR`, standaard 2000/uur).
+
+**Wekelijkse tellingen aflezen** (voor de CEO/monitor, geen Supabase-console nodig):
+
+```bash
+curl "https://typcoon.com/api/admin/funnel?token=$CRON_SECRET"
+```
+
+Geeft per week het aantal `pageview` / `game_start` / `engaged_session` / `parent_opt_in`
+terug — de proxy-metriek (charter.md) zonder te hoeven spelunken. Zelfde geheim als de
+cron (`CRON_SECRET`), als Bearer-header of `?token=`.
 
 ## Engine synchroon houden met typie-fun
 

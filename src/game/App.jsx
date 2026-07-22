@@ -14,6 +14,7 @@ import { readRefParam, ownCode, WELCOME_BONUS } from './referral.js';
 import { getLayout } from '../layouts/index.js';
 import { getSession, clearAccount } from '../net/session.js';
 import { saveProgress } from '../net/account.js';
+import { trackPageview, trackGameStart, trackParentOptIn, markSession } from '../net/track.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
@@ -45,6 +46,9 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false); // "voortgang per e-mail"
   const [showLogin, setShowLogin] = useState(false); // ander apparaat
 
+  // meting (assignment 006): bezoek + "betrokken" (≥2 sessies) — één keer bij het openen.
+  useEffect(() => { trackPageview('/speel/'); markSession(); }, []);
+
   // bestaande save laden
   useEffect(() => {
     const saved = loadGame();
@@ -72,6 +76,7 @@ export default function App() {
   }, [game, session]);
 
   const start = useCallback(() => {
+    trackGameStart();
     const profile = newProfile({ naam: name.trim() || 'Speler' });
     profile.onboardingGezien = true;
     let tycoon = newTycoon();
@@ -102,7 +107,7 @@ export default function App() {
   }, []);
 
   // ouder koppelde e-mail (account aangemaakt) → onthoud de sessie; de sync-effect pusht.
-  const onLinked = useCallback((sess) => { setSession(sess); setShowAccount(false); }, []);
+  const onLinked = useCallback((sess) => { trackParentOptIn(); setSession(sess); setShowAccount(false); }, []);
 
   // ingelogd op dit apparaat (ander apparaat / gewiste browser) → server-voortgang laden.
   const onLoggedIn = useCallback((sess) => {
@@ -195,7 +200,7 @@ export default function App() {
               ))}
             </div>
           )}
-          <button className="btn btn-big" onClick={() => setView('play')}>{gt('home.continue')}</button>
+          <button className="btn btn-big" onClick={() => { trackGameStart(); setView('play'); }}>{gt('home.continue')}</button>
           <div className="home-links">
             <button className="link-parents" onClick={() => setView('refresh')}>✋ {gt('home.handsCheck')}</button>
             <button className="link-parents" onClick={() => setView('records')}>🏆 {gt('home.records')}</button>
