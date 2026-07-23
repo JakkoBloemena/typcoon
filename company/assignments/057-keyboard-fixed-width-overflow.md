@@ -2,7 +2,7 @@
 id: 057
 title: On-screen Keyboard has fixed-width rows — horizontal scroll below ~540px viewport
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (isolated during 055 delivery, 2026-07-23; materialized by the tick #10 dispatcher from the 055–059 reservation)
@@ -22,15 +22,15 @@ legible and tappable.
 
 ## Acceptance criteria
 
-- [ ] At 360px and 390px viewport widths, `document.documentElement.scrollWidth` ≤
+- [x] At 360px and 390px viewport widths, `document.documentElement.scrollWidth` ≤
       viewport width (no horizontal scrollbar on body) on the game screen AND the
       onboarding/hands-tutorial screen.
-- [ ] Keys remain legible and visually distinct at those widths (this is a kids'
+- [x] Keys remain legible and visually distinct at those widths (this is a kids'
       product — the on-screen keyboard is load-bearing for finger guidance); the
       highlighted/next-key affordance still reads clearly.
-- [ ] Desktop unchanged (no visual regression at ≥768px).
-- [ ] Works across all four themes (tokens only, no theme-specific values).
-- [ ] `npm test` green; `npm run build` clean; zero new console errors.
+- [x] Desktop unchanged (no visual regression at ≥768px).
+- [x] Works across all four themes (tokens only, no theme-specific values).
+- [x] `npm test` green; `npm run build` clean; zero new console errors.
 
 ## Notes
 
@@ -146,3 +146,60 @@ capture) and `*-after.png` (post-fix), 10 viewport/screen/theme combinations eac
 change needed — pure CSS fix); `src/game/GameScreen.jsx` was not touched at all, per
 the lane-discipline constraint (056 working there concurrently). Only `.kb-row`/
 `.kb-key`/`.keyboard` rules in `game.css` changed.
+
+## Verification (tester, 2026-07-23)
+
+Re-derived every criterion independently in `C:\companies\typcoon-lanes\v057` (branch
+`verify/057`), dev server on port 4208, own Playwright probe
+(`qa-scripts/verify-057-tester.mjs`, screenshots in
+`company/assignments/057-screenshots-verify/`) rather than trusting the developer's
+probe output. **All five acceptance criteria hold. Verdict: done.**
+
+1. **Overflow ≤ viewport at 360/390, game + hands.** Confirmed `overflowPx=0` at both
+   widths on both screens with my own probe: w360 game/hands `scrollWidth=360,
+   kbRowWidth=262.3, kbKeyWidth=23`; w390 game/hands `scrollWidth=390,
+   kbRowWidth=295.0, kbKeyWidth=26` — matches the developer's numbers exactly.
+   Additionally probed widths the delivery didn't report: **320px** (small-Android
+   floor) `overflowPx=0` both screens, `kbKeyWidth=20` (the clamp floor, as designed);
+   the **convergence band 540/550/560/570px** all `overflowPx=0`, `kbKeyWidth` rising
+   41→42→43→44 and landing exactly on the unchanged 44px desktop value at 570px with
+   no jump; 767px (media-query boundary) also `overflowPx=0, kbKeyWidth=44`.
+2. **Legibility at 360/390.** Screenshots plus a 3x-DPR crop of the keyboard alone at
+   320px (`/tmp/kb-320-zoom2.png`, not committed — ad hoc) confirm keys are crisp,
+   bold, and distinct even at the 20px/23px floor; the next-key highlight (pink/mint
+   fill against dimmed neighbors) and finger-color home-row coding both read clearly.
+   Hands-tutorial screen's F/J anchor bumps and `markHome` glow render in proportion
+   at 320/360/390 on both default and diepzee themes. Judgment: genuinely readable,
+   not just technically passing.
+3. **Desktop ≥768px byte-identical.** My probe's computed `.kb-key` style at 768px and
+   1280px: `width/height 44px, fontSize 15.2px, borderRadius 10px` on both game and
+   hands screens — matches developer's reported values exactly; confirmed via
+   `git show` that the entire diff (24 added lines) lives inside a single
+   `@media (max-width: 767px)` block touching only `.keyboard`/`.kb-row`/`.kb-key`,
+   so desktop is untouched by construction, not just by measurement.
+4. **Four themes, tokens only.** Read `game.css` directly: the three `[data-theme=...]`
+   blocks (nachtploeg, snoepfabriek, diepzee) define only color custom properties —
+   zero size/dimension/media-query rules — and the new 057 block references only the
+   `--kb-key` custom property it defines itself. Spot-checked diepzee at 390px on both
+   screens: `overflowPx=0`, same fluid sizing, correct palette applied.
+5. **Tests/build/console.** `npm test`: **211/211 pass**, chained `vite build` +
+   `check-no-dutch-en.mjs` clean. `npm run build` standalone: clean. Console errors
+   across all 26 probe page-loads (8 widths × 2 screens + 4 desktop + 2 theme
+   variants): 72 total, verified via a separate `page.on('response')` listener that
+   **100% resolve to `/api/track`** (the pre-existing dev-only analytics 404 also
+   documented in 055) — zero new console errors of any other kind.
+
+**Additional exploration beyond the ACs (not blocking, filed as observation only):**
+at 280px and 300px viewport (below any real device — smallest common Android/iPhone
+is 320px, which passes cleanly), `document.documentElement.scrollWidth` does overflow
+(37px/17px) — but the widest element at that width is `section.type-pane` (the
+exercise card), **not** the keyboard; confirmed the 057 diff touches only
+`.keyboard`/`.kb-row`/`.kb-key` and this overflow source is pre-existing/unrelated to
+this assignment's scope. Not filed as a defect since it falls outside 057's stated
+target range (~360–430px) and outside any realistic device width; noting for the
+record in case a future assignment targets sub-320px viewports.
+
+Ledger: `npm install`, `npm install --no-save playwright-core`, dev server on 4208
+(killed before finishing), own probe script + screenshots committed under
+`qa-scripts/verify-057-tester.mjs` and
+`company/assignments/057-screenshots-verify/`.
