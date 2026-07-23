@@ -48,3 +48,27 @@ export function machineLocked(machineId, unlocked) {
 export function atFreeCap(lettersLearned, unlocked) {
   return !unlocked && lettersLearned >= FREE_LETTER_CAP;
 }
+
+// Gratis-plafond-bewaker (§058), aangeroepen ná elke afgeronde oefening. Een
+// promotie die de leer-grens zou overschrijden wordt teruggedraaid: `curriculumIndex`
+// terug naar `prevIndex` (de staat van vóór déze promotie). Zonder geheugen levert
+// `tryPromote` bij de EERSTVOLGENDE oefening exact dezelfde geblokkeerde stap weer
+// op (curriculumIndex en keyStats zijn door de terugdraai ongewijzigd t.o.v. daarvoor),
+// dus de paywall-moment zou anders bij elke volgende oefening opnieuw in de wachtrij
+// komen — bij een normaal gespeelde grens levert dat een keer-op-keer-herhalende
+// overlay op, en bij een (QA-)save die al ver voorbij de grens staat een oneindige
+// herhaling. `tycoon.freeCapPaywallShown` is een eenmalig-vlag, hetzelfde patroon als
+// `thanksShown` (referral.js): de eerste keer over de grens wordt hij gezet en de
+// paywall getoond; daarna blijft de promotie stil teruggedraaid, zonder overlay.
+export function applyFreeCapGuard({ next, unlocked, promoted, prevIndex, before, afterLetters }) {
+  if (unlocked || !promoted || afterLetters <= FREE_LETTER_CAP) {
+    return { next, promoted, afterLetters, paywall: false };
+  }
+  const alreadyShown = !!next.tycoon.freeCapPaywallShown;
+  const rolledBack = {
+    ...next,
+    profile: { ...next.profile, curriculumIndex: prevIndex },
+    tycoon: alreadyShown ? next.tycoon : { ...next.tycoon, freeCapPaywallShown: true },
+  };
+  return { next: rolledBack, promoted: null, afterLetters: before, paywall: !alreadyShown };
+}
