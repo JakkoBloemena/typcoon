@@ -1,0 +1,49 @@
+Sjabloon — factuur schoollicentie (stub)
+==========================================
+Assignment 019 (TBD-B, research/school-licence-plan.md §6). Dit is een STUB — géén
+verzendklare factuur. Alle [TODO]'s hieronder zijn wettelijk verplichte factuurgegevens
+(ondernemersgegevens/BTW) die pas ingevuld kunnen worden zodra assignment 002
+(facturerende entiteit: eenmanszaak/BV, BTW-nummer, KvK) is afgerond. Vóór die tijd mag er
+GEEN echte factuur met dit sjabloon worden verstuurd — plan §4: "een schoolaankoop vereist
+een geldige factuur van een factureringsbekwame entiteit."
+
+---------------------------------------------------------------
+FACTUUR
+
+Factuurnummer:     [TODO: doorlopend factuurnummer, bv. 2026-001]
+Factuurdatum:      [TODO: datum]
+Vervaldatum:       [TODO: factuurdatum + betaaltermijn, bv. 14 of 30 dagen]
+
+Van:
+  [TODO: bedrijfsnaam — vanuit assignment 002 (eenmanszaak/BV-naam)]
+  [TODO: adres]
+  [TODO: KvK-nummer]
+  [TODO: BTW-nummer (BTW-identificatienummer)]
+  [TODO: IBAN / rekeningnummer]
+
+Aan:
+  [schoolnaam]
+  [TODO: adres school]
+  [TODO: t.a.v. / inkoopordernummer, indien de school dat vereist]
+
+Omschrijving                                    Aantal   Bedrag (excl. BTW)
+-----------------------------------------------------------------------------
+Typcoon [Klas-licentie | School-licentie]            1   [TODO: bedrag]
+  Looptijd: [begindatum] t/m [einddatum] (1 schooljaar)
+  Licentiecode: [code — output van scripts/mint-licence.mjs]
+-----------------------------------------------------------------------------
+Subtotaal (excl. BTW)                                    [TODO: bedrag]
+BTW ([TODO: percentage — af te stemmen binnen assignment 002])   [TODO: bedrag]
+-----------------------------------------------------------------------------
+Totaal (incl. BTW)                                        [TODO: bedrag]
+
+Betaalinstructie: gelieve het totaalbedrag binnen [TODO: betaaltermijn] over te maken
+onder vermelding van het factuurnummer naar bovenstaand rekeningnummer.
+
+Na ontvangst van de betaling wordt de licentiecode hierboven geactiveerd/toegezonden voor
+gebruik door de school (zie scripts/mint-licence.mjs — de code is al zelfstandig geldig
+zodra hij gemint is; koppel het versturen ervan aan bevestigde betaling, niet aan deze
+factuur-stub).
+
+Vragen over deze factuur? scholen@typcoon.com
+---------------------------------------------------------------

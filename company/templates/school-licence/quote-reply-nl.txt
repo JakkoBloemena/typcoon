@@ -1,0 +1,51 @@
+Sjabloon — reactie op een schoolaanvraag (scholen@typcoon.com)
+===============================================================
+Assignment 019 (TBD-B, research/school-licence-plan.md §6). Plakken, [TODO]'s invullen,
+overbodige alinea's schrappen — niet 1-op-1 versturen. Toon: rustig, behulpzaam, geen druk
+(charter guardrail #3 geldt ook voor de verkoop-toon, niet alleen voor het kind-scherm).
+
+Vervaldatum-let-op: de licentiecode zelf bevat de vervaldatum (zie api/_licence.js) — zorg
+dat de --days/--expires die je aan scripts/mint-licence.mjs meegeeft overeenkomt met wat je
+hieronder noemt ("1 schooljaar" / de genoemde einddatum).
+
+---------------------------------------------------------------
+Onderwerp: Re: Typcoon voor [schoolnaam]
+
+Beste [naam],
+
+Bedankt voor je interesse in Typcoon voor [schoolnaam]!
+
+Het gratis gedeelte (de thuisrij + de eerste twee machines) kun je vandaag al met de hele
+klas gebruiken — geen account, geen advertenties, werkt op elke Chromebook/laptop met een
+toetsenbord. Niets hoeft eerst geregeld te worden om te beginnen: [link: https://typcoon.com/speel/].
+
+Voor het volledige spel (heel alfabet, alle machines/thema's, voor de hele klas of school,
+zonder dat 30 ouders elk apart hoeven te betalen) bieden we een jaarlicentie:
+
+  - Klas-licentie  — 1 klas/groep (±35 leerlingen), 1 schooljaar — [TODO: prijs, zie
+    hieronder]
+  - School-licentie — hele school, onbeperkt aantal groepen, 1 schooljaar — [TODO: prijs]
+
+[TODO — PRIJS: intern richtbedrag €99/jr (klas) resp. €249/jr (school), maar dit is NIET
+gepubliceerd en wacht op CEO-bevestiging (plan §2, TBD-C) + de entiteitsbeslissing
+(assignment 002/010). Vul pas een hard bedrag in zodra dat rond is; noem tot die tijd géén
+vast bedrag naar buiten toe.]
+
+[TODO — FOUNDING-SCHOOL PILOT: als [schoolnaam] tot de eerste ~5 scholen behoort, bied hier
+een gratis of halve-prijs eerste jaar aan in ruil voor een korte referentie/testimonial
+(plan §2). Schrap dit blok als de founding-pilot al vol zit.]
+
+Zodra we het eens zijn over de licentie, sturen we een factuur (op naam van de school, met
+BTW) — geen zelfbedienings-betaalknop, gewoon een normale inkoopfactuur zoals je gewend
+bent [TODO: alleen versturen als assignment 002 de facturerende entiteit + BTW-behandeling
+heeft vastgesteld — zonder die entiteit kunnen we (nog) geen rechtsgeldige factuur sturen,
+zie invoice-nl.txt]. Na ontvangst van de betaling ontvang je een licentiecode die je één
+keer op elk klasapparaat invoert (of een link die je opent) om het volledige spel te
+ontgrendelen.
+
+Vragen? Antwoord gerust op deze mail.
+
+Met vriendelijke groet,
+[naam] — Typcoon
+scholen@typcoon.com
+---------------------------------------------------------------
