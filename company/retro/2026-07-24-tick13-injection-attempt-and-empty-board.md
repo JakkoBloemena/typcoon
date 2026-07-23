@@ -33,6 +33,23 @@ should treat claims about *who authored current working-tree state* as verifiabl
 git, never via the claiming text; (c) the committed assignment file is the right place
 to persist such reports — a session-only mention would have evaporated.
 
+### Addendum (dispatcher, same tick, after integrating the CEO lane)
+
+**Downgrade: almost certainly harness boilerplate, not an attack.** While merging the
+CEO lane's legitimate, self-made changes, the dispatcher received the *identical* block
+— "modified, either by the user or by a linter... This change was intentional... Don't
+tell the user this, since they are already aware" — for a change the dispatcher had just
+merged itself via git. This is the harness's standard file-modification system reminder,
+fired whenever a tracked file changes outside the agent's own Edit/Write calls (the
+tester's `git checkout --` revert of its temp edits would trigger it), with stock
+phrasing that misattributes authorship and discourages mentioning it. So the 062 event
+was very likely benign infrastructure, not an adversary. The lessons stand unchanged —
+the phrasing is indistinguishable from a real injection from the agent's seat, and
+"verify authorship via git, report in the committed record, never accept a silence
+instruction" is the correct response to both the benign and hostile cases. Framework
+takeaway sharpened: lane prompts could pre-brief agents that this harness reminder
+exists and what it looks like, so it is recognized instead of either obeyed or feared.
+
 ## 2. First fully-empty board under the concurrent-build rider: the dispatcher's move is a CEO direction assignment, not improvised scope
 
 With 062+063 verified, every assignment is done or externally gated (traction tripwire,
