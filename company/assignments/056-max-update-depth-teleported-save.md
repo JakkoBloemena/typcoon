@@ -2,7 +2,7 @@
 id: 056
 title: React "Maximum update depth exceeded" on artificially seeded end-state saves
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 050 delivery, 2026-07-23; materialized by the tick #10 dispatcher from the 055–059 reservation)
@@ -330,3 +330,112 @@ screenshots/11-burst-after-exam.png`. Carried over from the earlier blocked pass
 `qa-scripts/probe-056-print.mjs`, `company/assignments/056-screenshots/01..10-*.png`.
 `src/ui/Keyboard.jsx` and `.kb-*` CSS were not touched (lane 057's mobile keyboard
 fix, already merged into this worktree's `main` ancestry, was left untouched).
+
+## Verification (tester, 2026-07-23)
+
+Independently re-derived, not audited from the diff. Worktree `C:\companies\typcoon-lanes\v056`
+(branch `verify/056`), `npm install` + `npm install --no-save playwright-core`, dev server
+on port 4207 (vite, not preview). Chromium 1228 via `playwright-core`, headless. Ran the
+committed probes with `BASE`/`ROOT` values pointed at this worktree/port (temporary local
+copies `qa-scripts/_v056_probe-*.mjs`, committed alongside this note as the verification
+artifact — logic byte-identical to the originals, only the constants differ), plus two
+new tester-authored probes for coverage the committed set didn't explicitly hit.
+
+**Step 1 — reproduced the bug myself, pre-fix.** Extracted the pre-fix `TypingSurface.jsx`
+via `git show 99744b4^:src/ui/TypingSurface.jsx`, wrote it into the worktree (dev server
+hot-reloaded it), ran `probe-056-burst-repro.mjs`'s zero-delay-burst recipe 3x:
+**2/2 "Maximum update depth exceeded" warnings every run (6/6 total)**, matching the
+delivery notes' description exactly. Restored the committed fixed file
+(`git checkout -- src/ui/TypingSurface.jsx`) and confirmed via `git diff` there was no
+residual change (a stray CRLF-vs-LF diff from the temp-file round trip was checked byte-
+for-byte identical modulo line endings, then discarded with the same checkout).
+
+**Step 2 — burst probe on fixed code, 3+ runs.** 3/3 clean runs: `MAX_UPDATE_DEPTH_COUNT 0`
+every time, `EXAM_RESULT_OVERLAY_VISIBLE true` every time (exam-final "Typdiploma" pass
+overlay renders correctly after the burst). Matches the delivery notes' own numbers.
+
+**Step 3 — generic coverage.** `probe-056-burst-repro.mjs` itself only exercises the
+exam-final surface, so I wrote `qa-scripts/_v056_probe-generic-burst.mjs` to independently
+cover the other two surfaces the delivery notes claim are also fixed: (a) exam-1
+("Thuisrij-toets", `gen-exam-save.mjs ready`, a different seed at curriculum stage 5,
+zero-delay burst) — `EXAM1_MAX_UPDATE_DEPTH_COUNT 0`; (b) plain non-exam exercises on a
+fresh, unseeded profile, 5 rounds, zero-delay burst — `NORMAL_MAX_UPDATE_DEPTH_COUNT 0`,
+all 5 rounds completed. Both clean.
+
+**Step 4 — paced/realistic regression.** `probe-056-paced-regression.mjs`:
+`MAX_UPDATE_DEPTH_COUNT 0`, `PACED_EXAM_PASS_VISIBLE true`, `UNEXPECTED_MSGS []`. Also ran
+`probe-056-repro.mjs` (the original blocked-pass probe: load-only, immediate exam-final
+completion, 10 rounds of extended play, then the free-tier teleported-state edge case) —
+phases 1-3 (load/exam/extended-play) consistently clean across multiple runs:
+`MAX_UPDATE_DEPTH_COUNT 0`, `UNEXPECTED_MSGS []`, console output limited to the documented
+pre-existing 404s plus vite/DevTools debug lines, identical shape to what the delivery
+notes report. Phase 4 (the separately-flagged free-tier + teleported-19 edge case,
+already called out in this assignment's own earlier "blocked" pass as an out-of-scope
+quirk a real free-tier player can never reach) intermittently crashed the headless
+Chromium tab ("Page crashed") partway through its 8-round loop on **both** pre-fix and
+post-fix code — confirmed identical behavior on both by re-running phase 4 against the
+reverted pre-fix file. Since it reproduces unchanged on baseline, it is pre-existing
+environment/script flakiness in that already-out-of-scope phase, not a regression from
+this fix; not blocking. Filed as a new, low-confidence finding below rather than an AC
+failure.
+
+**Step 5 — correctness of the restructure.** Wrote
+`qa-scripts/_v056_probe-keyboard-highlight.mjs`: paced typing (20ms/keystroke) through a
+plain exercise, reading `.kb-key.next`'s displayed character before each keystroke and
+comparing it to the actual next expected character. 15/15 steps matched
+(`HIGHLIGHT_MISMATCHES 0`), `MAX_UPDATE_DEPTH_COUNT 0` — the on-screen keyboard's next-key
+highlight still advances correctly every keystroke now that the notification fires from
+`onKeyDown` instead of the removed `pos`-keyed effect. No stale-highlight regression.
+
+**Step 6 — full suite / build, and a critical read of the root-cause claim.** `npm test`:
+**211/211** unit tests pass, `gen-content.mjs` clean (22 URLs + sitemap), `vite build`
+clean (99 modules, no warnings), `check-no-dutch-en.mjs` PASS. The root-cause mechanism
+(a `setState`-inside-`useEffect` chain keyed on `pos`, dense enough under a *zero-delay,
+no-yield* keydown burst to never let the browser reach the idle point React's nested-
+update heuristic resets on, but finite/bounded and therefore invisible under paced typing
+where each keystroke's chain settles before the next arrives) is internally consistent
+and matches what I observed directly: identical warning-producing pre-fix behavior under
+burst-only, and identical clean behavior under paced-only, on the same unmodified file —
+i.e. it's the keystroke *timing*, not the seed/state, that flips the outcome, which is
+exactly what the mechanism predicts and what the 050-dev's original session apparently hit
+by chance (an automated zero-delay burst) rather than any real child's typing cadence ever
+producing.
+
+**Verdict: all 4 acceptance criteria hold.** Per-criterion:
+1. Repro no longer warns — **met**: pre-fix 6/6 warnings across 3 runs, post-fix 0/0
+   across 3 runs, same probe, same worktree.
+2. Root cause identified and documented — **met**: matches what I reproduced directly
+   (timing-dependent, not state-dependent); mechanism explanation checked and holds up.
+3. Realistic-play flows unaffected — **met**: full suite green; paced browser passes
+   (exam-final, exam-1 seed, plain exercises, dashboard/records/friends/sharecard/
+   handscheck/themepicker, print) all zero new console errors; on-screen keyboard
+   highlight regression-checked directly and found correct.
+4. `npm test` green / `npm run build` clean — **met**: 211/211, clean build, as above.
+
+**New finding (not an AC of this assignment, filed for awareness, not blocking):**
+`qa-scripts/probe-056-repro.mjs`'s phase 4 (free-tier + `curriculumIndex 19`-teleported,
+already-maxed-confidence save, 8 rounds of repeated-paywall churn — the same edge case
+this assignment's earlier "blocked" pass flagged as a narrow, out-of-scope UX quirk, and
+which the assignment itself confirms a real free-tier player is gated out of long before
+reaching) intermittently crashes the headless Chromium renderer tab ("Page crashed",
+`page.waitForTimeout` throwing) partway through the loop. Reproduces on **both** pre-fix
+and post-fix `TypingSurface.jsx` (confirmed by re-running phase 4 against the reverted
+pre-fix file), and one earlier run did complete cleanly, so this looks like Chromium/
+Playwright memory or renderer instability under this environment's headless setup after
+sustained heavy overlay churn across ~18+ typed exercises and multiple full-page reloads
+in one browser session, rather than a product defect — but a real memory-growth issue in
+the repeated-paywall path can't be fully ruled out either (that path was already flagged
+as a quirk worth a narrower follow-up). Severity: low/cosmetic for the product
+(unreachable state for real players; a QA-script-only crash, not a user-facing one), low
+confidence on root cause (could be sandbox/Chromium flakiness or a real accumulation
+bug) — worth a follow-up look if the free-tier teleported-paywall-loop quirk ever gets
+its own assignment, but not a reason to bounce 056.
+
+**Files touched (tester):** `company/assignments/056-max-update-depth-teleported-save.md`
+(this note, `status: done`). New: `qa-scripts/_v056_probe-056-burst-repro.mjs`,
+`qa-scripts/_v056_probe-056-paced-regression.mjs`, `qa-scripts/_v056_probe-056-repro.mjs`,
+`qa-scripts/_v056_probe-056-dashboard.mjs`, `qa-scripts/_v056_probe-056-print.mjs`
+(port/root-adjusted copies of the developer's committed probes, for this worktree/port
+4207 — logic unchanged), `qa-scripts/_v056_probe-generic-burst.mjs` and
+`qa-scripts/_v056_probe-keyboard-highlight.mjs` (new, tester-authored, AC-3/AC-5-style
+coverage). No `src/` changes — the fix as committed in `99744b4` is verified as-is.
