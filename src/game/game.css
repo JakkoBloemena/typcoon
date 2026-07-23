@@ -36,6 +36,29 @@
   --pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* veerkracht met overshoot */
 }
 
+/* ---------- Thema: Nachtploeg (assignment 051, premium proof-of-swap) ----------
+   Zelfde tokennamen als hierboven — alleen andere waarden (paars/neon i.p.v.
+   blauwdruk/messing). data-theme.js zet dit attribuut op <html> voor het echte
+   thema, of op een klein voorbeeldvlak in de thema-kiezer voor een preview.
+   Minimaal maar niet kapot: het echte pakket van meerdere thema's is assignment 052. */
+[data-theme='nachtploeg'] {
+  --night: #140b2e;
+  --panel: #21134a;
+  --panel-2: #1a0f3c;
+  --line: #4a2f86;
+  --brass: #7c5cff;
+  --brass-hi: #a78bff;
+  --brass-deep: #4b2fb0;
+  --mint: #33e6a0;
+  --mint-deep: #17a06b;
+  --flame: #ff6b4a;
+  --sky: #5fd0ff;
+  --sky-deep: #2f9cc4;
+  --paper: #f4f0ff;
+  --ink-dim: #b7a8e8;
+  --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #241457 12px 24px);
+}
+
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0; min-height: 100%;
@@ -369,6 +392,16 @@ button { font-family: inherit; }
   background: linear-gradient(180deg, var(--brass-hi), var(--brass)); padding: 7px 11px;
   border-radius: var(--r-sm); box-shadow: 0 3px 0 var(--brass-deep);
 }
+
+/* ---------- Thema-kiezer ---------- */
+.theme-card { max-width: 420px; }
+.theme-list { width: 100%; }
+.theme-swatch {
+  width: 46px; height: 40px; flex: none; border-radius: var(--r-sm);
+  background: var(--night); border: 2px solid var(--line);
+  display: flex; align-items: flex-end; justify-content: flex-end; padding: 4px;
+}
+.theme-swatch-dot { width: 14px; height: 14px; border-radius: 999px; background: var(--brass); box-shadow: 0 2px 0 var(--brass-deep); }
 
 .unlock-card { max-width: 420px; }
 .unlock-card .card-icon { font-size: 3rem; }
