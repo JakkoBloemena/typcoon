@@ -111,6 +111,16 @@ export function generateExamText(exam, state, localePack, rng = Math.random) {
     if (exam.caps && rng() < 0.25) w = capitalizeFirst(w);
     words.push(w);
   }
+  // zorg dat elke letter minstens één keer voorkomt (bugfix: de Markov-keten dekt
+  // de hele lettersset waarschijnlijk, maar garandeert het niet — een toets die de
+  // eigen toetsenset niet dekt is geen eerlijke toets, dus dwing dezelfde garantie
+  // af die hieronder al voor symbolen bestaat).
+  for (const L of letters) {
+    if (!words.some((w) => w.toLowerCase().includes(L))) {
+      const at = Math.floor(rng() * words.length);
+      words[at] = words[at] + L;
+    }
+  }
   // zorg dat elk symbool minstens één keer voorkomt
   for (const s of syms) {
     if (/^[0-9]$/.test(s)) {
@@ -130,13 +140,18 @@ export function gradeExam(exam, accuracy, kpm = 0) {
 }
 
 // Verwerk een poging (geslaagd of niet). Bij slagen: bonus-sterren + markeren.
+// Idempotent op een herhaalde pass: het diploma is eenmalige erkenning, dus een
+// toets die al gehaald is levert bij een volgende (theoretische) pass geen tweede
+// beloning op — alleen de pogingsteller loopt door (bugfix: dit werd voorheen niet
+// bewaakt, dus een dubbele pass zou de beloning ook dubbel uitkeren).
 export function applyExamResult(state, exam, pass) {
   const exams = state.exams || newExams();
   const attempts = { ...exams.attempts, [exam.id]: (exams.attempts[exam.id] || 0) + 1 };
-  if (!pass) {
+  const alreadyPassed = exams.passed.includes(exam.id);
+  if (!pass || alreadyPassed) {
     return { state: { ...state, exams: { ...exams, attempts } }, reward: 0 };
   }
-  const passed = exams.passed.includes(exam.id) ? exams.passed : [...exams.passed, exam.id];
+  const passed = [...exams.passed, exam.id];
   const rewards = {
     ...state.rewards,
     stars: state.rewards.stars + EXAM_BONUS_STARS,
