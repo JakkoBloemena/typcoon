@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-24 #13 — OPEN
+- opened: 2026-07-24 00:04 (system clock, consistent with commit clock — tick #12 close commit c86ea24 ~00:02)
+- claimed: 062 + 063 (verification pass — statuses stay needs_verification, this entry is the claim)
+- worktrees: 062 → C:\companies\typcoon-lanes\v062 (verify/062 off main, port 4219); 063 → C:\companies\typcoon-lanes\v063 (verify/063, port 4220); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs (esbuild file locks), orphaned chrome PIDs 25560/30368, dead port-4173 server (all Shareholder housekeeping).
+- ids allocated: 064–065 reserved for defects/proposals the lanes may report (lanes report to the dispatcher, who materializes them — lanes never compute ids); next free after reservation: 066; next decision id: 010
+- notes: mid-tick plan — nothing on the board is blocked_by 062 or 063, so completions unblock nothing new; a bounce dispatches its rework lane same tick (038/044 precedent). Monitor not dispatched: ran healthy inside tick #12 (~45 min ago by commit clock) and tick #12's three pushes changed no product code (qa-scripts + build-time checker only — shipped bundle unchanged). Growth/analyst not dispatched: funnel readout still token-gated (ADR 008 Shareholder asks pending, non-blocking), 035 data-gated, school chain behind 010. 010/020/021/022/003/035 externally gated as before. Lane rules per tick #10/#11 retro: testers re-derive (not audit), finish synchronously, dispatcher-only ids, dispatcher inspects branch state on every completion.
+
 ## Tick 2026-07-23 #12 — CLOSED
 - opened: 2026-07-23 23:10 (system clock, consistent with commit clock — tick #11 close commit 3ea6aa9 ~23:06)
 - claimed: 058 + 059 + 060 + 061 (verification pass — statuses stay needs_verification, this entry is the claim); monitor stage-duty lane (no assignment id — post-deploy health check after tick #11's four production deploys, which the tick-#10 monitor run predates; writes company/metrics only)
