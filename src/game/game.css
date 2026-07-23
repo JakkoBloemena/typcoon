@@ -352,6 +352,32 @@ button { font-family: inherit; }
 .exam-pill:hover { filter: brightness(1.06); }
 .exam-pill:active { transform: translateY(4px); box-shadow: 0 0 0 var(--mint-deep); }
 
+/* diploma-certificaat (assignment 050): mint-toets-idioom hierboven doorgezet in een
+   "document"-blokje binnen het examPass-vier-moment. .cert-print isoleert dit blok
+   bij het afdrukken (window.print()) — de rest van de app (overlay, kaart, knoppen)
+   wordt onzichtbaar zodat er geen chrome meelekt in de afdruk. */
+.cert {
+  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: var(--panel-2); border: 2px dashed var(--mint-deep); border-radius: var(--r-md);
+  padding: 16px 18px; margin: 2px 0;
+}
+.cert-badge { font-size: 2rem; }
+.cert-kicker { color: var(--ink-dim); font-weight: 800; font-size: 0.7rem; letter-spacing: 1.5px; }
+.cert-exam { margin: 2px 0 6px; color: var(--brass); font-size: 1.25rem; }
+.cert-line { margin: 0; color: var(--paper); font-weight: 700; font-size: 0.92rem; }
+.cert-line b { color: var(--brass); font-size: 1.1rem; }
+.cert-date { margin: 8px 0 0; color: var(--ink-dim); font-size: 0.8rem; font-weight: 700; }
+
+@media print {
+  html, body { background: #fff; }
+  body * { visibility: hidden; }
+  .cert-print, .cert-print * { visibility: visible; }
+  .cert-print {
+    position: absolute; top: 48px; left: 50%; transform: translateX(-50%);
+    width: min(520px, 90vw); border-style: solid; background: var(--panel);
+  }
+}
+
 /* eerste-keer hint: verdwijnt zodra het kind de eerste toets aanslaat */
 .type-hint {
   font-family: 'Lilita One', sans-serif; font-size: 1.15rem; color: var(--brass);
@@ -533,6 +559,18 @@ button { font-family: inherit; }
 .dash-value { font-family: 'Lilita One', sans-serif; font-size: 1.8rem; color: var(--brass); font-variant-numeric: tabular-nums; }
 .dash-label { color: var(--ink-dim); font-size: 0.8rem; font-weight: 800; text-align: center; }
 .dash-note { color: var(--ink-dim); font-size: 0.85rem; font-weight: 600; max-width: 520px; text-align: center; line-height: 1.5; }
+
+/* diploma-bewijs op het ouder-dashboard (assignment 050) — zelfde rij-idioom als
+   .records-row: geen nieuwe kleur, alleen een lijst i.p.v. een grid. */
+.dash-exams { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 8px; }
+.dash-exams-title { align-self: flex-start; font-size: 1.15rem; color: var(--paper); margin: 4px 0 0; }
+.dash-exam-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.dash-exam-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 10px 14px; color: var(--paper); font-weight: 700; font-size: 0.9rem;
+}
+.dash-exam-icon { font-size: 1.2rem; }
 
 /* ---------- Dagelijkse terugkeer (streak + opwarm-boost) ---------- */
 .streak-pill {

@@ -150,6 +150,10 @@ const STRINGS = {
   'dash.note': 'Typcoon oefent nauwkeurigheid vóór snelheid: netjes typen levert de meeste munten op. Zo leert je kind spelenderwijs blind typen.',
   'dash.unlock': '🔓 Ontgrendel de volledige fabriek',
   'dash.back': '← Terug',
+  'dash.examsTitle': '🏅 Behaalde diploma\'s',
+  'dash.examEarned': '{name} behaald — {pct}% nauwkeurigheid',
+  'dash.examEarnedNoAcc': '{name} behaald',
+  'dash.examsNone': 'Nog geen toets behaald — die verschijnt hier zodra er één gehaald is.',
 
   'share.title': '📸 Deel je fabriek',
   'share.sub': 'Een plaatje van de fabriek — voor de familie-app of om aan opa en oma te laten zien.',
@@ -282,6 +286,12 @@ const STRINGS = {
   'exam.exam-3': 'Alfabet-toets',
   'exam.exam-4': 'Hoofdletters-toets',
   'exam.exam-final': 'Typdiploma',
+
+  // diploma-certificaat (assignment 050) — verschijnt in het examPass-vier-moment
+  'cert.kicker': 'TYPCOON CERTIFICAAT',
+  'cert.for': 'Voor {naam}',
+  'cert.accuracyLabel': 'nauwkeurigheid',
+  'cert.print': '🖨️ Print of bewaar',
 
   // kleine taal-neutrale bouwstenen die in JS-logica (niet in strings.js zelf)
   // een taal-specifiek woordje nodig hadden — hoorden hier al thuis, waren
@@ -451,6 +461,10 @@ const STRINGS_EN = {
   'dash.note': "Typcoon trains accuracy before speed: typing neatly earns the most coins. That's how your child learns to touch type, one game at a time.",
   'dash.unlock': '🔓 Unlock the full factory',
   'dash.back': '← Back',
+  'dash.examsTitle': '🏅 Diplomas earned',
+  'dash.examEarned': '{name} passed — {pct}% accuracy',
+  'dash.examEarnedNoAcc': '{name} passed',
+  'dash.examsNone': 'No exam passed yet — it will show up here as soon as one is earned.',
 
   'share.title': '📸 Share your factory',
   'share.sub': 'A picture of the factory — for the family chat or to show grandma and grandpa.',
@@ -584,6 +598,11 @@ const STRINGS_EN = {
   'exam.exam-3': 'Alphabet Exam',
   'exam.exam-4': 'Capitals Exam',
   'exam.exam-final': 'Typing Diploma',
+
+  'cert.kicker': 'TYPCOON CERTIFICATE',
+  'cert.for': 'For {naam}',
+  'cert.accuracyLabel': 'accuracy',
+  'cert.print': '🖨️ Print or save',
 
   'common.and': 'and',
 
