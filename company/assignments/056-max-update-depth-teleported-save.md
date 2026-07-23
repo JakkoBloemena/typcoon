@@ -2,7 +2,7 @@
 id: 056
 title: React "Maximum update depth exceeded" on artificially seeded end-state saves
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 050 delivery, 2026-07-23; materialized by the tick #10 dispatcher from the 055–059 reservation)
