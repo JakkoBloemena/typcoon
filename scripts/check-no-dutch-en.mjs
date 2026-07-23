@@ -86,8 +86,15 @@ function walkHtmlFiles(dir) {
 // other attribute on a <link> (a `title`, `aria-label`, or future prose-bearing attribute)
 // stays scannable for Dutch (assignment 059: the old whole-tag strip blinded the checker
 // to exactly that class of attribute).
+// The value alternation is quote-agnostic (assignment 063: 059's version was hard-coded
+// to double quotes only, so a single-quoted or unquoted href/hreflang — never emitted by
+// gen-content.mjs today, but not impossible on a future hand-edit — would leak its real
+// nl slug words through un-blanked and false-positive fail the check). Order matters:
+// try double-quoted, then single-quoted, then bare unquoted (anything up to whitespace or
+// the tag's closing `>` — deliberately does NOT stop at a bare `/`, since a legitimate
+// unquoted URL value contains slashes, e.g. href=https://typcoon.com/leren-typen/).
 const LINK_TAG_RE = /<link\b[^>]*>/gi;
-const LINK_URL_ATTR_RE = /\b(href|hreflang)(\s*=\s*)"[^"]*"/gi;
+const LINK_URL_ATTR_RE = /\b(href|hreflang)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]*)/gi;
 
 // Scans one file's raw HTML source. Returns [{ word, count }] for every non-allowlisted
 // lexicon hit, plus a diacritic hit if any accented character is present.
