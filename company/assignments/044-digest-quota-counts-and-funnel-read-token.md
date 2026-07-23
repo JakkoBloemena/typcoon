@@ -2,7 +2,7 @@
 id: 044
 title: Digest DB row counts (quota proxy) + FUNNEL_READ_TOKEN on /api/admin/funnel
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: ceo (lane ceo/043 report, materialized by tick #8 dispatcher from the 044–049 reservation)
@@ -228,3 +228,83 @@ by this fix) to confirm no regression — still passes.
 the two test files. Nothing pushed; work confined to
 `C:\companies\typcoon-lanes\b044fix` (branch `build/044-fix`). Status left at
 `needs_verification` for re-verification.
+
+## Re-verification (2026-07-23, tester)
+
+Worked in `C:\companies\typcoon-lanes\v044r2` (branch `verify/044-r2`, off main,
+starting at commit `bfec8f5`, which already includes the merged rework
+`7876d1d`/`f63f1a0`). `npm install` run in the worktree; nothing pushed, nothing
+merged, main checkout at `C:\companies\typcoon-lanes` untouched.
+
+**Criterion 1 (digest row counts, fail-safe incl. accounts-totaal) — PASSES,
+independently confirmed.** Read `api/cron/notify.js` directly (not the rework
+notes). `digestMessage`'s "accounts totaal" line now renders via `nb(totalAccounts)`
+(the same null→"n.b." helper used for the four quota rows), and the call site no
+longer pre-collapses: `digestMessage(yesterday, counts, quota.accounts, quota)` —
+`quota.accounts` (which is `null` on a failed count, per `rowCount()`'s try/catch)
+travels unchanged into the renderer. No other code path between `rowCount()` and
+`digestMessage` touches `quota.accounts`, so there is no re-collapse-to-number
+anywhere in the file. Confirmed by running the previous tester's committed probes
+unmodified:
+- `node qa-scripts/probe-044-accounts-total-failsafe.mjs` → `accounts totaal: n.b.`
+  (never `0`), `rijen — accounts: n.b.`, send succeeds (200, `digest: true`).
+- `node qa-scripts/probe-044-all-fail-and-non2xx.mjs` → both failure modes
+  (network-throw and non-2xx), all four counts failing simultaneously →
+  `accounts totaal: n.b.` and all four `rijen` fields `n.b.`, digest still sends
+  (200, `digest: true`) in both cases.
+
+Also probed the combination neither prior tester covered — **accounts succeeding
+while the other three fail** (guards against a fix that broke the happy path while
+fixing the failure path, e.g. an `nb()` that also mishandles a real 0 or other
+falsy-but-defined value). New probe committed:
+`qa-scripts/probe-044-accounts-succeeds-others-fail.mjs` — seeds 7 real `accounts`
+rows, fails `events`/`rate_limits`/`rate_limit_claims`'s count queries; asserts
+`accounts totaal: 7` and `rijen — accounts: 7` (correct real number, not `n.b.`,
+not invented) while the other three fields correctly show `n.b.`, and the digest
+still sends (200, `digest: true`, exactly one Telegram message). Passed.
+
+**Criteria 2–4 regression — PASS, no regression from the rework.**
+- `node qa-scripts/probe-044-funnel-edge-cases.mjs` → all funnel auth edge cases
+  (empty-string tokens, both secrets unset, array-valued query token, OR-semantics,
+  `FUNNEL_READ_TOKEN === CRON_SECRET` rejection at `funnelTokenValid`) still pass
+  unchanged.
+- `npm test` → **199 pass, 0 fail, 0 skipped** (up from the rework's reported 156 —
+  main has grown by 43 tests from unrelated work merged since the rework landed;
+  no new failures introduced by 044).
+- `git show --stat f63f1a0` (the rework commit) confirms the diff touched exactly
+  `api/cron/notify.js` (2 functional lines: the `nb()` call and removal of the
+  `?? 0` pre-collapse, plus a comment), `test/report.test.js`, `test/track.test.js`,
+  and the assignment file itself — no other files. `api/admin/funnel.js` (criteria
+  2/3) is untouched by the rework, consistent with the fix being scoped to
+  criterion 1 only.
+
+**Mutation check (non-tautological tests) — PASSES.** Reintroduced the bounced
+`const totalAccounts = quota.accounts ?? 0;` pre-collapse at the call site (mutating
+the tracked file directly, not a probe) and reran `npm test`: **198 pass, 1 fail**
+— the new `test/track.test.js` case (`cron/notify: een falende accounts-telling
+toont "accounts totaal: n.b.", ...`) failed as expected, since it asserts on the
+end-to-end handler output. The new `test/report.test.js` pure-`digestMessage` case
+correctly did not need to catch this (it exercises the renderer directly, not the
+call site — mutating the call site is exactly what the e2e test is for). Reverted
+via `git checkout -- api/cron/notify.js`; `npm test` back to 199/199 pass;
+`git status`/`git diff --stat` confirm the worktree is diff-clean against
+`bfec8f5` (only the new probe script remains untracked, as intended).
+
+**Live production checks (read-only, no cron trigger) — PASS.** Against
+`https://typcoon.com/api/admin/funnel` (following redirects, `-L`, per
+`cleanUrls` in vercel.json):
+- No `Authorization` header, no `?token=` → `401 {"error":"unauthorized"}`.
+- Garbage token via `?token=garbage-not-a-real-token` → `401 {"error":"unauthorized"}`.
+- Garbage token via `Authorization: Bearer garbage-not-real` header →
+  `401 {"error":"unauthorized"}`.
+No real secrets used or presented at any point; the cron endpoint itself was never
+called against production.
+
+**Verdict: all four criteria pass, independently re-verified with fresh eyes
+(read the code, did not take the rework notes' word for it). No regressions found
+in criteria 2–4. The one previously-bounced defect (accounts-totaal inventing "0")
+is fixed and does not reproduce under any failure combination tried, including a
+combination neither prior tester probed. Flipping `status` to `done`.**
+
+Committed alongside this report:
+`qa-scripts/probe-044-accounts-succeeds-others-fail.mjs`.
