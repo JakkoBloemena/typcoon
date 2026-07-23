@@ -2,7 +2,7 @@
 id: 050
 title: Diploma certificate on pass + surface it as parent proof-of-learning
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: [049]
 opened_by: ceo
@@ -156,3 +156,72 @@ worth a follow-up assignment to track down which effect is looping at that edge,
 does not affect the realistic exam-1/exam-final flows this assignment's own QA drives
 (zero non-404 console errors there) and is unrelated to the certificate/dashboard code
 added here.
+
+## Verification (tester, 2026-07-23)
+
+Independently re-derived every criterion in `C:\companies\typcoon-lanes\v050`
+(`verify/050`, dev server on port 4204, `playwright-core` against the same Chromium
+build the developer used). Did not take the delivery notes as evidence — re-ran
+`npm test`/`npm run build` myself and wrote my own Playwright probes
+(`qa-scripts/verify-050-tester.mjs`, `qa-scripts/verify-050-idempotency.mjs`,
+`qa-scripts/verify-050-empty-dash.mjs`) rather than re-running the developer's own
+`probe-050-cert-dashboard.mjs` as evidence.
+
+1. **`npm test` / `npm run build`** — 211/211 green (matches current `master`'s
+   baseline; the developer's own-noted "208" is stale because assignments 052/055/056
+   landed on top of 050 before this verify branch was cut — expected drift, not a
+   defect). `vite build`: 99 modules, clean. `check-no-dutch-en`: PASS.
+2. **AC1 (real, non-invented values) — the actual gap in the developer's own QA.** The
+   developer's probe only ever typed exam text perfectly (100% every run), so it never
+   proved the shown number is *measured*. I typed exam-1 and exam-final with 1-2
+   deliberate wrong keypresses inserted mid-text via Playwright keyboard events. Result:
+   cert showed **96%** (exam-1) and **99%** (exam-final) — never hardcoded 100 —
+   alongside the seeded username "Timo", the real exam name ("Thuisrij-toets" /
+   "Typdiploma"), and today's date (23 juli 2026). Screenshots:
+   `050-screenshots/tester-t1-imperfect-cert.png`, `tester-t2-final-cert.png`. The
+   examPass banner text and the cert block agree on the same measured number
+   (`"...met 96% nauwkeurigheid"` vs cert `"96% nauwkeurigheid"`).
+3. **AC2 (print, no app chrome)** — spied `window.print` before any exam; clicking
+   "🖨️ Print of bewaar" (or "Print or save" on en) twice on the FINAL diploma produced
+   exactly 2 calls (proportional to clicks, no double-fire bug). `page.emulateMedia({
+   media: 'print' })` confirmed only the `.cert-print` card renders — no topbar, no
+   keyboard, no overlay backdrop, background reset to white. Screenshot:
+   `050-screenshots/tester-t2-print-media-emulation.png`.
+4. **AC3 (dashboard honesty)** — zero earned: no `.dash-exam-list`, honest "Nog geen
+   toets behaald" note (`tester-empty-dash.png`). After earning exam-1: exactly one
+   `.dash-exam-row` with the real accuracy; survived a hard `page.reload()`. **Legacy
+   case constructed myself** (a save with `exams.passed: ['exam-1']` but
+   `tycoon.certificates: {}` — simulating a pre-050 pass): dashboard correctly shows
+   "Thuisrij-toets behaald" with **no** percentage — the `accuracy: null` path, no
+   invented number (`050-screenshots/tester-t3-legacy-dash.png`).
+5. **AC5 (repeat-pass idempotency)** — the real UI cannot drive this end-to-end: once
+   an exam is in `exams.passed`, `nextAvailableExam`/`examReady` permanently exclude it
+   and `.exam-pill` never reappears, so a player literally cannot retake a passed exam.
+   Verified the idempotency guard directly against the shipped `economy.js` functions
+   instead (not the developer's test file — my own script,
+   `qa-scripts/verify-050-idempotency.mjs`): first pass stores `{accuracy:0.74, kpm:55,
+   date:yesterday}`, reward 150; a second `applyTypcoonExamResult` call on the same
+   already-passed exam with different accuracy (1.0) and today's date returns reward 0
+   and leaves the stored certificate byte-for-byte unchanged. Confirmed correct.
+6. **AC4 (nl/en parity)** — drove the full pass-exam + dashboard flow under `uiTaal:
+   'en'` for both a fresh pass and the legacy-row case elsewhere. Cert:
+   "Home Row Exam", "For Timo", "97% accuracy"; dashboard row: "Home Row Exam passed —
+   97% accuracy". Zero Dutch substrings (`behaald`/`nauwkeurig`) on either surface.
+   Screenshots: `050-screenshots/tester-t5-en-cert.png`, `tester-t5-en-dash.png`.
+7. **Console** — zero errors across every probe run beyond the documented pre-existing
+   `/api/track` 404 (no backend on the dev server).
+8. **Mutation check (non-tautological tests)** — temporarily changed the stored
+   certificate's accuracy in `economy.js`'s `applyTypcoonExamResult` from the real
+   `accuracy` param to a hardcoded `1`; re-ran `test/economy.test.js`: 3 tests failed
+   exactly as expected (`...bewaart het ECHTE gemeten resultaat...`, the idempotency
+   test, and `earnedCertificates: ...echte nauwkeurigheid`). Reverted; all 29 pass again
+   confirmed clean (`git diff` on `economy.js` empty after revert).
+
+**All acceptance criteria hold, independently reproduced.** Flipping to `done`.
+
+New defects found: none. (The developer's own proposed follow-up — a pre-existing
+"Maximum update depth exceeded" warning on an unrealistic teleported-to-exam-final save
+— was not reproduced in this pass; it may already be fixed by assignment 056's
+zero-delay-burst fix to `TypingSurface`, which landed on master after 050 branched and
+is present in this verify checkout. Not re-investigated further as it is explicitly out
+of scope for 050.)
