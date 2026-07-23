@@ -2,7 +2,7 @@
 id: 019
 title: Licence record + issuance (concierge tooling)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: [018]
 opened_by: ceo
@@ -84,3 +84,68 @@ new). `npm run build` → succeeds, 92 modules. Manually ran
 `node scripts/mint-licence.mjs` with no env vars (clean exit 1, no crash) and with env vars
 but no `--school`/`--tier` (usage message, exit 1) to confirm the CLI degrades the same way
 the endpoints do.
+
+### Verification (tester, 2026-07-23)
+
+**Verdict: PASS — all 4 TBD-B criteria independently verified. status → done.**
+
+Build/test numbers reproduced independently in the worktree (`C:\companies\typcoon-lanes\v019`,
+branch `verify/019`): `npm install` clean; `npm test` → **126/126 pass** (repo has grown since
+the developer's 117 baseline via other integrated lanes; all 6 new tests in
+`test/school-licence-record.test.js` present and passing — `parseArgs`, mint+record,
+whitespace/empty-school rejection, EXPIRY, unknown-tier rejection, RLS-posture self-check.
+Read each test body: they assert real things (e.g. the EXPIRY test independently calls
+`verifyCode()` on the minted code rather than just checking the DB row) — not vacuous.
+`npm run build` → succeeds, 94 modules.
+
+Per TBD-B checklist (research/school-licence-plan.md §6):
+
+1. **"A licence can be minted and recorded ... and the resulting code unlocks the game via
+   TBD-A."** PASS. Beyond the unit test, drove the real integration myself: minted a code
+   with `mintCode()` and fed it straight into the real `api/school/redeem.js` handler (with
+   `fetch` stubbed only for the rate-limiter's DB call, not for licence logic) →
+   `{status: 200, body: {ok: true, tier: 'klas'}}`. Confirms the code minted by 019's tool is
+   the same code TBD-A's endpoint accepts, not just a same-format lookalike.
+2. **"Expiry is enforced ... verifiable by setting a past expiry."** PASS. Minted a code with
+   `expiresAt` 5 days in the past and fed it into the real redeem handler →
+   `{status: 400, body: {ok: false, error: 'expired'}}`. Also confirmed at the `_licence.js`
+   level directly (`verifyCode()` → `{valid: false, reason: 'expired'}`) and via the shipped
+   test. The `licenses` row is still written (audit trail) while the code independently
+   fails verification — table and code format never disagree, as claimed.
+3. **"A reply/quote template and an invoice template stub exist ... with a clear TODO
+   marker."** PASS. Both `company/templates/school-licence/quote-reply-nl.txt` and
+   `invoice-nl.txt` read in full: `[TODO: ...]` markers cover every 002-gated detail (price,
+   entity name, KvK, BTW-nummer, IBAN, invoice number). `invoice-nl.txt` opens with an
+   explicit "GEEN echte factuur... mag er GEEN echte factuur met dit sjabloon worden
+   verstuurd" warning gated on 002. Neither template states a committed price (correctly
+   flagged TODO pending CEO/002 confirmation) or promises anything the code doesn't deliver.
+4. **"RLS-safe ... only reachable server-side ... never via the anon key."** PASS. Compared
+   `20260723000001_licenses_table.sql` line-by-line against `20260722000001_events_table.sql`:
+   identical posture (`enable row level security`, zero `create policy` statements — service
+   role only). Unique index on `code`, index on `lower(school_name)`, sane column types
+   (`text`, `timestamptz`). **Not applied to the remote/production Supabase project** — file
+   verification only, per instructions; this migration is still pending application by the
+   dispatcher.
+
+**Security / surface check.** `git show --stat` on the build commit (`fc065ed`) confirms zero
+files under `api/` were touched by 019 — no new HTTP endpoint. `find api -type f` and
+`vercel.json` show no new route. `scripts/mint-licence.mjs` requires
+`SCHOOL_LICENSE_SECRET` + `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` and exits 1 cleanly
+with no partial writes when any are absent (reproduced: no env vars → clean exit 1 before
+any network call).
+
+**CLI edge cases exercised:** empty `--school` → usage/exit 1; whitespace-only `--school`
+→ `mintAndRecord` rejects with `school_required`, exit 1; unknown `--tier` → `mintCode`
+rejects with `unknown_tier`, exit 1; both `--days` and `--expires` supplied → `--expires`
+wins, no partial write on downstream failure. All exit 1, no crash, no partial writes — as
+claimed.
+
+**Adjacent defect found (outside TBD-B's criteria, reported to dispatcher, not filed as an
+assignment):** malformed `--days`/`--expires` values crash the CLI with an uncaught
+`RangeError` and a raw Node stack trace instead of a clean usage/error message. Repro:
+`node scripts/mint-licence.mjs --school "Test" --tier klas --days notanumber` (also
+`--expires not-a-date`) → `RangeError: Invalid time value` at `mint-licence.mjs:80`,
+process still exits 1 but via an unhandled exception, not the script's own error handling.
+No data is written (crash happens before the insert), so this is not a safety issue, but it
+is a real robustness gap in a tool a human runs by hand and can easily mistype a date into.
+Low severity, does not block this verdict since it is not one of TBD-B's 4 checklist items.
