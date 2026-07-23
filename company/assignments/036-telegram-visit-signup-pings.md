@@ -2,7 +2,7 @@
 id: 036
 title: Typie pings — message on every site visit + signup, and a daily digest
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: ceo

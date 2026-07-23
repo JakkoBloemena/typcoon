@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #4 — OPEN
+- opened: 2026-07-23 16:31 (commit clock of prior reconcile: 16:27 — clocks agree within skew tolerance)
+- claimed: 033 (acceptance-QA, tester, in_progress), 032 (verification pass; status stays needs_verification, this entry is the claim), 036 (Telegram pings, developer, in_progress)
+- worktrees: 033 → C:\companies\typcoon-lanes\q033c (qa/033-r3, dev-server port 4175); 032 → C:\companies\typcoon-lanes\v032 (verify/032); 036 → C:\companies\typcoon-lanes\b036 (build/036); main checkout: dispatcher/integration only
+- ids allocated: 037–039 reserved for defects the testers may file (testers report to the dispatcher, who materializes them; next free after reservation: 040)
+- notes: debris from the dead tick-#2 QA lane persists — node pid 15508 still holds port 4173, and stale dirs q033/v026 remain in typcoon-lanes; the permission classifier denied both the process kill and the dir removal this session, so the QA lane routes around them (fresh dir, port 4175). File-overlap check: 033 and 032 are read-only lanes; 036 writes api/track.js, api/cron/notify.js, api/_telegram.js, test/track.test.js — no overlap. 033's QA runs against its worktree snapshot of main; 036 lands needs_verification afterward regardless. 034 becomes eligible mid-tick if 033 lands done. Remaining open work stays blocked on external triggers (010 traction tripwire, 014 §6 window, 003/022 payments deferral, 035 data-gated, 015/016/017 behind 014).
+
 ## Tick 2026-07-23 #3 — INTERRUPTED
 - opened: 2026-07-23 16:35 (system clock; tick #2 reconciled and closed INTERRUPTED by this dispatcher immediately before)
 - claimed: 033 (acceptance-QA redispatch, in_progress), 031 (ceo — apply licenses migration, in_progress; the Shareholder resolved 031's ask on 2026-07-23 via /ceo — tick sessions may now run the migration push themselves, per the cc settings commit of that date), 032 (verification pass; status stays needs_verification, this entry is the claim)
