@@ -16,7 +16,8 @@
 //  - REBIRTH/prestige: verkoop je fabriek voor een permanente multiplier — de
 //    leer-voortgang (geleerde letters) reset NOOIT, alleen de economie.
 
-import { applyExamResult } from '../engine/exams.js';
+import { applyExamResult, EXAMS } from '../engine/exams.js';
+import { dayKey } from '../engine/dailyGoal.js';
 
 // Munten per afgeronde oefening vóór alle multipliers.
 export const BASE_PER_EXERCISE = 10;
@@ -57,6 +58,7 @@ export function newTycoon() {
     lastWeekly: null, // vorige week (voor "versla jezelf")
     records: { bestWeekCoins: 0, longestStreak: 0 }, // all-time records
     badges: [], // behaalde prestatie-id's (zie achievements.js)
+    certificates: {}, // examId -> { accuracy, kpm, date } — diploma-bewijs (assignment 050)
   };
 }
 
@@ -279,7 +281,12 @@ export function examReward(examId) {
 
 // Verwerk een afgelegde toets in de spel-state. Bij slagen: munten (geen straf,
 // geen beloning bij zakken — vier-moment of gerust "nog een keer", nooit gating).
-export function applyTypcoonExamResult(state, exam, pass) {
+// `accuracy`/`kpm` zijn optioneel: als de aanroeper ze meegeeft (het echte, gemeten
+// resultaat van déze poging — nooit verzonnen) bewaren we ze als het diploma-
+// certificaat voor de ouder-dashboard-proof (assignment 050). Idempotent net als de
+// engine: een herhaalde pass op een al-gehaalde toets overschrijft het certificaat
+// niet (reward blijft 0, dus de `if (reward > 0)`-tak hieronder wordt overgeslagen).
+export function applyTypcoonExamResult(state, exam, pass, accuracy = null, kpm = null, now = Date.now()) {
   // de engine geeft zelf al aan of dit een VERSE pass is (0 bij een fail én bij een
   // herhaalde pass van een al-gehaalde toets — idempotent, zie exams.test.js).
   const { state: examState, reward: engineReward } = applyExamResult(state, exam, pass);
@@ -293,8 +300,27 @@ export function applyTypcoonExamResult(state, exam, pass) {
         coins: next.tycoon.coins + reward,
         totalCoins: next.tycoon.totalCoins + reward,
         lifetimeCoins: (next.tycoon.lifetimeCoins || 0) + reward,
+        certificates: accuracy == null ? next.tycoon.certificates : {
+          ...next.tycoon.certificates,
+          [exam.id]: { accuracy, kpm, date: dayKey(now) },
+        },
       },
     };
   }
   return { state: next, reward };
+}
+
+// Diploma-bewijs voor het ouder-dashboard (assignment 050): welke toetsen zijn
+// gehaald, en met welke écht-gemeten nauwkeurigheid. Een toets die vóór deze
+// assignment gehaald is heeft geen bewaard certificaat — dan geven we `accuracy:
+// null` terug in plaats van een verzonnen percentage (§geen invented numbers).
+export function earnedCertificates(state) {
+  const passed = state.exams?.passed || [];
+  const certs = state.tycoon?.certificates || {};
+  return EXAMS.filter((e) => passed.includes(e.id)).map((e) => ({
+    id: e.id,
+    icon: e.icon,
+    accuracy: certs[e.id]?.accuracy ?? null,
+    date: certs[e.id]?.date ?? null,
+  }));
 }

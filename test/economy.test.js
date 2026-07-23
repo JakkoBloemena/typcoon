@@ -8,7 +8,7 @@ import {
   BASE_PER_EXERCISE, GOLDEN_MULT, coinsPerSecond, tick, buildingCost,
   buildingUnlocked, buyBuilding, buyUpgrade, prodMultiplier, payoutMultiplier,
   BUILDINGS, MILESTONE_LEVELS, rebirthCost, canRebirth, rebirth, REBIRTH_BASE_COST,
-  EXAM_COIN_REWARD, examReward, applyTypcoonExamResult,
+  EXAM_COIN_REWARD, examReward, applyTypcoonExamResult, earnedCertificates,
 } from '../src/game/economy.js';
 import { pendingAchievements } from '../src/game/achievements.js';
 import { newState } from '../src/engine/index.js';
@@ -231,4 +231,63 @@ test('applyTypcoonExamResult: idempotent — een herhaalde pass op een al-gehaal
   assert.equal(second.reward, 0);
   assert.equal(second.state.tycoon.coins, first.state.tycoon.coins, 'geen tweede muntbeloning');
   assert.deepEqual(second.state.exams.passed, ['exam-1'], 'geen dubbele entry');
+});
+
+// --- diploma-certificaat: echte, gemeten waarden bewaren (assignment 050) ---
+
+test('applyTypcoonExamResult: een verse pass bewaart het ECHTE gemeten resultaat als certificaat, nooit een verzonnen cijfer', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const now = new Date(2026, 6, 23, 10, 0).getTime(); // 2026-07-23, lokale tijd
+  const { state: next } = applyTypcoonExamResult(s, exam1, true, 0.965, 0, now);
+  assert.deepEqual(next.tycoon.certificates['exam-1'], { accuracy: 0.965, kpm: 0, date: '2026-07-23' });
+});
+
+test('applyTypcoonExamResult: geen accuracy meegegeven → geen certificaat bewaard (oude call-vorm blijft werken)', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const { state: next } = applyTypcoonExamResult(s, exam1, true);
+  assert.deepEqual(next.tycoon.certificates, {});
+});
+
+test('applyTypcoonExamResult: een gezakte toets bewaart geen certificaat', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const { state: next } = applyTypcoonExamResult(s, exam1, false, 0.5, 0);
+  assert.deepEqual(next.tycoon.certificates, {});
+});
+
+test('applyTypcoonExamResult: een herhaalde pass overschrijft het bewaarde certificaat niet (eenmalige erkenning)', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const first = applyTypcoonExamResult(s, exam1, true, 0.96, 0, new Date(2026, 6, 20).getTime());
+  const second = applyTypcoonExamResult(first.state, exam1, true, 0.5, 0, new Date(2026, 6, 23).getTime());
+  assert.deepEqual(second.state.tycoon.certificates['exam-1'], { accuracy: 0.96, kpm: 0, date: '2026-07-20' });
+});
+
+test('earnedCertificates: lege lijst zonder gehaalde toetsen', () => {
+  const s = gameState();
+  assert.deepEqual(earnedCertificates(s), []);
+});
+
+test('earnedCertificates: een gehaalde toets komt terug met haar echte nauwkeurigheid', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const { state: next } = applyTypcoonExamResult(s, exam1, true, 0.965, 0, new Date(2026, 6, 23).getTime());
+  const certs = earnedCertificates(next);
+  assert.equal(certs.length, 1);
+  assert.equal(certs[0].id, 'exam-1');
+  assert.equal(certs[0].icon, exam1.icon);
+  assert.equal(certs[0].accuracy, 0.965);
+  assert.equal(certs[0].date, '2026-07-23');
+});
+
+test('earnedCertificates: een toets gehaald vóór deze assignment (geen bewaard certificaat) toont accuracy: null, nooit een verzonnen percentage', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  // simuleert een pre-050 save: exams.passed is gevuld, tycoon.certificates niet
+  const legacy = { ...s, exams: { ...s.exams, passed: [exam1.id] } };
+  const certs = earnedCertificates(legacy);
+  assert.equal(certs.length, 1);
+  assert.equal(certs[0].accuracy, null);
 });

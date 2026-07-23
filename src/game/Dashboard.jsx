@@ -4,6 +4,7 @@
 // verloop over tijd) is de premium-uitbreiding.
 
 import { activeLetters } from '../engine/curriculumCore.js';
+import { earnedCertificates } from './economy.js';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
 
@@ -11,6 +12,7 @@ export default function Dashboard({ game, unlocked, onBack, onOpenUnlock }) {
   const t = game.tycoon;
   const letters = activeLetters(game.curriculum, game.profile.curriculumIndex).length;
   const acc = t.totalKeys ? Math.round((t.correctKeys / t.totalKeys) * 100) : null;
+  const certs = earnedCertificates(game);
 
   const stats = [
     { icon: '🔤', label: gt('dash.letters'), value: `${letters}/26` },
@@ -37,6 +39,28 @@ export default function Dashboard({ game, unlocked, onBack, onOpenUnlock }) {
           </div>
         ))}
       </div>
+
+      {/* diploma-bewijs (assignment 050): alleen tonen wat écht behaald is — geen
+          toets behaald betekent géén sectie, nooit een verzonnen "behaald"-regel. */}
+      {certs.length > 0 ? (
+        <div className="dash-exams">
+          <h3 className="dash-exams-title">{gt('dash.examsTitle')}</h3>
+          <ul className="dash-exam-list">
+            {certs.map((c) => (
+              <li className="dash-exam-row" key={c.id}>
+                <span className="dash-exam-icon">{c.icon}</span>
+                <span>
+                  {c.accuracy == null
+                    ? gt('dash.examEarnedNoAcc', { name: gt('exam.' + c.id) })
+                    : gt('dash.examEarned', { name: gt('exam.' + c.id), pct: Math.round(c.accuracy * 100) })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="dash-note">{gt('dash.examsNone')}</p>
+      )}
 
       <p className="dash-note">{gt('dash.note')}</p>
 

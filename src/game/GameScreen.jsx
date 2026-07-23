@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { processKeystroke, finalizeExercise, generateExercise } from '../engine/index.js';
 import { activeKeys, activeLetters } from '../engine/curriculumCore.js';
-import { nextAvailableExam, generateExamText, gradeExam } from '../engine/exams.js';
+import { nextAvailableExam, generateExamText, gradeExam, getExam } from '../engine/exams.js';
 import { sessionKpm, updateSpeedAvg } from '../engine/speed.js';
 import {
   BUILDINGS, UPGRADES, GOLDEN_CHANCE, buildingCost, buildingUnlocked, coinsPerSecond,
@@ -32,7 +32,7 @@ import { makeThanksToken, ownCode, REFERRAL_MILESTONE_LETTERS } from './referral
 import { checkWeek } from './weekly.js';
 import { newFormState, pushKeystroke } from './reminders.js';
 import Unlock from './Unlock.jsx';
-import { fmt } from './format.js';
+import { fmt, fmtDate } from './format.js';
 import { gt } from './strings.js';
 
 const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden getypt is
@@ -328,12 +328,15 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       const accuracy = att ? 1 - err / att : 1;
       const kpm = sessionKpm(text.length, performance.now() - startedAt);
       const graded = gradeExam(exam, accuracy, kpm);
-      const { state: next, reward } = applyTypcoonExamResult(engineRef.current, exam, graded.pass);
+      // echte, gemeten waarden meegeven (geen invented numbers): applyTypcoonExamResult
+      // bewaart ze als het diploma-certificaat voor de ouder-dashboard-proof (050).
+      const { state: next, reward } = applyTypcoonExamResult(engineRef.current, exam, graded.pass, graded.accuracy, graded.kpm);
       setGame(next);
       sound.unlock?.();
       if (graded.pass) setTimeout(() => sound.cheer?.('cheer-classic'), 150);
       setExamMode(null);
-      setMoment({ kind: graded.pass ? 'examPass' : 'examFail', examId: exam.id, accuracy: graded.accuracy, reward });
+      const cert = next.tycoon.certificates?.[exam.id];
+      setMoment({ kind: graded.pass ? 'examPass' : 'examFail', examId: exam.id, accuracy: graded.accuracy, reward, date: cert?.date });
     },
     [examMode, setGame],
   );
@@ -611,6 +614,18 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
               <h3>{gt('exam.passTitle')}</h3>
               <p>{gt('exam.passBody', { name: gt('exam.' + moment.examId), pct: Math.round(moment.accuracy * 100) })}</p>
               {moment.reward > 0 && <div className="welcome-bonus"><Coin className="btn-coin" /> +{fmt(moment.reward)}</div>}
+              {/* diploma-certificaat (assignment 050) — .cert-print isoleert dit blok
+                  bij het afdrukken (@media print in game.css), zodat er geen app-chrome
+                  meelekt in de afdruk. Alleen echte, gemeten waarden: geen verzonnen cijfers. */}
+              <div className="cert cert-print">
+                <div className="cert-badge">{getExam(moment.examId)?.icon || '🏅'}</div>
+                <div className="cert-kicker">{gt('cert.kicker')}</div>
+                <h4 className="cert-exam">{gt('exam.' + moment.examId)}</h4>
+                <p className="cert-line">{gt('cert.for', { naam: state.profile.naam })}</p>
+                <p className="cert-line"><b>{Math.round(moment.accuracy * 100)}%</b> {gt('cert.accuracyLabel')}</p>
+                {moment.date && <p className="cert-date">{fmtDate(moment.date)}</p>}
+              </div>
+              <button className="btn-ghost" onClick={() => window.print()}>{gt('cert.print')}</button>
             </>)}
             {moment.kind === 'examFail' && (<>
               <Mascot pose={1} className="card-mascot" />

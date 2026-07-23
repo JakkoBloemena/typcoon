@@ -35,3 +35,13 @@ export function fmt(n) {
   }
   return n.toLocaleString(intlLocale);
 }
+
+// Leesbare datum voor het diploma-certificaat (assignment 050) — `dateKey` is een
+// lokale YYYY-MM-DD (zie engine/dailyGoal.js dayKey), taal-afhankelijk net als fmt().
+export function fmtDate(dateKey) {
+  if (!dateKey) return '';
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const locale = getLocale();
+  const intlLocale = locale === 'en' ? 'en-US' : 'nl-NL';
+  return new Date(y, m - 1, d).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+}

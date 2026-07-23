@@ -12,7 +12,7 @@ import enPack from '../src/data/en/index.js';
 import { BUILDINGS, UPGRADES } from '../src/game/economy.js';
 import { ACHIEVEMENTS } from '../src/game/achievements.js';
 import { EXAMS } from '../src/engine/exams.js';
-import { fmt } from '../src/game/format.js';
+import { fmt, fmtDate } from '../src/game/format.js';
 
 test('setLocale/getLocale: valid locales apply, unknown falls back to nl', () => {
   setLocale('en');
@@ -70,6 +70,7 @@ const STATIC_FLOW_KEYS = [
   'common.and',
   'exam.pillLabel', 'exam.banner', 'exam.offerTitle', 'exam.offerBody', 'exam.offerStart',
   'exam.offerDecline', 'exam.passTitle', 'exam.passBody', 'exam.failTitle', 'exam.failBody',
+  'cert.kicker', 'cert.for', 'cert.accuracyLabel', 'cert.print',
 ];
 
 const dynamicKeys = [
@@ -151,4 +152,20 @@ test('fmt(): number formatting follows the active locale (no Dutch mln/mld/bjn i
   assert.equal(fmt(9_876_000_000), '9.88 B');
   for (const bad of ['mln', 'mld', 'bjn']) assert.equal(fmt(9_876_000_000_000).includes(bad), false);
   setLocale('nl');
+});
+
+// fmtDate: leesbare datum op het diploma-certificaat (assignment 050), taal-afhankelijk
+// net als fmt() — geen Engelse datumnotatie in een nl-sessie of andersom.
+test('fmtDate(): formats a YYYY-MM-DD date-key per the active locale', () => {
+  setLocale('nl');
+  assert.equal(fmtDate('2026-07-23'), '23 juli 2026');
+  setLocale('en');
+  assert.equal(fmtDate('2026-07-23'), 'July 23, 2026');
+  setLocale('nl');
+});
+
+test('fmtDate(): empty/missing date-key returns an empty string, never a fabricated date', () => {
+  assert.equal(fmtDate(null), '');
+  assert.equal(fmtDate(undefined), '');
+  assert.equal(fmtDate(''), '');
 });
