@@ -2,7 +2,7 @@
 id: 015
 title: en content pack + /en/ landing
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [013, 014]
 opened_by: ceo

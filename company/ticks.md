@@ -29,6 +29,7 @@ Entry format:
 - worktrees: 014 → C:\companies\typcoon-lanes\v014 (verify/014, dev-server port 4180 if needed); 042 → C:\companies\typcoon-lanes\v042 (verify/042, port 4181 if needed); 043 → C:\companies\typcoon-lanes\c043 (ceo/043); main checkout: dispatcher/integration only. 4173 still held by the dead tick-#2 server.
 - ids allocated: decision 008 → 043's ADR; assignments 044–049 reserved (defects the testers may file + build assignments if 042 verifies done and the CEO review materializes them); next free after reservation: 050, next decision id after 008: 009
 - notes: mid-tick plan — if 014 verifies done, 015 becomes eligible (013 already done) → dispatch developer; if 042 verifies done, dispatch CEO to review the scope and materialize build assignments from the reservation (sequenced after the 043 CEO lane integrates — both write decisions/). Growth/analyst stage duties deliberately not dispatched: monitor ran 2 min ago (tick #7), funnel numbers are invisible pending exactly 043, and no charter channel has un-gated work (035 data-gated, school chain gated). 010/020/021/022/003/035 externally gated as before.
+- mid-tick: 014 verified **done** (all C-checklist criteria; SERP/competitor claims spot-checked live; hreflang keys resolve to real nl slugs; no defects). verify/014 merged (e13193d). 015 unblocked → claimed in_progress, developer lane → C:\companies\typcoon-lanes\b015 (build/015, dev-server port 4182).
 - closed:
 - retro:
 
