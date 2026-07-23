@@ -29,6 +29,7 @@ Entry format:
 - worktrees: C:\companies\typcoon-lanes\v013 / v019 / v024 / v026 / v027 / v028 / v029 / v030 (branches verify/013 …); main checkout: dispatcher/integration only
 - ids allocated: none to lanes — testers report defects to the dispatcher, who materializes them from 031 (next free after this tick's board: 031)
 - notes: article chain 026→027→028→029 blocked_by was a build-time nl.mjs file-collision guard (tick #1 ledger); verification lanes are read-only against landed main, so all four verify in parallel. 019 note carried: licenses migration NOT yet applied to prod — dispatcher applies after 019 verifies. All other open work blocked on external triggers (010 traction tripwire, 014 §6 six-week window, 003/022 payments deferral).
+- mid-tick (after 8/8 verified done): 031 (ceo — apply licenses migration; dispatcher's `supabase db push` denied by session permission classifier, human-gated) and 032 (mint arg robustness, 019-tester proposal) materialized. 032 claimed in_progress → worktree C:\companies\typcoon-lanes\b032 (build/032). Product-owner dispatched to scope the next milestone (board has no other actionable work until external triggers) → worktree C:\companies\typcoon-lanes\po33 (po/next-milestone), ids 033–036 pre-allocated for whatever it opens.
 
 ## Tick 2026-07-23 #1 — CLOSED
 - opened: 2026-07-23 13:27
