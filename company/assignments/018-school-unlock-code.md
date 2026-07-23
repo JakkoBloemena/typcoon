@@ -2,7 +2,7 @@
 id: 018
 title: School unlock-code mechanism (second door to the existing unlock)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -85,3 +85,61 @@ instead verified against the real handler functions in the integration test (byp
 
 **Not touched, as instructed:** `Unlock.jsx`'s parent math-gate, `premium.js`'s
 `completePurchase()`/flag logic, `supabase/schema.sql` (no `licenses` table — that's 019).
+
+### Verification Note (tester, 2026-07-23)
+
+All five TBD-A criteria (research/school-licence-plan.md §6) independently re-verified,
+hands-on, against `api/_licence.js`, `api/school/redeem.js`, `src/net/school.js`,
+`src/game/schoolLicence.js`, `src/game/SchoolCode.jsx`. **Verdict: done.**
+
+- **Not mintable from client source.** `dist/` built fresh (`npm install && npm run
+  build`, 92 modules) and grepped: zero occurrences of `SCHOOL_LICENSE_SECRET`,
+  `verifyCode`, `mintCode`, `createHmac` in `dist/assets/*.js` — `api/_licence.js` is
+  never imported by any `src/` file (grep confirms), only referenced in a comment.
+  Ran an independent (not the developer's) Node script directly against
+  `verifyCode()`/`mintCode()`: tampered tier byte, tampered expiry bytes, tampered
+  signature byte, 8 guessed/common secrets, malformed/empty/null/undefined/oversized/
+  unicode input — every case correctly rejected (`invalid`/`malformed`/`expired`,
+  never a false `valid`). Signature space is 32 bits (8 hex chars); infeasible to
+  brute behind the 20/hr rate limit.
+- **Expiry.** Minted an already-expired code and a just-past-boundary code via
+  `mintCode()` myself — both correctly rejected with `reason:'expired'`. Replay
+  re-checked against plan §3 text directly ("geen seat counting of licentie-
+  handhaving") — confirmed this is the documented honour-system choice, not a
+  euphemism; independently confirmed same valid code redeems twice (200 both times)
+  via my own shimmed endpoint call, matching the plan.
+- **Degradation.** Ran `api/school/redeem.js` myself with zero env vars: clean `500
+  not_configured`, no crash, including against hostile inputs (huge 1MB code string,
+  object/array in place of the code field, missing body) — all degrade cleanly, never
+  a throw. Rate limiting independently retested with my own in-memory Supabase shim:
+  20 allowed, 21st→429, independent IPs get independent buckets, a valid code from an
+  unrelated bucket still succeeds — mirrors the account-endpoint pattern as claimed.
+- **Child-safe strings.** Read all `school.*` keys in `src/game/strings.js` (NL) —
+  calm, concrete, no blame/scare language ("Die code klopt niet", "Vraag je school om
+  een nieuwe", "wacht een paar minuten"). Judged child-safe.
+- **No child PII.** Read `src/net/school.js` + `schoolLicence.js`: the only network
+  call is `POST /api/school/redeem {code}` — no name, no profile, no device id, no
+  account. Confirmed by reading the actual fetch call, not inferred.
+- **Unlock parity / persistence — real browser (Playwright/Chromium).** Ran the real
+  app via `vite dev`, created a profile, simulated a successful redeem (same
+  `completePurchase()` flag `localStorage['typcoon:unlocked']='1'`), reloaded: flag
+  persisted, both unlock entry points (`🔓`/`🏫`) correctly hid once unlocked. Clicked
+  the real **"Opnieuw beginnen"** button (native confirm dialog auto-accepted):
+  `typcoon:unlocked` stayed `'1'` while `typcoon:save` was cleared to `null` — durability
+  identical to the family unlock, because it's the literal same flag/mechanism.
+  Also confirmed via `vite dev`'s SPA-fallback for `/api/*` (404, not a false-200 HTML
+  page) that an unreachable backend in dev mode cannot be mistaken for a successful
+  redeem — `net/school.js`'s `r.ok` is correctly `false` on that 404.
+- **Untouched math-gate/premium.** `git log` on `src/game/Unlock.jsx` and
+  `src/game/premium.js`: last touching commit is `4ef580d` (007, pre-018) for both —
+  018 added zero commits to either file. Confirmed by reading both files in full: the
+  math-gate, `completePurchase()`, and the unlock flag logic are exactly the
+  pre-existing code.
+- **Build/test.** `npm install` (fresh worktree, no `node_modules`) → clean. `npm run
+  build` → succeeds, 92 modules, no secret in `dist/`. `npm test` → **111/111 pass**
+  (15 of them the new `test/school-licence.test.js`, independently re-run alone:
+  15/15). Matches main's 111/111 baseline exactly — the developer Note's "92/92" is
+  stale/inaccurate but the current tree is at parity.
+
+No defects found. No regression to the family unlock or math-gate. Filed no new
+assignments — nothing broke.
