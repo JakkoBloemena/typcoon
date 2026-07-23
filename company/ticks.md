@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #6 — OPEN
+- opened: 2026-07-23 17:42 (system clock; agrees with commit clock 17:40 — tick #5's closed-at 17:58 was written by a skewed clock, entry itself properly CLOSED)
+- claimed: 038 (verification pass; status stays needs_verification, this entry is the claim), 039 (ceo — apply claims migration; in_progress — probing whether the cc allow-rule fix for `supabase db push` landed, per cc settings commit da30a02 of 2026-07-23)
+- worktrees: 038 → C:\companies\typcoon-lanes\v038 (verify/038; dev-server port 4178 if one is needed — 4173 still held by the dead tick-#2 server); 039 → main checkout (supabase project link lives there; ceo lane only, sole main-checkout lane)
+- ids allocated: 040–041 reserved for defects the testers may file (038 lane now; 036 re-verify lane mid-tick if 038 verifies done — testers report to the dispatcher, who materializes them); next free after reservation: 042
+
 ## Tick 2026-07-23 #5 — CLOSED
 - opened: 2026-07-23 17:14 (system clock read this session; prior tick closed 17:09)
 - claimed: 036, 037 — verification pass (statuses stay needs_verification; this entry is the claim)

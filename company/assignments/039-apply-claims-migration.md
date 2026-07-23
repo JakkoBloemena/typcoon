@@ -2,7 +2,7 @@
 id: 039
 title: Apply migration 20260723000002 (rate_limit_claims) to production
 owner: ceo
-status: blocked
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #5, enforcing PROTOCOL blocked-on-human rule)
