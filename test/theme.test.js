@@ -10,6 +10,54 @@ import {
   newTycoon, coinsPerSecond, payoutForExercise, buildingCost, rebirthCost,
   earnFromExercise, milestoneMultiplier, buyBuilding,
 } from '../src/game/economy.js';
+import { gt, setLocale } from '../src/game/strings.js';
+import { readFileSync } from 'node:fs';
+
+// Elk thema is een complete leverbare eenheid (assignment 052): een label + een
+// beschrijving in BEIDE talen, én een echt kleurenblok in game.css. Deze test
+// vangt een half-toegevoegd thema (wel in de registry, geen strings of geen CSS).
+const GAME_CSS = readFileSync(new URL('../src/game/game.css', import.meta.url), 'utf8');
+
+test('elk thema heeft nl+en labels/beschrijvingen en een CSS-blok', () => {
+  for (const t of THEMES) {
+    for (const locale of ['nl', 'en']) {
+      setLocale(locale);
+      const label = gt('theme.' + t.id);
+      const desc = gt('theme.' + t.id + '.desc');
+      assert.notEqual(label, 'theme.' + t.id, `${t.id}: ontbrekend label (${locale})`);
+      assert.notEqual(desc, 'theme.' + t.id + '.desc', `${t.id}: ontbrekende beschrijving (${locale})`);
+      assert.ok(label.trim().length > 0 && desc.trim().length > 0, `${t.id}: lege string (${locale})`);
+    }
+    // Het standaard-thema woont in :root; alternatieven hebben een eigen data-theme-blok.
+    if (t.id !== DEFAULT_THEME) {
+      assert.ok(GAME_CSS.includes(`[data-theme='${t.id}']`), `${t.id}: geen [data-theme] blok in game.css`);
+    }
+  }
+  setLocale('nl'); // reset voor andere testbestanden
+});
+
+// De vier thema-haken die 052 toevoegde moeten een default in :root hebben, anders
+// valt het standaard-thema terug op een ongedefinieerde waarde.
+test('de thema-haken (--on-accent/--sink/--bg-wash/--bg-grid) hebben een :root-default', () => {
+  const root = GAME_CSS.slice(GAME_CSS.indexOf(':root'), GAME_CSS.indexOf('}', GAME_CSS.indexOf(':root')));
+  for (const token of ['--on-accent', '--sink', '--bg-wash', '--bg-grid']) {
+    assert.ok(new RegExp(token + '\\s*:').test(root), `${token} mist een :root default`);
+  }
+});
+
+// De paywall mag niets beloven dat niet bestaat (decisions/009): de geschrapte
+// 'fabrieks-uitbreiding'/'factory expansion'-claim mag in GEEN taal terugkeren.
+test('geen paywall-tekst belooft een niet-bestaande fabrieksuitbreiding', () => {
+  for (const locale of ['nl', 'en']) {
+    setLocale(locale);
+    for (const key of ['unlock.perkPrestige', 'premium.chapterBody', 'unlock.buyTitle',
+      'unlock.perkLetters', 'unlock.perkMachines', 'unlock.perkDashboard', 'unlock.perkFamily']) {
+      const v = gt(key).toLowerCase();
+      assert.equal(/uitbreiding|expansion/.test(v), false, `${key} (${locale}) belooft nog een uitbreiding`);
+    }
+  }
+  setLocale('nl');
+});
 
 test('het standaard-thema is gratis; er is minstens één vergrendeld alternatief', () => {
   const def = themeDef(DEFAULT_THEME);
