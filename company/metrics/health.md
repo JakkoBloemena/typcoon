@@ -195,3 +195,77 @@ endpoints), no auth boundary breach, sitemap count matches expectation (22), spe
 ledger clean and unchanged, no renewal risk. One carried-forward measurement gap
 (quota consumption, ADR 008, unchanged) — not a new finding. No incident to open this
 tick.**
+
+## 2026-07-23 23:20 UTC — tick #14 (ADR 010 stage duty: health + trigger evaluation)
+
+First monitor pass under ADR 010's build-hold (decisions/010). No product-code
+deploys happened between tick #12 and this tick — confirmed both ways: `git log main`
+shows no commits touching `api/`, `src/`, `index.html`, `vite.config.js`,
+`vercel.json`, or `package.json` since `3240cd5` (061), which was already live at
+tick #12; and the `/speel/` bundle hashes below are byte-identical to tick #12's.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, 0.40s, `Last-Modified: Thu, 23 Jul 2026 23:19:34 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle `speel-Dx9n5T0C.js` / `speel-B2OxpAxn.css` — **identical hashes to tick #12**, direct confirmation the same build is still being served, no drift |
+| `GET /en/` | 200 — still live, consistent with the en launch recorded at tick #12, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** — matches tick #12, no change |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` — auth boundary holds |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` — bad token rejected, no data leak |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` — digest endpoint still gated |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` — bad bearer rejected |
+| `GET /api/track` | **405** — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+All 18 checks match tick #12's results exactly (same status codes, same bundle
+hashes, same sitemap count, same auth rejections). No 4xx/5xx surprises, no auth
+boundary breach, no stale or drifted content. This is the expected result given zero
+deploys since tick #12 — reported as a positive confirmation, not assumed.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, not
+re-opened.** No Vercel/Supabase dashboard or API credentials in this environment.
+Standing Shareholder ask 4 in decisions/010 (monthly glance at usage pages) remains
+open and unactioned as of this tick — flagging again per protocol rather than
+treating silence as "no risk."
+
+**Spend: verified against `company/metrics/spend.md`, matches reality, no changes.**
+Four lines unchanged since tick #7: domain (Shareholder-owned auto-renew, immaterial,
+untracked per decisions/003), Vercel/Supabase/Resend all €0 free tier (escalate to
+CEO before any paid-plan upgrade). Checked decisions/010 explicitly for spend
+language — it states "Zero new spend; `metrics/spend.md` unchanged" and confirms no
+commitment is created by the build-hold. No line in spend.md carries a Shareholder
+"approved one-time, cancel before renewal" condition to watch. Budget ceiling
+€50/month (decisions/003) — current recorded recurring spend: €0.
+
+**ADR 010 revisit-trigger evaluation (T1–T6):**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` baseline is dated 2026-07-23 (site verified pre-adoption, sitemap submitted 2026-07-08); today is 2026-07-24, ~1 day of possible data. No new entry added to search-console.md since baseline (git log confirms file unchanged). |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (git log confirms unchanged since its creation at 043); `FUNNEL_READ_TOKEN` is not set in this monitor's environment and no Shareholder digest paste has landed. Cannot compute a 7-day average from zero rows. |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two data sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en itself is confirmed live and healthy (see endpoint checks) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** This lands with the Shareholder via Telegram/paste per ADR 008; this monitor has no Telegram access and no repo artifact records one. No evidence either way. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. (Precondition — empty funnel.md, no token — is currently true, consistent with T2's evaluation above, but the date gate controls.) |
+| T6 | Any production incident or new defect | **NOT FIRED.** This tick's health check found zero incidents: 18/18 endpoint checks pass, auth boundaries intact, bundle unchanged, spend clean. |
+
+**No trigger fired this tick.** The build-hold stands unchanged; nothing reopens
+dispatchable work.
+
+**Verdict: HEALTHY. Bundle unchanged since tick #12 (byte-identical asset hashes,
+zero product-code commits on `main` since 3240cd5/061), all 18 checks pass, both
+admin/cron auth boundaries intact, sitemap steady at 22 URLs, spend ledger clean and
+unchanged, no renewal risk. All six ADR 010 revisit triggers evaluated explicitly;
+none fired (T1/T5 not yet due, T2/T3/T4 unevaluable for lack of data, T6 clear). One
+carried-forward measurement gap (quota consumption, ADR 008, unchanged) — not a new
+finding. No incident to open, no defect to materialize this tick.**
