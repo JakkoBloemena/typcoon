@@ -23,6 +23,14 @@ Entry format:
 
 ---
 
+## Tick 2026-07-24 #14 — OPEN
+- opened: 2026-07-24 01:17 (system clock, consistent with commit clock — tick #13 close commit 5a9d4cd ~00:32)
+- claimed: none — ADR 010 build-hold is in force; board holds zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035). This tick executes the ADR's standing mandate: monitor stage duty + revisit-trigger evaluation (last monitor health pass was tick #12, ~2h ago by commit clock; tick #13 skipped it citing recency).
+- worktrees: monitor → C:\companies\typcoon-lanes\mon14 (mon/tick14; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (all ADR 010 ask 3 housekeeping).
+- ids allocated: 065–066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them — lanes never compute ids); next free after reservation: 067; next decision id: 011
+- closed:
+- retro:
+
 ## Tick 2026-07-24 #13 — CLOSED
 - opened: 2026-07-24 00:04 (system clock, consistent with commit clock — tick #12 close commit c86ea24 ~00:02)
 - claimed: 062 + 063 (verification pass — statuses stay needs_verification, this entry is the claim)
