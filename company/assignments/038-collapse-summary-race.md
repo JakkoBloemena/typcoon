@@ -2,7 +2,7 @@
 id: 038
 title: Fix double-send race in the >20/min collapse summary (atomic dedup claim)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #5), filed by the 036 verification tester (reproduced defect — tester sets priority by user impact per PROTOCOL)
@@ -146,3 +146,120 @@ action per decisions/005 precedent**), `supabase/schema.sql` (mirrored the new t
 assignments):** `rate_limits` and now `rate_limit_claims` both have no prune/TTL job
 (same pre-existing gap the 036 tester already flagged for `rate_limits`) — table growth
 is unbounded over time for both. Not in scope for this fix.
+
+## Verification (tester, 2026-07-23)
+
+**Setup.** Worktree `verify/038` (already checked out on top of the integrated build,
+`a0350fd`/`baba123`), `npm install` (fresh, 22 packages), `npm test`, `npm run build`,
+reverted the established `scripts/gen-content.mjs`-driven `public/**` churn with
+`git checkout -- public/` before committing, per precedent.
+
+**Results — all four acceptance criteria independently verified, all pass:**
+
+1. **`node qa-scripts/probe-036-race.mjs`** → `PASS: overflow summary sent exactly once
+   even under concurrent next-minute invocations.` Exit 0. Matches build notes. The probe
+   genuinely models PostgREST's real `on_conflict`/`ignore-duplicates` return shape (empty
+   array = loser, `[row]` = winner), not a hand-wave.
+
+2. **`npm test` → 146/146 passing** (baseline 143 + 3 new). Matches build notes exactly.
+
+3. **Read `api/_ratelimit.js`'s `claimOnce()` and `api/track.js`'s `pingVisit()`
+   critically, then probed the edge cases by hand** — wrote
+   `qa-scripts/probe-038-claimonce-edges.mjs` (new, committed) covering three angles the
+   existing suite/probe don't exercise directly:
+   - **Missing-table fail-safe (039 unapplied)**: simulated the real PostgREST 404/PGRST205
+     shape a POST to a nonexistent `rate_limit_claims` relation would actually return
+     (JSON error body, not an empty array, `ok: false`). `claimOnce()` correctly returns
+     `false` (never throws); the full `pingVisit()` path through `track.js`'s handler
+     still returns 204, never throws into the request path, and correctly sends **no**
+     overflow summary at all (fails safe to "not won" exactly as the build notes claim —
+     confirmed this is a real behavior, not just an assertion in the notes).
+   - **Claim fetch throws (network blip)**: same result — `false`, no throw, no summary
+     sent, request path unaffected.
+   - **Three-way concurrency**: extended the two-way race to three simultaneous callers
+     racing the same `tgflag:<minute>` claim (`Promise.all` of three, same
+     `setImmediate`-tick interleave forcing technique as the existing race test/probe) —
+     exactly one summary sent, not zero, not two, not three.
+   All 7 checks in the new probe pass (`node qa-scripts/probe-038-claimonce-edges.mjs` →
+   exit 0). PostgREST semantics assumption (`on_conflict=bucket` +
+   `Prefer: resolution=ignore-duplicates,return=representation` → winner gets `[row]`,
+   loser gets `[]`, all via a real Postgres unique-index conflict) checked against
+   documented PostgREST upsert behavior and found consistent with the code's assumptions.
+
+4. **Normal collapse behavior unchanged** — re-read `api/_visitping.js` (fully untouched,
+   confirmed via the pure unit tests at lines 139-141 in the suite output: `minuteKey`,
+   `shouldPingVisit`, `overflowCount` all still pass unmodified) and the three new
+   `test/track.test.js` cases read skeptically line by line:
+   - The "normal overflow" test genuinely exercises the minute-boundary path (freezes
+     `Date.now`, fills 25 pings in minute 0 sequentially, advances a full minute, asserts
+     exactly one `+5 bezoeken afgelopen minuut`) — not tautological, it would fail against
+     the pre-038 code path if the atomic claim were removed.
+   - The "no overflow" test (15 ≤ 20 in the previous minute) asserts zero overflow
+     messages — real negative-case coverage.
+   - The ported race test is the same scenario as `probe-036-race.mjs`, `raceDelay: true`
+     forcing a `setImmediate` tick before every DB call including inside the claim POST
+     path, so the race window is genuinely forced open; the claim itself has no `await`
+     between the shim's exists-check and its push (mirroring what a real unique
+     constraint guarantees atomically at the DB level) — this is the correct way to
+     model "atomic at the DB, but the surrounding I/O still has real latency", not a shim
+     that accidentally can't race. Confirmed by manually reverting `api/track.js` to call
+     `rateLimited()` instead of `claimOnce()` for the `tgflag` bucket and re-running just
+     this test — it fails (2 overflow messages) as expected, proving the test has actual
+     teeth and isn't tautological. Reverted after confirming.
+   - Confirmed independently (separate from these three) that first-20-individual /
+     21st+-silent behavior is untouched: pre-existing `>20 bezoeken binnenzelfde minuut`
+     test in `test/track.test.js` still passes and was not modified (diff-checked against
+     036's version).
+
+5. **Digest dedup verdict re-derived independently, not taken on faith:**
+   - Confirmed `api/cron/notify.js` still uses `bucketCount`/`bucketMark` (not
+     `claimOnce`) for `tg-digest:<yesterday>` — grepped the file directly, zero
+     `claimOnce` references there.
+   - Confirmed `vercel.json` has exactly one cron entry (`0 * * * *`, hourly, single
+     path) — no fan-out, no second cron that could overlap it.
+   - Ran the pre-existing `qa-scripts/probe-036-digest.mjs` standalone (untouched by this
+     assignment) — all 8 probes still pass, confirming the digest's mark-after-confirmed-
+     send retry semantics genuinely still work end to end and weren't accidentally
+     affected by the `claimOnce()` addition living in the same file
+     (`api/_ratelimit.js`).
+   - The reasoning that Vercel's execution-time ceiling is far below the 3600s
+     inter-cron gap holds generically (Vercel serverless function limits top out in the
+     minutes, not the hour, on every plan tier) — no plausible overlap path exists for a
+     single hourly cron with no concurrent trigger source, unlike `track.js` which is hit
+     by many real concurrent browser requests. Verdict endorsed as sound.
+   - **Non-blocking observation (pre-existing, not introduced by 038):** both
+     `claimOnce()` (new, for the per-visit overflow summary) and the pre-existing
+     `rateLimited()` it replaces claim/mark the bucket *before* `tg()` confirms the send
+     succeeded — unlike the digest, which deliberately marks only *after* a confirmed
+     send specifically to get retry-on-failure semantics. This means if the "winning"
+     caller's `tg()` call for the overflow summary itself fails (Telegram transiently
+     down), that overflowed minute's summary is lost with no retry — the bucket is
+     already claimed, so a later pageview's `claimOnce()` call correctly reports "already
+     claimed" and stays silent. Checked `git show a84b890:api/track.js` (the pre-038,
+     036-authored version) and confirmed this ordering (mark-before-confirmed-send) is
+     unchanged by this fix — `rateLimited()` also inserted its row before knowing whether
+     `tg()` would succeed, so this is not a regression 038 introduced, just an existing
+     trait carried over unmodified. Not filed as a defect (pre-existing, severity would be
+     4/cosmetic — an occasional missed ops notification on a rare Telegram outage, not a
+     duplicate or data-loss issue), noted here for completeness per the tester contract.
+
+6. **`npm run build`** → clean, `vite build`, 94 modules transformed, no errors/warnings.
+   `public/**` gen-content churn reverted with `git checkout -- public/` before
+   committing, per precedent.
+
+7. **Additional probing beyond the listed criteria:** the three-scenario
+   `qa-scripts/probe-038-claimonce-edges.mjs` above (missing table, claim-fetch-throws,
+   three-way race) was written specifically because the assignment's own text called out
+   "hunt for edge cases... what if the PostgREST request errors, times out, returns
+   non-2xx? What happens on the FIRST minute after deploy when the table doesn't exist
+   yet" — these were read/reasoned-about in the build notes but not actually exercised
+   by any existing test or probe before this verification pass. All pass.
+
+**Verdict: VERIFIED DONE.** All four acceptance criteria hold under independent
+re-derivation and hands-on probing, not just re-reading the build notes. No defect
+found. One non-blocking, pre-existing (not introduced by this assignment) observation
+recorded above for completeness. Setting `status: done`.
+
+Files added by this verification pass: `qa-scripts/probe-038-claimonce-edges.mjs` (new,
+standalone, `node qa-scripts/probe-038-claimonce-edges.mjs`, not part of `npm test`) and
+this Verification section.
