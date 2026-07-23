@@ -148,3 +148,41 @@ assignments — held up under independent re-derivation and does not need rework
 
 No probe artifacts beyond this file; all checks were read/grep/`npm test` against the
 existing tree, run from `C:\companies\typcoon-lanes\v042`.
+
+## Rework (product-owner, 2026-07-23)
+
+Bounce accepted. The refuted claim was independently re-verified against the tree (read of
+`src/engine/exams.js`, grep of `test/` for every exam export → zero hits, `newExams()` only
+touched incidentally by `promotion.test.js` via `engine/index.js` state init). `status`
+stays `needs_verification` for re-check.
+
+Changes to `research/game-depth-scope.md`:
+
+1. **"tested" claim corrected throughout** (TL;DR, §1 table, §2 Candidate A, Assignment 1
+   Notes): `exams.js` is now described as **built, unwired, and untested** — complete by
+   inspection, zero direct coverage. No surface still calls it "tested."
+2. **Feasibility/risk for Candidate A re-derived honestly.** Wiring untested grading logic
+   into a kids' product is a real, if bounded, risk (unfair fail / wrongly-awarded diploma).
+   **PO decision: build order is unchanged — Candidate A stays priority-2, first.** The
+   ranking rests on impact (REVENUE.md's #1 lever, the assignment's "progression past full
+   alphabet"), which never depended on the module being tested; the added risk is retired
+   cheaply because the module is 149 lines of pure functions, exactly the shape a half-day of
+   characterization tests pins. Demoting the highest-value lever to dodge a test-shaped risk
+   would be the wrong trade. Rationale written into §2 Candidate A.
+3. **Assignment 1 now makes the test work explicit, not incidental:** a new first acceptance
+   criterion requires direct engine-level tests for `exams.js` (`gradeExam`, `examReady`/
+   `nextAvailableExam`, `generateExamText`, `applyExamResult`) to pass **before** exam grading
+   is exposed to a child. The Notes no longer claim the engine is "done and tested."
+4. **Tester's two non-blocking notes folded in.** (a) The REVENUE.md §0 "grind" paraphrase
+   (Candidate D + cut-line table) is retightened to what §0 actually says — it rules out
+   pay-to-skip-practice monetizations by construction; the anti-grind point is carried as
+   substance-transfer, not a false quote. (b) `src/engine/rewards.js`'s inert typie theme
+   catalog (`SHOP`/`equipped`/`buyUnlock`, imported by no `src/game/` file — re-verified) is
+   now noted under Candidate B: **usable as the designer's theme menu (names/directions),
+   but its star-shop gating must be ignored** — typcoon gates cosmetics behind the premium
+   unlock, not earned stars. Assignments 3 and 4 updated to treat it as dead reference, not a
+   dependency.
+
+No draft-assignment ids allocated; no new assignment files opened. The other three acceptance
+criteria and the guardrail/paid-tier/cut-line reasoning are unchanged (they held under the
+tester's re-derivation).
