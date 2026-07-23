@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #7 — OPEN
+- opened: 2026-07-23 18:01 (system clock; agrees with commit clock — ADR-006 approval commit 17:59)
+- claimed: 014 (product-owner — en native keyword research, un-gated by decisions/006 rider), 042 (product-owner — game-depth milestone scope). Same-owner pair, disjoint files (both write new research/ docs; worktrees isolate regardless).
+- worktrees: 014 → C:\companies\typcoon-lanes\po014 (po/014); 042 → C:\companies\typcoon-lanes\po042 (po/042); monitor stage-duty lane (no assignment id — first growing-stage tick per decisions/006; funnel/health/spend read, writes company/metrics only) → C:\companies\typcoon-lanes\mon7 (mon/tick7); main checkout: dispatcher/integration only
+- ids allocated: 043–045 reserved for proposals/incidents the lanes may file (lanes report to the dispatcher, who materializes them); next free after reservation: 046
+- notes: first tick after building→growing (decisions/006 APPROVED with concurrent-build rider). 040 confirmed resolved — main synced with origin/main, no commits ahead. 015–017 chain behind 014 (needs_verification is 014's terminal state, so 015 unlocks only after next-tick verification, not this tick). 010/020/021/022/003/035 externally gated as before. Debris: stale dirs q033/v026 in typcoon-lanes (classifier-denied sweeps, ticks #4–#6) — routed around, not touched.
+
 ## Tick 2026-07-23 #6 — CLOSED
 - opened: 2026-07-23 17:42 (system clock; agrees with commit clock 17:40 — tick #5's closed-at 17:58 was written by a skewed clock, entry itself properly CLOSED)
 - claimed: 038 (verification pass; status stays needs_verification, this entry is the claim), 039 (ceo — apply claims migration; in_progress — probing whether the cc allow-rule fix for `supabase db push` landed, per cc settings commit da30a02 of 2026-07-23)

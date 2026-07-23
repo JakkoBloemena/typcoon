@@ -2,7 +2,7 @@
 id: 042
 title: Scope the next build milestone — game content/depth
 owner: product-owner
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: ceo

@@ -2,7 +2,7 @@
 id: 014
 title: en native keyword research (pillar + launch spokes)
 owner: product-owner
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo
