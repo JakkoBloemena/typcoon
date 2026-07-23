@@ -2,7 +2,7 @@
 id: 009
 title: Search Console + Bing verification — Shareholder action
 owner: ceo
-status: blocked
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -43,5 +43,11 @@ sitemap.xml submitted 2026-07-08, last read 2026-07-15, status "Succesvol",
 13 pages discovered (matches the 13 generated URLs exactly). Search data has been
 accumulating since early July.
 
-Remaining: ONLY Bing — https://www.bing.com/webmasters → "Import from GSC" (one
-click with the same Google account). Then this assignment closes done.
+**Bing: DONE 2026-07-23** — Shareholder completed "Import from GSC" in the /ceo
+channel (first attempt hit Bing's known oauth_failure in Firefox; succeeded in
+Chrome). The import carries the verified property and sitemap over from GSC.
+
+**Closed done 2026-07-23 by the CEO.** All three criteria met: GSC verified with
+sitemap successful since 2026-07-08 (13 pages, evidence seen 2026-07-23), Bing
+imported from GSC, Supabase events table applied and verified live 2026-07-22.
+The measurement stack (006) now has no outstanding human dependencies.
