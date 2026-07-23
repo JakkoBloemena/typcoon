@@ -2,7 +2,7 @@
 id: 034
 title: Recommend the CEO propose building→growing to the Shareholder
 owner: ceo
-status: open
+status: in_progress
 priority: 2
 blocked_by: [033]
 opened_by: product-owner
