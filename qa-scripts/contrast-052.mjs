@@ -1,6 +1,22 @@
 // contrast-052.mjs — WCAG AA contrast verification for the 052 theme batch.
 // Pure computation against the token hex values (no browser). Run: node qa-scripts/contrast-052.mjs
 // AA thresholds: 4.5:1 normal body text, 3:1 large/bold text & UI accents.
+//
+// Assignment 060: this used to hand-maintain a THEMES table (including two fictional
+// per-theme `onMint`/`onSky` entries that don't exist in game.css — the real shipped ink
+// on those surfaces is a single hardcoded literal, identical across all themes; see
+// company/assignments/052-first-theme-batch.md's Verification section). Every value
+// checked below is now parsed straight out of the shipped `src/game/game.css` — the
+// `:root` defaults, each `[data-theme=...]` override block, and the literal ink colors
+// used on the mint/sky surfaces — so nothing here can drift from what actually ships.
+
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const CSS_PATH = resolve(ROOT, 'src', 'game', 'game.css');
+const css = readFileSync(CSS_PATH, 'utf8');
 
 function srgbToLin(c) {
   const s = c / 255;
@@ -17,46 +33,70 @@ function ratio(fg, bg) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// ---- The four themes' token values (must mirror game.css exactly) ----
-const THEMES = {
-  muntpers: {
-    night: '#101a3d', panel: '#1b2650', panel2: '#16204a', line: '#33407c',
-    brass: '#ffb915', brassHi: '#ffd25e', brassDeep: '#c67f00',
-    mint: '#33e6a0', mintDeep: '#17a06b', flame: '#ff6b4a', sky: '#5fa8ff',
-    paper: '#f4f7ff', inkDim: '#93a2d8', onAccent: '#3d2c00', onMint: '#0d2a1e', onSky: '#0d1836',
-  },
-  nachtploeg: {
-    night: '#170a34', panel: '#271552', panel2: '#1e0f42', line: '#5233a0',
-    brass: '#b491ff', brassHi: '#d3beff', brassDeep: '#6a3fce',
-    mint: '#3ee8ad', mintDeep: '#159f74', flame: '#ff6f8a', sky: '#63d6ff',
-    paper: '#f3efff', inkDim: '#b8a6ec', onAccent: '#1c0a3e', onMint: '#0a2a1e', onSky: '#0a1a34',
-  },
-  snoepfabriek: {
-    night: '#2c1030', panel: '#42184a', panel2: '#371441', line: '#7a3576',
-    brass: '#ff5ea8', brassHi: '#ff9ecb', brassDeep: '#c23a7a',
-    mint: '#4ce0a6', mintDeep: '#1f9f6f', flame: '#ff5c5c', sky: '#8bb6ff',
-    paper: '#fff1f8', inkDim: '#e2a3cd', onAccent: '#4a0a2a', onMint: '#0c2a1e', onSky: '#101a36',
-  },
-  diepzee: {
-    night: '#06201f', panel: '#0e3733', panel2: '#0a2b28', line: '#1f645b',
-    brass: '#ff8a6b', brassHi: '#ffb59c', brassDeep: '#c2502f',
-    mint: '#37e6b6', mintDeep: '#159f7e', flame: '#ff6f6f', sky: '#4fd4ff',
-    paper: '#e9fffb', inkDim: '#7fcabb', onAccent: '#3d1105', onMint: '#053026', onSky: '#08222e',
-  },
-  // --- extra candidates rendered for the pairwise pick (not shipped) ---
-  ruimtebasis: {
-    night: '#070c1f', panel: '#131d40', panel2: '#0d1531', line: '#294a94',
-    brass: '#3fd9ec', brassHi: '#8ff0f6', brassDeep: '#12889e',
-    mint: '#45e6b0', mintDeep: '#159f74', flame: '#ff6f8a', sky: '#7fa8ff',
-    paper: '#eaf2ff', inkDim: '#8fabe0', onAccent: '#042028', onMint: '#06291f', onSky: '#0d1a38',
-  },
-  zonnesmederij: {
-    night: '#2a1206', panel: '#43200c', panel2: '#371a09', line: '#7a3f1e',
-    brass: '#ff9d2e', brassHi: '#ffc46b', brassDeep: '#c26a12',
-    mint: '#6ad46a', mintDeep: '#2f9f3a', flame: '#ff5c4a', sky: '#5fb0ff',
-    paper: '#fff2e6', inkDim: '#d6a880', onAccent: '#3a1e00', onMint: '#0c2a0c', onSky: '#0d1836',
-  },
-};
+// ---- Read the real tokens out of game.css --------------------------------------
+// `--panel-2` -> `panel2`, `--brass-hi` -> `brassHi`, `--on-accent` -> `onAccent`, etc.
+// (mirrors the camelCase names the checks() table below reads.)
+function toCamel(cssVarName) {
+  return cssVarName.replace(/^--/, '').replace(/-([a-z0-9])/g, (_, c) => (/[0-9]/.test(c) ? c : c.toUpperCase()));
+}
+
+function extractBlock(pattern, label) {
+  const m = css.match(pattern);
+  if (!m) throw new Error(`game.css: could not find ${label} — has the CSS structure changed?`);
+  return m;
+}
+
+function parseTokens(blockBody) {
+  const tokens = {};
+  const re = /(--[\w-]+):\s*([^;]+);/g;
+  let m;
+  while ((m = re.exec(blockBody))) tokens[toCamel(m[1])] = m[2].trim();
+  return tokens;
+}
+
+// Only the tokens the checks table below actually needs.
+const RELEVANT = ['night', 'panel', 'panel2', 'line', 'brass', 'brassHi', 'brassDeep',
+  'mint', 'mintDeep', 'flame', 'sky', 'paper', 'inkDim', 'onAccent'];
+function pickRelevant(tokens) {
+  const out = {};
+  for (const key of RELEVANT) out[key] = tokens[key];
+  return out;
+}
+
+const rootBody = extractBlock(/:root\s*{([^}]*)}/, ':root block')[1];
+const rootTokens = parseTokens(rootBody);
+
+// The default theme (no [data-theme] attribute) IS the :root values — Muntpers.
+const THEMES = { muntpers: pickRelevant(rootTokens) };
+
+const themeRe = /\[data-theme=['"]([\w-]+)['"]\]\s*{([^}]*)}/g;
+let tm;
+while ((tm = themeRe.exec(css))) {
+  const [, id, body] = tm;
+  THEMES[id] = pickRelevant({ ...rootTokens, ...parseTokens(body) });
+}
+
+// The ink-on-mint / ink-on-sky colors are NOT theme tokens — they're the same hardcoded
+// literal on every theme (that's the assignment-060 finding). Read them straight from the
+// rules that actually pair a literal `color` with a `var(--mint...)`/`var(--sky...)`
+// background, so a future edit to either literal is caught automatically.
+function inkOnToken(selector, tokenVar) {
+  // Anchored to line-start so a shared/grouped selector (e.g. `.coin-pill, .cps-pill,
+  // .star-pill {`) earlier in the file can't be mistaken for this rule's own block.
+  const body = extractBlock(new RegExp(`^\\${selector}\\s*{([^}]*)}`, 'm'), `rule ${selector}`)[1];
+  const colorMatch = body.match(/color:\s*(#[0-9a-fA-F]{6})/);
+  if (!colorMatch) throw new Error(`game.css: ${selector} has no literal color to check`);
+  if (!body.includes(`var(${tokenVar}`)) {
+    throw new Error(`game.css: ${selector} no longer backgrounds on ${tokenVar} — pick a different source rule`);
+  }
+  return colorMatch[1];
+}
+const onMintInk = inkOnToken('.exam-pill', '--mint');
+const onSkyInk = inkOnToken('.star-pill', '--sky');
+for (const t of Object.values(THEMES)) {
+  t.onMint = onMintInk;
+  t.onSky = onSkyInk;
+}
 
 // Pairs that carry meaning. label, fg, bg, min ratio.
 function checks(t) {
