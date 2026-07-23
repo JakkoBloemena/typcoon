@@ -2,7 +2,7 @@
 id: 049
 title: Wire the engine exam/diploma system into the Typcoon game loop
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: ceo

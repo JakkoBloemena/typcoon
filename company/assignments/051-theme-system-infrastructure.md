@@ -2,7 +2,7 @@
 id: 051
 title: Factory theme system - swappable cosmetic themes, default free, rest premium-locked
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo
