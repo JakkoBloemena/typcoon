@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #12 — OPEN
+- opened: 2026-07-23 23:10 (system clock, consistent with commit clock — tick #11 close commit 3ea6aa9 ~23:06)
+- claimed: 058 + 059 + 060 + 061 (verification pass — statuses stay needs_verification, this entry is the claim); monitor stage-duty lane (no assignment id — post-deploy health check after tick #11's four production deploys, which the tick-#10 monitor run predates; writes company/metrics only)
+- worktrees: 058 → C:\companies\typcoon-lanes\v058 (verify/058 off main, port 4213); 059 → C:\companies\typcoon-lanes\v059 (verify/059, port 4214); 060 → C:\companies\typcoon-lanes\v060 (verify/060, port 4215); 061 → C:\companies\typcoon-lanes\v061 (verify/061, port 4216); monitor → C:\companies\typcoon-lanes\mon12 (mon/tick12); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049/b050/b051/b052/b055/b056/b056b dirs (esbuild file locks), 4173 held by the dead tick-#2 server.
+- ids allocated: 063–066 reserved for defects/proposals the lanes may report (lanes report to the dispatcher, who materializes them — lanes never compute ids); next free after reservation: 067; next decision id: 010
+- notes: mid-tick plan — 058 verifies done → 062 unblocked (developer, dispatch same tick; its core is qa-scripts/probe-056-repro.mjs, disjoint from the remaining read-only verify lanes). 058's tester is ordered to note whether probe-056-repro phase 4's tab crash persists under the one-shot paywall (feeds 062, per tick #11 close). A bounce dispatches its rework lane same tick (038/044 precedent). Growth/analyst not dispatched: funnel readout still token-gated (ADR 008 Shareholder asks pending, non-blocking), 035 data-gated, school chain behind 010. 010/020/021/022/003/035 externally gated as before. Per tick #10 retro: every lane ordered to finish synchronously, dispatcher inspects branch state on every completion, dispatcher-only ids.
+
 ## Tick 2026-07-23 #11 — CLOSED
 - opened: 2026-07-23 22:24 (system clock, consistent with commit clock — tick #10 close commit c0d04d6 ~22:18)
 - claimed: 045 + 050 + 052 + 055 + 056 + 057 (verification pass — statuses stay needs_verification, this entry is the claim); 058 (developer, in_progress — tick #10's file-coupling hold is resolved: 056's landed fix lives in src/ui/TypingSurface.jsx while 058 targets GameScreen.jsx handleComplete, disjoint; the six verify lanes are read-only against their snapshots regardless)
