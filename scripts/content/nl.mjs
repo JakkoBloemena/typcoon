@@ -273,6 +273,50 @@ export default {
         { q: 'Heeft mijn kind een account nodig om gratis te oefenen?', a: 'Nee. Gratis spelen kan volledig zonder account; de voortgang blijft op het apparaat. Een ouder-account is optioneel, voor voortgang op meerdere apparaten en een wekelijkse voortgangsmail.' },
       ],
     },
+    {
+      slug: 'typen-leren-met-een-spelletje',
+      title: 'Typen leren met een spelletje: werkt dat echt?',
+      description: 'Werkt een typspel echt, of speelt je kind vooral en typt het nauwelijks? De pedagogie achter een goed leerspel (spaced repetition, letter voor letter, nauwkeurigheid vóór snelheid) plus een checklist om het verschil te herkennen.',
+      h1: 'Typen leren met een spelletje: werkt dat echt?',
+      date: '2026-07-23', updated: '2026-07-23', readMin: 7,
+      lead: 'Kan je kind écht leren typen met een spelletje, of is het vooral een leuke afleiding zonder leereffect? Die vraag zit onder elk "typen leren spelletje" dat je tegenkomt: werkt een typspel echt, of speelt je kind vrolijk verder terwijl het amper typt? Het eerlijke antwoord: het ligt aan het spel. Er zit een precieze pedagogie achter een spel dat wél werkt — en een duidelijk verschil met spelletjes die alleen vermaken. Dit artikel legt die pedagogie uit (spaced repetition, letter voor letter, nauwkeurigheid vóór snelheid) en geeft je een concrete checklist om zelf te beoordelen of een typspel je kind echt leert blind typen.',
+      sections: [
+        { h2: 'Waarom spelen en leren wél kunnen samenvallen', html: `
+          <p>Leerwetenschap is hier eigenlijk vrij eenduidig over. Vaardigheden zoals blind typen — spiergeheugen, geen kennis — leer je het snelst met <strong>directe feedback</strong> (je merkt meteen of een aanslag goed was), <strong>herhaling die terugkomt</strong> in plaats van één keer geoefend en dan losgelaten, en doelen die net iets boven je huidige niveau liggen: niet te makkelijk (verveling), niet te moeilijk (frustratie).</p>
+          <p>Een spel kan dat allemaal bieden — een score die meteen reageert op elke aanslag, een volgende ronde die net iets pittiger is dan de vorige, een reden om morgen terug te komen. Dat is geen toeval: het is exact hetzelfde recept als een goede typecursus, alleen verpakt in iets dat een kind uit zichzelf wil doen. Het probleem is dat "spelletje" en "leerspel" niet hetzelfde zijn, en het verschil zit 'm in details die je pas ziet als je weet waarnaar je moet kijken.</p>` },
+        { h2: 'Spaced repetition: zwakke letters komen vanzelf terug', html: `
+          <p>Een letter die je kind één keer goed typt, zit nog niet. De techniek achter <strong>spaced repetition</strong> (denk aan een Leitner-doos met vakjes) is simpel maar krachtig: een toets die goed gaat, komt pas na een langere tussenpoos terug; een toets die misgaat, zakt terug naar het begin en komt al na een halve minuut opnieuw langs. Zo krijgt precies de letter die je kind lastig vindt de meeste herhaling, zonder dat er een saai, vast rijtje "oefen nu de q" doorgewerkt hoeft te worden.</p>
+          <p>Dit is het verschil tussen een spel dat willekeurig woorden aanbiedt en een spel dat ónthoudt welke letters nog wankel zijn. Het eerste voelt hetzelfde, maar leert langzamer.</p>` },
+        { h2: 'Eén letter tegelijk: de promotie-poort', html: `
+          <p>Een goed opgezet leerpad begint bij de thuisrij en breidt daarna <strong>letter voor letter</strong> uit — nooit een handvol nieuwe toetsen tegelijk. Belangrijker nog dan de volgorde is de poort ertussen: een nieuwe letter komt pas erbij als de vorige echt zit, gemeten aan voldoende <em>correcte</em> herhalingen op een blijvend hoge nauwkeurigheid. Geen vaste tijd, geen vast aantal levels — een echte drempel op prestatie.</p>
+          <p>Dat lijkt een detail, maar het is het verschil tussen een kind dat een stevige basis opbouwt en een kind dat drie letters half kent omdat de vierde alweer werd geïntroduceerd. Zie ook <a href="/blog/blind-typen-leren-tips/">blind typen leren: 8 tips die echt werken</a>, waarvan tip 6 precies dit principe beschrijft.</p>` },
+        { h2: 'Nauwkeurigheid vóór snelheid — ook in de beloning', html: `
+          <p>Snelheid is verleidelijk om te belonen: het is makkelijk te meten en voelt spectaculair. Maar een kind dat beloond wordt voor snel typen, tikt sneller en slordiger — en slechte gewoonten die je er nu inslijpt, kosten later de meeste moeite om af te leren. Een spel dat écht leert, keert dat om: <strong>nauwkeurigheid bepaalt de beloning</strong>, en snelheid mag pas meetellen als de techniek al staat.</p>
+          <p>Concreet betekent dat: rommelig of blind erop los typen levert weinig tot niets op, en de grootste beloningssprong zit juist bij bijna-foutloos typen. Zo wordt "goed" typen de enige winnende strategie — niet "snel klikken".</p>` },
+        { h2: 'Het echte risico: spelen zonder te typen', html: `
+          <p>Dit is de valkuil waar ouders het vaakst intrappen, omdat het spel er op het eerste gezicht prima uitziet. Veel "typspelletjes" zijn eigenlijk <strong>spelletjes over typen</strong>, niet spelletjes waarin getypt wordt: sleep de juiste letter naar het gaatje, kies met de muis het juiste antwoord in een meerkeuzevraag, kijk naar een animatie en klik op "verder". Je kind speelt, heeft plezier, verzamelt punten — en heeft in die tijd amper een toets op het echte toetsenbord aangeraakt.</p>
+          <p>Ook arcade-achtige typspellen kunnen hierin trappen: als het spel alleen beloont wíe het snelst klikt of het meeste scoort, ongeacht nauwkeurigheid, dan traint het rommelig tikken — precies de gewoonte die je later weer moet afleren. De vraag is dus niet "vindt mijn kind het leuk?" maar "typt mijn kind hierbij daadwerkelijk, met de juiste vingers, letter voor letter?". Als het antwoord nee is, is het een leuk spelletje — maar geen typles.</p>` },
+        { h2: 'De checklist: is dit een écht leerspel?', html: `
+          <p>Gebruik deze zes vragen om een typspel te beoordelen vóór je erop vertrouwt dat je kind er blind typen mee leert:</p>
+          <ul>
+            <li><strong>1. Typt mijn kind echt op het toetsenbord?</strong> Niet slepen, klikken of een animatie bekijken — daadwerkelijke aanslagen, met tien vingers.</li>
+            <li><strong>2. Bouwt het letter voor letter op?</strong> Begint het bij de thuisrij en komt er pas een nieuwe letter bij als de vorige zit — of moet je kind meteen hele zinnen typen?</li>
+            <li><strong>3. Komen lastige letters vaker terug?</strong> Onthoudt het spel welke toetsen nog wankel zijn, of is elke ronde even willekeurig als de vorige?</li>
+            <li><strong>4. Beloont het nauwkeurigheid, of alleen snelheid?</strong> Levert netjes typen meer op dan snel-en-slordig, of telt alleen de score?</li>
+            <li><strong>5. Gaat de moeilijkheid pas omhoog bij prestatie?</strong> Of stijgt het level gewoon na verloop van tijd, ongeacht of je kind de vorige stap al beheerst?</li>
+            <li><strong>6. Blijft de blik op het scherm?</strong> Licht het spel de volgende toets op het scherm op, zodat je kind leert niet naar de eigen handen te kijken?</li>
+          </ul>
+          <p>Scoort een spel op de meeste van deze zes een "ja"? Dan heb je waarschijnlijk een echt leerspel te pakken. Scoort het vooral "nee"? Dan is het prima als extraatje, maar niet als enige oefening.</p>` },
+        { h2: 'Hoe Typcoon dit toepast', html: `
+          <p>Typcoon is hier één concreet voorbeeld van, geen verkooppraatje: onder de motorkap draait een adaptieve leer-engine die letters één voor één ontgrendelt, pas nadat een toets voldoende correcte herhalingen haalt op een blijvend hoge nauwkeurigheid — niet na een vaste tijd. Zwakke letters komen via spaced repetition vanzelf sneller terug. En omdat nauwkeurigheid de muntmultiplier is (tot 3× zoveel munten bij bijna-foutloos typen, tegenover bijna niets onder de 60%), is netjes typen de enige winnende strategie in het spel zelf — precies de zesde-vraag-toets hierboven, ingebakken in de beloning in plaats van erbovenop geplakt.</p>
+          <p>Benieuwd naar meer gratis opties en waar je op moet letten bij het kiezen? Lees <a href="/blog/beste-gratis-typspelletjes-kinderen/">de beste gratis typspelletjes voor kinderen</a>.</p>` },
+      ],
+      faq: [
+        { q: 'Is elk typspel goed voor mijn kind?', a: 'Nee. Alleen een spel dat écht laat typen (geen slepen of meerkeuze), letter voor letter opbouwt, zwakke letters herhaalt en nauwkeurigheid beloont, leert je kind blind typen. Puur vermaak mag ernaast, maar niet in plaats van.' },
+        { q: 'Hoeveel moet mijn kind met zo\'n spel oefenen?', a: 'Net als bij elke typoefening: 10–15 minuten per dag werkt beter dan lange sessies af en toe. Zie ook waarom 10 minuten per dag genoeg is.' },
+        { q: 'Mijn kind vindt een spel leuk dat niet aan de checklist voldoet — moet ik het verbieden?', a: 'Nee, plezier is ook waardevol. Laat het gerust als extraatje, maar zorg dat het hoofdgedeelte van de oefentijd bij een spel zit dat wél letter voor letter opbouwt en nauwkeurigheid beloont.' },
+      ],
+    },
   ],
 
   // Standalone landingpagina's (geen blogartikel): bv. de scholen-pagina.
