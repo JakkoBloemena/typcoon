@@ -2,7 +2,7 @@
 id: 060
 title: contrast-052.mjs checks fictional onMint/onSky values instead of the shipped ink literals
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester (reported during 052 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)

@@ -2,7 +2,7 @@
 id: 059
 title: check-no-dutch-en.mjs strips whole <link> tags, blinding it to Dutch in non-URL attributes
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester (reported during 045 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
