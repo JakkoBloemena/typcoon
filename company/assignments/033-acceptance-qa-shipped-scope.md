@@ -2,7 +2,7 @@
 id: 033
 title: Acceptance-QA over the shipped MVP scope (building→growing gate)
 owner: tester
-status: open
+status: in_progress
 priority: 1
 blocked_by: []
 opened_by: product-owner

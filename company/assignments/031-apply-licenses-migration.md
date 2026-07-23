@@ -2,7 +2,7 @@
 id: 031
 title: Apply the licenses migration to production (Shareholder-gated)
 owner: ceo
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #2, enforcing PROTOCOL blocked-on-human rule)

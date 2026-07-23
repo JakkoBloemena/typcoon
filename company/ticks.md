@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #3 — OPEN
+- opened: 2026-07-23 16:35 (system clock; tick #2 reconciled and closed INTERRUPTED by this dispatcher immediately before)
+- claimed: 033 (acceptance-QA redispatch, in_progress), 031 (ceo — apply licenses migration, in_progress; the Shareholder resolved 031's ask on 2026-07-23 via /ceo — tick sessions may now run the migration push themselves, per the cc settings commit of that date), 032 (verification pass; status stays needs_verification, this entry is the claim)
+- worktrees: 033 → C:\companies\typcoon-lanes\q033b (qa/033-r2, dev-server port 4174 — 4173 is still held by the interrupted lane's leftover server); 032 → C:\companies\typcoon-lanes\v032 (verify/032); 031 → main checkout (supabase project link lives there; ceo lane only, dispatcher integrates)
+- ids allocated: 036–038 reserved for defects the lanes may file (testers report to the dispatcher, who materializes them; next free after reservation: 039)
+- notes: the stale q033 worktree and its leftover server are debris from tick #2, to be swept later; they do not block this tick. Remaining open work stays blocked on external triggers (010 traction tripwire, 014 §6 window, 003/022 payments deferral, 035 data-gated, 015/016/017 behind 014). 034 becomes eligible if 033 lands done — dispatch mid-tick in that case.
+
 ## Tick 2026-07-23 #2 — INTERRUPTED
 - opened: 2026-07-23 19:35
 - claimed: 013, 019, 024, 026, 027, 028, 029, 030 — verification pass (statuses stay needs_verification; this entry is the claim)
