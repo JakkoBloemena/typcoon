@@ -2,7 +2,7 @@
 id: 013
 title: en player UI strings — full en string map with key-set parity
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [012]
 opened_by: ceo
