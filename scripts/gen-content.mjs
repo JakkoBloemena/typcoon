@@ -14,7 +14,8 @@ const SITE = 'https://typcoon.com';
 
 // Content-packs. nl is de standaard (x-default). Extra talen: importeer + zet in LOCALES.
 import nl from './content/nl.mjs';
-const LOCALES = [nl];
+import en from './content/en.mjs';
+const LOCALES = [nl, en];
 const DEFAULT = 'nl';
 
 // nl leeft op de root ('/'); extra talen op '/<lang>/'. Zo blijven de URL's schoon.
@@ -23,6 +24,10 @@ const pillarUrl = (pack) => `${prefix(pack.locale)}/${pack.pillar.slug}/`;
 const blogUrl = (pack) => `${prefix(pack.locale)}/blog/`;
 const articleUrl = (pack, slug) => `${prefix(pack.locale)}/blog/${slug}/`;
 const pageUrl = (pack, slug) => `${prefix(pack.locale)}/${slug}/`;
+// /speel/ is one build (§3.7 of research/en-locale-scope.md) — locale is a runtime
+// signal the app reads off ?lang=, not a separate URL. Non-default locales must carry
+// it or the CTA silently opens the app in nl (breaking the "zero Dutch" bar).
+const appUrl = (pack) => (pack.locale === DEFAULT ? '/speel/' : `/speel/?lang=${pack.locale}`);
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -109,14 +114,14 @@ function nav(pack) {
       <a href="${blogUrl(pack)}">${pack.ui.blog}</a>
       <a href="${pillarUrl(pack)}">${pack.ui.guide}</a>
       ${(pack.pages || []).filter((pg) => pg.navLabel).map((pg) => `<a href="${pageUrl(pack, pg.slug)}">${esc(pg.navLabel)}</a>`).join('\n      ')}
-      <a class="cta" href="/speel/">${pack.ui.tryFree}</a>
+      <a class="cta" href="${appUrl(pack)}">${pack.ui.tryFree}</a>
     </nav>`;
 }
 
 function footer(pack) {
   return `<footer>
       <p>${pack.ui.footerTag}</p>
-      <p><a href="${p(pack) || '/'}">${pack.ui.home}</a> · <a href="${blogUrl(pack)}">${pack.ui.blog}</a> · <a href="${pillarUrl(pack)}">${pack.ui.guide}</a> · <a href="/speel/">${pack.ui.tryFree.replace('▶ ', '')}</a></p>
+      <p><a href="${p(pack) || '/'}">${pack.ui.home}</a> · <a href="${blogUrl(pack)}">${pack.ui.blog}</a> · <a href="${pillarUrl(pack)}">${pack.ui.guide}</a> · <a href="${appUrl(pack)}">${pack.ui.tryFree.replace('▶ ', '')}</a></p>
     </footer>
     <script src="/track.js" defer></script>
   </body>
@@ -128,7 +133,7 @@ function ctaBox(pack) {
   return `<div class="cta-box">
       <h3>${esc(pack.ui.ctaTitle)}</h3>
       <p>${esc(pack.ui.ctaBody)}</p>
-      <a class="btn" href="/speel/">${pack.ui.tryFree}</a>
+      <a class="btn" href="${appUrl(pack)}">${pack.ui.tryFree}</a>
     </div>`;
 }
 
@@ -222,9 +227,9 @@ function renderBlogIndex(pack) {
   const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pack.ui.blog, url }];
   const bc = breadcrumb(pack, trail);
   const items = [pack.pillar, ...pack.articles];
-  const html = head(pack, { title: `Blog — leren typen voor kinderen · Typcoon`, description: 'Praktische artikelen voor ouders over blind leren typen: leeftijd, vingerzetting, oefenen, gratis vs. betaald en meer.', url, jsonLd: bc.schema })
+  const html = head(pack, { title: `${pack.ui.blogTitle} · Typcoon`, description: pack.ui.blogDescription, url, jsonLd: bc.schema })
     + nav(pack)
-    + `\n    <main>\n      ${bc.html}\n      <h1>${esc(pack.pillar.h1.replace(': de complete gids', ''))}</h1>\n      <p class="lead">Praktische artikelen en tips voor ouders die hun kind willen leren blind typen.</p>\n      <ul class="cards">\n        <li><a href="${pillarUrl(pack)}">📘 ${esc(pack.pillar.title)}<small>${pack.ui.readMin(pack.pillar.readMin)} · ${pack.ui.guide}</small></a></li>\n        ${pack.articles.map((a) => `<li><a href="${articleUrl(pack, a.slug)}">${esc(a.title)}<small>${pack.ui.readMin(a.readMin)}</small></a></li>`).join('\n        ')}\n      </ul>\n      ${ctaBox(pack)}\n    </main>\n    `
+    + `\n    <main>\n      ${bc.html}\n      <h1>${esc(pack.pillar.blogHeading)}</h1>\n      <p class="lead">${esc(pack.ui.blogLead)}</p>\n      <ul class="cards">\n        <li><a href="${pillarUrl(pack)}">📘 ${esc(pack.pillar.title)}<small>${pack.ui.readMin(pack.pillar.readMin)} · ${pack.ui.guide}</small></a></li>\n        ${pack.articles.map((a) => `<li><a href="${articleUrl(pack, a.slug)}">${esc(a.title)}<small>${pack.ui.readMin(a.readMin)}</small></a></li>`).join('\n        ')}\n      </ul>\n      ${ctaBox(pack)}\n    </main>\n    `
     + footer(pack);
   write(url, html);
   return url;

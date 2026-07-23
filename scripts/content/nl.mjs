@@ -22,6 +22,11 @@ export default {
     footerTag: 'Spelenderwijs blind leren typen — gratis, zonder account, zonder advertenties.',
     ctaTitle: 'Leer typen terwijl je een muntenfabriek bouwt',
     ctaBody: 'In Typcoon verdient élke letter munten. Netjes typen levert het meest op — zo leert je kind blind typen zonder het door te hebben. Gratis te proberen, zonder account.',
+    // Gelokaliseerd (was hard-coded in gen-content.mjs's renderBlogIndex; verplaatst
+    // hierheen tijdens de en-content-pack-pass, zie scripts/content/en.mjs).
+    blogTitle: 'Blog — leren typen voor kinderen',
+    blogDescription: 'Praktische artikelen voor ouders over blind leren typen: leeftijd, vingerzetting, oefenen, gratis vs. betaald en meer.',
+    blogLead: 'Praktische artikelen en tips voor ouders die hun kind willen leren blind typen.',
   },
 
   // De pijlerpagina: de brede gids waar we op willen ranken; linkt naar alle spokes.
@@ -30,6 +35,7 @@ export default {
     title: 'Leren typen voor kinderen: de complete gids (2026)',
     description: 'Alles over blind leren typen voor kinderen (8–12): op welke leeftijd, de juiste vingerzetting, hoe je oefent, gratis vs. betaald en het typediploma. Praktische gids voor ouders.',
     h1: 'Leren typen voor kinderen: de complete gids',
+    blogHeading: 'Leren typen voor kinderen',
     updated: '2026-07-08',
     readMin: 9,
     lead: 'Blind leren typen is een van de nuttigste vaardigheden die een kind op de basisschool kan oppikken — het scheelt straks uren op het huiswerk en een leven lang naar het toetsenbord turen. In deze gids lees je precies hoe kinderen leren typen: de beste leeftijd, de juiste vingerzetting, hoe vaak je oefent, en of je een betaalde cursus nodig hebt.',
