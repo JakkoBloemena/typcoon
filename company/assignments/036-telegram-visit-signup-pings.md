@@ -2,9 +2,9 @@
 id: 036
 title: Typie pings — message on every site visit + signup, and a daily digest
 owner: developer
-status: needs_verification
+status: done
 priority: 2
-blocked_by: [038]
+blocked_by: []
 opened_by: ceo
 ---
 
@@ -213,3 +213,106 @@ guarantee, which fails under concurrent invocations (reproduced above). Leaving
 Files touched by this verification pass: this assignment file (this section) and two
 new throwaway-but-worth-keeping probe scripts, `qa-scripts/probe-036-digest.mjs` and
 `qa-scripts/probe-036-race.mjs` (not part of `npm test`, run standalone with `node`).
+
+## Re-verification (tester, 2026-07-23, tick — worktree `verify/036-r2`)
+
+**Scope.** Re-verifying 036 now that 038 (the collapse-summary race fix) has landed and
+been independently verified done (146/146, race probe exact-once, 3 edge probes,
+mutation-tested). This pass covers 036's full criteria list again — the one that
+bounced (collapse dedup) fresh via probe re-execution against the new code, and every
+other criterion either freshly re-run or cited from tick #5 with the diff checked to
+confirm the covering code is genuinely untouched (not just assumed).
+
+**Setup.** Worktree `verify/036-r2` (branch already created/checked out on top of
+`bf396a3`, the integrated 038 fix). `npm install` — fresh node_modules, 22 packages, no
+errors. `npm test`, probes, `npm run build` all run below.
+
+**1. `npm test` → 146/146 passing.** Matches expected count exactly (038's baseline).
+No failures, no skips.
+
+**2. Bounced criterion, re-run independently:**
+- `node qa-scripts/probe-036-race.mjs` → `Overflow summary messages sent: 1
+  [ '+5 bezoeken afgelopen minuut' ]` / `PASS: overflow summary sent exactly once even
+  under concurrent next-minute invocations.` Exit 0.
+- `node qa-scripts/probe-038-claimonce-edges.mjs` → all 7 checks pass (missing-table
+  fail-safe ×4, claim-fetch-throws ×2, three-way-race ×1). Exit 0.
+Both match the counts recorded in 038's verification exactly; I ran them fresh rather
+than reading the prior output, and got the same result — the fix holds.
+
+**3. Diff-audit to decide fresh-verify vs. cite.** `git diff 10b9c9f..bf396a3` (tick-#5
+036-verification commit → current HEAD) confirms 038 touched exactly four files:
+`api/_ratelimit.js` (new `claimOnce()`), `api/track.js` (one-line swap: `pingVisit()`'s
+overflow branch now calls `claimOnce()` instead of `rateLimited()` for the
+`tgflag:<minute>` bucket only), `supabase/migrations/20260723000002_*.sql` (new table),
+`supabase/schema.sql` (mirrored). `git diff 10b9c9f..bf396a3 -- api/_visitping.js
+api/cron/notify.js api/_telegram.js api/account/create.js` returns **empty** — zero
+lines changed in any of those four files since tick #5. Read `api/track.js`'s current
+`pingVisit()` line by line to confirm the individual-ping path (`bucketMark`/
+`bucketCount`/`shouldPingVisit`/`tg()` for the *current* minute, and the res.status(204)
+-before-pingVisit ordering in the handler) is untouched by the diff — only the overflow
+branch's dedup call changed.
+
+Per-criterion disposition:
+- **Stored pageview → exactly one ping, none for rejected/non-pageview** — fresh
+  (npm test, `test/track.test.js`'s 5 cases) + code read confirms the individual-send
+  path is byte-for-byte unaffected by 038.
+- **204 never blocked by Telegram** — fresh (npm test, `DB.tgThrows` case) + structural
+  re-read: `res.status(204).end()` still precedes `pingVisit()` unconditionally;
+  `tg()` (untouched file) still can't throw by construction.
+- **Digest fires once at 08:00 Amsterdam, correct yesterday-window, zero-day digest** —
+  fresh: `node qa-scripts/probe-036-digest.mjs` → all 8 probes pass (winter/summer
+  Amsterdam DST, no-fire-before-08:00, Amsterdam-window tallying incl. the 22:01 UTC
+  edge, explicit-zero message, failed-send-doesn't-mark/retries, query-throws-doesn't-
+  mark/recovers, no-summary-if-no-later-pageview). `api/cron/notify.js` and
+  `api/_ratelimit.js`'s `bucketCount`/`bucketMark` (the digest's dedup helpers, distinct
+  from the new `claimOnce()` added to the same file) are unchanged by 038 — confirmed by
+  reading the `_ratelimit.js` diff itself: `claimOnce()` is a pure addition at the end of
+  the file, nothing existing was edited.
+- **tg() errors logged, not swallowed; no PII** — `api/_telegram.js` has zero diff since
+  tick #5 (confirmed above); citing tick #5's verification is valid — the covering code
+  is provably identical, not just assumed. Same for the signup ping (`api/account/
+  create.js`, zero diff) and the no-PII message-content checks in `api/track.js`'s
+  `pingVisit` message builder (that part of the file is also outside 038's one-line
+  diff).
+- **Collapse rule, >20/min → exactly one summary** — fresh, this is the criterion that
+  bounced; re-verified above (probe-036-race.mjs exit 0, exactly 1; probe-038-
+  claimonce-edges.mjs 7/7; plus the 3 new ported race/collapse tests inside `npm test`).
+  Also re-confirmed the *normal* (non-race) collapse shape is unchanged: first 20/minute
+  individual, 21st+ silent, one summary on next-minute pageview, no summary when no
+  overflow — via the pre-existing `test/visitping.test.js` pure-function tests (fully
+  untouched by 038, still 3/3 in the 146) and the two new non-race `track.test.js` cases
+  (normal overflow, no-overflow).
+- **All tests green, clean build** — fresh, both below.
+
+**4. `npm run build`** → clean, `vite build`, 94 modules transformed, no errors/
+warnings. `git checkout -- public/` reverted the expected `scripts/gen-content.mjs`
+churn (17 files: blog pages, sitemap.xml, index.html, etc.) before committing, per
+precedent — confirmed `git status --porcelain` is clean afterward.
+
+**5. Migration status.** Confirmed via assignment 039 (status: done): `supabase
+migrations/20260723000002_rate_limit_claims_table.sql` is applied to production
+(`supabase migration list --linked` showed a remote timestamp, tick #6). Per this
+lane's scope, I did not touch production Supabase or run any migration/push command
+myself — verification here is entirely shim/probe-based against the worktree code, as
+instructed.
+
+**No new defects found.** Re-confirm the two non-blocking observations already on
+record are unchanged and not re-filed: (a) raw "combo"/"COMBO!" literals outside `gt()`
+— unrelated to 036/038, pre-existing per 037's verification; (b) overflow-summary claim
+happens before Telegram send confirmation (`claimOnce()` marks before `tg()` confirms,
+unlike the digest's deliberate mark-after-send) — pre-existing ordering carried over
+unmodified from `rateLimited()`, severity 4, already recorded in 038's verification.
+Nothing new surfaced in this pass beyond what 038's own verification already covered.
+
+**Verdict: VERIFIED DONE.** All acceptance criteria hold — the previously-bounced
+collapse-dedup criterion is fixed and independently reconfirmed fresh (race probe exact-
+once, 7/7 edge probes, 146/146 suite), and every other criterion is either freshly
+re-run in this pass or validly cited from tick #5 because a file-level diff proves its
+covering code has not changed since. `npm test` 146/146, `npm run build` clean, no
+production writes made. Setting `status: done`, clearing `blocked_by: [038]` (038 is
+done).
+
+Files touched by this re-verification pass: this assignment file (this section, plus
+the front-matter `status`/`blocked_by` update). No new probe scripts were needed — the
+existing `probe-036-race.mjs`, `probe-038-claimonce-edges.mjs`, and `probe-036-digest.mjs`
+fully covered what needed fresh execution.
