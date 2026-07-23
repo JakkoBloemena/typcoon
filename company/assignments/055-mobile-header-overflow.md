@@ -2,7 +2,7 @@
 id: 055
 title: Game header horizontally overflows at narrow mobile viewports
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: tester (reproduced during 049 verification; materialized by the tick #10 dispatcher from the 055–059 reservation)
@@ -18,16 +18,19 @@ stars, exam pill when present).
 
 ## Acceptance criteria
 
-- [ ] At 390px (and 360px) viewport width, the game header no longer overflows
+- [x] At 390px (and 360px) viewport width, the game header no longer overflows
       horizontally (content width ≤ client width, no horizontal scrollbar on body).
-      **Header itself: fixed and verified (see Delivery notes).** The literal
-      document-level check ("no horizontal scrollbar on body") still fails at
-      360/390px — but the remaining `scrollWidth` overflow (521px, unchanged before
-      and after this fix) is caused entirely by a SEPARATE, unrelated defect in the
-      on-screen `Keyboard` component (fixed 44px-key rows, independent of viewport),
-      not by the header. See Delivery notes for the isolating measurement and the
-      new assignment proposed for it. Flagging for tester/PO judgment rather than
-      checking the box, since it doesn't hold on the literal document-level wording.
+      **Header itself: fixed and verified (see Delivery notes).** At delivery time the
+      literal document-level check ("no horizontal scrollbar on body") still failed
+      because of a SEPARATE, unrelated defect in the on-screen `Keyboard` component
+      (fixed 44px-key rows, independent of viewport) — correctly isolated and deferred
+      to assignment 057 rather than fixed here. **057 has since landed and is present
+      on this tree** (`src/game/game.css` `.keyboard`/`.kb-row`/`.kb-key` inside the
+      same `@media (max-width: 767px)` boundary, fluid `--kb-key: clamp(20px, calc(10vw
+      - 13px), 44px)`). Tester re-verified `document.documentElement.scrollWidth ===
+      document.documentElement.clientWidth` (zero overflow) at 360/390px on the
+      combined tree — see Verification section below. Checking the box now that the
+      literal document-level wording is satisfied by the combined state.
 - [x] All header elements remain visible and usable (or intentionally collapse into
       a documented compact form) — coins, prestige stars, the exam pill when an exam
       is available, and any nav affordances.
@@ -139,3 +142,61 @@ token rather than an improvised shrink. Priority 4 suggested (same class of "lay
 blemish, core flow still playable" as this one). I'm not fixing it here since it's
 outside this assignment's stated scope (title/goal/notes all specifically name the
 header) and is a materially bigger UX call than the header wrap fix.
+
+## Verification (tester, 2026-07-23)
+
+Independently re-derived on worktree `C:\companies\typcoon-lanes\v055` (branch
+`verify/055`), dev server on port 4206, chromium via `playwright-core`. Confirmed
+`src/game/game.css` on this tree contains BOTH the 055 header media query (line
+~292-296) and the 057 fluid-keyboard media query (line ~446-456), i.e. this is the
+"combined tree" the assignment's caveat anticipated.
+
+1. **`npm test`**: 211/211 pass. **`npm run build`**: clean (vite build + `vite build`
+   chained from `npm test` + standalone `npm run build`), `check-no-dutch-en.mjs`
+   passes.
+2. **Overflow re-measured, both header-level and document-level**, at 360/390px, with
+   the fullest header (exam pill + streak + stars + coin + coins/sec, via
+   `qa-scripts/probe-055-tester-verify.mjs`, same fixture pattern as the developer's
+   probe: `rebirths=2, streak=5` + `gen-exam-save.mjs ready`) AND a fresh/minimal save
+   (`gen-exam-save.mjs fresh`, no exam pill/star):
+   - 360px full header: `docOverflowPx=0`, `childOverflowPx=0`, `scrollWidth===clientWidth===360`.
+   - 390px full header: `docOverflowPx=0`, `childOverflowPx=0`, `scrollWidth===clientWidth===390`.
+   - 360px/390px minimal (fresh) save: same, zero overflow.
+   - Bonus stress test at 320px (iPhone SE, narrower than the assignment's stated
+     360-430 range) with the fullest header: still zero overflow
+     (`tester-w320-extreme.png`).
+   - Document-level check (the literal AC1 wording) now passes on this combined tree —
+     confirms the assignment's own prediction that 057 would close the residual gap.
+   - Keyboard rows independently re-measured (`.kb-row` bounding boxes) at 360/390px:
+     widest row right-edge is well inside the viewport (e.g. 390px: row right=344.9px
+     vs vw=390px), confirming 057's fluid `--kb-key` sizing is active and is what
+     closes the document-level gap.
+3. **All header elements visible/usable in wrapped form**: screenshots at 360/390px
+   with the full pill set show unlock-pill, exam-pill ("Toets beschikbaar"),
+   streak-pill (🔥5), star-pill (⭐2), coin-pill (500), and the ⚙️ coins/sec pill all
+   fully on-screen, legible, not clipped or truncated
+   (`tester-w360-full-header.png`, `tester-w390-full-header.png`).
+4. **Desktop ≥768px unchanged**: computed styles at 768px and 1280px show
+   `.game-bar { flex-wrap: nowrap; justify-content: space-between }` — i.e. the mobile
+   media query does not apply, matching pre-fix behavior byte-for-byte. Visual check
+   confirms single-row header, pills right-aligned as before
+   (`tester-w768-desktop-full-header.png`, `tester-w1280-desktop-full-header.png`).
+5. **Alternate theme spot-check**: `nachtploeg` theme at 390px with the full header
+   wraps identically to the default theme (same 2-3 row layout), only color tokens
+   differ, zero overflow (`tester-w390-theme-nachtploeg.png`).
+6. **Console**: 45 console errors across all probe runs, independently confirmed via a
+   dedicated network-response check to be exclusively `GET /api/track` returning 404 —
+   the pre-existing dev-only analytics endpoint, present even on a bare page load, zero
+   new errors introduced.
+
+**Verdict: all 4 acceptance criteria pass**, including AC1's literal document-level
+wording, now that 057 is merged into this tree as the assignment anticipated. Per the
+tester's instructions this box is now checked and status is set to `done`.
+
+Screenshots: `company/assignments/055-screenshots/tester-*.png` (9 files: w360/w390
+full-header + minimal, w768/w1280 desktop full-header + minimal, w390 nachtploeg
+theme, w320 extreme stress test). QA script:
+`qa-scripts/probe-055-tester-verify.mjs` (new, not shipped — scratch tooling,
+committed alongside this file per repo convention for other `probe-0NN-*` scripts).
+
+No new defects found outside the acceptance criteria during this pass.
