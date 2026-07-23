@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { processKeystroke, finalizeExercise, generateExercise } from '../engine/index.js';
 import { activeKeys, activeLetters } from '../engine/curriculumCore.js';
 import { nextAvailableExam, generateExamText, gradeExam } from '../engine/exams.js';
-import { sessionKpm } from '../engine/speed.js';
+import { sessionKpm, updateSpeedAvg } from '../engine/speed.js';
 import {
   BUILDINGS, UPGRADES, GOLDEN_CHANCE, buildingCost, buildingUnlocked, coinsPerSecond,
   accuracyMultiplier, comboMultiplier, prestigeMultiplier, milestoneMultiplier,
@@ -88,6 +88,8 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
 
   const engineRef = useRef(state);
   engineRef.current = state;
+  const exerciseRef = useRef(exercise);
+  exerciseRef.current = exercise;
   const lastKeyRef = useRef(0);
   const lastTickRef = useRef(0);
   const comboRef = useRef(0); // bron-van-waarheid voor de combo (mijlpaal-detectie)
@@ -96,6 +98,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const formRef = useRef(newFormState()); // signaal-venster voor houding-hints
   const sessionExRef = useRef(0); // opdrachten in déze sessie (voor de opfris-cue)
   const examWasReadyRef = useRef(false); // toets al klaar VOOR déze opdracht begon (§examOffer-poort)
+  const exerciseStartRef = useRef(0); // starttijd van dé lopende opdracht (voor kpm, §speedAvg)
 
   const soundOn = state.profile.geluidAan !== false;
   useEffect(() => { setMuted(!soundOn); }, [soundOn]);
@@ -136,6 +139,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   useEffect(() => {
     setExercise(generateExercise(engineRef.current, pack, layout));
     exStreakRef.current = 0;
+    exerciseStartRef.current = performance.now();
     setGolden(engineRef.current.tycoon.exercisesDone >= 3 && Math.random() < GOLDEN_CHANCE);
     // toets-aanbod-poort (049): vastleggen VOOR déze opdracht begint — keystrokes
     // binnen de opdracht werken confidence al bij, dus meten-op-completion zou de
@@ -198,6 +202,13 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
       const prevIndex = engineRef.current.profile.curriculumIndex;
       const before = activeLetters(engineRef.current.curriculum, engineRef.current.profile.curriculumIndex).length;
       let { state: next, promoted } = finalizeExercise(engineRef.current, results);
+      // persoonlijk snelheidsgemiddelde (§speedAvg, assignment 054): dezelfde kpm-
+      // meting als de toets (sessionKpm op de afgelegde tekst) en dezelfde EMA-
+      // conventie als (het ongebruikte) rewards.js — dit is nu de ENIGE plek die
+      // state.speedAvg bijwerkt, zodat de eindtoets-snelheidspoort (exams.js:
+      // examReady) door echt spelen ooit opengaat.
+      const exerciseKpm = sessionKpm(exerciseRef.current?.text.length || 0, performance.now() - exerciseStartRef.current);
+      next = { ...next, speedAvg: updateSpeedAvg(next.speedAvg || 0, exerciseKpm) };
       // dagelijkse opwarm-boost: eerste opdrachten van de dag leveren extra op
       const boostActive = (next.tycoon.boostLeft || 0) > 0;
       const dailyBoost = boostActive ? boostMultiplier(next.tycoon.streak) : 1;

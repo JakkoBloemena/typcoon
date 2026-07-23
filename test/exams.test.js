@@ -14,6 +14,7 @@ import {
   EXAMS, getExam, examKeys, examReady, nextAvailableExam, examStatus,
   generateExamText, gradeExam, applyExamResult, newExams,
 } from '../src/engine/exams.js';
+import { updateSpeedAvg } from '../src/engine/speed.js';
 
 // --- fixtures ---------------------------------------------------------------
 
@@ -123,6 +124,29 @@ test('examReady: de eindtoets blijft op slot tot speedAvg binnen 90% van minKpm 
 
   const s2 = { ...s, speedAvg: examFinal.minKpm * 0.9 };
   assert.equal(examReady(s2, examFinal), true, 'exact op 90% van minKpm = klaar om aan te bieden');
+});
+
+test('examReady: een realistische speedAvg-progressie (echte oefeningen, geen handmatige set) opent uiteindelijk de eindtoets (assignment 054)', () => {
+  let s = readyState(examFinal, 1); // alle inhoud confident; alleen de snelheidspoort ontbreekt nog
+  // alle mini-toetsen al gehaald (realistisch: die komen ruim vóór de eindtoets),
+  // zodat nextAvailableExam ondubbelzinnig naar de eindtoets wijst zodra hij open gaat
+  s = { ...s, exams: { ...s.exams, passed: EXAMS.filter((e) => e.id !== 'exam-final').map((e) => e.id) } };
+  assert.equal(s.speedAvg, 0, 'vers profiel: nog nooit iets gemeten');
+  assert.equal(examReady(s, examFinal), false, 'op slot zolang speedAvg 0 is');
+
+  // simuleer een kind dat oefening na oefening steeds sneller typt (dezelfde EMA
+  // die GameScreen.jsx nu na elke afgeronde opdracht toepast, kpm 40 → 115) — geen
+  // enkele losse meting forceert de lat, het is de geleidelijke opbouw die telt.
+  let openedAt = -1;
+  for (let i = 0; i < 25; i++) {
+    const kpm = Math.min(40 + i * 4, 115);
+    s = { ...s, speedAvg: updateSpeedAvg(s.speedAvg, kpm) };
+    if (openedAt === -1 && examReady(s, examFinal)) openedAt = i;
+  }
+  assert.ok(openedAt > 5, `de poort gaat niet te vroeg open, vóór de snelheid er echt staat (ging open bij oefening ${openedAt})`);
+  assert.ok(s.speedAvg >= examFinal.minKpm * 0.9, `na realistisch oefenen moet speedAvg (${s.speedAvg}) de 90%-lat (${examFinal.minKpm * 0.9}) bereiken`);
+  assert.equal(examReady(s, examFinal), true, 'exam-final wordt aangeboden zodra de opgebouwde speedAvg de lat haalt');
+  assert.equal(nextAvailableExam(s)?.id, examFinal.id);
 });
 
 test('examReady: een niet-eindtoets kijkt nooit naar speedAvg', () => {
