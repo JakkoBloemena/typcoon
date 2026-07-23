@@ -72,6 +72,17 @@ create table if not exists public.rate_limits (
 alter table public.rate_limits enable row level security;
 create index if not exists rate_limits_bucket_idx on public.rate_limits (bucket, created_at);
 
+-- Atomaire eenmalige claim (assignment 038): "claim deze sleutel precies één keer"
+-- (bv. 'tgflag:<minuut>' voor de >20/minuut-samenvatting) — een apárte tabel omdat
+-- `rate_limits.bucket` bewust NIET uniek is (andere buckets daar zijn tellers met
+-- meerdere rijen per waarde). Zie supabase/migrations/20260723000002_* voor de volledige
+-- toelichting en claimOnce() in api/_ratelimit.js voor het gebruik.
+create table if not exists public.rate_limit_claims (
+  bucket      text primary key,
+  created_at  timestamptz not null default now()
+);
+alter table public.rate_limit_claims enable row level security;
+
 -- Meting (assignment 006): eerste-partij, cookieless trechter-events —
 -- bezoek → spel-start → betrokken (≥2 sessies) → ouder-opt-in (REVENUE.md).
 -- Privacy: GEEN cookies, GEEN fingerprinting, GEEN PII. `session_id` is een anonieme

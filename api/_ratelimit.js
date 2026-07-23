@@ -58,3 +58,30 @@ export async function bucketMark(base, H, bucket) {
     /* best-effort teller: nooit blokkeren op een tel-fout */
   }
 }
+
+// Atomaire eenmalige claim (assignment 038): fix voor de race waarbij twee gelijktijdige
+// aanroepen via rateLimited()'s SELECT-count-then-INSERT allebei "nog niet gezien" konden
+// lezen vóór een van beide had geïnsert (klassieke TOCTOU) — bv. de >20/minuut-
+// samenvatting die daardoor kon dubbelversturen. Gebruikt een APARTE tabel
+// (rate_limit_claims, unique op bucket — zie de migratie) omdat rate_limits.bucket
+// bewust niet uniek is (andere buckets daar zijn tellers, geen eenmalige vlaggen).
+// INSERT ... ON CONFLICT (bucket) DO NOTHING via PostgREST (`on_conflict` + `Prefer:
+// resolution=ignore-duplicates,return=representation`): Postgres serialiseert concurrent
+// inserts op de unique index, dus precies één aanroep krijgt de rij terug (gewonnen),
+// de rest krijgt een lege array (al geclaimd). Bij twijfel (fout/onbereikbaar) tellen we
+// dit als NIET gewonnen — dit is een ops-melding, geen kritiek pad: liever een gemiste
+// samenvatting dan een dubbele.
+export async function claimOnce(base, H, bucket) {
+  try {
+    const r = await fetch(`${base}/rest/v1/rate_limit_claims?on_conflict=bucket`, {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=representation' },
+      body: JSON.stringify({ bucket }),
+    });
+    if (!r.ok) return false;
+    const rows = await r.json().catch(() => []);
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
+}
