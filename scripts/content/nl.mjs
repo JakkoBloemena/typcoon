@@ -354,6 +354,44 @@ export default {
         { q: 'Wat is het verschil tussen Typcoon en Nitro Type?', a: 'Typcoon leert een kind vanaf nul blind typen met een adaptieve leer-engine; Nitro Type is racepraktijk voor wie dat al kan. Ze zijn eigenlijk complementair — eerst de techniek, dan het racen.' },
       ],
     },
+    {
+      slug: 'typles-op-school-of-thuis',
+      title: 'Typles op school of thuis: wat is de beste keuze?',
+      description: 'Krijgen kinderen op school typles, of regel je dat zelf thuis? Wat Nederlandse basisscholen wel en niet standaard doen, wat een schoolcursus kost en hoe traag of snel die gaat, en het gratis thuis-alternatief.',
+      h1: 'Typles op school of thuis: wat is de beste keuze?',
+      date: '2026-07-23', updated: '2026-07-23', readMin: 6,
+      lead: 'Het korte antwoord op "typles op school of thuis?": de meeste basisscholen geven geen typles binnen het gewone lesprogramma — het is geen kerndoel en dus nergens verplicht. Sommige scholen bieden wél een (betaalde) typecursus aan via een externe aanbieder, na schooltijd. In dit artikel lees je precies wat scholen wel en niet doen, welke vier dingen de doorslag geven tussen een schoolcursus en zelf thuis beginnen, en hoe het gratis thuis-pad er praktisch uitziet.',
+      sections: [
+        { h2: 'Het korte antwoord: geen vast onderdeel, wel soms een keuzemogelijkheid', html: `
+          <p>Krijgt je kind typles op school? Voor de meeste kinderen is het antwoord nee — blind typen staat niet in de kerndoelen van het basisonderwijs en is dus nergens verplicht. Ook de nieuwste kerndoelen-herziening verandert dat niet: <strong>digitale geletterdheid</strong> wordt vanaf 2027 een eigen kerndoel (scholen krijgen tot 2031 de tijd om dat volledig in te voeren), maar dat gaat over brede digitale vaardigheden — informatie zoeken, veilig omgaan met apparaten, mediawijsheid — niet specifiek over vingerzetting of blind typen.</p>
+          <p>Dat betekent niet dat geen enkele school er iets aan doet. Op ouderforums komt hetzelfde patroon steeds terug: de ene school biedt na schooltijd een typecursus aan, de andere laat het volledig aan de ouders over. Het scheelt dus echt per school — en precies daarom is het handig om zelf te weten hoe die keuze werkt, in plaats van te wachten tot school iets aanbiedt.</p>` },
+        { h2: 'Als een school iets aanbiedt: wat dat meestal inhoudt', html: `
+          <p>Wanneer een basisschool "typles" aanbiedt, is dat in de praktijk zelden een vak dat de eigen leerkracht geeft. Meestal huurt de school een externe aanbieder in — bekende namen zijn onder meer Type-Uniek, LOI Kidzz, TypeTopia en Pica — die na schooltijd, vaak aansluitend op het continurooster, een cursus geeft van zo'n <strong>10 tot 12 lessen van een uur</strong>, in groepjes van ongeveer <strong>8 tot 12 kinderen</strong>, meestal gericht op groep 6, 7 en 8.</p>
+          <p>Belangrijk om te weten: dit is <strong>geen gratis schoolvak</strong>. Ouders melden hun kind zelf aan en betalen de cursus rechtstreeks aan de aanbieder — vaak rond de <strong>€150 à €200</strong>, soms met een kleine korting via de schoolafspraak. De school host het (een lokaal, een moment op het rooster) maar regelt verder weinig; aanmelding, herinneringen en het examen lopen via de aanbieder zelf.</p>` },
+        { h2: 'De keuze: schoolcursus of thuis — vier dingen die de doorslag geven', html: `
+          <p>Twijfel je tussen een aangeboden schoolcursus en het zelf thuis oppakken? Dit zijn de vier factoren die er in de praktijk het meest toe doen:</p>
+          <ul>
+            <li><strong>1. Kosten.</strong> Een schoolcursus kost al gauw €150 à €200 — vergelijkbaar met een reguliere betaalde typecursus, alleen dan op school georganiseerd. Thuis met een gratis programma beginnen kost niets; zie <a href="/blog/gratis-leren-typen-kind/">gratis leren typen: kan een kind dat écht?</a> voor het concrete gratis leerpad.</li>
+            <li><strong>2. Tempo.</strong> Een schoolcursus volgt een vast lesrooster: 10 tot 12 weken, één les per week, hetzelfde tempo voor de hele groep. Een kind dat sneller snapt hoe het werkt, wacht op de rest; een kind dat meer tijd nodig heeft, moet soms toch door naar de volgende les. Thuis bepaalt je kind zelf het tempo, letter voor letter.</li>
+            <li><strong>3. Groep vs. individuele aandacht.</strong> Met 8 tot 12 kinderen per sessie is er weinig ruimte om bij ieder kind apart de vingerzetting te corrigeren. Thuis — of met een programma dat per letter bijhoudt hoe je kind ervoor staat — is de aandacht per definitie 1-op-1.</li>
+            <li><strong>4. Doorzettingsvermogen.</strong> Dit is de factor die ouders het vaakst onderschatten: ook een betaalde schoolcursus vráágt om thuis te oefenen, meestal een paar keer per week naast de wekelijkse les. Een schoolcursus koopt dus geen "klaar, nu kan mijn kind het" — hij koopt vooral structuur: een vast moment, een groep die meedoet, een duidelijk lesschema. Kun je die structuur zelf makkelijk thuis organiseren (een vast moment na school, een programma dat dagelijks terugkomt), dan vervalt het grootste voordeel van de schoolcursus.</li>
+          </ul>` },
+        { h2: 'Wanneer een schoolcursus de moeite waard is', html: `
+          <p>Kies gerust voor de schoolcursus als je kind moeite heeft om zelfstandig een gewoonte vol te houden en juist opbloeit van een vaste groep met een leerkracht-achtige structuur, als het bedrag er financieel makkelijk in zit, of als je als ouder liever niet zelf de kar trekt qua herinneren en volgen. Ook praktisch: staat de aanbieder er al, dan is aanmelden een kwestie van een formulier invullen — die drempel is laag.</p>` },
+        { h2: 'Wanneer thuis prima (of beter) werkt', html: `
+          <p>Thuis werkt minstens zo goed — vaak zelfs beter — als je kind al een beetje zelfstandig achter een scherm kan werken, als €150 à €200 niet vanzelfsprekend is, of als je liever niet wacht tot de school iets aanbiedt (niet elke school doet dat, en niet elk jaar). Het enige dat je nodig hebt, is een programma dat écht adaptief is — dat nieuwe letters op het juiste moment introduceert en nauwkeurigheid beloont — en een vast, kort moment op de dag. Zie ook <a href="/blog/leren-typen-groep-6-7-8/">leren typen in groep 6, 7 en 8</a> voor waarom juist deze leeftijd zich daar goed voor leent.</p>` },
+        { h2: 'Het gratis thuis-pad in het kort', html: `
+          <p>Concreet ziet dat pad er zo uit: begin bij de thuisrij (linkerhand op A-S-D-F, rechterhand op J-K-L-;), breid letter voor letter uit, laat je kind rustig en nauwkeurig typen — snelheid komt vanzelf — en plan 10 tot 15 minuten per dag in. Dat is precies hetzelfde fundament als een betaalde schoolcursus gebruikt, alleen zonder factuur. Het volledige stappenplan, met wat gratis wél en niet oplevert, staat in <a href="/blog/gratis-leren-typen-kind/">gratis leren typen: kan een kind dat écht?</a></p>
+          <p>In Typcoon staat dat pad al klaar in een gratis spel: elke letter levert munten op voor een fabriek, nauwkeurig typen levert tot 3× zoveel op, en een adaptieve leer-engine zorgt dat een nieuwe letter pas verschijnt als de vorige echt zit. De thuisrij en de eerste machines zijn volledig gratis, zonder tijdslimiet en zonder account.</p>` },
+        { h2: 'Geen schoolcursus dit jaar? Dat is heel normaal', html: `
+          <p>Biedt je school niets aan, dan loopt je kind niets mis dat elders wél verplicht is — typen staat nergens als kerndoel, dus er is geen achterstand in te lopen. Werkt je school wél met typles, of overweeg je zelf iets voor de klas te regelen? Lees <a href="/voor-scholen/">Typcoon voor scholen</a> voor een gratis, AVG-vriendelijke optie zonder account. Meer achtergrond over blind typen leren in het algemeen vind je in de <a href="/leren-typen-voor-kinderen/">complete gids: leren typen voor kinderen</a>.</p>` },
+      ],
+      faq: [
+        { q: 'Krijgen kinderen op de basisschool standaard typles?', a: 'Nee. Typen staat niet in de kerndoelen van het basisonderwijs en is dus nergens verplicht — het scheelt sterk per school of er een (betaalde) typecursus wordt aangeboden.' },
+        { q: 'Is een typecursus op school duur?', a: 'Meestal vergelijkbaar met een reguliere betaalde cursus: reken op zo\'n €150 à €200, rechtstreeks te betalen aan de externe aanbieder — de school host alleen het lokaal en het lesmoment.' },
+        { q: 'Kan mijn kind net zo goed thuis leren typen als via een schoolcursus?', a: 'Ja, mits het programma echt adaptief is en je kind regelmatig oefent. Zelfs een schoolcursus vraagt om een paar keer per week thuis te oefenen — de vaardigheid zelf leer je grotendeels thuis, met of zonder cursus.' },
+      ],
+    },
   ],
 
   // Standalone landingpagina's (geen blogartikel): bv. de scholen-pagina.
