@@ -39,6 +39,22 @@ export function parseArgs(argv) {
   return out;
 }
 
+// Valideert --days/--expires en berekent de vervaldatum (ISO-string) — vóórdat de
+// CLI-wrapper 'm doorgeeft aan mintAndRecord. Zonder dit gooit `new Date(bad).toISOString()`
+// verderop een rauwe `RangeError: Invalid time value` i.p.v. de nette usage/error-stijl die
+// de rest van dit script al gebruikt voor ontbrekende env-vars/--school/--tier.
+export function resolveExpiresAt({ days, expires }) {
+  if (expires !== undefined) {
+    const d = new Date(expires);
+    if (Number.isNaN(d.getTime())) throw new Error(`Ongeldige --expires: verwacht een geldige datum (bv. 2027-01-01).`);
+    return d.toISOString();
+  }
+  if (!Number.isInteger(days) || days <= 0) {
+    throw new Error(`Ongeldige --days: verwacht een positief geheel getal.`);
+  }
+  return new Date(Date.now() + days * 86400000).toISOString();
+}
+
 // De eigenlijke mint-stap: mint de code (server-geheim nodig) en logt hem in `licenses`.
 // Los van de CLI-wrapper hieronder getest, met dezelfde in-memory-shim-stijl als
 // test/school-licence.test.js.
@@ -77,7 +93,13 @@ if (isMain) {
     console.error('Gebruik: node scripts/mint-licence.mjs --school "Naam" --tier klas|school [--days 365 | --expires 2027-01-01]');
     process.exit(1);
   }
-  const expiresAt = args.expires ? new Date(args.expires).toISOString() : new Date(Date.now() + args.days * 86400000).toISOString();
+  let expiresAt;
+  try {
+    expiresAt = resolveExpiresAt(args);
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
   try {
     const { code } = await mintAndRecord({ school: args.school, tier: args.tier, expiresAt }, secret, db);
     console.log(`Licentie gemint voor "${args.school}" (${args.tier}), geldig tot ${expiresAt.slice(0, 10)}:`);
