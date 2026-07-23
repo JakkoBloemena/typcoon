@@ -2,7 +2,7 @@
 id: 016
 title: Multi-locale hreflang + sitemap correctness (page-key map)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [015]
 opened_by: ceo
