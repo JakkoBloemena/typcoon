@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #1 — OPEN
+- opened: 2026-07-23 13:27
+- claimed: 012, 018, 023, 025 — verification pass (statuses stay needs_verification; this entry is the claim)
+- worktrees: C:\companies\typcoon-lanes\v012 / v018 / v023 / v025 (branches verify/012 …); main checkout: dispatcher/integration only
+- ids allocated: 026–029 reserved for the four article write-assignments from research/content-batch-2-scope.md §write-assignments, materialized only if 023 verifies done; testers report other defects to the dispatcher (next free after reservation: 030)
+- notes: all open assignments blocked (013/024←012, 019←018, 015/016/17 chain, 020/021/022←010, 014←§6 trigger). Verified-done completions unblock 013 (then maybe article-026); 024 waits behind 013 (strings.js collision). 009 closed by Shareholder yesterday/today (GSC pre-existing + Bing imported).
+- closed:
+- retro:
+
 ## Tick 2026-07-22 #2 — CLOSED
 - opened: 2026-07-22 21:38
 - claimed: 001, 004, 005, 006, 007, 008, 011 — verification pass (statuses stay needs_verification; this ledger entry is the claim)
