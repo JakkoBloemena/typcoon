@@ -2,7 +2,7 @@
 id: 037
 title: en locale — coin-flash popup leaks hardcoded Dutch
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #4), filed by the 033 acceptance-QA tester (reproduced defect — tester sets priority by user impact per PROTOCOL)
@@ -72,3 +72,97 @@ automatically. `npm run build` → clean (vite build succeeded); build regenerat
 reverted with `git checkout -- public/` before committing.
 
 Files changed: `src/game/GameScreen.jsx`, `src/game/strings.js`, `test/locale.test.js`.
+
+## Verification (tester, 2026-07-23)
+
+Re-derived independently in worktree `C:\companies\typcoon-lanes\v037` (branch
+`verify/037`, main `8245c9b`). Did not take the build notes' word for anything below.
+
+**Diff scope** — `git show 54ada61` confirms exactly 3 code/test files touched:
+`src/game/GameScreen.jsx` (6 lines: 3 literals wrapped in `gt()`), `src/game/strings.js`
+(6 lines added: 3 new keys × 2 maps), `test/locale.test.js` (1 line: 3 keys added to
+`STATIC_FLOW_KEYS`). Nothing out of scope changed. Integration commit `01b64ae` is a
+clean merge of the same diff.
+
+**Test suite** — `npm install` clean, then `npm test`: **143/143 pass, 0 fail, 0
+skipped** (matches claim exactly). Confirmed `test/locale.test.js` actually contains
+and runs full-map, bidirectional key-parity (`'en and nl string maps have identical
+key sets (both directions)'`, asserting both `missingInEn` and `orphanInEn` are
+empty over the entire map via `localeKeys()`, not just the flow subset) plus a
+separate full-map no-raw-key / no-Dutch-fallback test. Both cover the 3 new keys
+automatically since they're regular entries in both `STRINGS` and `STRINGS_EN`.
+
+**Build** — `npm run build` clean (vite build succeeded, 94 modules). Build
+regenerated `public/**` (line-ending-only SSG churn, per established precedent);
+reverted with `git checkout -- public/` before committing — confirmed `git status`
+clean on `public/` afterward.
+
+**Browser repro (Playwright/Chromium, `npx serve -l 4176 dist`, port 4176 only)**:
+drove the real home → onboarding → gameplay flow (typed the actual onboarding drill
+text, then read the live `.typing-text` target and typed it verbatim) to force a real
+`handleComplete` → `coinFlash` render, not a synthetic DOM query.
+
+- en session (`/speel/?lang=en`): coin-flash popup rendered
+  `×3.0 neat · ×1.1 combo · ×1.5 warm-up` — zero Dutch, multipliers unchanged from the
+  033 defect reference (`×3.0`, `×1.1`, `×1.5`). Screenshot:
+  `company/assignments/037-screenshots/en-06-coinflash-clean.png`. Also captured the
+  English landing (`en-01-landing.png`) and onboarding drill screen
+  (`en-03-pre-typing.png`) confirming the surrounding flow is English too.
+  Additionally verified locale persistence across Menu → "Keep building" re-entry
+  (`en-re-entry-coinflash.png`: `×3.0 neat · ×1.1 combo · ×1.5 warm-up` again, no
+  locale reset on remount).
+- nl session (`/speel/`, default locale): coin-flash popup rendered
+  `×3.0 netjes · ×1.1 combo · ×1.5 opwarm` — byte-identical to the original 033
+  defect-reference screenshot's Dutch text
+  (`company/assignments/033-screenshots/en-06-dutch-leak-coinflash.png`, which shows
+  the same string leaking under en). Screenshot:
+  `company/assignments/037-screenshots/nl-06-coinflash-clean.png`, plus landing
+  (`nl-01-landing.png`).
+- Golden (`×3 gold`/`×3 goud`) segment is stochastic (`GOLDEN_CHANCE = 0.12`, only
+  after 3+ exercises) and wasn't hit live in the runs performed (one attempt at a long
+  automated loop crashed the Chromium page before landing on gold — not reproduced as
+  a product bug, looked like an artifact of rapid scripted input). Combo and
+  warm-up segments *were* observed live (both non-golden, appear whenever
+  `comboMult > 1` / `boost > 1`, which the drill naturally triggers). Golden text
+  resolution was confirmed via direct `gt()` call instead (see below) — this is the
+  "remaining segments via gt() resolution" fallback the task allowed for.
+- Supporting `gt()`-resolution check (`node` importing `src/game/strings.js`
+  directly): `setLocale('en')` → `flashNeat: 'neat'`, `flashGold: 'gold'`,
+  `flashWarmup: 'warm-up'`, `combo: 'combo'`; `setLocale('nl')` →
+  `flashNeat: 'netjes'`, `flashGold: 'goud'`, `flashWarmup: 'opwarm'`,
+  `combo: 'combo'`. Matches live observations for the two segments seen live and
+  confirms the untested golden segment resolves correctly too.
+
+**Key parity** — confirmed live: `test('en and nl string maps have identical key
+sets (both directions)')` passed as part of the 143/143 run, and it asserts full-map
+parity (not a subset), so the 3 new keys are covered.
+
+**Adversarial probes**:
+- Grepped `GameScreen.jsx` for remaining hardcoded literals near the fix: the
+  `nudge`, `checkHands`, `golden-banner`, `boost-chip`, and shop-meta lines are all
+  `gt()`-wrapped. No other Dutch literal found in the fix's immediate neighborhood.
+- Found one pre-existing (not introduced by this fix, out of scope, not a Dutch
+  leak) minor inaccuracy: the build notes say "`play.combo` (the fourth word in the
+  popup) was already `gt()`-wrapped" — it is not; line 356 of `GameScreen.jsx`
+  renders a raw hardcoded `combo` string literal, not `gt('play.combo')` (that key is
+  only used at the combo-meter, line 328). Also `combo-flash`'s `"COMBO!"` (line 365)
+  is a raw literal. Both are harmless today because "combo" is `IDENTICAL_BY_DESIGN`
+  in both languages, so there's no visible Dutch leak — but they're literals outside
+  `gt()`, unlike what the notes claim. Flagging for developer awareness only, not
+  filing as a defect (no user-visible impact, and out of the assignment's named
+  scope of lines ~355/357/358).
+- Confirmed no dead keys / no raw-key rendering: all three new keys
+  (`play.flashNeat`, `play.flashGold`, `play.flashWarmup`) are referenced exactly
+  once each in `GameScreen.jsx` and render real text in both locales (see live +
+  gt() evidence above).
+
+**Verdict: all 4 acceptance criteria independently verified. PASS.**
+
+Evidence: `company/assignments/037-screenshots/{en-01-landing,en-03-pre-typing,
+en-06-coinflash-clean,en-re-entry-coinflash,nl-01-landing,nl-06-coinflash-clean}.png`.
+Probe script kept for regression use:
+`qa-scripts/probe-037-coinflash.mjs` (drives both locales headlessly and prints the
+coin-flash text; served build must be on port 4176).
+
+Test suite: 143/143 pass, 0 fail (unchanged from developer's report, independently
+re-run). Build: clean, `public/**` reverted, nothing left dirty.
