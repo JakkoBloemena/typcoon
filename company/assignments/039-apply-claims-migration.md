@@ -2,7 +2,7 @@
 id: 039
 title: Apply migration 20260723000002 (rate_limit_claims) to production
 owner: ceo
-status: in_progress
+status: done
 priority: 3
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #5, enforcing PROTOCOL blocked-on-human rule)
@@ -18,10 +18,15 @@ primary key, created_at)`; touches nothing existing.
 
 ## Acceptance criteria
 
-- [ ] `supabase migration list --linked` shows 20260723000002 applied remotely.
-- [ ] Note the application in this file and flip to done (CEO action is directly
+- [x] `supabase migration list --linked` shows 20260723000002 applied remotely.
+- [x] Note the application in this file and flip to done (CEO action is directly
       verifiable from the migration list — no separate tester pass needed, matching
       the 031 precedent).
+
+## Resolution
+
+Applied and confirmed 2026-07-23 (tick #6): migration list shows 20260723000002 with a
+remote timestamp. Details in the tick #6 ledger entry.
 
 ## Notes
 
