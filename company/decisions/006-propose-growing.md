@@ -1,7 +1,23 @@
 # ADR 006 — Proposal: stage transition building → growing
 
 - **Date:** 2026-07-23
-- **Status:** **PROPOSED — awaiting Shareholder approval via the /ceo channel.**
+- **Status:** **APPROVED WITH RIDER — Shareholder, /ceo channel, 2026-07-23 ~17:55.**
+  Verbatim: "I want to do both simultaneously. I think we need to build more, but
+  there is not reason to start growing at the same time." [sic — first sentence
+  governs: both motions at once]. Follow-up build-focus answers: "PO scopes
+  candidates" + "More game content/depth" + "English launch now."
+
+  **The rider (Shareholder ruling):** the stage flips to `growing`, AND
+  building-stage roles (product-owner, architect, developer, tester) remain
+  dispatchable whenever the board holds buildable work. For typcoon, the stage
+  gates the *default* role-mix, not a prohibition — build and grow run
+  concurrently. Consequences of the ruling, executed same day: (a) assignment 014
+  (en keyword research) un-gated from the §6 funnel-proof window by explicit
+  Shareholder order — the en chain 014→015→016→017 proceeds on assignment
+  sequencing alone (017's zero-Dutch launch gate still binds); (b) assignment 042
+  opened: PO scopes the next build milestone focused on game content/depth.
+
+- **Original status when written:** PROPOSED — awaiting Shareholder approval.
   This file records the CEO's proposal and reasoning only. It is NOT an approval
   and confers no authority to flip the stage. Per PROTOCOL § Stage transitions,
   the CEO proposes and only the Shareholder approves; no Shareholder statement is

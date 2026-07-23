@@ -2,7 +2,7 @@
 id: 040
 title: Push main to origin (deploys the 038 race fix) — tick sessions cannot push
 owner: ceo
-status: blocked
+status: done
 priority: 2
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #6, enforcing PROTOCOL blocked-on-human rule; id from the tick's 040–041 reservation)

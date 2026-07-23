@@ -35,11 +35,15 @@ Secondary leading indicators: game-starts and engaged rate, once measurement is 
 
 ## Stage
 
-`building`
+`growing` — **with the concurrent-build rider (decisions/006, Shareholder
+2026-07-23):** building-stage roles remain dispatchable whenever the board holds
+buildable work; build and grow run at the same time. Growing-stage duties (monitor
+reads the funnel, growth works the named channels, analyst reports) apply from the
+same date.
 
 Stage 0 (validation) was deliberately skipped by Shareholder decision: the product is
 live with ~73 passing tests and category willingness-to-pay is proven. See
-decisions/001-adoption.md.
+decisions/001-adoption.md. Stage building → growing: decisions/006 (2026-07-23).
 
 ## Budget ceiling
 

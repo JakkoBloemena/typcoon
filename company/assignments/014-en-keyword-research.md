@@ -2,7 +2,7 @@
 id: 014
 title: en native keyword research (pillar + launch spokes)
 owner: product-owner
-status: blocked
+status: open
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -20,8 +20,8 @@ The checklist under "### C —" in research/en-locale-scope.md §7 is normative.
 
 ## Notes
 
-**Blocked on the §6 trigger, not on another assignment:** assignment 006's
-measurement live ≥6 weeks AND nl parent opt-ins/week non-zero and non-declining
-(exact floor: CEO call at that time). Escape hatch per §6: if nl traffic arrives
-but does not convert, escalate to CEO instead of proceeding. Terminal state
-needs_verification.
+~~Blocked on the §6 trigger~~ **UN-GATED 2026-07-23 by explicit Shareholder order
+("English launch now", /ceo channel — decisions/006 rider).** The §6 funnel-proof
+window no longer applies to this chain; 014→015→016→017 proceeds on assignment
+sequencing alone. 017's zero-Dutch whole-launch QA gate still binds before en goes
+live, and 037's coin-flash fix is already done. Terminal state needs_verification.
