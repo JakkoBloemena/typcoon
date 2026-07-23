@@ -178,6 +178,24 @@ test('track: rate-limit per IP blokkeert na de limiet (429), zoals de account-AP
   assert.equal(last.statusCode, 429);
 });
 
+// --- check-order (assignment 030): onbekend type mag de rate-limit niet omzeilen. Vóór
+// deze fix zat `TYPES.has(type)` vóór de twee rateLimited()-calls, waardoor onbekend-type-
+// verkeer nooit meetelde — een onbemeten flood-pad op dit publieke endpoint. Nu zit de
+// type-check op dezelfde plek als de sessionId/path-validatie: ná beide rate-limit-checks.
+test('track: onbekend type telt ook mee tegen de rate-limit — 121e opeenvolgende verzoek van één IP krijgt 429', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const headers = { 'x-forwarded-for': '203.0.113.99' };
+  let last;
+  for (let i = 0; i < 121; i++) {
+    const r = await call(track, { body: { type: 'nonsense-type-flood' }, headers });
+    if (i < 120) assert.equal(r.statusCode, 204); // onder de limiet: stil geweigerd, niet aftastbaar
+    last = r;
+  }
+  assert.equal(last.statusCode, 429);
+  assert.equal(DB.events.length, 0); // nooit iets opgeslagen, met of zonder rate-limit
+});
+
 test('admin/funnel: zonder geldig token 401', async () => {
   withBackend();
   const funnel = (await import('../api/admin/funnel.js')).default;
