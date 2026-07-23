@@ -8,8 +8,13 @@ import {
   BASE_PER_EXERCISE, GOLDEN_MULT, coinsPerSecond, tick, buildingCost,
   buildingUnlocked, buyBuilding, buyUpgrade, prodMultiplier, payoutMultiplier,
   BUILDINGS, MILESTONE_LEVELS, rebirthCost, canRebirth, rebirth, REBIRTH_BASE_COST,
+  EXAM_COIN_REWARD, examReward, applyTypcoonExamResult,
 } from '../src/game/economy.js';
 import { pendingAchievements } from '../src/game/achievements.js';
+import { newState } from '../src/engine/index.js';
+import { newProfile } from '../src/engine/profile.js';
+import { getExam } from '../src/engine/exams.js';
+import nlPack from '../src/data/nl/index.js';
 
 // --- nauwkeurigheid: de grote hefboom ---
 
@@ -176,4 +181,54 @@ test('prestaties triggeren op de juiste drempels en maar één keer', () => {
   assert.ok(!eerste.includes('tienduizend'));
   const daarna = pendingAchievements({ ...ctx, tycoon: { ...ctx.tycoon, badges: eerste } });
   assert.deepEqual(daarna, []);
+});
+
+// --- toets-diploma's: beloning in Typcoon's eigen economie (assignment 049) ---
+
+function gameState() {
+  const profile = newProfile({ naam: 'K' });
+  return { ...newState(profile, nlPack.curriculumTail), tycoon: newTycoon() };
+}
+
+test('examReward: elke toets kent een positieve muntbeloning toe', () => {
+  for (const id of Object.keys(EXAM_COIN_REWARD)) {
+    assert.ok(examReward(id) > 0, `${id} moet een positieve beloning hebben`);
+  }
+  assert.equal(examReward('geen-bestaande-toets'), 0);
+});
+
+test('applyTypcoonExamResult: een geslaagde toets stort munten in tycoon.coins, nooit in rewards.stars', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const { state: next, reward } = applyTypcoonExamResult(s, exam1, true);
+  assert.equal(reward, examReward('exam-1'));
+  assert.equal(next.tycoon.coins, s.tycoon.coins + reward);
+  assert.equal(next.tycoon.totalCoins, s.tycoon.totalCoins + reward);
+  assert.equal(next.tycoon.lifetimeCoins, (s.tycoon.lifetimeCoins || 0) + reward);
+  // grep-bare garantie (assignment 049 AC): de sterrenlaag van typie wordt hier
+  // nooit aangeraakt — Typcoon gebruikt 'm niet.
+  assert.deepEqual(next.rewards, s.rewards, 'state.rewards blijft ongewijzigd door een toets');
+  assert.deepEqual(next.exams.passed, ['exam-1']);
+});
+
+test('applyTypcoonExamResult: een gezakte toets levert GEEN beloning op en verandert de tycoon-economie niet', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const { state: next, reward } = applyTypcoonExamResult(s, exam1, false);
+  assert.equal(reward, 0);
+  assert.equal(next.tycoon.coins, s.tycoon.coins);
+  assert.equal(next.tycoon.totalCoins, s.tycoon.totalCoins);
+  assert.equal(next.tycoon.lifetimeCoins, s.tycoon.lifetimeCoins);
+  assert.deepEqual(next.exams.passed, []);
+  assert.deepEqual(next.rewards, s.rewards);
+});
+
+test('applyTypcoonExamResult: idempotent — een herhaalde pass op een al-gehaalde toets levert geen tweede beloning', () => {
+  const s = gameState();
+  const exam1 = getExam('exam-1');
+  const first = applyTypcoonExamResult(s, exam1, true);
+  const second = applyTypcoonExamResult(first.state, exam1, true);
+  assert.equal(second.reward, 0);
+  assert.equal(second.state.tycoon.coins, first.state.tycoon.coins, 'geen tweede muntbeloning');
+  assert.deepEqual(second.state.exams.passed, ['exam-1'], 'geen dubbele entry');
 });
