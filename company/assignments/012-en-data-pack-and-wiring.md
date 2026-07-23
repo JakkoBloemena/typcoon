@@ -2,7 +2,7 @@
 id: 012
 title: en practice data pack + qwerty-us layout + player-app locale wiring
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -142,3 +142,81 @@ than 200 to feel substantive; trimmed once from an initial 402-word draft.
 All hard bars (stage-4 filter, first-20/stage-6 bound, no duplicates,
 kid-safety) hold regardless of list length; flagging the size delta for the
 tester rather than silently deviating from the scope doc's stated target.
+
+### Tester verification (2026-07-23)
+
+Independently re-derived every item under research/en-locale-scope.md §7 "### A —"
+against the code, not the Notes above. All pass; nothing here is taken on the
+developer's word.
+
+- **Home-row bar** (own throwaway script importing the real `curriculumCore.js`):
+  stage-4 active set = `{f,j,d,k,s,l,a}` (`;` excluded, not `[a-z]`). Filtering
+  `en/words.js` to that set yields **23** words (≥10 met): as, ad, ask, add, all,
+  sad, lad, dad, fad, fall, flask, salad, alas, lass, asks, adds, fads, lads,
+  dads, falls, flasks, salads, alfalfa. First-20/stage-6 bound (stage 1-6 letters
+  `{f,j,d,k,s,l,a,g,h,e,i}`): zero violations. No duplicates across all 308
+  words.
+- **bigrams.js**: all 26 a-z rows present; `q→u`=0.95 dominant; top rank per row
+  confirmed programmatically — `t→h`, `h→e`, `i→n`, `e→r`, `a→n` (th/he/in/er/an
+  all rank #1 in their row).
+- **baseFreq.js**: all 26 letters present, sums to 0.9999.
+- **curriculumTail.js**: diffed against nl's — identical shape minus the accent
+  stage line; Shift → `.,` → `?!'-` → digits, confirmed no accent stage.
+- **sentences.js**: read all 38 sentences myself for kid-safety — all
+  age-appropriate (animals, family, school, play; nothing objectionable).
+  Regex-verified all 38 are `^[a-z ]+$` (lowercase, letters+spaces only), 3
+  mascot ("typie") lines confirmed.
+- **qwerty-us**: diffed against qwerty-nl.js — comments translated only,
+  positions/finger map/id identical pattern (`id:'qwerty-us'`), registered in
+  `layouts/index.js`.
+- **Wiring**: confirmed in source — `App.jsx` `detectLocale()` reads `?lang=en`,
+  `setLocale()` called before any `gt()` in render, new profiles get
+  `trainTaal/uiTaal: locale, layout: layoutForLocale(locale)`; `GameScreen.jsx`
+  selects pack via `getPack(state.profile.trainTaal)`. One `/speel/` build
+  (single `speel/index.html`, one Vite entry) — no SPA fork.
+- **Zero-Dutch bar**: re-ran the developer's approach independently rather than
+  trusting it — wrote my own SSR script (custom esbuild-JSX loader + Node,
+  outside the repo) that renders `Onboarding` (full + refresh), `Hands`, and
+  `GameScreen` via `react-dom/server` with locale forced to `en`, plus my own
+  400-exercise headless engine simulation (curriculumIndex reached 19, 18
+  promotions, 0 errors; 454/2556 generated tokens matched real `en/words.js`
+  entries, e.g. "add", "lad", "sad", "dads" surfacing as real words from stage 4
+  on). Findings:
+  - Confirmed the **known, excused** gap: `src/ui/TypingSurface.jsx`'s
+    `aria-label="Typ hier"` does render literally in the SSR'd Onboarding output
+    (it's included via `<TypingSurface>` in the drill/refresh screens) — this is
+    the exact issue the assignment's own Notes already flag as a deliberate
+    follow-up (file is synced from typie-fun), matches instructions to not fail
+    012 for it.
+  - Confirmed the **known, excused** gap: `school.linkLabel` is missing from
+    `STRINGS_EN` (assignment 018's addition, post-dates this lane) — renders as
+    the raw key on the home screen for a new/unlocked-false profile. Matches
+    instructions to not fail 012 for this (013's scope).
+  - Also independently reproduced the "ik" pseudo-word artifact the developer's
+    notes call out (Markov noise coincidentally spelling a Dutch word,
+    e.g. exercise `"hagefa if ik is ii heeeesi eheeese"`) — confirmed this is
+    generator noise, not a real-word pick from a Dutch source (not in
+    `en/words.js`), and is architecture shared with nl, not a 012-introduced
+    leak.
+  - No other Dutch text found: scanned SSR output for diacritics and common
+    Dutch function words (0 hits outside the two excused items above); grepped
+    all `src/game` + `src/ui` JSX for hardcoded `aria-label=`/`title=`/
+    `placeholder=` and Dutch text nodes — only the pre-existing input
+    placeholders in Login/Friends/ParentEmail/SchoolCode (usernames/example
+    codes, e.g. `bv. sanne_09`), which are sub-screens explicitly out of 012's
+    "home → onboarding → gameplay" flow scope (013's key-parity job covers
+    those screens) — same as `school.linkLabel`.
+  - Minor observation, not a leak: `src/game/assets.jsx`'s `Svg()` component is
+    passed a `title="munt"/"ster"/"Muntje"` prop by `Coin`/`Star`/`Mascot` but
+    never spreads/renders `title` onto the DOM node (the JSX destructures only
+    `{ markup, className }`) — so these hardcoded-Dutch strings are dead code,
+    never actually reach the DOM. Not a real Dutch leak; flagging only as a
+    trivial code-quality note, not a defect.
+- **Build/tests**: `npm install` clean. `npm test` → **111/111 passing**
+  (matches the cited main-tree number); `en-pack.test.js` (9) and
+  `locale.test.js` (6) both green and independently reviewed — they genuinely
+  import the real `curriculumCore.js`/`buildCurriculum`, not a hand-rolled
+  stub. `npm run build` → clean (`gen-content` prebuild + `vite build`,
+  emits `dist/speel/index.html` + `dist/index.html` + assets).
+
+**Verdict: all criteria under §7 "### A —" met. Status → done.**
