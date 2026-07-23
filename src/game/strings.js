@@ -2,10 +2,10 @@
 // in één bestand) achter dezelfde sleutels, zodat gt() taal-bewust is zonder dat
 // elke call site een taal hoeft mee te geven (assignment 012, §3.7). setLocale()
 // zet de actieve taal (uit profile.uiTaal); gt('sleutel', { vars }) leest daaruit.
-// De en-kaart hieronder dekt de sleutels die in de speel-flow (home → onboarding
-// → gameplay) daadwerkelijk gebruikt worden; de resterende sleutels (ouder-
-// koppeling, dashboard, records, vrienden, inloggen) zijn assignment 013's volle
-// sleutel-pariteitstaak.
+// De en-kaart dekt nu elke sleutel uit de nl-kaart (assignment 013, volle
+// sleutel-pariteit — zie test/locale.test.js voor de pariteits-check in beide
+// richtingen). gt() valt nooit terug op nl: een ontbrekende sleutel toont de
+// kale sleutel, zodat een gat in de en-kaart meteen zichtbaar is in de tests.
 
 const STRINGS = {
   'brand.name': 'Typcoon',
@@ -259,10 +259,10 @@ const STRINGS = {
   'fingers.bothHome': 'Beide handen op de thuisrij: linkerhand A S D F, rechterhand J K L ;, duimen op de spatie.',
 };
 
-// en — Engelse speltekst (assignment 012, §3.7). Dekt de sleutels die de
-// home → onboarding → gameplay-flow gebruikt (zie strings.test.js voor de
-// exacte dekking); de resterende sleutels vallen terug op deze NL-kaart totdat
-// assignment 013 de volle en-kaart met sleutel-pariteit levert.
+// en — Engelse speltekst (assignment 012 legde de basis, §3.7; assignment 013
+// levert de volle sleutel-pariteit met nl — zie test/locale.test.js voor de
+// pariteits-check in beide richtingen). Volgorde spiegelt de nl-kaart hierboven
+// zodat de twee kaarten side-by-side te vergelijken zijn.
 const STRINGS_EN = {
   'brand.name': 'Typcoon',
   'brand.tagline': 'Type coins. Build your factory. Become a tycoon.',
@@ -284,9 +284,66 @@ const STRINGS_EN = {
   'home.emailProgress': 'Progress by email',
   'home.emailLinked': 'Email linked',
   'home.otherDevice': 'Played before? Log in on this computer',
-  'home.trust': 'Free to try · no ads · no in-app purchases for your child',
 
+  'acc.title': 'Progress to the parent 📧',
+  'acc.sub': "Save your progress safely (keep going on any computer) and get a short weekly progress email. For the parent — kids just play, no account needed.",
+  'acc.emailLabel': "Parent's email",
+  'acc.userLabel': "Child's username",
+  'acc.userHint': '3–20 characters: letters, numbers or _. You’ll use this to log in on another computer later.',
+  'acc.optWeekly': 'Send me a weekly progress report',
+  'acc.optReminders': 'Remind me if a streak is about to break',
+  'acc.consent': 'I am the parent/guardian and give consent for these emails.',
+  'acc.submit': 'Link & save',
+  'acc.busy': 'Just a moment…',
+  'acc.trust': 'Only your email · no ads · unsubscribe any time via the link in the email.',
+  'acc.errTaken': 'That username is already taken — pick another one.',
+  'acc.errOffline': "The link can't be made right now (server not active yet). The game keeps working fine; try again later.",
+  'acc.errGeneric': 'Something went wrong. Please try again.',
+  'acc.doneTitle': 'Linked! 🎉',
+  'acc.doneBody': 'We sent a confirmation to {email}. Your progress is now saved automatically.',
+  'acc.doneGo': 'Keep playing',
   'acc.unlinkConfirm': 'Unlink from this device? Your progress stays saved locally.',
+
+  'login.title': 'Continue on this computer 💻',
+  'login.sub': "Enter the username. We'll send a login code to the parent's email address.",
+  'login.sendCode': 'Send me a code',
+  'login.codeSent': "We sent a code to {email}. Check the parent's inbox.",
+  'login.codeLabel': '6-digit code',
+  'login.verify': 'Log in',
+  'login.errNotFound': "We don't recognise that username. Is it spelled right?",
+  'login.errCode': "That code isn't right (or it's expired). You can request a new one.",
+  'login.errBusy': 'Too many attempts for now — wait a few minutes and try again.',
+
+  'records.title': '🏆 Your records',
+  'records.firstWeek': 'This week counts! Come back every day and beat yourself next week.',
+  'records.ahead': "You're {n} coins ahead of last week! 🚀",
+  'records.behind': "{n} more coins to beat last week — you can do it!",
+  'records.thisWeek': 'This week',
+  'records.allTime': 'All-time records',
+  'records.weekCoins': 'Coins this week',
+  'records.weekExercises': 'Tasks this week',
+  'records.weekCombo': 'Best combo this week',
+  'records.lastWeek': 'last week: {n}',
+  'records.bestWeek': 'Best week ever',
+  'records.bestCombo': 'Highest combo',
+  'records.longestStreak': 'Longest streak',
+  'records.letters': 'Letters learned',
+
+  'friends.title': '🎁 Invite a friend',
+  'friends.sub': "Your friend gets {n} coins as a gift — and once they're off to a good start, you get some too!",
+  'friends.yourLink': 'Your invite link',
+  'friends.copy': 'Copy',
+  'friends.copied': 'Copied!',
+  'friends.share': 'Share with a friend',
+  'friends.shareText': 'Come type with me and build a coin factory together in Typcoon!',
+  'friends.rewarded': 'Rewarded friends: {n}/{max}',
+  'friends.haveToken': 'Got a thank-you code from a friend? Paste it here:',
+  'friends.redeem': 'Redeem',
+  'friends.claimed': 'Success! +{n} coins from your friend. 🎉',
+  'friends.bad': "That code isn't right (or has already been used).",
+  'friends.thanksTitle': 'Your friend gets a bonus too! 🎁',
+  'friends.thanksBody': 'Nice work! Give this thank-you code to the friend who invited you — then they get coins too:',
+  'home.trust': 'Free to try · no ads · no in-app purchases for your child',
 
   'premium.unlockShort': 'Unlock',
   'premium.inFull': 'In the full factory',
@@ -311,6 +368,31 @@ const STRINGS_EN = {
   'unlock.doneBody': 'Everything is unlocked. Have fun learning to touch type!',
   'unlock.doneGo': 'Keep playing',
 
+  'school.linkLabel': 'Enter school licence code',
+  'school.title': 'School licence code 🏫',
+  'school.sub': 'Does your school have a licence? Enter the code to unlock the full factory on this device.',
+  'school.label': 'Licence code',
+  'school.submit': 'Unlock the factory',
+  'school.errInvalid': "That code isn't right. Check that you typed it correctly.",
+  'school.errExpired': 'This licence code has expired. Ask your school for a new one.',
+  'school.errBusy': 'Too many attempts for now — wait a few minutes and try again.',
+  'school.errOffline': "The licence can't be checked right now (server not active yet). Try again later.",
+  'school.doneTitle': 'The factory is unlocked! 🎉',
+  'school.doneBody': 'This device now has the full factory — just like the family unlock.',
+  'school.doneGo': 'Keep playing',
+
+  'dash.title': '📊 For parents',
+  'dash.sub': "{naam}'s progress",
+  'dash.letters': 'Letters learned',
+  'dash.accuracy': 'Accuracy',
+  'dash.exercises': 'Tasks completed',
+  'dash.combo': 'Best combo',
+  'dash.coins': 'Coins earned',
+  'dash.stars': 'Stars',
+  'dash.note': "Typcoon trains accuracy before speed: typing neatly earns the most coins. That's how your child learns to touch type, one game at a time.",
+  'dash.unlock': '🔓 Unlock the full factory',
+  'dash.back': '← Back',
+
   'play.back': '← Menu',
   'play.soundOff': 'Sound off',
   'play.soundOn': 'Sound on',
@@ -319,6 +401,8 @@ const STRINGS_EN = {
   'play.stars': 'Stars: everything ×{mult}',
   'play.factory': 'Machines',
   'play.upgrades': 'Upgrades',
+  'play.tabFloor': '🏭 Factory',
+  'play.tabShop': '🛒 Shop',
   'play.accuracyLever': '{pct}% neat — neater typing = more coins!',
   'play.combo': 'combo',
   'play.typeHint': 'Type the letters to make your first coins',
@@ -408,9 +492,6 @@ const STRINGS_EN = {
   'ach.drie-rebirths': 'Three stars',
   'ach.honderd-oefeningen': '100 tasks done',
 
-  'friends.thanksTitle': 'Your friend gets a bonus too! 🎁',
-  'friends.thanksBody': 'Nice work! Give this thank-you code to the friend who invited you — then they get coins too:',
-
   'desktop.title': 'Grab a keyboard!',
   'desktop.body': 'Typcoon is played with a real keyboard — on a laptop or computer. See you there!',
 
@@ -441,11 +522,17 @@ export function getLocale() {
   return activeLocale;
 }
 
+// Sleutels van een taalkaart (voor de nl/en pariteitstest — assignment 013).
+// Geen productie-call-site mag hierlangs tekst lezen; gt() blijft het enige pad.
+export function localeKeys(locale) {
+  return Object.keys(LOCALES[locale] || {});
+}
+
 export function gt(key, vars) {
   const table = LOCALES[activeLocale] || STRINGS;
-  // en is niet (nog) compleet (assignment 013 levert volle sleutel-pariteit).
   // Val NOOIT terug op de NL-tekst — dat zou juist Nederlands laten zien in een
-  // en-sessie. Een ontbrekende sleutel toont (net als voorheen) de kale sleutel.
+  // en-sessie. Een ontbrekende sleutel toont de kale sleutel (nu alleen bereikbaar
+  // via een echte typefout, want en/nl zijn sleutel-voor-sleutel gelijk — assignment 013).
   const raw = table[key];
   if (raw == null) return key;
   if (!vars) return raw;
