@@ -26,7 +26,7 @@ import TypingSurface from '../ui/TypingSurface.jsx';
 import Keyboard from '../ui/Keyboard.jsx';
 import FactoryFloor from './FactoryFloor.jsx';
 import { Machine, Coin, Star, Mascot } from './assets.jsx';
-import { FREE_LETTER_CAP, machineLocked } from './premium.js';
+import { FREE_LETTER_CAP, machineLocked, applyFreeCapGuard } from './premium.js';
 import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
 import { makeThanksToken, ownCode, REFERRAL_MILESTONE_LETTERS } from './referral.js';
 import { checkWeek } from './weekly.js';
@@ -222,14 +222,15 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
 
       // gratis leer-grens (Hoofdstuk 1): een promotie die vóór de 11e letter zou
       // uitkomen wordt teruggedraaid en vervangen door de paywall. Leren zelf blijft
-      // gratis tot hier; premium opent de rest van het alfabet + machines.
+      // gratis tot hier; premium opent de rest van het alfabet + machines. De
+      // paywall zelf verschijnt maar één keer (applyFreeCapGuard, §058) — anders
+      // vindt de eerstvolgende oefening dezelfde geblokkeerde promotie steeds terug.
       let afterLetters = activeLetters(next.curriculum, next.profile.curriculumIndex).length;
-      if (!unlocked && promoted && afterLetters > FREE_LETTER_CAP) {
-        next = { ...next, profile: { ...next.profile, curriculumIndex: prevIndex } };
-        afterLetters = before;
-        promoted = null;
-        momentsRef.current.push({ kind: 'paywall' });
-      }
+      const capGuard = applyFreeCapGuard({ next, unlocked, promoted, prevIndex, before, afterLetters });
+      next = capGuard.next;
+      promoted = capGuard.promoted;
+      afterLetters = capGuard.afterLetters;
+      if (capGuard.paywall) momentsRef.current.push({ kind: 'paywall' });
 
       // vier-momenten verzamelen (één voor één tonen, na de munt-flash)
       if (promoted) {

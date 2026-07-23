@@ -59,6 +59,7 @@ export function newTycoon() {
     records: { bestWeekCoins: 0, longestStreak: 0 }, // all-time records
     badges: [], // behaalde prestatie-id's (zie achievements.js)
     certificates: {}, // examId -> { accuracy, kpm, date } — diploma-bewijs (assignment 050)
+    freeCapPaywallShown: false, // gratis-plafond-paywall al één keer getoond? (zie premium.js applyFreeCapGuard, §058)
   };
 }
 
