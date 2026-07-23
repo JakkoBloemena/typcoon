@@ -23,13 +23,16 @@ Entry format:
 
 ---
 
-## Tick 2026-07-23 #4 — OPEN
+## Tick 2026-07-23 #4 — CLOSED
 - opened: 2026-07-23 16:31 (commit clock of prior reconcile: 16:27 — clocks agree within skew tolerance)
 - claimed: 033 (acceptance-QA, tester, in_progress), 032 (verification pass; status stays needs_verification, this entry is the claim), 036 (Telegram pings, developer, in_progress)
 - worktrees: 033 → C:\companies\typcoon-lanes\q033c (qa/033-r3, dev-server port 4175); 032 → C:\companies\typcoon-lanes\v032 (verify/032); 036 → C:\companies\typcoon-lanes\b036 (build/036); main checkout: dispatcher/integration only
 - ids allocated: 037–039 reserved for defects the testers may file (testers report to the dispatcher, who materializes them; next free after reservation: 040)
 - mid-tick: 032 verified done (130/130, no new defects); 036 landed needs_verification (143/143 combined on main, pushed); 033 acceptance-QA done by the tester — 10/10 criteria, one non-core defect materialized as 037 (en coin-flash Dutch leak, p3, from the reservation). 033 done unblocks 034 → claimed in_progress, CEO lane → C:\companies\typcoon-lanes\c034 (ceo/034), decision id 006 pre-allocated for the growing proposal. 037 claimed in_progress → C:\companies\typcoon-lanes\b037 (build/037). Ids 038–039 still reserved for defects; next free assignment id after reservation: 040.
 - notes: debris from the dead tick-#2 QA lane persists — node pid 15508 still holds port 4173, and stale dirs q033/v026 remain in typcoon-lanes; the permission classifier denied both the process kill and the dir removal this session, so the QA lane routes around them (fresh dir, port 4175). File-overlap check: 033 and 032 are read-only lanes; 036 writes api/track.js, api/cron/notify.js, api/_telegram.js, test/track.test.js — no overlap. 033's QA runs against its worktree snapshot of main; 036 lands needs_verification afterward regardless. 034 becomes eligible mid-tick if 033 lands done. Remaining open work stays blocked on external triggers (010 traction tripwire, 014 §6 window, 003/022 payments deferral, 035 data-gated, 015/016/017 behind 014).
+- closed: 2026-07-23 17:09
+- outcomes: 033 **done** by the tester (acceptance QA, 10/10 criteria, real browser + live-site checks, 36 screenshots + qa-scripts/ committed) — the building→growing QA gate is met. 032 verified **done** (130/130, edge cases probed, nothing new filed). 036 built, **needs_verification** (Telegram visit pings + 08:00 digest, 143/143 combined). Mid-tick: 037 materialized from 033's one reproduced defect (en coin-flash Dutch leak, p3) and FIXED same tick, **needs_verification** (143/143). 034 dispatched after 033 landed: gate judged SATISFIED, decision **006-propose-growing.md written (PROPOSED)**, 034 → **blocked on the Shareholder** (approve/decline via /ceo; secondary ask: CRON_SECRET for the monitor vs. rely on 036's digest). 038–039 defect reservations lapse with this entry. All merges suite-checked on main (143/143) and pushed.
+- retro: clean tick, one process note — classifier denied dispatcher housekeeping (process kill + stale-dir delete) for the second time across ticks; routed around via fresh worktrees/port. Write-up: retro/2026-07-23-classifier-denied-housekeeping.md.
 
 ## Tick 2026-07-23 #3 — INTERRUPTED
 - opened: 2026-07-23 16:35 (system clock; tick #2 reconciled and closed INTERRUPTED by this dispatcher immediately before)
