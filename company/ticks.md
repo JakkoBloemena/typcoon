@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #5 — OPEN
+- opened: 2026-07-23 17:14 (system clock read this session; prior tick closed 17:09)
+- claimed: 036, 037 — verification pass (statuses stay needs_verification; this entry is the claim)
+- worktrees: 036 → C:\companies\typcoon-lanes\v036 (verify/036); 037 → C:\companies\typcoon-lanes\v037 (verify/037); main checkout: dispatcher/integration only
+- ids allocated: 038–039 reserved for defects the testers may file (lapsed unused from tick #4, re-reserved; testers report to the dispatcher, who materializes them; next free after reservation: 040)
+- notes: only eligible work is the two needs_verification lanes from tick #4 — both read-only tester lanes against landed main, no file overlap possible. Ports: 037's browser repro uses dev-server port 4176, 036 (if it needs one) 4177 — 4173 still held by the dead tick-#2 server (kill denied by classifier again this tick, third occurrence; q033/v026 dir sweep also denied again). 034 stays blocked on the Shareholder (decision 006 approve/decline via /ceo + CRON_SECRET secondary ask). All other open work gated externally (010 tripwire, 014 §6 window, 003/022 payments deferral, 035 data-gated, 015/016/017 behind 014). If both verify done, board has nothing further eligible this tick — growing proposal already on the Shareholder's desk.
+
 ## Tick 2026-07-23 #4 — CLOSED
 - opened: 2026-07-23 16:31 (commit clock of prior reconcile: 16:27 — clocks agree within skew tolerance)
 - claimed: 033 (acceptance-QA, tester, in_progress), 032 (verification pass; status stays needs_verification, this entry is the claim), 036 (Telegram pings, developer, in_progress)
