@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { mintAndRecord, parseArgs } from '../scripts/mint-licence.mjs';
+import { mintAndRecord, parseArgs, resolveExpiresAt } from '../scripts/mint-licence.mjs';
 import { verifyCode } from '../api/_licence.js';
 
 const SECRET = 'test-mint-secret';
@@ -36,6 +36,31 @@ test('parseArgs leest --school/--tier/--days/--expires', () => {
 
   const b = parseArgs(['--school', 'X', '--tier', 'school', '--expires', '2027-01-01']);
   assert.equal(b.expires, '2027-01-01');
+});
+
+test('resolveExpiresAt berekent een geldige vervaldatum uit --days of --expires (ongewijzigd gedrag)', () => {
+  const fromDays = resolveExpiresAt({ days: 200 });
+  assert.equal(new Date(fromDays).toISOString(), fromDays); // al een ISO-string
+  assert.ok(new Date(fromDays) > new Date());
+
+  const fromExpires = resolveExpiresAt({ expires: '2027-01-01' });
+  assert.equal(fromExpires, new Date('2027-01-01').toISOString());
+});
+
+test('resolveExpiresAt weigert een niet-numerieke --days met een nette fout i.p.v. de onbehandelde RangeError van new Date(NaN*...).toISOString()', () => {
+  const args = parseArgs(['--school', 'Test', '--tier', 'klas', '--days', 'notanumber']);
+  assert.throws(() => resolveExpiresAt(args), /Ongeldige --days/);
+});
+
+test('resolveExpiresAt weigert een niet-positieve of niet-gehele --days', () => {
+  assert.throws(() => resolveExpiresAt({ days: 0 }), /Ongeldige --days/);
+  assert.throws(() => resolveExpiresAt({ days: -5 }), /Ongeldige --days/);
+  assert.throws(() => resolveExpiresAt({ days: 10.5 }), /Ongeldige --days/);
+});
+
+test('resolveExpiresAt weigert een ongeldige --expires met een nette fout i.p.v. de onbehandelde RangeError van new Date("not-a-date").toISOString()', () => {
+  const args = parseArgs(['--school', 'Test', '--tier', 'klas', '--expires', 'not-a-date']);
+  assert.throws(() => resolveExpiresAt(args), /Ongeldige --expires/);
 });
 
 test('mintAndRecord mint een code EN legt schoolnaam/tier/uitgifte/vervaldatum/code vast', async () => {
