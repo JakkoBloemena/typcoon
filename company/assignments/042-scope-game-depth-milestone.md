@@ -2,7 +2,7 @@
 id: 042
 title: Scope the next build milestone — game content/depth
 owner: product-owner
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -38,3 +38,11 @@ Authority: decisions/006 rider (Shareholder). Sibling motion: the en chain
 (014→017) was un-gated the same day — sequencing/collision judgment between en
 lanes and game-depth lanes belongs to the dispatcher at claim time. Terminal
 state needs_verification.
+
+Scope delivered: research/game-depth-scope.md (2026-07-23, product-owner). Two
+candidates to build (typ-diploma spine, factory themes), an explicit cut line,
+build order, and 4 draft assignments (+1 optional), ids TBD. Two items for the
+CEO at review: (1) the paywall promises themes + "fabrieks-uitbreidingen" that do
+not exist in code — themes candidate closes half, optional Assignment 5 or a copy
+softening closes the rest; (2) the highest lever is latent, not new — the engine's
+exam/diploma module (src/engine/exams.js) is built and tested but unwired.
