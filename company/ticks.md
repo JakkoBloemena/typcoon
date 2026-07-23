@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #8 — OPEN
+- opened: 2026-07-23 18:13 (system clock; agrees with commit clock — tick #7 close commit bec4f8a ~18:11)
+- claimed: 014 + 042 (verification pass — statuses stay needs_verification, this entry is the claim), 043 (ceo — observability access decision, in_progress)
+- worktrees: 014 → C:\companies\typcoon-lanes\v014 (verify/014, dev-server port 4180 if needed); 042 → C:\companies\typcoon-lanes\v042 (verify/042, port 4181 if needed); 043 → C:\companies\typcoon-lanes\c043 (ceo/043); main checkout: dispatcher/integration only. 4173 still held by the dead tick-#2 server.
+- ids allocated: decision 008 → 043's ADR; assignments 044–049 reserved (defects the testers may file + build assignments if 042 verifies done and the CEO review materializes them); next free after reservation: 050, next decision id after 008: 009
+- notes: mid-tick plan — if 014 verifies done, 015 becomes eligible (013 already done) → dispatch developer; if 042 verifies done, dispatch CEO to review the scope and materialize build assignments from the reservation (sequenced after the 043 CEO lane integrates — both write decisions/). Growth/analyst stage duties deliberately not dispatched: monitor ran 2 min ago (tick #7), funnel numbers are invisible pending exactly 043, and no charter channel has un-gated work (035 data-gated, school chain gated). 010/020/021/022/003/035 externally gated as before.
+- closed:
+- retro:
+
 ## Tick 2026-07-23 #7 — CLOSED
 - opened: 2026-07-23 18:01 (system clock; agrees with commit clock — ADR-006 approval commit 17:59)
 - claimed: 014 (product-owner — en native keyword research, un-gated by decisions/006 rider), 042 (product-owner — game-depth milestone scope). Same-owner pair, disjoint files (both write new research/ docs; worktrees isolate regardless).

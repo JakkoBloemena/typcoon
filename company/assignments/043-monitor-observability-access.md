@@ -2,7 +2,7 @@
 id: 043
 title: Monitor observability access — quota readout + funnel digest channel
 owner: ceo
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: monitor (via tick #7 dispatcher, from the 043–045 reservation)
