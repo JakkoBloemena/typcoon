@@ -23,7 +23,13 @@ Entry format:
 
 ---
 
-## Tick 2026-07-24 #14 — CLOSED
+## Tick 2026-07-24 #15 — OPEN
+- opened: 2026-07-24 01:24 (system clock reads ~90s *after* tick #14's close commit e8a4df2 at 01:22:01 commit-clock; ledger stamp 01:26 in #14 is the known few-minute skew — trusting commit order per tick #2/#9 retro)
+- claimed: none — ADR 010 build-hold in force; board re-read directly from disk confirms zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035; 020/021 blocked_by chains unsatisfied). Standing mandate (monitor stage duty + T1–T6 trigger evaluation) executed by tick #14 ~90 seconds ago — healthy, no trigger fired; re-running a health pass inside two minutes measures nothing (tick #13 recency precedent, now at its extreme).
+- worktrees: none — main checkout, ledger writes only
+- ids allocated: none — next free assignment id: 065, next decision id: 011 (unchanged from tick #14)
+- closed:
+- retro:
 - opened: 2026-07-24 01:17 (system clock, consistent with commit clock — tick #13 close commit 5a9d4cd ~00:32)
 - claimed: none — ADR 010 build-hold is in force; board holds zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035). This tick executes the ADR's standing mandate: monitor stage duty + revisit-trigger evaluation (last monitor health pass was tick #12, ~2h ago by commit clock; tick #13 skipped it citing recency).
 - worktrees: monitor → C:\companies\typcoon-lanes\mon14 (mon/tick14; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (all ADR 010 ask 3 housekeeping).
