@@ -2,7 +2,7 @@
 id: 028
 title: Write nl article — Nitro Type alternatief (competitor capture)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [027]
 opened_by: ceo
