@@ -40,6 +40,24 @@ async function markDate(base, RH, username, col, val) {
   });
 }
 
+// Rijtelling van één tabel via PostgREST's count=exact (Content-Range-header) — geen rijen
+// nodig, alleen het totaal. Assignment 044 (decisions/008 gap 1): een zelfgemeten quota-
+// proxy voor de vier tabellen die het snelst groeien/onbegrensd zijn (036/038's QA-vlag op
+// rate_limits). Fail-safe is een harde eis: een falende telling mag de digest nooit
+// blokkeren of vertragen — een mislukte query levert `null` (→ "n.b." in het bericht),
+// nooit een throw die de rest van de cronrun raakt.
+const QUOTA_TABLES = ['accounts', 'events', 'rate_limits', 'rate_limit_claims'];
+async function rowCount(base, RH, table) {
+  try {
+    const r = await fetch(`${base}/rest/v1/${table}?select=*&limit=1`, { headers: { ...RH, Prefer: 'count=exact', Range: '0-0' } });
+    if (!r.ok) return null;
+    const total = (r.headers.get('content-range') || '').split('/')[1];
+    return total != null ? parseInt(total, 10) || 0 : null;
+  } catch {
+    return null;
+  }
+}
+
 function reportHtml(s, manageUrl) {
   const row = (label, val) => `<tr><td style="padding:11px 0;color:#5b6493;border-bottom:1px solid #f0f0f6;font-size:14px;">${label}</td><td style="padding:11px 0;text-align:right;font-weight:700;color:#1b2650;border-bottom:1px solid #f0f0f6;font-size:15px;">${val}</td></tr>`;
   let rows = row('Letters geleerd', `${s.lettersLearned}/26`);
@@ -69,8 +87,13 @@ function reminderHtml(naam, streak, manageUrl) {
 // Dagelijkse Telegram-liveness-digest (assignment 036): gisterens tellingen + totaal
 // accounts. Alleen aantallen, geen PII. Toont expliciet 0 — stilte moet een zichtbaar
 // signaal blijven, geen gat (zie de retro hierboven).
-export function digestMessage(day, counts, totalAccounts) {
-  return `📊 <b>Typcoon — ${day}</b>\n👀 bezoeken: ${fmt(counts.pageview)}\n🎮 spel-starts: ${fmt(counts.game_start)}\n⏱️ betrokken sessies: ${fmt(counts.engaged_session)}\n👪 ouder-opt-ins: ${fmt(counts.parent_opt_in)}\n📦 accounts totaal: ${fmt(totalAccounts)}`;
+// `quota` (assignment 044, optioneel): rijtellingen van accounts/events/rate_limits/
+// rate_limit_claims — de zelfgemeten quota-proxy uit decisions/008. Een `null`-waarde
+// (fail-safe: die ene telling mislukte) toont "n.b." in plaats van een gegokt getal.
+export function digestMessage(day, counts, totalAccounts, quota) {
+  const nb = (n) => (n == null ? 'n.b.' : fmt(n));
+  const quotaLine = quota ? `\n🧮 rijen — accounts: ${nb(quota.accounts)}, events: ${nb(quota.events)}, rate_limits: ${nb(quota.rate_limits)}, rate_limit_claims: ${nb(quota.rate_limit_claims)}` : '';
+  return `📊 <b>Typcoon — ${day}</b>\n👀 bezoeken: ${fmt(counts.pageview)}\n🎮 spel-starts: ${fmt(counts.game_start)}\n⏱️ betrokken sessies: ${fmt(counts.engaged_session)}\n👪 ouder-opt-ins: ${fmt(counts.parent_opt_in)}\n📦 accounts totaal: ${nb(totalAccounts)}${quotaLine}`;
 }
 
 export default async function handler(req, res) {
@@ -99,9 +122,12 @@ export default async function handler(req, res) {
       const evRows = await evRes.json().catch(() => []);
       const yesterdayRows = (Array.isArray(evRows) ? evRows : []).filter((r) => amsParts(new Date(r.created_at).getTime()).day === yesterday);
       const counts = tallyByType(yesterdayRows, EVENT_TYPES);
-      const accCountRes = await fetch(`${base}/rest/v1/accounts?select=id&limit=1`, { headers: { ...RH, Prefer: 'count=exact', Range: '0-0' } });
-      const totalAccounts = parseInt((accCountRes.headers.get('content-range') || '').split('/')[1] || '0', 10) || 0;
-      if ((await tg(digestMessage(yesterday, counts, totalAccounts))).ok) { digest = true; await bucketMark(base, H, digestBucket); }
+      const quota = {};
+      for (const table of QUOTA_TABLES) quota[table] = await rowCount(base, RH, table);
+      // fail-safe: dezelfde telling voedt de bestaande "accounts totaal"-regel; `null` bij
+      // een mislukte query gaat ongewijzigd door naar digestMessage's nb()-renderer ("n.b."),
+      // in plaats van hier al tot 0 verzonnen te worden (bounce op 044: zie assignment).
+      if ((await tg(digestMessage(yesterday, counts, quota.accounts, quota))).ok) { digest = true; await bucketMark(base, H, digestBucket); }
     }
 
     const accRes = await fetch(`${base}/rest/v1/accounts?select=kid_username,parent_email,pref_weekly_report,pref_reminders,last_report_date,last_reminder_date&or=(pref_weekly_report.eq.true,pref_reminders.eq.true)&limit=5000`, { headers: RH });

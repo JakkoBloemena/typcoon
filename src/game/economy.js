@@ -16,6 +16,8 @@
 //  - REBIRTH/prestige: verkoop je fabriek voor een permanente multiplier — de
 //    leer-voortgang (geleerde letters) reset NOOIT, alleen de economie.
 
+import { applyExamResult } from '../engine/exams.js';
+
 // Munten per afgeronde oefening vóór alle multipliers.
 export const BASE_PER_EXERCISE = 10;
 
@@ -253,4 +255,46 @@ export function rebirth(tycoon) {
     },
     ok: true,
   };
+}
+
+// --- Toets-diploma's: beloning in TYPCOON's eigen economie (assignment 049) ---
+//
+// exams.js komt uit de gedeelde (taal-neutrale) engine en kent van zichzelf een
+// muntbeloning toe via typie's `state.rewards.stars` — een sterrenlaag die Typcoon
+// niet gebruikt (zie decisions/009). Deze wrapper neemt uit het engine-resultaat
+// ALLEEN de toets-boekhouding (`exams.passed`/`attempts`) over en beloont een
+// geslaagde toets in Typcoon's eigen munteconomie; `state.rewards` wordt hier
+// bewust nooit aangeraakt.
+export const EXAM_COIN_REWARD = {
+  'exam-1': 150,
+  'exam-2': 300,
+  'exam-3': 450,
+  'exam-4': 600,
+  'exam-final': 1000,
+};
+
+export function examReward(examId) {
+  return EXAM_COIN_REWARD[examId] || 0;
+}
+
+// Verwerk een afgelegde toets in de spel-state. Bij slagen: munten (geen straf,
+// geen beloning bij zakken — vier-moment of gerust "nog een keer", nooit gating).
+export function applyTypcoonExamResult(state, exam, pass) {
+  // de engine geeft zelf al aan of dit een VERSE pass is (0 bij een fail én bij een
+  // herhaalde pass van een al-gehaalde toets — idempotent, zie exams.test.js).
+  const { state: examState, reward: engineReward } = applyExamResult(state, exam, pass);
+  let next = { ...state, exams: examState.exams };
+  const reward = engineReward > 0 ? examReward(exam.id) : 0;
+  if (reward > 0) {
+    next = {
+      ...next,
+      tycoon: {
+        ...next.tycoon,
+        coins: next.tycoon.coins + reward,
+        totalCoins: next.tycoon.totalCoins + reward,
+        lifetimeCoins: (next.tycoon.lifetimeCoins || 0) + reward,
+      },
+    };
+  }
+  return { state: next, reward };
 }

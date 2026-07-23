@@ -22,6 +22,7 @@ const STRINGS = {
   'home.how2': '🏭 Koop machines die munten maken zolang jij typt.',
   'home.how3': '⭐ Verkoop je fabriek voor een ster: alles gaat daarna sneller!',
   'home.parents': 'Voor ouders',
+  'home.theme': 'Thema’s',
   'home.invite': 'Nodig een vriend uit',
   'home.share': 'Deel je fabriek',
   'home.records': 'Jouw records',
@@ -95,6 +96,14 @@ const STRINGS = {
   'premium.chapterTitle': 'Hoofdstuk 1 voltooid! 🎉',
   'premium.chapterBody': 'Wauw — je kent je eerste letters én hebt een echte fabriek gebouwd! In de volledige fabriek leer je álle letters en krijg je alle machines, sterren en thema’s.',
   'premium.chapterCta': 'Bekijk de volledige fabriek',
+
+  'theme.title': 'Kies je thema',
+  'theme.sub': 'Het standaard-thema is gratis en compleet. De rest hoort bij de volledige fabriek.',
+  'theme.muntpers': 'De Muntpers',
+  'theme.muntpers.desc': 'Het standaard-thema: blauwdruk-fabriek met glimmend messing.',
+  'theme.nachtploeg': 'Nachtploeg',
+  'theme.nachtploeg.desc': 'Een paarse nachtfabriek met neon-accenten.',
+  'theme.lockedHint': 'Ontgrendel de volledige fabriek om te wisselen.',
 
   'unlock.gateTitle': 'Even een volwassene erbij',
   'unlock.gateBody': 'Vraag papa of mama om deze som op te lossen.',
@@ -253,6 +262,23 @@ const STRINGS = {
   'desktop.title': 'Pak een toetsenbord erbij!',
   'desktop.body': 'Typcoon speel je met een echt toetsenbord — op een laptop of computer. Tot zo!',
 
+  // Toetsen/typdiploma (assignment 049): optioneel, nooit gating — puur erkenning.
+  'exam.pillLabel': 'Toets beschikbaar',
+  'exam.banner': 'TOETS: {name}',
+  'exam.offerTitle': 'Klaar voor een toets? 🏅',
+  'exam.offerBody': 'Je kent deze letters goed! Wil je de {name} proberen? Gewoon voor de eer — lukt het niet, dan speel je gewoon verder.',
+  'exam.offerStart': 'Start de toets!',
+  'exam.offerDecline': 'Nog even niet',
+  'exam.passTitle': 'Toets gehaald! 🎉',
+  'exam.passBody': 'Knap gedaan! Je haalde de {name} met {pct}% nauwkeurig.',
+  'exam.failTitle': 'Nog niet helemaal — geen zorgen!',
+  'exam.failBody': 'Je zat op {pct}% nauwkeurig. Oefen nog even door, dan lukt de toets zo!',
+  'exam.exam-1': 'Thuisrij-toets',
+  'exam.exam-2': 'Bovenrij-toets',
+  'exam.exam-3': 'Alfabet-toets',
+  'exam.exam-4': 'Hoofdletters-toets',
+  'exam.exam-final': 'Typdiploma',
+
   // kleine taal-neutrale bouwstenen die in JS-logica (niet in strings.js zelf)
   // een taal-specifiek woordje nodig hadden — hoorden hier al thuis, waren
   // per ongeluk hardgecodeerd in GameScreen.jsx (zie assignment 012).
@@ -293,6 +319,7 @@ const STRINGS_EN = {
   'home.how2': '🏭 Buy machines that make coins as long as you keep typing.',
   'home.how3': '⭐ Sell your factory for a star: everything after that goes faster!',
   'home.parents': 'For parents',
+  'home.theme': 'Themes',
   'home.invite': 'Invite a friend',
   'home.share': 'Share your factory',
   'home.records': 'Your records',
@@ -366,6 +393,14 @@ const STRINGS_EN = {
   'premium.chapterTitle': 'Chapter 1 complete! 🎉',
   'premium.chapterBody': 'Wow — you know your first letters and built a real factory! In the full factory you learn ALL the letters and get every machine, star and theme.',
   'premium.chapterCta': 'See the full factory',
+
+  'theme.title': 'Choose your theme',
+  'theme.sub': 'The default theme is free and complete. The rest comes with the full factory.',
+  'theme.muntpers': 'The Coin Press',
+  'theme.muntpers.desc': 'The default look: blueprint factory with polished brass.',
+  'theme.nachtploeg': 'Night Shift',
+  'theme.nachtploeg.desc': 'A purple night factory with neon accents.',
+  'theme.lockedHint': 'Unlock the full factory to switch.',
 
   'unlock.gateTitle': 'Grab a grown-up',
   'unlock.gateBody': 'Ask mom or dad to solve this sum.',
@@ -524,6 +559,23 @@ const STRINGS_EN = {
 
   'desktop.title': 'Grab a keyboard!',
   'desktop.body': 'Typcoon is played with a real keyboard — on a laptop or computer. See you there!',
+
+  // Exams/typing diploma (assignment 049): optional, never gating — recognition only.
+  'exam.pillLabel': 'Exam available',
+  'exam.banner': 'EXAM: {name}',
+  'exam.offerTitle': 'Ready for an exam? 🏅',
+  'exam.offerBody': "You know these letters well! Want to try the {name}? Just for the glory — if it doesn't go your way, you just keep playing.",
+  'exam.offerStart': 'Start the exam!',
+  'exam.offerDecline': 'Not right now',
+  'exam.passTitle': 'Exam passed! 🎉',
+  'exam.passBody': 'Nice work! You passed the {name} with {pct}% accuracy.',
+  'exam.failTitle': "Not quite yet — no worries!",
+  'exam.failBody': "You were at {pct}% accuracy. Practise a bit more and you'll ace it!",
+  'exam.exam-1': 'Home Row Exam',
+  'exam.exam-2': 'Upper Row Exam',
+  'exam.exam-3': 'Alphabet Exam',
+  'exam.exam-4': 'Capitals Exam',
+  'exam.exam-final': 'Typing Diploma',
 
   'common.and': 'and',
 

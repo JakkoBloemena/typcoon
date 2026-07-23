@@ -36,6 +36,29 @@
   --pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* veerkracht met overshoot */
 }
 
+/* ---------- Thema: Nachtploeg (assignment 051, premium proof-of-swap) ----------
+   Zelfde tokennamen als hierboven — alleen andere waarden (paars/neon i.p.v.
+   blauwdruk/messing). data-theme.js zet dit attribuut op <html> voor het echte
+   thema, of op een klein voorbeeldvlak in de thema-kiezer voor een preview.
+   Minimaal maar niet kapot: het echte pakket van meerdere thema's is assignment 052. */
+[data-theme='nachtploeg'] {
+  --night: #140b2e;
+  --panel: #21134a;
+  --panel-2: #1a0f3c;
+  --line: #4a2f86;
+  --brass: #7c5cff;
+  --brass-hi: #a78bff;
+  --brass-deep: #4b2fb0;
+  --mint: #33e6a0;
+  --mint-deep: #17a06b;
+  --flame: #ff6b4a;
+  --sky: #5fd0ff;
+  --sky-deep: #2f9cc4;
+  --paper: #f4f0ff;
+  --ink-dim: #b7a8e8;
+  --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #241457 12px 24px);
+}
+
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0; min-height: 100%;
@@ -242,6 +265,22 @@ button { font-family: inherit; }
 @keyframes goldpulse { 0%, 100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.05) rotate(1deg); } }
 .gold-run .typing-surface { border-color: var(--brass); box-shadow: 0 8px 0 #6b4d00, 0 0 34px rgba(255, 185, 21, 0.25); }
 
+/* ---------- Toets/diploma (assignment 049) — mintkleur, zelfde chip-idioom als
+   .checkhands-chip/.form-nudge hierboven: optioneel en nooit een paywall-signaal. */
+.exam-banner {
+  font-family: 'Lilita One', sans-serif; font-size: 1.05rem; letter-spacing: 0.5px; color: #0d2a1e;
+  background: linear-gradient(180deg, #7ff0c0, var(--mint)); border-radius: 999px;
+  padding: 10px 26px; box-shadow: 0 5px 0 var(--mint-deep), 0 0 30px rgba(51, 230, 160, 0.35);
+}
+.exam-pill {
+  font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 0.9rem; cursor: pointer;
+  color: #0d2a1e; background: linear-gradient(180deg, #7ff0c0, var(--mint) 55%);
+  border: none; padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 0 var(--mint-deep);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+.exam-pill:hover { filter: brightness(1.06); }
+.exam-pill:active { transform: translateY(4px); box-shadow: 0 0 0 var(--mint-deep); }
+
 /* eerste-keer hint: verdwijnt zodra het kind de eerste toets aanslaat */
 .type-hint {
   font-family: 'Lilita One', sans-serif; font-size: 1.15rem; color: var(--brass);
@@ -369,6 +408,16 @@ button { font-family: inherit; }
   background: linear-gradient(180deg, var(--brass-hi), var(--brass)); padding: 7px 11px;
   border-radius: var(--r-sm); box-shadow: 0 3px 0 var(--brass-deep);
 }
+
+/* ---------- Thema-kiezer ---------- */
+.theme-card { max-width: 420px; }
+.theme-list { width: 100%; }
+.theme-swatch {
+  width: 46px; height: 40px; flex: none; border-radius: var(--r-sm);
+  background: var(--night); border: 2px solid var(--line);
+  display: flex; align-items: flex-end; justify-content: flex-end; padding: 4px;
+}
+.theme-swatch-dot { width: 14px; height: 14px; border-radius: 999px; background: var(--brass); box-shadow: 0 2px 0 var(--brass-deep); }
 
 .unlock-card { max-width: 420px; }
 .unlock-card .card-icon { font-size: 3rem; }

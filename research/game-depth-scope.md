@@ -14,13 +14,18 @@ Ids below are literally "TBD"; the dispatcher allocates them.*
 - **Two candidates ship, in this order: (1) the typing-diploma spine, (2) factory themes.**
   Both are grounded in the code, both are pure breadth/mastery (never learning-speed), and
   both make an *already-sold-but-non-existent* paywall promise true.
-- **The biggest lever is latent, not new.** `src/engine/exams.js` is a complete, tested
-  mini-exam + final-diploma module (5 exams, culminating in a real "typ-diploma" at 100
-  keys/min + 95% accuracy) that **is not wired into the game** — no file under `src/game/`
-  imports it. Wiring it in delivers the genuine "progression past full alphabet" the
-  assignment asks for *and* hits REVENUE.md's #1 purchase driver (parent-visible proof of
-  learning) — at spike-verified feasibility, because the hard part (readiness gating, text
-  generation, grading) already exists and is tested.
+- **The biggest lever is latent, not new — but it is unproven code.** `src/engine/exams.js`
+  is a complete-by-inspection mini-exam + final-diploma module (5 exams, culminating in a real
+  "typ-diploma" at 100 keys/min + 95% accuracy) that **is not wired into the game** — no file
+  under `src/game/` imports it — and that **has zero direct test coverage in this repo**
+  (verified: no test references any exam export; the only contact is `newExams()` called during
+  state init via `engine/index.js`, touched incidentally by `promotion.test.js`; it never
+  exercises readiness gating, text generation, grading, or reward application). Wiring it in
+  delivers the genuine "progression past full alphabet" the assignment asks for *and* hits
+  REVENUE.md's #1 purchase driver (parent-visible proof of learning). The module *reads* as
+  coherent, so wiring is de-risked on the UI side — but "the engine work is done" is only half
+  true: it is written, not verified. Assignment 1 therefore treats pinning the exam exports with
+  engine-level tests as its **first** step, not an afterthought (see §2 Candidate A and §5).
 - **The paywall lies today, harmlessly but really.** `src/game/strings.js`
   `unlock.perkPrestige` = "Alle thema's en fabrieks-uitbreidingen" / "Every theme and
   factory expansion", and `premium.chapterBody` promises "alle machines, sterren en thema's".
@@ -46,8 +51,8 @@ Ids below are literally "TBD"; the dispatcher allocates them.*
 | Parent dashboard | 6 stat tiles (letters/26, accuracy%, exercises, best combo, coins, stars); free to view | `src/game/Dashboard.jsx` |
 | Achievements | 15 badges incl. `alle-letters` (26), `drie-rebirths` | `src/game/achievements.js` |
 | Retention | Daily streak + warm-up boost + 3/7/14/30 milestones; weekly "beat-your-ghost" records; referral | PLAYTEST_LOG "Retention/Referral/Leaderboards", `daily.js`/`weekly.js`/`referral.js` |
-| **Exams / diploma** | **Built in the engine, UNWIRED in the game** — 5 exams, final = 100 kpm + 95% acc | `src/engine/exams.js` (imported by *no* `src/game/` file — verified) |
-| **Themes** | **Promised in paywall copy, does not exist** | `strings.js` promises it; grep of `src/game/` finds no theme code |
+| **Exams / diploma** | **Built in the engine, UNWIRED *and UNTESTED*** — 5 exams, final = 100 kpm + 95% acc; complete by inspection but zero direct test coverage | `src/engine/exams.js` (imported by *no* `src/game/` file, and referenced by *no* test — both verified) |
+| **Themes** | **Promised in paywall copy; no game-side system** — but an inert typie-era cosmetic catalog exists dead in the engine | `strings.js` promises it; grep of `src/game/` finds no theme code; `src/engine/rewards.js` has an unimported `SHOP`/`equipped` theme catalog (see Candidate B) |
 
 **The end-state gap.** After 26 letters the only remaining depth is the (excellent, already
 juicy) rebirth loop — PLAYTEST_LOG cycle 3 confirms a maxed factory is balanced and
@@ -61,22 +66,44 @@ The engine already computes exactly this and it sits dark.
 
 ### Candidate A — Wire the typing-diploma + mini-exams into the game  ✅ BUILD (priority 2)
 
-**Evidence.** `src/engine/exams.js` is a finished, tested module: `EXAMS` = five staged
-exams (exam-1 home row @stage 5, exam-2 @stage 8, exam-3 all letters @stage 14, exam-4
-punct+caps @stage 18, exam-final @stage 19 requiring 100 keys/min + 95% accuracy), with
-`examReady()` (only offers an exam when the confidence model says the child is ~certain to
-pass within ~3 tries), `generateExamText()`, `gradeExam()`, and `applyExamResult()`. The
-one wiring change needed: it awards `state.rewards.stars` (typie's cosmetic layer, which
-typcoon does **not** use — grep confirms no `src/game/` file touches `state.rewards`), so
-the reward must be re-pointed to typcoon's own economy (`tycoon` coins and/or a prestige
-star). DESIGN.md's "vier-momenten vieren meesterschap" and the existing SEO article
-`typediploma-nodig` both confirm a diploma is on-brand and demanded.
+**Evidence.** `src/engine/exams.js` is a finished-by-inspection module — 149 lines of pure,
+side-effect-free functions: `EXAMS` = five staged exams (exam-1 home row @stage 5, exam-2
+@stage 8, exam-3 all letters @stage 14, exam-4 punct+caps @stage 18, exam-final @stage 19
+requiring 100 keys/min + 95% accuracy), with `examReady()` (only offers an exam when the
+confidence model says the child is ~certain to pass within ~3 tries), `generateExamText()`,
+`gradeExam()`, and `applyExamResult()`. **Correction from the tester's re-check (and
+independently re-verified here): this module has *zero* direct test coverage in the repo.** No
+test file references any exam export (`EXAMS`, `examReady`, `nextAvailableExam`, `examStatus`,
+`generateExamText`, `gradeExam`, `applyExamResult`, `minigamesUnlocked`); the suite is 146/146
+green but none of it is exam logic. The only contact is `newExams()`, called during state init
+in `engine/index.js` and reached incidentally by `promotion.test.js` — which only instantiates
+the empty `{ passed: [], attempts: {} }` shape and never exercises readiness gating, text
+generation, grading, or reward application. So the module is *coherent* but *unproven*.
 
-**Why it is the top pick.** It is the assignment's "progression past full-alphabet" done as
-genuine mastery, not grind; and it is REVENUE.md §1.1/§6's single highest-leverage lever —
-"parents don't buy a game, they buy visible proof of learning," and a diploma is the
-strongest possible proof. Feasibility is de-risked because the engine work is done and
-tested.
+Two wiring changes needed, both verified in the source: (1) it awards `state.rewards.stars`
+(typie's cosmetic layer, which typcoon does **not** use — grep confirms no `src/game/` file
+touches `state.rewards`), so the reward must be re-pointed to typcoon's own economy (`tycoon`
+coins and/or a prestige star). (2) Because the grading/gating/text-generation logic has never
+been executed by a test, it must be pinned with engine-level characterization tests *before or
+alongside* wiring — see Assignment 1's AC. DESIGN.md's "vier-momenten vieren meesterschap" and
+the existing SEO article `typediploma-nodig` both confirm a diploma is on-brand and demanded.
+
+**Why it is still the top pick — and why the "untested" correction does not demote it.** The
+priority ranking rests on *impact*, not on the (now-corrected) test claim: it is the
+assignment's "progression past full-alphabet" done as genuine mastery, not grind, and it is
+REVENUE.md §1.1/§6's single highest-leverage lever — "parents don't buy a game, they buy visible
+proof of learning," and a diploma is the strongest possible proof. None of that depended on the
+module being tested. What the correction *does* change is the risk profile of the wiring: piping
+untested grading logic into a kids' product is genuinely riskier than wiring a tested module —
+if `gradeExam`/`examReady` has a subtle bug, a child could be failed unfairly or a diploma
+awarded on a text that didn't cover the keys. That risk is real but **bounded and cheap to
+retire**: the module is 149 lines of pure functions with no I/O — precisely the shape that is
+fast to pin with unit tests. The right response is therefore a test gate inside Assignment 1,
+**not** a demotion below Candidate B. Demoting the highest-value lever to avoid a risk that a
+half-day of characterization tests dissolves would be the wrong trade. (Candidate A and
+Candidate B are already independent parallel lanes per §4, so the ranking sets attention order,
+not a hard dependency.) **Build order is unchanged; the honest test work is now explicit in the
+AC where the doc previously understated it.**
 
 **Guardrail check.**
 - *G2 (never sell learning speed).* Exams are **earned by typing**, never bought; passing
@@ -102,7 +129,25 @@ picks freemium-**breadth**-unlock precisely so we sell cosmetics, never power. D
 core finding is that *seeing your empire* is the hook (build > numbers) — themes amplify the
 one thing kids demonstrably return for. And the paywall **already sells this**:
 `strings.js` `unlock.perkPrestige` ("Alle thema's en fabrieks-uitbreidingen") and
-`premium.chapterBody` ("alle machines, sterren en thema's"). No theme system exists in code.
+`premium.chapterBody` ("alle machines, sterren en thema's"). No theme system exists in the
+*game* (`src/game/`).
+
+**One inherited asset to weigh (tester's non-blocking note, re-verified).** `src/engine/rewards.js`
+carries a full typie-era cosmetic catalog that is imported by no `src/game/` file (grep confirms
+zero hits): a `SHOP` of themes (`theme-paars` as the free default, plus `theme-snoep`,
+`theme-ruimte`, `theme-oceaan`, `theme-neon`, `theme-zon`), cheers, dances and scenes, an
+`equipped: { theme: ... }` slot on `newRewards()`, and `buyUnlock()` / `equipItem()` machinery.
+It is the same "latent engine capability, dead in the game" pattern as `exams.js`. **Verdict on
+usability: mine it for the theme list, ignore its gating model.** The *catalog* — six named
+themes with a clear free/premium intent baked into their star costs — is genuinely useful as the
+designer's starting menu (Assignment 4), and saves inventing themes from scratch. But its
+*mechanism* is the wrong fit and must **not** be reused: `rewards.js` gates cosmetics behind
+**earned stars** (`buyUnlock` spends `state.rewards.stars`), whereas typcoon's whole model gates
+breadth behind the **one-time premium unlock** (`premium.js` `isUnlocked()`). Wiring the star-shop
+in would (a) reintroduce typie's cosmetic-economy that typcoon deliberately dropped and (b) let a
+child unlock "premium" themes with in-game currency, contradicting the paywall. So Assignment 3
+builds a fresh premium-gated swap mechanism; the catalog is reference for *what* themes to offer,
+not *how* to gate them.
 
 **Guardrail check.**
 - *G2.* Cosmetic by construction — a theme changes zero economy values, sells no speed. This
@@ -130,8 +175,11 @@ the diploma data this milestone produces. Recorded as a deliberate non-build in 
 **Evidence.** A 6th machine would need an `unlockAt` past 26 (curriculum has stages past 26:
 caps/punct/digits) — feasible. **But** PLAYTEST_LOG cycle 3 shows the 5-machine maxed factory
 is already balanced, juicy, and overflow-safe, and the infinite rebirth loop already supplies
-endless numeric depth. A machine that is *just* a bigger number is low-novelty grind, and
-REVENUE.md §0 warns explicitly against grind-shaped additions. The **only** version worth
+endless numeric depth. A machine that is *just* a bigger number is low-novelty grind. REVENUE.md §0 does not
+name "grind" literally — its table rules out *pay-to-skip-practice* monetizations (coin
+packs, time-skips, boost consumables) as "off the table by construction" — but the substance
+transfers: a bigger-number tier a parent might pay to reach faster brushes exactly against
+that pay-to-skip line, and it adds no learning. The **only** version worth
 building is a machine/expansion **gated on passing the diploma** — a mastery reward that also
 backs the paywall's "fabrieks-uitbreidingen" copy. Drafted as an **optional** priority-4
 assignment (depends on Candidate A) so the CEO can choose it or instead soften the copy.
@@ -162,7 +210,7 @@ rather than built on a guess in the growing stage. Cut for this milestone.
 | **Dashboard analytics (per-letter / over-time)** | Parent-facing conversion feature, not kid-facing game depth (042 remit); belongs with the payments/conversion lane (tripwire 010), fed by the diploma data built here. REVENUE.md §6 keeps it #1 *there*, not here. |
 | **Mini-games / new exercise-type surface** | Large new surface; "plays but barely types" pedagogy risk (content article B); threatens G2's single-faucet rule. Unproven. |
 | **Extra retention/streak mechanics** | Retention layer already shipped (PLAYTEST_LOG); further depth must be measurement-gated in growing, not guessed. |
-| **Grind-only machine tiers** | Maxed factory already balanced (PLAYTEST_LOG cycle 3); rebirth already gives infinite numeric depth; REVENUE.md §0 warns against grind. Only a *diploma-gated* expansion is worth it, and that is optional (Candidate D). |
+| **Grind-only machine tiers** | Maxed factory already balanced (PLAYTEST_LOG cycle 3); rebirth already gives infinite numeric depth; REVENUE.md §0 rules out pay-to-skip-practice monetizations by construction, and a bigger-number tier brushes that line while adding no learning. Only a *diploma-gated* expansion is worth it, and that is optional (Candidate D). |
 | **Any change to economy multipliers / faucet** | Hard guardrail-2 line: typing stays the only faucet, accuracy the only multiplier. Out of scope, full stop. |
 | **Multi-child profiles** | Named in REVENUE.md but it is an account/infra feature tied to payments, not game depth; the unlock UI does not currently promise it, so no copy gap forces it now. Leave to the accounts/payments lane. |
 
@@ -221,6 +269,19 @@ reachable and takeable by a **free** player; exam-2+ and exam-final fall past th
 cap and are premium by nature.
 
 **Acceptance criteria.**
+- [ ] **Before (or alongside) any wiring, `src/engine/exams.js` gains direct engine-level
+      tests** — this module has zero direct coverage today and its logic has never been
+      executed by the suite. A new `test/exams.test.js` must pin, at minimum: `gradeExam`
+      (pass exactly at `passAcc`, fail just below; final exam fails below `minKpm` even at
+      100% accuracy, passes at/above it); `examReady`/`nextAvailableExam` (locked below the
+      exam's `stage`; not offered while `governor.state === 'frustrated'`; offered only once
+      every covered key clears the `EXAM_READY` confidence bar; the final exam withheld until
+      `speedAvg` is within 90% of `minKpm`); `generateExamText` (output covers the exam's
+      key set — every required symbol appears at least once — and is deterministic under a
+      seeded rng); and `applyExamResult` (records the pass, is idempotent on re-pass, grants
+      nothing on a fail). These tests must pass **before** the exam grading is exposed to a
+      child. (This replaces the doc's earlier — incorrect — assumption that the module was
+      already tested.)
 - [ ] Playing to home-row mastery as a **new/free** player, the game offers exam-1 as an
       optional exam (clearly labelled a "toets"/exam, distinct from a normal exercise) and
       lets the player decline and keep playing.
@@ -244,9 +305,12 @@ cap and are premium by nature.
 - [ ] `npm test` green (add tests for the reward mapping and the "no reward on fail" path);
       `npm run build` clean; zero console errors across an exam pass and an exam fail.
 
-**Notes.** The engine module is done and tested — the work is UI + reward remapping +
-persistence wiring, not exam logic. Keep exam-1 free; do not let the exam offer bypass the
-paywall for premium letters.
+**Notes.** The engine module is written and reads as coherent, but it is **not tested** — it
+has zero direct coverage today (only `newExams()` is touched incidentally by
+`promotion.test.js` during state init). So the work is: **first** pin the exam logic with
+engine tests (first AC), **then** the UI + reward remapping + persistence wiring. Do not
+assume the grading/gating logic is correct because the suite is green — none of it is exam
+logic. Keep exam-1 free; do not let the exam offer bypass the paywall for premium letters.
 
 ---
 
@@ -323,6 +387,11 @@ but not selectable when locked, routing a tap to the existing unlock screen.
 come from the designer (theme = a named set of the existing design tokens), with the developer
 wiring the swap mechanism. This assignment builds the **mechanism + default**; concrete
 alternate themes are Assignment 4. Closes the live paywall promise of "alle thema's".
+**Do not reuse `src/engine/rewards.js`'s `SHOP`/`buyUnlock`/`equipItem` machinery** — it is the
+inert typie star-shop and gates cosmetics behind earned in-game stars, which is the wrong model
+for typcoon (cosmetics gate behind the one-time premium unlock via `premium.js` `isUnlocked()`,
+not stars). Treat that file as dead reference, not a dependency; the new theme state must not
+route through `state.rewards`.
 
 ---
 
@@ -339,7 +408,10 @@ opened_by: product-owner
 **Goal.** Deliver three visually distinct, kid-appealing alternate themes on top of Assignment
 3's mechanism (e.g. a night/neon factory, a candy/sweets factory, a space/rocket factory —
 final set is the designer's call), each a coherent recolour/restyle using the design tokens,
-each premium-locked.
+each premium-locked. The inert catalog in `src/engine/rewards.js` (`theme-neon`, `theme-snoep`,
+`theme-ruimte`, `theme-oceaan`, `theme-zon`) is a ready-made starting menu the designer can mine
+for names/directions — but it is *reference only*; author the themes as design tokens on
+Assignment 3's mechanism, not by importing `rewards.js`.
 
 **Acceptance criteria.**
 - [ ] Three alternate themes exist and are each selectable by an unlocked player, each visibly

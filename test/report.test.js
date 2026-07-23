@@ -106,3 +106,39 @@ test('digestMessage: telt gisterens werkelijke aantallen mee', () => {
   assert.match(text, /ouder-opt-ins: 1/);
   assert.match(text, /accounts totaal: 17/);
 });
+
+// ---- Rijtellingen als quota-proxy (assignment 044, decisions/008 gap 1) -----------
+test('digestMessage: zonder quota-argument blijft het bericht ongewijzigd (geen rijen-regel)', () => {
+  const counts = { pageview: 1, game_start: 1, engaged_session: 1, parent_opt_in: 1 };
+  const text = digestMessage('2026-07-22', counts, 5);
+  assert.equal(/rijen/.test(text), false);
+});
+
+test('digestMessage: quota-argument voegt de vier gelabelde rijtellingen toe', () => {
+  const counts = { pageview: 1, game_start: 1, engaged_session: 1, parent_opt_in: 1 };
+  const quota = { accounts: 17, events: 4213, rate_limits: 980, rate_limit_claims: 12 };
+  const text = digestMessage('2026-07-22', counts, 17, quota);
+  assert.match(text, /accounts: 17/);
+  assert.match(text, /events: 4\.213/); // nl-NL duizendtalscheiding
+  assert.match(text, /rate_limits: 980/);
+  assert.match(text, /rate_limit_claims: 12/);
+});
+
+test('digestMessage: fail-safe — een mislukte telling (null) toont "n.b." i.p.v. een gegokt getal, en blokkeert de rest niet', () => {
+  const counts = { pageview: 1, game_start: 1, engaged_session: 1, parent_opt_in: 1 };
+  const quota = { accounts: 17, events: null, rate_limits: 980, rate_limit_claims: null };
+  const text = digestMessage('2026-07-22', counts, 17, quota);
+  assert.match(text, /accounts: 17/);
+  assert.match(text, /events: n\.b\./);
+  assert.match(text, /rate_limits: 980/);
+  assert.match(text, /rate_limit_claims: n\.b\./);
+});
+
+test('digestMessage: fail-safe geldt ook voor "accounts totaal" — een mislukte accounts-telling toont "n.b.", nooit een verzonnen 0 (044 bounce)', () => {
+  const counts = { pageview: 1, game_start: 1, engaged_session: 1, parent_opt_in: 1 };
+  const quota = { accounts: null, events: 4213, rate_limits: 980, rate_limit_claims: 12 };
+  const text = digestMessage('2026-07-22', counts, quota.accounts, quota);
+  assert.match(text, /accounts totaal: n\.b\./);
+  assert.match(text, /rijen — accounts: n\.b\./);
+  assert.equal(/accounts totaal: 0/.test(text), false);
+});

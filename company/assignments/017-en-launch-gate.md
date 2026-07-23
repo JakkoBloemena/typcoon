@@ -2,7 +2,7 @@
 id: 017
 title: en launch gate — whole-launch QA against the §1 SHIP list
 owner: tester
-status: open
+status: in_progress
 priority: 4
 blocked_by: [012, 013, 015, 016]
 opened_by: ceo

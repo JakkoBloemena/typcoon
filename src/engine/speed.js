@@ -22,6 +22,16 @@ export function sessionKpm(correctKeystrokes, durationMs) {
   return Math.round(correctKeystrokes / minutes);
 }
 
+// Meebewegend persoonlijk snelheidsgemiddelde (EMA), op elke afgeronde opdracht
+// bijgewerkt met de kpm van díe opdracht. Zelfde conventie als (het ongebruikte)
+// `applyExerciseRewards` in rewards.js: 70% geschiedenis, 30% laatste opdracht —
+// dempt uitschieters (een enkele trage/snelle opdracht kantelt het gemiddelde niet),
+// maar blijft meebewegen met echte vooruitgang. Eerste meting = het gemiddelde zelf
+// (geen geschiedenis om mee te blenden).
+export function updateSpeedAvg(prevAvg, kpm) {
+  return prevAvg ? Math.round(0.7 * prevAvg + 0.3 * kpm) : kpm;
+}
+
 export function bestKpm(sessions = []) {
   return sessions.reduce((m, s) => Math.max(m, s.kpm || 0), 0);
 }
