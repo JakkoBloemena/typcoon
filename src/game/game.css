@@ -282,6 +282,19 @@ button { font-family: inherit; }
 .game-main { display: grid; grid-template-columns: 1fr 350px; gap: 16px; align-items: start; }
 @media (max-width: 920px) { .game-main { grid-template-columns: 1fr; } }
 
+/* 055: onder 768px (desktop-grens, AC3) groeit de volle pil-verzameling — unlock/toets
+   links, streak/ster/munt/⚙️ rechts — breder dan het scherm; zonder wrap dwingt de rij
+   haar min-content-breedte af en scrollt het hele spel horizontaal (zie
+   qa-scripts/probe-055-header-overflow.mjs). Bar-left en wallet wrappen elk apart op hun
+   eigen volle regel, zodat de header op smal mobiel netjes in twee/drie regels valt i.p.v.
+   overflowt. Bewust achter deze media query: ≥768px (desktop) blijft byte-identiek
+   (space-between + nowrap), zoals vóór deze fix. */
+@media (max-width: 767px) {
+  .game-bar { flex-wrap: wrap; justify-content: flex-start; }
+  .bar-left { flex: 1 1 100%; flex-wrap: wrap; }
+  .wallet { flex: 1 1 100%; justify-content: flex-end; }
+}
+
 /* ---------- Fabrieksvloer: de lopende band ---------- */
 .floor {
   display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; min-height: 96px;
