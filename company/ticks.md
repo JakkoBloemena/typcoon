@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #2 — OPEN
+- opened: 2026-07-23 19:35
+- claimed: 013, 019, 024, 026, 027, 028, 029, 030 — verification pass (statuses stay needs_verification; this entry is the claim)
+- worktrees: C:\companies\typcoon-lanes\v013 / v019 / v024 / v026 / v027 / v028 / v029 / v030 (branches verify/013 …); main checkout: dispatcher/integration only
+- ids allocated: none to lanes — testers report defects to the dispatcher, who materializes them from 031 (next free after this tick's board: 031)
+- notes: article chain 026→027→028→029 blocked_by was a build-time nl.mjs file-collision guard (tick #1 ledger); verification lanes are read-only against landed main, so all four verify in parallel. 019 note carried: licenses migration NOT yet applied to prod — dispatcher applies after 019 verifies. All other open work blocked on external triggers (010 traction tripwire, 014 §6 six-week window, 003/022 payments deferral).
+
 ## Tick 2026-07-23 #1 — CLOSED
 - opened: 2026-07-23 13:27
 - claimed: 012, 018, 023, 025 — verification pass (statuses stay needs_verification; this entry is the claim)
