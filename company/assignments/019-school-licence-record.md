@@ -2,7 +2,7 @@
 id: 019
 title: Licence record + issuance (concierge tooling)
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [018]
 opened_by: ceo
