@@ -495,6 +495,26 @@ test('cron/notify: een falende rijtelling (events plat) blokkeert de digest niet
   }
 });
 
+test('cron/notify: een falende accounts-telling toont "accounts totaal: n.b.", nooit een verzonnen 0 (044 bounce)', async () => {
+  const DB = withBackend();
+  DB.countFailTables.add('accounts');
+  const cron = (await import('../api/cron/notify.js')).default;
+  const realNow = Date.now;
+  try {
+    Date.now = () => Date.UTC(2026, 6, 18, 10, 0, 0);
+
+    const r = await call(cron, { method: 'GET', headers: { authorization: 'Bearer testsecret' } });
+    assert.equal(r.statusCode, 200); // geen 500: de falende telling mag de send niet blokkeren
+    assert.equal(r.body.digest, true);
+    assert.equal(DB.tg.length, 1);
+    assert.match(DB.tg[0], /accounts totaal: n\.b\./);
+    assert.match(DB.tg[0], /rijen — accounts: n\.b\./);
+    assert.equal(/accounts totaal: 0/.test(DB.tg[0]), false);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
 // --- client-helper: mag nooit crashen zonder browser-API's (server/test), zelfde
 // verwachting als src/game/premium.js ("werkt zonder localStorage zonder te crashen") --
 test('net/track.js: client-helpers werken zonder window/localStorage/navigator (server/test) zonder te crashen', async () => {

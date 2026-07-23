@@ -133,3 +133,12 @@ test('digestMessage: fail-safe — een mislukte telling (null) toont "n.b." i.p.
   assert.match(text, /rate_limits: 980/);
   assert.match(text, /rate_limit_claims: n\.b\./);
 });
+
+test('digestMessage: fail-safe geldt ook voor "accounts totaal" — een mislukte accounts-telling toont "n.b.", nooit een verzonnen 0 (044 bounce)', () => {
+  const counts = { pageview: 1, game_start: 1, engaged_session: 1, parent_opt_in: 1 };
+  const quota = { accounts: null, events: 4213, rate_limits: 980, rate_limit_claims: 12 };
+  const text = digestMessage('2026-07-22', counts, quota.accounts, quota);
+  assert.match(text, /accounts totaal: n\.b\./);
+  assert.match(text, /rijen — accounts: n\.b\./);
+  assert.equal(/accounts totaal: 0/.test(text), false);
+});
