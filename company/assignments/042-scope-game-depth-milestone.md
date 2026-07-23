@@ -2,7 +2,7 @@
 id: 042
 title: Scope the next build milestone — game content/depth
 owner: product-owner
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -186,3 +186,69 @@ Changes to `research/game-depth-scope.md`:
 No draft-assignment ids allocated; no new assignment files opened. The other three acceptance
 criteria and the guardrail/paid-tier/cut-line reasoning are unchanged (they held under the
 tester's re-derivation).
+
+## Re-verification (2026-07-23, tester, second pass)
+
+**Verdict: PASS — `status: done`.** Second pass, scoped to the bounce cause and the rework's
+folded-in notes per the dispatcher's brief. Worked in `C:\companies\typcoon-lanes\v042r2`
+(branch `verify/042-r2`), read/grep/`npm test` only, no probe artifacts.
+
+**1. Refuted claim gone, underlying fact re-confirmed — PASS.**
+`grep -n -i "tested" research/game-depth-scope.md` returns 6 hits, all of them stating or
+discussing that `exams.js` is *un*tested (TL;DR, §1 table "UNWIRED *and UNTESTED*", §2
+Candidate A evidence + rationale paragraphs, Assignment 1 AC parenthetical, Assignment 1
+Notes). Targeted re-grep for the exact bounced phrases ("finished, tested", "done and
+tested", "already exists and is tested") returns zero matches — only "finished-by-inspection"
+remains, which is accurate and distinct from "tested". Independently re-ran the underlying
+check: `grep -rn "EXAMS|examReady|nextAvailableExam|examStatus|generateExamText|gradeExam|
+applyExamResult|minigamesUnlocked" test/` → **0 hits**, confirming zero direct exams.js
+coverage still holds. `npm test` → 154/154 green (own the suite grew since the first pass;
+none of the growth touches exam exports, consistent with the grep result).
+
+**2. Candidate A rationale honest — PASS.** §2 Candidate A states explicitly "the priority
+ranking rests on *impact*, not on the (now-corrected) test claim" and separately names the
+real risk ("piping untested grading logic into a kids' product is genuinely riskier... a
+child could be failed unfairly or a diploma awarded on a text that didn't cover the keys")
+while explaining why it doesn't demote the candidate (bounded, cheap-to-retire risk on 149
+lines of pure functions). Assignment 1's acceptance criteria now open with an explicit first
+bullet requiring `test/exams.test.js` (gradeExam, examReady/nextAvailableExam,
+generateExamText, applyExamResult) to pass **before** exam grading is exposed to a child —
+confirmed this is literally the first `- [ ]` item in the AC list, not an afterthought.
+
+**3. Two folded-in non-blocking notes — PASS, both re-checked against source.**
+- REVENUE.md §0 (read directly, lines 8–19): it is a table of idle-game monetizations ruled
+  "off the table by construction" — coin packs, time-skips, boost consumables, ads — never
+  using the literal word "grind". The doc's retightened line ("REVENUE.md §0 does not name
+  'grind' literally — its table rules out pay-to-skip-practice monetizations... as 'off the
+  table by construction' — but the substance transfers") matches §0's actual content exactly;
+  this replaces the prior loose "REVENUE.md §0 warns explicitly against grind-shaped
+  additions" paraphrase in both the Candidate D section and the §3 cut-line table.
+- `src/engine/rewards.js` inert theme catalog: confirmed present and unimported
+  (`grep -rn "rewards.js|theme-paars|CATALOG|equipped" src/game/` → 0 hits, same as first
+  pass). It is now noted under Candidate B as usable-for-names-only reference, explicitly
+  flagging that its star-shop (`buyUnlock`, `state.rewards.stars`) gating must be ignored
+  because typcoon gates cosmetics behind the one-time premium unlock, not earned stars.
+  Assignment 3's Notes and Assignment 4's Goal both carry an explicit "reference only, not a
+  dependency / do not reuse the SHOP/buyUnlock/equipItem machinery" instruction.
+
+**4. No regression on previously-passing criteria — PASS.** Diffed the rework commit
+(`git diff 8871e06 2945a45 -- research/game-depth-scope.md`, merge 7f117ab): every hunk is
+either (a) the "tested" → "untested" correction and its consequences (TL;DR, §1 table, §2
+Candidate A, Assignment 1 AC/Notes), or (b) the two folded-in notes above (REVENUE.md §0
+retightening in Candidate D + §3 table; rewards.js dead-reference notes in Candidate B,
+Assignment 3, Assignment 4). §4 (build order) has no diff hunk at all — untouched. §6
+(guardrail/paid-tier summary table) has no diff hunk — untouched. The cut line (§3) changed
+only in the one cell covered by point 3 above; the other five rows and the "concern to
+surface to the CEO" paragraph are byte-identical. All 5 draft assignment blocks in §5 still
+omit an `id:` field (`grep -n "^id:" research/game-depth-scope.md` → no matches) and
+`blocked_by` still uses `<Assignment N id>` placeholders; `company/assignments/` contains
+044/045 (unrelated, from other lanes) and no 046–049 — confirms no ids were allocated during
+rework, matching the acceptance criterion's "ids TBD."
+
+**Not checked further (out of re-verification scope per the dispatcher's brief, and
+unchanged by the rework):** the machine/curriculum/DESIGN.md/PLAYTEST_LOG citations
+independently re-derived in the first pass were not re-run — the rework's diff does not
+touch those lines, so the predecessor's pass stands.
+
+No probe artifacts. Commit made from `C:\companies\typcoon-lanes\v042r2` on branch
+`verify/042-r2`; nothing pushed.
