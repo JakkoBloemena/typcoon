@@ -120,3 +120,78 @@ serving correctly, `/en/` gate intact, auth boundary on `/api/admin/funnel` inta
 One measurement gap carried forward from tick #7/ADR 008 (quota consumption, now
 digest-measured but not board-visible to this monitor) — not a new finding, not
 re-opened, recorded per protocol. No incident, no assignment needed.**
+
+## 2026-07-23 21:13 UTC — tick #12 (post-deploy check, 4 production deploys since tick #10)
+
+Post-deploy health check after tick #11 pushed four merges to `main`: `c3eb6fa` (058,
+free-tier promotion cap sticky / paywall guard), `f4738f2` (059, no-Dutch checker
+`<link>`-stripping narrowed to href/hreflang), `d94223a` (060, contrast script reads
+real shipped `game.css`), `3240cd5` (061, Unlock overlay mount-guard stops
+double-click click-through). All four confirmed present in `git log --oneline main`
+reachable history at check time (checked out at `f1213fe`, one commit ahead of
+`3ea6aa9`/`3240cd5`). Last monitor check was tick #10 (~22:00 local, predates all
+four).
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows redirects):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, ~0.41s, `Last-Modified: Thu, 23 Jul 2026 21:12:49 GMT`, `X-Vercel-Cache: HIT` — fresh |
+| `GET /speel/` (game) | 200; bundled assets now `speel-Dx9n5T0C.js` / `speel-B2OxpAxn.css` — **different hashes from tick #10's `speel-D4uP_d9b.js` / `speel-CrNulXhw.css`**, both fetched separately and confirmed 200 — direct evidence a new build is actually being served, not just that `main` moved |
+| `GET /en/` | **200** (was 404 at tick #10 — en-locale content is now live; consistent with `/en/` appearing in the current sitemap, not a regression, no auth/gate implied for this route) |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** — matches expected count (was 17 at tick #10; growth is nl content + new `/en/` set, all 22 URLs individually listed and spot-checked above, none 404) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` — auth boundary holds |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` — bad token rejected, no data leak |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` — read source (`api/cron/notify.js:100-101`) first: Bearer-token check against `CRON_SECRET`; digest endpoint also gated, not just funnel |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` — bad bearer rejected, no digest data leak |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — matches source, fails silently by design (fire-and-forget) |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live and configured; error string changed from tick #7's `invalid` to `malformed`, consistent with normal input-validation wording, not a regression (still a clean 400, not 404/500/not_configured) |
+
+No 4xx/5xx surprises outside documented/expected behavior. No English content
+improperly exposed (it's now intentionally live per sitemap, not a leak — no
+credentials or admin data involved). No auth boundary breach found on either
+admin-facing endpoint (`funnel`, `cron/notify`).
+
+**Post-deploy code spot-check: confirmed via changed asset hashes (§ above), not just
+git history.** Could not directly verify 058 (paywall cap), 059 (no-Dutch checker), or
+060 (contrast script) are live from outside — 058 requires driving the free-tier
+paywall flow client-side, 059/060 are build-time/CI checks with no runtime HTTP
+surface. 061 (Unlock overlay mount-guard) is DOM/interaction behavior, not checkable
+via plain HTTP either. The `/speel/` bundle hash change is the strongest available
+external signal that a new build (encompassing all four merges, since they share one
+bundle) is what's being served — noting the per-change verification gap explicitly
+rather than claiming each of the four is individually confirmed live from outside.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, not re-opened, no new
+information this tick.** No Vercel/Supabase dashboard or API credentials in this
+environment; not requesting new tokens per ADR 008's reasoning (no genuinely
+usage-read-only scope available on our plans, and granting a broader token would
+invert the CRON_SECRET boundary decisions/006 deliberately kept out of this
+environment). The digest-measured row counts (api/cron/notify.js, per ADR 008's
+durable-fix path) remain unreadable from this monitor's environment (no Telegram
+access). Recording the gap again, not treating it as closed or as newly degraded.
+
+**Spend: verified against `company/metrics/spend.md`, matches reality, no changes.**
+Four lines unchanged since tick #7/#10: domain (Shareholder-owned auto-renew,
+immaterial, cancel-by = company death only, untracked per decisions/003), Vercel /
+Supabase / Resend all €0 free tier (escalate to CEO before any paid-plan upgrade).
+Checked `company/decisions/` for anything dated after 009 (last decision spend.md
+reflects) — none found; 009 is still the latest decision file, no new recurring
+commitment introduced by tick #11's builds. No renewal date due or approaching this
+tick. Budget ceiling €50/month (decisions/003) — current recorded recurring spend: €0.
+No line in spend.md carries a Shareholder "approved one-time, cancel before renewal"
+condition to watch — nothing to escalate pre-renewal this tick.
+
+**Verdict: HEALTHY. All 16 checks pass (10 page/asset checks incl. new asset-hash
+evidence of live redeploy, 6 auth/behavior checks on funnel/cron/track/redeem
+endpoints), no auth boundary breach, sitemap count matches expectation (22), spend
+ledger clean and unchanged, no renewal risk. One carried-forward measurement gap
+(quota consumption, ADR 008, unchanged) — not a new finding. No incident to open this
+tick.**
