@@ -6,14 +6,27 @@
 // de app gedraagt zich verder alsof de betaling geslaagd is. De echte Stripe/Paddle-
 // aanroep komt op de gemarkeerde plek.
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { PRICE, completePurchase } from './premium.js';
 import { gt } from './strings.js';
+
+// Hoe lang na het openen een klik op de achtergrond genegeerd wordt (ms). Vangt
+// een klik op die "doorlekt" van het scherm hiervoor — bv. een snelle dubbele
+// klik op een vergrendeld thema: de eerste klik wisselt de thema-kiezer voor
+// dit overlay op dezelfde plek, en zonder deze wacht zou de tweede klik van
+// diezelfde dubbelklik meteen weer op de achtergrond hiervan vallen en sluiten
+// (assignment 061 — twee overlay-niveaus poppen ipv landen op de ontgrendel-kaart).
+const BACKDROP_GUARD_MS = 400;
 
 export default function Unlock({ offer = false, onClose, onPurchased }) {
   const [step, setStep] = useState('gate'); // 'gate' | 'buy' | 'done'
   const [answer, setAnswer] = useState('');
   const [shake, setShake] = useState(false);
+  const openedAt = useRef(Date.now());
+  const closeBackdrop = () => {
+    if (Date.now() - openedAt.current < BACKDROP_GUARD_MS) return;
+    onClose();
+  };
   // ouder-poort: twee getallen 3–9 (bewust niet triviaal voor een kind van 6)
   const q = useMemo(() => {
     const a = 3 + Math.floor(Math.random() * 7);
@@ -35,7 +48,7 @@ export default function Unlock({ offer = false, onClose, onPurchased }) {
   const price = offer ? PRICE.offer : PRICE.now;
 
   return (
-    <div className="overlay" onClick={onClose}>
+    <div className="overlay" onClick={closeBackdrop}>
       <div className="card unlock-card" onClick={(e) => e.stopPropagation()}>
         {step === 'gate' && (<>
           <div className="card-icon">🔐</div>
