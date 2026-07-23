@@ -2,7 +2,7 @@
 id: 016
 title: Multi-locale hreflang + sitemap correctness (page-key map)
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: [015]
 opened_by: ceo
@@ -121,3 +121,118 @@ Run section), `scripts/content/nl.mjs` (+`key` fields on pillar/age/games-listic
 `scripts/content/en.mjs` (+`key` fields on pillar/age/games-listicle, header comment
 updated), `scripts/check-hreflang.mjs` (new), regenerated `public/**/index.html` +
 `public/sitemap.xml` (generator output, committed per existing repo convention).
+
+## Verification (2026-07-23, tester)
+
+Verified independently in worktree `C:\companies\typcoon-lanes\v016` (branch
+`verify/016`, off `build/016`), against the normative "### E —" checklist in
+research/en-locale-scope.md §7. `npm install` run first (node_modules was missing, 22
+packages added). Did not trust the delivery notes' side-claims — re-derived every
+bullet from the built `dist/` output and from diffing raw commits myself.
+
+**`npm test`: 146/146 pass**, exact count reproduced (`node --test test/*.test.js`,
+`# tests 146 / # pass 146 / # fail 0`). **`npm run build`: clean** — `vite build`,
+0 warnings/errors, `gen-content: 22 URLs (pijler + blog + 15 artikelen + 1 pagina's) +
+sitemap`.
+
+**Bullet 1 — cross-locale page-key map, resolves actual slugs.** Read
+`buildKeyMap()`/`resolveAlternates()` in `scripts/gen-content.mjs`: keys collected from
+`LANDINGS` (hand-authored `/`, `/en/`) plus every pack's `pillar`/`articles`/`pages` that
+carry a `key`. Confirmed on the pillar and (going beyond "one spoke") on all three
+clustered spokes: nl pillar's `en` alternate resolves to
+`https://typcoon.com/en/learn-typing-for-kids/` (real slug, not a locale-prefix guess);
+same pattern independently confirmed for `age`
+(`op-welke-leeftijd-leren-typen` ↔ `what-age-to-learn-typing`) and `games-listicle`
+(`beste-gratis-typspelletjes-kinderen` ↔ `free-typing-games-for-kids`). PASS.
+
+**Bullet 2 — reciprocal clusters + x-default; no false alternates.** Dumped the
+`hreflang` `<link>` block from both sides of every cluster in the built `dist/`
+(pillar, age, games-listicle, blog index, home) — identical `{nl, en, x-default}` sets
+on both sides in every case, `x-default` always the nl URL. Then checked every nl-only
+page for false alternates: all 10 keyless blog articles
+(`blind-typen-leren-tips`, `gratis-leren-typen-kind`, `gratis-of-betaalde-typecursus`,
+`hoe-lang-duurt-leren-typen`, `leren-typen-groep-6-7-8`, `typediploma-nodig`,
+`typen-leren-met-een-spelletje`, `typen-oefenen-10-minuten-per-dag`,
+`typles-op-school-of-thuis`, `welke-vinger-welke-toets`) plus `voor-scholen` emit **no**
+hreflang block at all (correct — no `key`, no cluster, no dangling link).
+`nitro-type-alternatief` (has `key:'nitro'`, en counterpart doesn't exist yet) emits only
+`self` + `x-default`, no `en` alternate — correct, not a false one. Cross-checked against
+the pre-016 commit (`cb2e166`): `git diff cb2e166 ac1ddce -- public/` shows the nl-only
+articles *used* to carry a false `en` alternate pointing at a 404ing guessed URL (e.g.
+`nitro-type-alternatief` used to declare
+`hreflang="en" href=".../en/blog/nitro-type-alternatief/"`, which 016 correctly removes)
+— confirms the bug this assignment fixes was real and is gone. PASS.
+
+**Bullet 3 — both landings carry the full cluster.** `dist/index.html` and
+`dist/en/index.html` both emit `{nl: https://typcoon.com/, en: https://typcoon.com/en/,
+x-default: https://typcoon.com/}` — reciprocal, correct x-default. Confirmed via
+`git diff cb2e166 ac1ddce` that the hand-authored landing source files
+(root `index.html`, presumably `public/en/index.html` equivalent — not present as a
+separate rendered artifact touched by this commit) were **not** modified by 016 (no
+`index.html`/`en/index.html` hand-authored source in the commit's file list beyond the
+generator-produced tree) — consistent with the notes' claim these blocks were already
+correct since 015 and only now additionally participate in the sitemap. PASS.
+
+**Bullet 4 — sitemap.xml.** `dist/sitemap.xml` declares
+`xmlns:xhtml="http://www.w3.org/1999/xhtml"`; every clustered `<url>` carries
+`<xhtml:link rel="alternate">` entries including a self-reference and `x-default`,
+matching the per-page `<link>` blocks exactly (both driven by the same `KEY_MAP`, so
+they structurally cannot drift). `/en/` is present as an explicit entry (`<loc>
+https://typcoon.com/en/</loc>`) with its full cluster — confirmed via `git diff` this
+entry did not exist pre-016. Counted 22 `<url>` entries total (matches the
+build-log-reported 22 URLs; pre-016 sitemap had 21, `+1` for `/en/`, as claimed).
+`robots.txt` unchanged: `Sitemap: https://typcoon.com/sitemap.xml`, still the one file.
+PASS.
+
+**Bullet 5 — hard-coded Dutch strings moved to pack `ui`.** Read the full
+`gen-content.mjs`: every rendering function (`nav`, `footer`, `ctaBox`, `faqBlock`,
+`breadcrumb`, `renderBlogIndex`) sources copy exclusively from `pack.ui.*` /
+`pack.pillar.*` / pack fields — no literal Dutch/English UI strings in the generator
+itself (only Dutch in code *comments*, which don't render). `blogTitle`,
+`blogDescription`, `blogLead`, `pillar.blogHeading` are present and localised in both
+`scripts/content/nl.mjs` and `scripts/content/en.mjs` with distinct nl/en values. This
+was actually 015's fix (re-verified here, not a new 016 change) — correctly not
+re-claimed as new work by the developer. PASS.
+
+**Bullet 6 — validation script + build.** Read `scripts/check-hreflang.mjs` in full:
+it walks every built `.html` file plus `sitemap.xml`, collects every
+`<link>`/`<xhtml:link rel="alternate" hreflang>`, and asserts the `href` resolves to a
+file that was actually built. Ran it clean: `check-hreflang: PASS — 64 hreflang
+alternates checked across dist/, all resolve.` — matches the delivery's claimed count.
+Sanity-checked the checker myself (not trusting the dev's word): edited a real `href` in
+a built `dist/en/index.html` to a nonexistent path — checker correctly failed
+(`FAIL — 1/64 alternates broken`, exact file/hreflang/href reported); restored via a
+clean `npm run build` re-run and the checker passed again. Worktree confirmed diff-clean
+of the experiment afterward (rebuild churn was CRLF/LF line-ending noise only —
+`git diff` showed 0 real content lines — `git checkout -- public/` used to fully
+restore). One nuance for the record, not a failure: the checker validates *resolution*
+(every href points at a real file) but does not itself assert *reciprocity* — reciprocity
+was verified by hand in bullet 2 above and holds everywhere checked; the checklist's
+"reciprocity checks clean (e.g. a validator or a scripted assertion)" wording is
+satisfied by the combination of the scripted resolution-check plus the manual reciprocity
+verification, but a future tightening could fold reciprocity assertions into the script
+itself. Not filing as a defect — noting for awareness only. `npm run build`: clean
+(reconfirmed above). PASS.
+
+**Additional independent checks (beyond the checklist, nothing broke):**
+- Diffed every changed file in `public/` between `cb2e166` (pre-016) and `ac1ddce` (016)
+  line by line: on the nl side, changes are hreflang-`<link>`-line-only (fixed or removed
+  false alternates, as above) plus the `sitemap.xml` restructure. On the en side, the
+  *only* additional change is the documented `homeUrl()` fix: `/en` → `/en/` in the nav
+  brand link, breadcrumb trail, and footer home link on every en generator page, which
+  also fixes the `BreadcrumbList` JSON-LD "Home" `item` URL the same way. No unexpected
+  content/copy/schema changes anywhere.
+- Content packs: confirmed `key` fields present exactly where claimed
+  (`pillar`/`age`/`games-listicle` in both `nl.mjs` and `en.mjs`; `nitro` in `nl.mjs`
+  only), no duplicate keys, no accidental key collisions.
+- `vercel.json` unchanged (`trailingSlash: true` still active in prod, so the local-only
+  `/en` no-trailing-slash SPA-fallback quirk flagged in 015 is now moot anyway since
+  generator output itself emits `/en/` directly).
+
+**Verdict: PASS on all six E-checklist bullets.** Every claim in the delivery notes was
+independently re-derived from the built output and the raw commit diff, not taken on
+trust. No defects found. Status set to `done`.
+
+No probe script needed beyond the sanity-check of the existing `check-hreflang.mjs`
+(performed in-place against `dist/`, then reverted via a fresh `npm run build`; no new
+file committed since nothing needed fixing).
