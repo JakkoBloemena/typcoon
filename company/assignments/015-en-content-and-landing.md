@@ -2,7 +2,7 @@
 id: 015
 title: en content pack + /en/ landing
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: [013, 014]
 opened_by: ceo
@@ -103,3 +103,81 @@ Consider a small automated "no-Dutch-on-en-pages" regression test (grep the buil
 silently reintroduce Dutch text without a human running the manual check again. Not
 built here — 017's launch QA gate already covers this check once, and this would be new
 scope beyond D's checklist.
+
+## Verification (2026-07-23, tester)
+
+Verified independently in worktree `C:\companies\typcoon-lanes\v015` (branch
+`verify/015`), against the normative "### D —" checklist in
+research/en-locale-scope.md §7. `npm install` run first (node_modules was missing).
+Server used: `vite preview --port 4184`, killed before finishing.
+
+**D checklist — all four bullets pass:**
+
+1. **`scripts/content/en.mjs` in the nl.mjs shape, `en` added to `LOCALES`.** Confirmed:
+   `locale:'en'`, `htmlLang:'en'`, `ogLocale:'en_US'`, full `ui` block, `pillar`
+   (`/en/learn-typing-for-kids/`) + 2 `articles` spokes
+   (`/en/blog/free-typing-games-for-kids/`, `/en/blog/what-age-to-learn-typing/`) — slugs
+   match research/en-keyword-research.md §4 verbatim. `LOCALES = [nl, en]` in
+   `gen-content.mjs`. Read the full file: content is natively English (not translated
+   Dutch) — checked prose quality, competitor claims (TypingClub/Typing.com/Nitro
+   Type/KidzType) and free-tier claims against 014/existing app behaviour, consistent.
+2. **`npm run build` emits the right en pages, correctly tagged, styled identically to
+   nl.** Ran `npm test` (146/146 green) and `npm run build` (clean, no warnings/errors).
+   `dist/en/` contains exactly `index.html`, `learn-typing-for-kids/index.html`,
+   `blog/index.html`, `blog/free-typing-games-for-kids/index.html`,
+   `blog/what-age-to-learn-typing/index.html`. Verified on every one: `<html lang="en">`,
+   `og:locale=en_US`, and on pillar/articles `"inLanguage":"en"` +
+   `Article`/`BreadcrumbList` schema (+`FAQPage` on both spokes) — matches the nl pillar's
+   own schema set exactly (nl pillar also has no FAQ, so en pillar not having one is
+   consistent, not a gap). Diffed the `<style>` block between `dist/en/learn-typing-for-kids/`
+   and `dist/leren-typen-voor-kinderen/` — byte-identical CSS.
+3. **`/en/index.html` hand-authored landing, English copy, VideoGame+FAQPage JSON-LD,
+   lang="en", CTA opens the English app.** Read the full source: `lang="en"`,
+   `VideoGame`, `FAQPage`, plus bonus `Organization`/`WebSite` JSON-LD, all English, CTA
+   → `/speel/?lang=en`. Drove it with a real Chromium browser (Playwright, headless
+   `chromium-1228` from the machine's ms-playwright cache): loaded `/en/`, clicked the
+   "Play free" CTA, landed on `/speel/?lang=en`, and the rendered React app body read
+   "Type coins. Build your factory. Become a tycoon." — genuinely English, not a
+   lang-agnostic default. Cross-checked `/speel/` with no `lang` param on the same run:
+   renders Dutch ("Typ munten. Bouw je fabriek.") — confirms the `?lang=en` switch is
+   real and wired up (traced to `src/game/App.jsx`'s `lang === 'en' ? 'en' : 'nl'`
+   read of `URLSearchParams`), not a coincidence.
+4. **Zero Dutch on any en page; blog nav links resolve.** Ran my own independent Dutch
+   lexicon grep (not the dev's word list) over the built `dist/en/` tree and
+   `en/index.html` source — two passes, ~50 common Dutch words/particles including
+   grammar words (je/het/een/voor/van/niet/dat/deze), domain terms
+   (kinderen/typen/leren/gratis/vinger/toetsenbord/typespel/muntenfabriek) and more
+   (gids/leeftijd/beste/spelen/cursus/wanneer/waarom/hoe/wat/zonder/door/terwijl/...).
+   Zero real hits — only the same "kind" substring false-positive the dev flagged (inside
+   "the kind kids already..."), confirmed by inspection, plus expected code-comment hits
+   in `en.mjs` citing nl slugs for assignment E (not rendered). Blog index and
+   pillar/article cross-links all point to real built paths — verified every `href`.
+
+**Folded-in generator fixes verified not to change nl rendered output:** diffed
+`scripts/content/nl.mjs` against the pre-015 baseline (commit `bb606ea`) — the only
+change is 4 new additive fields (`blogTitle`, `blogDescription`, `blogLead`,
+`blogHeading`); their values are character-identical to the strings that used to be
+hard-coded in `gen-content.mjs`'s `renderBlogIndex` before this change, confirmed by
+diffing against the pre-015 generator source. The new `appUrl(pack)` helper
+(`/speel/` for nl, `/speel/?lang=<locale>` otherwise) preserves nl's exact prior
+behaviour while fixing the real en bug it was folded in to prevent (en pages'
+CTA silently dropping readers into the Dutch app).
+
+**Non-blocking observation (not filed as a bug, not a D-checklist failure):** the
+generator's shared `p(pack) || '/'` "Home" nav-link helper (pre-existing since 013, not
+introduced by this assignment) renders `/en` without a trailing slash on every
+generator-built en page (blog index, pillar, both spokes) — nl's equivalent home link
+is `/` (falls back correctly since nl is `DEFAULT`). Locally, `vite preview`'s SPA
+fallback silently serves the *Dutch* `dist/index.html` for `/en` (200, wrong content) —
+worth knowing if anyone smoke-tests locally without noticing the trailing slash. In the
+real deployment this resolves correctly: `vercel.json` has `"trailingSlash": true`, so
+`/en` 301-redirects to `/en/` before serving. Since production is unaffected and the
+generator code isn't part of this delivery, this doesn't fail the "nav links resolve (no
+404)" bullet — flagging for the dispatcher's awareness only, in case E or F wants to
+tidy the helper to always emit the trailing slash directly.
+
+**Verdict: PASS on all four D-checklist bullets.** `npm test` 146/146 green, `npm run
+build` clean. Status set to `done`.
+
+Probe script committed: `qa-scripts/_015-verify.mjs` (Playwright, run against
+`vite preview --port 4184`, server killed after use).
