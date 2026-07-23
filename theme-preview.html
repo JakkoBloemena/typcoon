@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="nl" data-theme="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Theme preview — 052</title>
+  <style>@import '/src/game/game.css';</style>
+  <style>
+    /* Two EXTRA candidates rendered only here for the pairwise pick — never shipped. */
+    [data-theme='ruimtebasis'] {
+      --night: #070c1f; --panel: #131d40; --panel-2: #0d1531; --line: #294a94;
+      --brass: #3fd9ec; --brass-hi: #8ff0f6; --brass-deep: #12889e;
+      --mint: #45e6b0; --mint-deep: #159f74; --flame: #ff6f8a; --sky: #7fa8ff; --sky-deep: #2f6cc4;
+      --paper: #eaf2ff; --ink-dim: #8fabe0;
+      --on-accent: #042028; --sink: #030814; --bg-wash: rgba(63,217,236,0.06); --bg-grid: rgba(120,160,255,0.08);
+      --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #0a1230 12px 24px);
+    }
+    [data-theme='zonnesmederij'] {
+      --night: #2a1206; --panel: #43200c; --panel-2: #371a09; --line: #7a3f1e;
+      --brass: #ff9d2e; --brass-hi: #ffc46b; --brass-deep: #c26a12;
+      --mint: #6ad46a; --mint-deep: #2f9f3a; --flame: #ff5c4a; --sky: #5fb0ff; --sky-deep: #2f6cc4;
+      --paper: #fff2e6; --ink-dim: #d6a880;
+      --on-accent: #3a1e00; --sink: #1c0c04; --bg-wash: rgba(255,157,46,0.07); --bg-grid: rgba(255,180,90,0.07);
+      --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #3a1a08 12px 24px);
+    }
+    .wrap { max-width: 1140px; margin: 0 auto; padding: 20px 18px 56px; }
+    .label { font-family: 'Lilita One', sans-serif; color: var(--brass); font-size: 1.4rem; margin: 0 0 12px; }
+    .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .coin-glyph { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--brass-hi), var(--brass) 70%); box-shadow: inset 0 -2px 0 var(--brass-deep); display: inline-block; }
+    .m-glyph { width: 56px; height: 46px; border-radius: 8px; background: linear-gradient(180deg, var(--line), var(--panel-2)); border: 2px solid var(--line); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="label" id="tname">Muntpers</p>
+
+    <div class="game-bar" style="margin-bottom:16px;">
+      <div class="bar-left">
+        <button class="btn btn-ghost icon-btn">🎨</button>
+        <button class="btn btn-ghost icon-btn">🔊</button>
+      </div>
+      <div class="wallet">
+        <span class="coin-pill big"><span class="coin-glyph"></span> 12.480</span>
+        <span class="cps-pill big">+34 /sec</span>
+        <span class="star-pill big">★ 3</span>
+      </div>
+    </div>
+
+    <div class="game-main" style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="floor running">
+          <div class="floor-tile"><span class="m-glyph"></span><span class="floor-level">Niv. 8</span><span class="floor-mult">×2</span><span class="floor-rate">+12/s</span></div>
+          <div class="floor-tile"><span class="m-glyph"></span><span class="floor-level">Niv. 5</span><span class="floor-rate">+7/s</span></div>
+          <div class="floor-tile"><span class="m-glyph"></span><span class="floor-level">Niv. 3</span><span class="floor-rate">+4/s</span></div>
+        </div>
+
+        <div class="type-pane">
+          <div class="meters">
+            <div class="meter"><span class="meter-face">🎯</span><div><div class="meter-big">97%</div><div class="meter-sub">nauwkeurig</div></div></div>
+            <div class="meter combo-meter hot"><span class="meter-face">🔥</span><div><div class="meter-big">×12</div><div class="meter-sub">combo</div></div></div>
+          </div>
+          <div class="golden-banner">GOUDEN RONDE — dubbele munten!</div>
+          <div class="typing-surface">
+            <div class="typing-text"><span class="tchar done">f</span><span class="tchar done">a</span><span class="tchar done">b</span><span class="tchar current">r</span><span class="tchar">i</span><span class="tchar">e</span><span class="tchar">k</span></div>
+            <div class="typing-progress"><span class="typing-progress-fill" style="width:55%"></span></div>
+          </div>
+          <div class="exam-banner">Thuisrij-diploma klaar! ✍️</div>
+        </div>
+      </div>
+
+      <div class="shop">
+        <h2>Machines</h2>
+        <ul class="shop-list">
+          <li class="shop-item owned"><span class="m-glyph shop-thumb"></span><div class="shop-info"><span class="shop-name">Typemachine <b>×3</b></span><span class="shop-meta">+12 munten/sec</span></div><button class="btn buy">240</button></li>
+          <li class="shop-item premium-lock"><span class="m-glyph shop-thumb"></span><div class="shop-info"><span class="shop-name">🔒 Snoepmixer</span><span class="shop-meta">Ontgrendel de volledige fabriek</span></div><span class="premium-cta">Ontgrendel</span></li>
+        </ul>
+        <div class="rebirth-box"><button class="btn rebirth-btn">✨ Nieuwe start</button><div class="rebirth-bar"><span style="width:70%"></span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const themes = [
+      ['', 'Muntpers (standaard)'],
+      ['nachtploeg', 'Nachtploeg / Night Shift'],
+      ['snoepfabriek', 'Snoepfabriek / Sugar Rush'],
+      ['diepzee', 'Diepzee / Deep Dive'],
+      ['ruimtebasis', 'Ruimtebasis / Star Foundry (extra)'],
+      ['zonnesmederij', 'Zonnesmederij / Sun Forge (extra)'],
+    ];
+    const p = new URLSearchParams(location.search);
+    const t = p.get('t') || '';
+    const found = themes.find((x) => x[0] === t) || themes[0];
+    document.documentElement.setAttribute('data-theme', found[0]);
+    document.getElementById('tname').textContent = found[1];
+  </script>
+</body>
+</html>

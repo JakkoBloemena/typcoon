@@ -29,6 +29,15 @@
   --sky-deep: #2f6cc4;
   --paper: #f4f7ff;      /* inkt op donker */
   --ink-dim: #93a2d8;    /* gedempte inkt */
+  /* Thema-haken (assignment 052): de plekken die vroeger een vaste kleur hadden en
+     daardoor niet mee-verkleurden. Defaults = exact het oude Muntpers-uiterlijk;
+     elk [data-theme] overschrijft ze zodat een thema als een andere PLEK leest, niet
+     als een accent-tint. --on-accent is de inkt óp de accentkleur (knoplabel/munt):
+     bij een donker accent moet die licht worden, anders zakt het contrast weg. */
+  --on-accent: #3d2c00;  /* inkt op --brass (knoplabels, munt-pill, multiplier) */
+  --sink: #0c1430;       /* de harde onderrand/slagschaduw: 'de bodem' onder panelen */
+  --bg-wash: rgba(255, 185, 21, 0.05); /* zachte gloed bovenaan de grond */
+  --bg-grid: rgba(95, 128, 220, 0.07); /* de blauwdruk-rasterlijnen op de grond */
   --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #2a2418 12px 24px);
   --r-lg: 22px;
   --r-md: 16px;
@@ -36,36 +45,98 @@
   --pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* veerkracht met overshoot */
 }
 
-/* ---------- Thema: Nachtploeg (assignment 051, premium proof-of-swap) ----------
-   Zelfde tokennamen als hierboven — alleen andere waarden (paars/neon i.p.v.
-   blauwdruk/messing). data-theme.js zet dit attribuut op <html> voor het echte
-   thema, of op een klein voorbeeldvlak in de thema-kiezer voor een preview.
-   Minimaal maar niet kapot: het echte pakket van meerdere thema's is assignment 052. */
+/* ==================================================================================
+   THEMA'S (assignment 052) — elk een andere PLEK, niet een accent-tint.
+   Elk thema herschrijft dezelfde tokennamen als :root. De vier thema-haken
+   (--on-accent, --sink, --bg-wash, --bg-grid) laten óók de grond, de rasterlijnen en
+   de inkt-op-accent mee-verschuiven, zodat de fabriek echt van omgeving verandert.
+   Alle vier zijn computationeel op WCAG AA gecheckt (qa-scripts/contrast-052.mjs).
+   Economie blijft byte-voor-byte gelijk: dit zijn puur kleuren (test/theme.test.js).
+   ================================================================================== */
+
+/* --- Nachtploeg / Night Shift: dezelfde fabriek na sluitingstijd, verlicht door
+   neon-buizen. Diep indigo-violet, elektrisch-violette gloed, cyaan noodlampjes.
+   Evolueert 051's proof-of-swap tot een afgewerkt thema. --on-accent wordt LICHT:
+   het violette accent is te donker voor de oude bruine inkt. */
 [data-theme='nachtploeg'] {
-  --night: #140b2e;
-  --panel: #21134a;
-  --panel-2: #1a0f3c;
-  --line: #4a2f86;
-  --brass: #7c5cff;
-  --brass-hi: #a78bff;
-  --brass-deep: #4b2fb0;
-  --mint: #33e6a0;
-  --mint-deep: #17a06b;
-  --flame: #ff6b4a;
-  --sky: #5fd0ff;
+  --night: #170a34;
+  --panel: #271552;
+  --panel-2: #1e0f42;
+  --line: #5233a0;
+  --brass: #b491ff;
+  --brass-hi: #d3beff;
+  --brass-deep: #6a3fce;
+  --mint: #3ee8ad;
+  --mint-deep: #159f74;
+  --flame: #ff6f8a;
+  --sky: #63d6ff;
   --sky-deep: #2f9cc4;
-  --paper: #f4f0ff;
-  --ink-dim: #b7a8e8;
-  --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #241457 12px 24px);
+  --paper: #f3efff;
+  --ink-dim: #b8a6ec;
+  --on-accent: #1c0a3e;
+  --sink: #0b0522;
+  --bg-wash: rgba(180, 145, 255, 0.07);
+  --bg-grid: rgba(150, 110, 255, 0.09);
+  --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #241150 12px 24px);
+}
+
+/* --- Snoepfabriek / Sugar Rush: een snoepfabriek 's avonds. Diep bessen-paars als
+   grond, heet-roze hefboom, muntgroene lopende band, citroen-glans. Warm en zoet,
+   het tegenovergestelde van de koele blauwdruk. */
+[data-theme='snoepfabriek'] {
+  --night: #2c1030;
+  --panel: #42184a;
+  --panel-2: #371441;
+  --line: #7a3576;
+  --brass: #ff5ea8;
+  --brass-hi: #ff9ecb;
+  --brass-deep: #c23a7a;
+  --mint: #4ce0a6;
+  --mint-deep: #1f9f6f;
+  --flame: #ff5c5c;
+  --sky: #8bb6ff;
+  --sky-deep: #4f74c8;
+  --paper: #fff1f8;
+  --ink-dim: #e2a3cd;
+  --on-accent: #4a0a2a;
+  --sink: #1c0820;
+  --bg-wash: rgba(255, 94, 168, 0.07);
+  --bg-grid: rgba(255, 140, 190, 0.08);
+  --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #3a1038 12px 24px);
+}
+
+/* --- Diepzee / Deep Dive: de fabriek op de zeebodem. Diep teal-zwart, koraal-oranje
+   hefboom (warm accent op koele grond = maximaal contrast), zeeschuim-groene band,
+   aqua sterlicht. Een hue die in geen van de andere thema's voorkomt. */
+[data-theme='diepzee'] {
+  --night: #06201f;
+  --panel: #0e3733;
+  --panel-2: #0a2b28;
+  --line: #1f645b;
+  --brass: #ff8a6b;
+  --brass-hi: #ffb59c;
+  --brass-deep: #c2502f;
+  --mint: #37e6b6;
+  --mint-deep: #159f7e;
+  --flame: #ff6f6f;
+  --sky: #4fd4ff;
+  --sky-deep: #2f9cc4;
+  --paper: #e9fffb;
+  --ink-dim: #7fcabb;
+  --on-accent: #3d1105;
+  --sink: #041413;
+  --bg-wash: rgba(255, 138, 107, 0.06);
+  --bg-grid: rgba(79, 212, 255, 0.08);
+  --stripe: repeating-linear-gradient(-45deg, var(--brass) 0 12px, #06201f 12px 24px);
 }
 
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0; min-height: 100%;
   background:
-    linear-gradient(180deg, rgba(255, 185, 21, 0.05), transparent 260px),
-    repeating-linear-gradient(0deg, transparent 0 47px, rgba(95, 128, 220, 0.07) 47px 48px),
-    repeating-linear-gradient(90deg, transparent 0 47px, rgba(95, 128, 220, 0.07) 47px 48px),
+    linear-gradient(180deg, var(--bg-wash), transparent 260px),
+    repeating-linear-gradient(0deg, transparent 0 47px, var(--bg-grid) 47px 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, var(--bg-grid) 47px 48px),
     var(--night);
   color: var(--paper);
   font-family: 'Nunito', system-ui, sans-serif;
@@ -101,7 +172,7 @@ button { font-family: inherit; }
   --edge: var(--brass-deep);
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
   background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%);
-  color: #3d2c00; border: none; border-radius: var(--r-md);
+  color: var(--on-accent); border: none; border-radius: var(--r-md);
   padding: 12px 24px; font-size: 1rem; font-weight: 900; cursor: pointer;
   box-shadow: 0 6px 0 var(--edge);
   transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.12s ease;
@@ -113,11 +184,11 @@ button { font-family: inherit; }
 .btn-ghost {
   background: var(--panel-2); border: 2px solid var(--line); color: var(--ink-dim);
   font-weight: 800; font-size: 0.95rem; padding: 8px 16px; border-radius: var(--r-sm);
-  cursor: pointer; box-shadow: 0 4px 0 #0c1430;
+  cursor: pointer; box-shadow: 0 4px 0 var(--sink);
   transition: transform 0.06s ease, box-shadow 0.06s ease, color 0.12s ease;
 }
 .btn-ghost:hover { color: var(--paper); }
-.btn-ghost:active { transform: translateY(4px); box-shadow: 0 0 0 #0c1430; }
+.btn-ghost:active { transform: translateY(4px); box-shadow: 0 0 0 var(--sink); }
 
 /* ---------- Tellers & pillen (LED-gevoel: cijfers verspringen niet) ---------- */
 .coin-pill, .cps-pill, .star-pill { font-variant-numeric: tabular-nums; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
@@ -144,14 +215,14 @@ button { font-family: inherit; }
 .btn.buy { display: inline-flex; align-items: center; gap: 5px; }
 .btn-coin { width: 17px; height: 17px; }
 .coin-pill {
-  font-weight: 900; font-size: 1.15rem; color: #3d2c00;
+  font-weight: 900; font-size: 1.15rem; color: var(--on-accent);
   background: linear-gradient(180deg, var(--brass-hi), var(--brass) 60%);
   padding: 8px 18px; border-radius: 999px; box-shadow: 0 4px 0 var(--brass-deep);
 }
 .coin-pill.big { font-size: 1.35rem; }
 .cps-pill {
   font-weight: 800; color: var(--mint); background: var(--panel-2);
-  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--line); box-shadow: 0 4px 0 #0c1430;
+  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--line); box-shadow: 0 4px 0 var(--sink);
 }
 .cps-pill.big { font-size: 1.1rem; }
 .star-pill {
@@ -166,7 +237,7 @@ button { font-family: inherit; }
 .home-logo {
   width: 132px; height: 128px; margin: 0 auto; padding: 10px 14px; display: flex; align-items: center; justify-content: center;
   background: var(--panel); border: 3px solid var(--line); border-radius: 32px;
-  box-shadow: 0 8px 0 #0c1430, inset 0 2px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 0 var(--sink), inset 0 2px 0 rgba(255, 255, 255, 0.08);
   animation: dropIn 0.6s var(--pop) backwards;
 }
 .home-logo svg { width: 100%; height: 100%; }
@@ -182,7 +253,7 @@ button { font-family: inherit; }
 .home-card {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 28px 32px; box-shadow: 0 10px 0 #0c1430; min-width: 320px; max-width: 480px;
+  padding: 28px 32px; box-shadow: 0 10px 0 var(--sink); min-width: 320px; max-width: 480px;
   animation: dropIn 0.6s var(--pop) 0.24s backwards;
 }
 .home-how-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; color: var(--paper); font-weight: 800; font-size: 0.98rem; }
@@ -202,7 +273,7 @@ button { font-family: inherit; }
 .game-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 10px 14px; min-height: 60px; box-shadow: 0 8px 0 #0c1430;
+  padding: 10px 14px; min-height: 60px; box-shadow: 0 8px 0 var(--sink);
   position: sticky; top: 10px; z-index: 20;
 }
 .bar-left { display: flex; gap: 8px; align-items: center; }
@@ -215,7 +286,7 @@ button { font-family: inherit; }
 .floor {
   display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; min-height: 96px;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 14px 16px 18px; box-shadow: 0 8px 0 #0c1430; position: relative; overflow: hidden;
+  padding: 14px 16px 18px; box-shadow: 0 8px 0 var(--sink); position: relative; overflow: hidden;
 }
 .floor::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 8px;
@@ -235,7 +306,7 @@ button { font-family: inherit; }
 .floor-machine { width: 72px; height: 60px; }
 .floor-level { font-size: 0.72rem; font-weight: 900; color: var(--ink-dim); letter-spacing: 0.4px; }
 .floor-mult {
-  position: absolute; top: -10px; right: -8px; background: var(--brass); color: #3d2c00;
+  position: absolute; top: -10px; right: -8px; background: var(--brass); color: var(--on-accent);
   font-size: 0.72rem; font-weight: 900; padding: 3px 8px; border-radius: 999px;
   box-shadow: 0 3px 0 var(--brass-deep); transform: rotate(6deg); z-index: 2;
 }
@@ -246,7 +317,7 @@ button { font-family: inherit; }
 .meters { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .meter {
   display: flex; align-items: center; gap: 12px; background: var(--panel);
-  border: 3px solid var(--line); border-radius: var(--r-md); padding: 10px 18px; box-shadow: 0 6px 0 #0c1430;
+  border: 3px solid var(--line); border-radius: var(--r-md); padding: 10px 18px; box-shadow: 0 6px 0 var(--sink);
 }
 .meter-face { font-size: 1.9rem; }
 .meter-big { font-family: 'Lilita One', sans-serif; font-size: 1.9rem; color: var(--brass); line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35); }
@@ -257,7 +328,7 @@ button { font-family: inherit; }
 .combo-meter.hot .meter-big { color: var(--brass-hi); }
 
 .golden-banner {
-  font-family: 'Lilita One', sans-serif; font-size: 1.05rem; letter-spacing: 0.5px; color: #3d2c00;
+  font-family: 'Lilita One', sans-serif; font-size: 1.05rem; letter-spacing: 0.5px; color: var(--on-accent);
   background: linear-gradient(180deg, var(--brass-hi), var(--brass)); border-radius: 999px;
   padding: 10px 26px; box-shadow: 0 5px 0 var(--brass-deep), 0 0 30px rgba(255, 185, 21, 0.45);
   animation: goldpulse 1.1s ease-in-out infinite; position: relative;
@@ -291,7 +362,7 @@ button { font-family: inherit; }
 /* ---------- Typvlak ---------- */
 .typing-surface {
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 24px 32px; box-shadow: 0 8px 0 #0c1430; min-width: min(580px, 92vw); text-align: center;
+  padding: 24px 32px; box-shadow: 0 8px 0 var(--sink); min-width: min(580px, 92vw); text-align: center;
 }
 .typing-text { font-size: 2.1rem; letter-spacing: 5px; font-weight: 900; word-break: break-word; font-variant-numeric: tabular-nums; }
 /* Finish-lijn: vult mee terwijl het kind typt, kleurt groen als het bijna klaar is. */
@@ -340,7 +411,7 @@ button { font-family: inherit; }
 /* ---------- Winkel: het bedieningspaneel ---------- */
 .shop {
   display: flex; flex-direction: column; gap: 10px; background: var(--panel);
-  border: 3px solid var(--line); border-radius: var(--r-lg); padding: 16px; box-shadow: 0 8px 0 #0c1430;
+  border: 3px solid var(--line); border-radius: var(--r-lg); padding: 16px; box-shadow: 0 8px 0 var(--sink);
 }
 .shop h2 { margin: 6px 0 2px; font-size: 1.15rem; color: var(--paper); letter-spacing: 0.5px; }
 .shop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
@@ -377,7 +448,7 @@ button { font-family: inherit; }
 .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(6, 10, 28, 0.72); z-index: 60; }
 .card {
   background: var(--panel); border: 3px solid var(--line); border-radius: 26px;
-  box-shadow: 0 12px 0 #0c1430; padding: 30px 38px; text-align: center; max-width: 400px;
+  box-shadow: 0 12px 0 var(--sink); padding: 30px 38px; text-align: center; max-width: 400px;
   display: flex; flex-direction: column; gap: 10px; align-items: center;
   animation: cardPop 0.45s var(--pop);
 }
@@ -394,7 +465,7 @@ button { font-family: inherit; }
 /* ---------- Premium / paywall ---------- */
 .unlock-pill {
   font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 0.9rem; cursor: pointer;
-  color: #3d2c00; background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%);
+  color: var(--on-accent); background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%);
   border: none; padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 0 var(--brass-deep);
   transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
@@ -404,7 +475,7 @@ button { font-family: inherit; }
 .shop-item.premium-lock { cursor: pointer; border-style: dashed; }
 .shop-item.premium-lock:hover { border-color: var(--brass); }
 .premium-cta {
-  font-weight: 900; font-size: 0.8rem; color: #3d2c00; white-space: nowrap;
+  font-weight: 900; font-size: 0.8rem; color: var(--on-accent); white-space: nowrap;
   background: linear-gradient(180deg, var(--brass-hi), var(--brass)); padding: 7px 11px;
   border-radius: var(--r-sm); box-shadow: 0 3px 0 var(--brass-deep);
 }
@@ -456,7 +527,7 @@ button { font-family: inherit; }
 .dash-tile {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 18px 12px; box-shadow: 0 6px 0 #0c1430;
+  padding: 18px 12px; box-shadow: 0 6px 0 var(--sink);
 }
 .dash-icon { font-size: 1.8rem; }
 .dash-value { font-family: 'Lilita One', sans-serif; font-size: 1.8rem; color: var(--brass); font-variant-numeric: tabular-nums; }
@@ -541,7 +612,7 @@ button { font-family: inherit; }
 .onb-card {
   display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  box-shadow: 0 10px 0 #0c1430; padding: 26px clamp(18px, 4vw, 38px); max-width: 680px; width: 100%;
+  box-shadow: 0 10px 0 var(--sink); padding: 26px clamp(18px, 4vw, 38px); max-width: 680px; width: 100%;
   animation: dropIn 0.4s var(--pop);
 }
 .onb-mascot { width: 92px; height: 92px; }

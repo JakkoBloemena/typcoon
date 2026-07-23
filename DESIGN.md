@@ -76,6 +76,56 @@ scripts/sync-engine.mjs   haalt engine-updates op uit de typie-fun-buurmap (bewu
 
 Er lekt niets van het typie-merk naar de speler; de engine-hergebruik is onzichtbaar.
 
+## Thema's — premium breedte, één spelwereld (assignment 051 + 052)
+
+Het uiterlijk is één **spelwereld** met verwisselbare seizoensverf, geen skin-catalogus.
+Een thema is een NAMED SET van dezelfde CSS-custom-properties uit `game.css`'s `:root` —
+niets anders. Wisselen zet alleen een `data-theme`-attribuut op `<html>` (`src/game/theme.js`);
+**geen enkele economie-waarde beweegt mee** (charter-guardrail 2; bewaakt door
+`test/theme.test.js`). De keuze woont in een eigen localStorage-sleutel (`typcoon:theme`),
+nooit in het savebestand.
+
+**Regel voor de bouwer:** een nieuw thema is klaar als het (a) elke tokennaam uit `:root`
+opnieuw zet, (b) een label + beschrijving in nl én en heeft (`strings.js`), en (c) een
+`[data-theme='id']`-blok in `game.css` heeft. `test/theme.test.js` faalt bij een
+half-toegevoegd thema. Standaard (Muntpers) is gratis en compleet; alternatieven staan
+`free: false` en gaten achter de familie-unlock.
+
+**De vier thema-haken** (052) — de plekken die vroeger een vaste kleur hadden en dus niet
+mee-verkleurden. Elk heeft een `:root`-default gelijk aan het oude Muntpers-uiterlijk, zodat
+de standaard byte-identiek blijft; elk `[data-theme]` overschrijft ze zodat een thema als een
+andere **plek** leest, niet als een accent-tint:
+
+| Token | Wat | Waarom een haak |
+| --- | --- | --- |
+| `--on-accent` | inkt óp de accentkleur (knoplabels, munt-pill, multiplier) | bij een donker accent (Nachtploeg-violet) moet de inkt licht worden, anders zakt het knoplabel onder WCAG AA |
+| `--sink` | de harde onderrand/slagschaduw onder panelen ('de bodem') | een thema-eigen diepe tint verankert de wereld; een vaste navy-schaduw op teal/plum leest vies |
+| `--bg-wash` | zachte gloed bovenaan de grond | de sfeerkleur van de ruimte |
+| `--bg-grid` | de blauwdruk-rasterlijnen op de grond | grootste vlak in beeld; verandert de vloer van blauwdruk → snoep → zeebodem |
+
+**De vier plekken** (specifieke referentie stuurt beter dan "modern/fris"):
+
+- **De Muntpers / The Coin Press** (standaard, gratis) — een blauwdruk-controlekamer die een
+  kind mag bedienen: navy werkplaats, messing munten, gevarenstrepen, LED-tellers.
+- **Nachtploeg / Night Shift** — *dezelfde fabriek na sluitingstijd, verlicht door neon-buizen*.
+  Diep indigo-violet, elektrisch-violet accent met lichte inkt, cyaan noodlampjes. Evolueert
+  051's proof-of-swap tot een afgewerkt thema (051's minimale versie is vervangen).
+- **Snoepfabriek / Sugar Rush** — *een snoepfabriek 's avonds*: bessen-paarse grond, heet-roze
+  hefboom, muntgroene band, citroenglans. Warm en zoet — het tegendeel van de koele blauwdruk.
+- **Diepzee / Deep Dive** — *de fabriek op de zeebodem*: diep teal-zwart, koraal-oranje hefboom
+  (warm accent op koele grond = maximaal contrast), zeeschuim-groene band, aqua sterlicht. De
+  teal-hue komt in geen ander thema voor.
+
+De vier gronden spannen navy → violet → plum → teal; de vier accenten goud → lavendel → roze →
+koraal. Bewust maximale spreiding: elk thema is een plek, geen accent-variant. De verworpen
+kandidaten (Ruimtebasis/space-cyaan, Zonnesmederij/amber) verloren de pairwise-selectie omdat
+hun grond/accent te dicht bij de standaard lag (screenshots: `company/assignments/052-screenshots/candidates/`).
+
+**Contrast is berekend, niet geschat.** `qa-scripts/contrast-052.mjs` rekent alle betekenis-
+dragende paren (body-tekst, munt-pill, typvlak, knoplabels, semantische pillen) per thema uit;
+alle vier halen WCAG AA (body ≥ 4,5:1, grote/accent ≥ 3:1). Draai het script bij elke nieuwe
+thema-tint.
+
 ## Wat bewust NIET
 
 - **Geen idle/offline-inkomsten** — dan is typen niet meer de enige faucet.

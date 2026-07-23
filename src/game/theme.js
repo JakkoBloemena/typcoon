@@ -16,11 +16,15 @@ const KEY = 'typcoon:theme';
 export const DEFAULT_THEME = 'muntpers';
 
 // `free: true` -> selectable by anyone. Everything else gates behind premium.js's
-// isUnlocked(). `nachtploeg` is a minimal proof-that-the-swap-works alternate; the
-// real batch (multiple, designer-authored) is assignment 052.
+// isUnlocked(). De standaard (Muntpers) is gratis en compleet; de drie alternatieven
+// (assignment 052) zitten achter de familie-unlock. Elk alternatief is een andere
+// PLEK — de tokenwaarden staan in game.css als `[data-theme='<id>']`, de labels in
+// strings.js (nl+en). Volgorde hier = volgorde in de thema-kiezer.
 export const THEMES = [
   { id: 'muntpers', free: true },
   { id: 'nachtploeg', free: false },
+  { id: 'snoepfabriek', free: false },
+  { id: 'diepzee', free: false },
 ];
 
 export function themeDef(id) {
