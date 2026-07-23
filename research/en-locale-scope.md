@@ -403,12 +403,20 @@ dispatcher maps them to real ids on creation.*
 
 ### C — en native keyword research  · priority 3 · blocked_by: [] · gated by §6 trigger
 
-- [ ] Deliverable doc: en **pillar** target term + slug, and target term + slug + intent
-      for each launch spoke (≥ 2).
-- [ ] Targets are native English intent with the English competitor set noted — **not**
-      translated Dutch keywords (SEO.md §5).
-- [ ] Volumes validated with a tool if available; else prioritised by intent ×
-      attainability with the method stated (SEO.md §7 caveat honoured).
+**Materialized 2026-07-23 (assignment 014) → `research/en-keyword-research.md`.** That file
+is the deliverable; it fixes the en pillar term + slug (`typing for kids` →
+`/en/learn-typing-for-kids/`), the launch spokes (`free typing games for kids`,
+`what age should kids learn to type`; + `nitro type alternative` as fast-follow) with intent
+and cross-locale hreflang keys, and the dated English competitor set. Draft-D reads its
+pillar/spoke terms + slugs; draft-E reads its hreflang keys.
+
+- [x] Deliverable doc: en **pillar** target term + slug, and target term + slug + intent
+      for each launch spoke (≥ 2). *(`research/en-keyword-research.md` §4)*
+- [x] Targets are native English intent with the English competitor set noted — **not**
+      translated Dutch keywords (SEO.md §5). *(competitor set §1, native-vs-translation proof §3)*
+- [x] Volumes validated with a tool if available; else prioritised by intent ×
+      attainability with the method stated (SEO.md §7 caveat honoured). *(§5 — no tool in env;
+      method + dated SERP evidence §2; scale-time tool acquisition flagged §6)*
 
 ### D — en content pack + en landing  · priority 4 · blocked_by: [B, C]
 
