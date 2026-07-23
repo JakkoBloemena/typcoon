@@ -19,7 +19,7 @@
 // alleen de dagelijkse digest (api/cron/notify.js) overhouden een eenregelige revert:
 // verwijder de `pingVisit(...)`-aanroep hieronder.
 
-import { ipHash, rateLimited, bucketCount, bucketMark } from './_ratelimit.js';
+import { ipHash, rateLimited, bucketCount, bucketMark, claimOnce } from './_ratelimit.js';
 import { supa } from './_db.js';
 import { tg } from './_telegram.js';
 import { MAX_PER_MINUTE, minuteKey, shouldPingVisit, overflowCount } from './_visitping.js';
@@ -98,11 +98,14 @@ async function pingVisit(base, H, RH, row) {
   }
 
   // Is de VORIGE minuut zojuist pas echt "afgelopen" met meer dan het maximum? Dan nu —
-  // en maar één keer, dedup via rate_limits — de samengevoegde rest melden.
+  // en maar één keer — de samengevoegde rest melden. De dedup-claim is ATOMISCH
+  // (claimOnce(), assignment 038): twee gelijktijdige invocaties die allebei precies
+  // hierlangs komen (het scenario waar deze regel juist voor bestaat — een verkeerspiek)
+  // kunnen niet allebei winnen, dus hooguit één samenvatting per overgelopen minuut.
   const prevTotal = await bucketCount(base, RH, `tgping:${mk - 1}`);
   if (prevTotal > MAX_PER_MINUTE) {
-    const alreadyFlagged = await rateLimited(base, RH, `tgflag:${mk - 1}`, 1, 3600000);
-    const n = overflowCount(prevTotal, alreadyFlagged);
+    const won = await claimOnce(base, H, `tgflag:${mk - 1}`);
+    const n = overflowCount(prevTotal, !won);
     if (n > 0) await tg(`+${n} bezoeken afgelopen minuut`);
   }
 }

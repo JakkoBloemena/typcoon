@@ -33,15 +33,24 @@ function noBackend() {
 // hier beperkt tot de tabellen die de meting gebruikt. Plus een Telegram-spy (assignment
 // 036): `DB.tg` verzamelt elke verstuurde tekst, `DB.tgThrows = true` simuleert een
 // falende Telegram-call (zonder de rest van de shim te raken).
-function withBackend() {
+//
+// `raceDelay` (assignment 038): forceert een `setImmediate`-tick vóór elke DB-call, zoals
+// echte netwerklatentie — nodig om de race in qa-scripts/probe-036-race.mjs te porten
+// (twee "gelijktijdige" aanroepen moeten kunnen interleaven). De atomaire claim zelf
+// (on_conflict + ignore-duplicates hieronder) blijft ondanks die tick wél atomisch: er
+// zit BEWUST geen await tussen de check en de push, precies zoals een echte
+// unique-constraint dat garandeert (Postgres serialiseert concurrent inserts op de
+// index; JS's single-threaded event loop doet hetzelfde zolang niets ertussen await't).
+function withBackend({ raceDelay = false } = {}) {
   process.env.SUPABASE_URL = 'http://mock';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_key';
   process.env.CRON_SECRET = 'testsecret';
   process.env.TELEGRAM_BOT_TOKEN = 'test-token';
   process.env.TELEGRAM_CHAT_ID = 'test-chat';
 
-  const DB = { events: [], rate_limits: [], tg: [], tgThrows: false };
+  const DB = { events: [], rate_limits: [], rate_limit_claims: [], tg: [], tgThrows: false };
   let seq = 0;
+  const tick = () => new Promise((r) => setImmediate(r));
   function jsonResp(data, headers = {}, status = 200) {
     return {
       ok: status >= 200 && status < 300, status,
@@ -57,10 +66,12 @@ function withBackend() {
       DB.tg.push(body.text);
       return jsonResp({ ok: true });
     }
+    if (raceDelay) await tick();
 
     const method = (opts.method || 'GET').toUpperCase();
     const u = new URL(url);
     const table = u.pathname.replace('/rest/v1/', '');
+    const onConflict = u.searchParams.get('on_conflict');
     const prefer = opts.headers?.Prefer || opts.headers?.prefer || '';
 
     if (method === 'GET') {
@@ -77,6 +88,14 @@ function withBackend() {
     if (method === 'POST') {
       const body = opts.body ? JSON.parse(opts.body) : {};
       DB[table] = DB[table] || [];
+      if (onConflict && /ignore-duplicates/.test(prefer)) {
+        // Simuleert claimOnce()'s INSERT ... ON CONFLICT (bucket) DO NOTHING.
+        const exists = DB[table].some((r) => r[onConflict] === body[onConflict]);
+        if (exists) return jsonResp([], {}, 200); // al geclaimd: lege array = "niet gewonnen"
+        const row = { id: ++seq, created_at: new Date().toISOString(), ...body };
+        DB[table].push(row);
+        return jsonResp(/return=representation/.test(prefer) ? [row] : null, {}, 201);
+      }
       DB[table].push({ id: ++seq, created_at: new Date().toISOString(), ...body });
       return jsonResp(null, {}, 201);
     }
@@ -234,6 +253,73 @@ test('track: >20 bezoeken binnen dezelfde minuut sturen na de 20e geen losse mel
   }
   assert.equal(DB.events.length, 25); // alle bezoeken blijven gewoon geteld/opgeslagen
   assert.equal(DB.tg.length, 20); // maar vanaf de 21e geen losse Telegram-melding meer
+});
+
+// --- atomische dedup-claim voor de overloop-samenvatting (assignment 038 fix) -------
+// De dedup reed voorheen op rateLimited()'s niet-atomaire SELECT-count-then-INSERT
+// (api/_ratelimit.js), waardoor twee gelijktijdige invocaties in de eerstvolgende minuut
+// allebei "nog niet gemeld" konden lezen en dus allebei de samenvatting stuurden. Nu via
+// claimOnce() (aparte rate_limit_claims-tabel, unique op bucket). Deze drie tests dekken
+// de acceptatiecriteria van 038: normale overloop (één samenvatting), geen overloop
+// (geen samenvatting), en de race zelf (geport uit qa-scripts/probe-036-race.mjs).
+test('track: >20/minuut-overloop stuurt in de eerstvolgende latere minuut precies één samengevoegde samenvatting', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const realNow = Date.now;
+  try {
+    const minute0 = Date.UTC(2026, 6, 15, 12, 0, 0);
+    Date.now = () => minute0;
+    for (let i = 0; i < 25; i++) {
+      await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': `203.0.113.${i}` } });
+    }
+    Date.now = () => minute0 + 60000; // een minuut later: de vorige minuut (25 > 20) is nu "afgelopen"
+    await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() } });
+  } finally {
+    Date.now = realNow;
+  }
+  const overflow = DB.tg.filter((t) => /afgelopen minuut/.test(t));
+  assert.equal(overflow.length, 1);
+  assert.match(overflow[0], /^\+5 bezoeken afgelopen minuut$/);
+});
+
+test('track: geen overloop (≤20 bezoeken in de vorige minuut) stuurt geen samenvatting bij het volgende bezoek in een latere minuut', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const realNow = Date.now;
+  try {
+    const minute0 = Date.UTC(2026, 6, 15, 13, 0, 0);
+    Date.now = () => minute0;
+    for (let i = 0; i < 15; i++) {
+      await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': `203.0.114.${i}` } });
+    }
+    Date.now = () => minute0 + 60000;
+    await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() } });
+  } finally {
+    Date.now = realNow;
+  }
+  const overflow = DB.tg.filter((t) => /afgelopen minuut/.test(t));
+  assert.equal(overflow.length, 0);
+});
+
+test('track: twee gelijktijdige bezoeken in de eerstvolgende minuut sturen de overloop-samenvatting precies één keer (race, geport uit qa-scripts/probe-036-race.mjs)', async () => {
+  const DB = withBackend({ raceDelay: true });
+  const track = (await import('../api/track.js')).default;
+  const realNow = Date.now;
+  try {
+    const minute0 = Date.UTC(2026, 6, 15, 14, 0, 0);
+    Date.now = () => minute0;
+    for (let i = 0; i < 25; i++) {
+      await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': `203.0.115.${i}` } });
+    }
+    Date.now = () => minute0 + 60000;
+    const p1 = call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': '198.51.100.1' } });
+    const p2 = call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': '198.51.100.2' } });
+    await Promise.all([p1, p2]);
+  } finally {
+    Date.now = realNow;
+  }
+  const overflow = DB.tg.filter((t) => /afgelopen minuut/.test(t));
+  assert.equal(overflow.length, 1, `verwacht precies 1 samenvatting, kreeg ${overflow.length}: ${overflow}`);
 });
 
 test('track: rate-limit per IP blokkeert na de limiet (429), zoals de account-API\'s', async () => {
