@@ -2,7 +2,7 @@
 id: 062
 title: probe-056-repro.mjs phase 4 intermittently crashes the headless Chromium tab
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: [058]
 opened_by: tester (reported during 056 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
@@ -21,15 +21,15 @@ accumulation (if in product code).
 
 ## Acceptance criteria
 
-- [ ] The crash is either reproduced and root-caused, or bounded as environmental
+- [x] The crash is either reproduced and root-caused, or bounded as environmental
       with evidence (e.g. memory profile, Chromium crash reason, reproduction on a
       trivial page) — a documented verdict, not a guess.
-- [ ] If product code accumulates state/memory in the repeated-paywall path, that is
+- [x] If product code accumulates state/memory in the repeated-paywall path, that is
       reported to the dispatcher with a precise mechanism (fix may be in-scope here
       if small, dispatcher's call otherwise).
-- [ ] The probe (or its `_v056_` copy) runs its full loop reliably afterwards, or
+- [x] The probe (or its `_v056_` copy) runs its full loop reliably afterwards, or
       documents why flakiness is inherent to the environment.
-- [ ] `npm test` green; no product-code change without evidence it is needed.
+- [x] `npm test` green; no product-code change without evidence it is needed.
 
 ## Notes
 
@@ -42,3 +42,152 @@ under the one-shot paywall. Environment for the original crashes: headless Chrom
 survived (sandbox process-ownership boundary — dispatcher/Shareholder housekeeping).
 Severity low (QA tooling, real-player-unreachable state), confidence on mechanism
 low. Priority 4 per protocol.
+
+## Delivery notes (developer, 2026-07-23, build/062)
+
+**Verdict: bounded as environmental / not currently reproducible on the verified
+post-058 tree — with a concrete script-bug finding that also explains why the
+original crash was never actually a "repeated-paywall" stress test to begin with.**
+Zero crashes across 27 headless Chromium sessions and ~155 phase-4-equivalent
+rounds; no memory/DOM-node/listener accumulation signature found anywhere I looked;
+product code (`premium.js`'s `applyFreeCapGuard`, `GameScreen.jsx`'s effects/
+intervals) shows no accumulation mechanism, one-shot-gated since 058.
+
+**Setup.** Fresh worktree `C:\companies\typcoon-lanes\b062` (branch `build/062`,
+already at `main` 4f39cef), `npm install` + `npm install --no-save playwright-core`.
+Dev server `vite --port 4218 --strictPort` (adapted from the assignment's original
+hardcoded 4200/`b056`). Chromium 1228 via `playwright-core`, headless, same
+executable path as every other lane.
+
+**Evidence — crash frequency (AC1).**
+1. `qa-scripts/dev-062-phase4-crash-diag.mjs` (new; extends the tester's committed
+   `_tester-058-phase4-crash-check.mjs` two ways — see "Files touched"), run as
+   `node qa-scripts/dev-062-phase4-crash-diag.mjs 20 8`:
+   - **Phase A** — 20 independent fresh-browser passes of the phase-4 8-round loop
+     (each: launch, seed free-tier teleported save, play 8 rounds, close): **0/20
+     crashes**, `paywallCount=1` every single run (exactly the one-shot behaviour
+     058 shipped). `PHASE_A_SUMMARY {"runs":20,"crashes":0,"crashMsgs":[]}`.
+   - **Phase B** — one long-lived browser replaying the phase-4 loop **8 times
+     back-to-back without closing the browser** (64 rounds total, 8x the stress of
+     the original single 8-round loop), sampling `Performance.getMetrics()` via CDP
+     after every round: **0 crashes**. JS heap oscillates 6.8–27.6MB round-to-round
+     (normal alloc/GC churn — the 15–27MB peaks line up with the `page.reload()` at
+     the top of each pass, settling back to ~7MB within 1–2 rounds every time) but
+     shows **no monotonic growth**: first sample 7.7MB → last sample 7.1MB, net
+     `PHASE_B_HEAP_DELTA_MB -0.6`. DOM node count and listener count show the same
+     pattern (`PHASE_B_NODES_DELTA -35`, `PHASE_B_LISTENERS_DELTA -18`) — a real
+     accumulation bug would show these climbing monotonically across passes; they
+     don't. Full sample array is in the script's own stdout (`PHASE_B_SAMPLES`).
+   - Chrome-process snapshot (`Get-Process chrome`, count + summed
+     `WorkingSet64`) taken before Phase A, after Phase A, and after Phase B: **58MB
+     across 2 processes, unchanged all three times** — these 2 processes predate my
+     run entirely (`CreationDate` 10:32:58 PM / 10:37:16 PM, `ParentProcessId`
+     confirmed via `Get-CimInstance Win32_Process` to no longer exist — i.e.
+     independently-observed orphaned renderer/utility children from unrelated
+     concurrent lane activity on this shared machine, matching the exact "sandbox
+     process-ownership boundary" mechanism the assignment notes describe, just not
+     caused by my work). My 27 browser launches (20 Phase A + 1 Phase B + 6 full
+     `probe-056-repro.mjs` runs below) left **zero** new orphans and zero growth in
+     that baseline footprint.
+2. `qa-scripts/probe-056-repro.mjs` (hardened, see below), the actual assignment
+   probe, all 4 phases, run 6 times: `node qa-scripts/probe-056-repro.mjs` — **6/6
+   clean runs**, `exit=0` every time, ~55–57s each (down from "minutes", see the
+   timeout fix below), `FREE_TIER_PAYWALL_REPEATS 1 of 8 rounds` and
+   `MAX_UPDATE_DEPTH_COUNT 0` every run.
+
+**Evidence — why the original crash wasn't really "repeated-paywall churn" (bonus
+finding, script bug, not product code).** While chasing why my Phase-A/B numbers
+looked so much cleaner than the assignment's description, I found `probe-056-
+repro.mjs`'s `seedAndEnter(page, save, { unlocked })` only ever *sets*
+`localStorage['typcoon:unlocked']` when `unlocked` is truthy — it never *clears* it
+when falsy. Phase 1 seeds `unlocked: true` first; phase 4 then seeds `unlocked:
+false` on the *same page/localStorage*, but the stale `'1'` from phase 1 survives
+untouched. `App.jsx`'s `unlocked` state is a lazy `useState(() => isUnlocked())`
+re-evaluated fresh on every full `page.reload()` (which `seedAndEnter` does), so
+phase 4 was **re-reading the leftover `unlocked: true` from phase 1 on every run**
+— confirmed directly with a standalone check script
+(`AFTER PHASE1 (unlocked:true): 1` / `AFTER PHASE4 seed (unlocked:false): 1`) and by
+re-running the *unfixed* probe once first: `FREE_TIER_PAYWALL_REPEATS 0 of 8 rounds`
+(the paywall title only renders for `moment.kind === 'paywall'`, which
+`applyFreeCapGuard` only ever pushes when `!unlocked` — grepped `src/` for
+`premium.chapterTitle` and `clearUnlock`; the string has exactly one producer, and
+`clearUnlock()` has zero callers anywhere in `src/`, so there is no other path that
+title can come from). **This means the phase-4 crash this assignment describes,
+as originally observed by running the full committed script, was never actually
+exercising the promote→rollback→paywall cycle at all** — it was an already-unlocked
+player continuing an already-long single-tab session (load + exam-final completion +
+10 rounds of extended play + phase 4's 8 more rounds ≈ 20+ typed exercises and
+several full-page reloads in one Chromium tab), which lines up exactly with the
+056 tester's own hedge ("sustained heavy overlay churn... rather than a product
+defect"). I fixed the leak (`else localStorage.removeItem(...)`) so phase 4 now
+correctly tests the free-tier edge case (`FREE_TIER_PAYWALL_REPEATS 1 of 8` post-fix,
+matching Phase A/B's isolated numbers) — and it still didn't crash, 6/6.
+
+**AC2 — product-code accumulation: none found.** `src/game/premium.js`'s
+`applyFreeCapGuard` (058's one-shot guard) is a pure function with no accumulating
+state beyond the single `tycoon.freeCapPaywallShown` boolean it was designed to set
+once. `src/game/GameScreen.jsx`'s only interval (`setInterval` production tick) is
+cleaned up via `clearInterval` in its effect's return; no other `setInterval`/
+`addEventListener` calls in the file. Phase B's CDP heap/node/listener samples
+across 64 back-to-back rounds (8x the original loop length, deliberately harder
+than any real session) show no monotonic trend. Nothing to report as a product
+accumulation bug — verdict is environmental/script-bug, not product.
+
+**AC3 — probe hardened, runs reliably.** Two fixes to `qa-scripts/probe-056-
+repro.mjs` (comments inline explain each): (1) the `unlocked`-flag leak above, so
+phase 4 tests what it claims to; (2) `{ timeout: 2000 }` on the phase-4 overlay-
+title poll (was uncapped, burning Playwright's 30s default action timeout on every
+non-match round — the tester's observation from 058, confirmed here: pre-fix an
+early full run took the better part of a minute already since only phase 4's one
+poll per round was affected, but the fix is cheap and removes the failure mode
+entirely for any round where the overlay doesn't appear). Also re-pointed
+`BASE`/`ROOT` from the stale `b056`/4200 (that lane no longer exists) to this lane's
+4218/`b062`, per the workspace rules and the existing lane-copy convention
+(`_v056_probe-056-repro.mjs` already documents the same per-lane constant-swap
+pattern). 6/6 full-script runs clean post-fix (see above).
+
+**AC4 — `npm test` green.** `node --test test/*.test.js` → `# tests 215 / # pass
+215 / # fail 0`; chained `node scripts/gen-content.mjs` → 22 URLs + sitemap;
+chained `vite build` → 99 modules, built in 833ms, no warnings; chained
+`node scripts/check-no-dutch-en.mjs` → `PASS — 5 built en file(s) checked against 59
+Dutch lexicon words, zero unallowlisted hits.` `EXIT=0`. `public/` churn from the
+build step reverted via `git checkout -- public/` before committing, per lane
+convention; screenshot churn from the probe runs
+(`company/assignments/056-screenshots/*.png`, overwritten because `ROOT` now points
+here) reverted the same way.
+
+**Per-criterion status:**
+1. Crash reproduced-and-root-caused OR bounded environmental with evidence — **met**:
+   0/27 crashes across fresh-browser and long-lived-browser stress runs at 8x the
+   original loop length; heap/DOM/listener counts bounded, not growing; plus the
+   script-bug finding above explains why the *original* observation likely wasn't
+   testing the mechanism the assignment hypothesized in the first place.
+2. Product accumulation reported if found — **met, nothing found to report**: see
+   AC2 above; verdict is not-a-product-bug, no dispatcher escalation needed.
+3. Probe runs its full loop reliably — **met**: 6/6 clean full-script runs post-fix,
+   ~56s each; the `unlocked`-leak and missing-timeout fixes both landed in the same
+   file already in scope.
+4. `npm test` green, no unjustified product-code change — **met**: 215/215 + build +
+   checker, exit 0; zero `src/` changes (only `qa-scripts/` touched).
+
+**Files touched:** `qa-scripts/probe-056-repro.mjs` (BASE/ROOT repointed to this
+lane; `unlocked`-flag leak fix; explicit `{ timeout: 2000 }` on the phase-4 overlay
+poll). New: `qa-scripts/dev-062-phase4-crash-diag.mjs` (20-run fresh-browser crash-
+frequency check + 8-pass/64-round long-lived-browser CDP heap/node/listener stress
+diagnostic — the evidence artifact for this verdict). No `src/` changes.
+
+**New defects/findings reported to the dispatcher (not fixed here, out of this
+assignment's scope):** none beyond what's already documented above — the
+`unlocked`-leak was inside the file this assignment already had me touching, so I
+fixed it directly rather than filing it separately. The two baseline orphaned
+`chrome.exe` processes I observed at the *start* of this session (PIDs 25560/30368,
+parents already gone, ~58MB combined) predate my work and are unrelated to it —
+noting for the dispatcher/Shareholder housekeeping already flagged in this
+assignment's own Notes, not a new finding.
+
+**Confirmed:** dev server on port 4218 stopped (verified via
+`Get-NetTCPConnection -LocalPort 4218` returning no listener, and a follow-up
+`curl` to `localhost:4218` refusing the connection); no browser processes left
+running by my work (chrome snapshot before/after identical, 2 pre-existing
+unrelated orphans only); working tree clean of `public/`/screenshot churn before
+the commit below.

@@ -11,8 +11,8 @@ import { chromium } from 'playwright-core';
 import { execSync } from 'node:child_process';
 
 const EXE = 'C:/Users/Jakko/AppData/Local/ms-playwright/chromium-1228/chrome-win64/chrome.exe';
-const BASE = 'http://localhost:4200';
-const ROOT = 'C:/companies/typcoon-lanes/b056';
+const BASE = 'http://localhost:4218';
+const ROOT = 'C:/companies/typcoon-lanes/b062';
 
 function genSave() {
   return execSync('node qa-scripts/gen-final-exam-save.mjs', { cwd: ROOT }).toString().trim();
@@ -40,7 +40,14 @@ async function seedAndEnter(page, save, { unlocked } = {}) {
   await page.goto(`${BASE}/speel/`, { waitUntil: 'networkidle' });
   await page.evaluate(({ s, unlocked }) => {
     localStorage.setItem('typcoon:onboarded', '1');
+    // Explicit else (062 hardening): this script reuses one page/localStorage
+    // across phases, and phase 1 seeds unlocked:true — without clearing it here,
+    // phase 4's unlocked:false request stays contaminated by phase 1's flag (never
+    // actually removed), so phase 4 silently ran as an unlocked player instead of
+    // the intended free-tier edge case. Confirmed via a standalone localStorage
+    // read: 'typcoon:unlocked' stayed '1' across the seed call before this fix.
     if (unlocked) localStorage.setItem('typcoon:unlocked', '1');
+    else localStorage.removeItem('typcoon:unlocked');
     localStorage.setItem('typcoon:save', s);
   }, { s: save, unlocked });
   await page.reload({ waitUntil: 'networkidle' });
@@ -113,7 +120,10 @@ async function main() {
     if (!text) break;
     await typeText(page, text);
     await page.waitForTimeout(1000);
-    const title = await page.locator('.overlay .card h3').first().textContent().catch(() => null);
+    // Explicit timeout (062 hardening): no overlay on a miss means this locator's
+    // default Playwright action timeout (30s) burns on every one of the 8 rounds
+    // instead of failing fast — turns a several-second probe into minutes.
+    const title = await page.locator('.overlay .card h3').first().textContent({ timeout: 2000 }).catch(() => null);
     if (title && /voltooid/i.test(title)) paywallCount += 1;
     await drainOverlays(page);
   }
