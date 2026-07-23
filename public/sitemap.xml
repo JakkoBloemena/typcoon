@@ -1,23 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://typcoon.com/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/" />
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://typcoon.com/en/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/" />
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://typcoon.com/leren-typen-voor-kinderen/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/leren-typen-voor-kinderen/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/learn-typing-for-kids/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/leren-typen-voor-kinderen/" />
     <lastmod>2026-07-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://typcoon.com/blog/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/blog/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/" />
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://typcoon.com/blog/op-welke-leeftijd-leren-typen/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/op-welke-leeftijd-leren-typen/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/blog/what-age-to-learn-typing/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/op-welke-leeftijd-leren-typen/" />
     <lastmod>2026-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -54,6 +74,9 @@
   </url>
   <url>
     <loc>https://typcoon.com/blog/beste-gratis-typspelletjes-kinderen/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/beste-gratis-typspelletjes-kinderen/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/blog/free-typing-games-for-kids/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/beste-gratis-typspelletjes-kinderen/" />
     <lastmod>2026-07-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -84,6 +107,8 @@
   </url>
   <url>
     <loc>https://typcoon.com/blog/nitro-type-alternatief/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/nitro-type-alternatief/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/nitro-type-alternatief/" />
     <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -99,5 +124,40 @@
     <lastmod>2026-07-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://typcoon.com/en/learn-typing-for-kids/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/leren-typen-voor-kinderen/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/learn-typing-for-kids/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/leren-typen-voor-kinderen/" />
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://typcoon.com/en/blog/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/blog/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/" />
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://typcoon.com/en/blog/free-typing-games-for-kids/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/beste-gratis-typspelletjes-kinderen/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/blog/free-typing-games-for-kids/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/beste-gratis-typspelletjes-kinderen/" />
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://typcoon.com/en/blog/what-age-to-learn-typing/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://typcoon.com/blog/op-welke-leeftijd-leren-typen/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://typcoon.com/en/blog/what-age-to-learn-typing/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://typcoon.com/blog/op-welke-leeftijd-leren-typen/" />
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

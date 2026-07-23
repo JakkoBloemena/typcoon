@@ -5,8 +5,9 @@ import { fileURLToPath } from 'url';
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-// Twee pagina's:
-//  /        → SEO-landingspagina (statische HTML, geen React — snel en crawlbaar)
+// Drie pagina's:
+//  /        → nl SEO-landingspagina (statische HTML, geen React — snel en crawlbaar)
+//  /en/     → en SEO-landingspagina (assignment 015, zelfde opzet, hand-authored)
 //  /speel/  → het spel zelf (React)
 export default defineConfig({
   plugins: [react()],
@@ -15,6 +16,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(root, 'index.html'),
+        en: resolve(root, 'en/index.html'),
         speel: resolve(root, 'speel/index.html'),
       },
     },

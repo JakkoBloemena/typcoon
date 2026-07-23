@@ -22,14 +22,23 @@ export default {
     footerTag: 'Spelenderwijs blind leren typen — gratis, zonder account, zonder advertenties.',
     ctaTitle: 'Leer typen terwijl je een muntenfabriek bouwt',
     ctaBody: 'In Typcoon verdient élke letter munten. Netjes typen levert het meest op — zo leert je kind blind typen zonder het door te hebben. Gratis te proberen, zonder account.',
+    // Gelokaliseerd (was hard-coded in gen-content.mjs's renderBlogIndex; verplaatst
+    // hierheen tijdens de en-content-pack-pass, zie scripts/content/en.mjs).
+    blogTitle: 'Blog — leren typen voor kinderen',
+    blogDescription: 'Praktische artikelen voor ouders over blind leren typen: leeftijd, vingerzetting, oefenen, gratis vs. betaald en meer.',
+    blogLead: 'Praktische artikelen en tips voor ouders die hun kind willen leren blind typen.',
   },
 
   // De pijlerpagina: de brede gids waar we op willen ranken; linkt naar alle spokes.
+  // key: cross-locale hreflang key (assignment E, research/en-locale-scope.md §5.2) —
+  // en counterpart /en/learn-typing-for-kids/.
   pillar: {
+    key: 'pillar',
     slug: 'leren-typen-voor-kinderen',
     title: 'Leren typen voor kinderen: de complete gids (2026)',
     description: 'Alles over blind leren typen voor kinderen (8–12): op welke leeftijd, de juiste vingerzetting, hoe je oefent, gratis vs. betaald en het typediploma. Praktische gids voor ouders.',
     h1: 'Leren typen voor kinderen: de complete gids',
+    blogHeading: 'Leren typen voor kinderen',
     updated: '2026-07-08',
     readMin: 9,
     lead: 'Blind leren typen is een van de nuttigste vaardigheden die een kind op de basisschool kan oppikken — het scheelt straks uren op het huiswerk en een leven lang naar het toetsenbord turen. In deze gids lees je precies hoe kinderen leren typen: de beste leeftijd, de juiste vingerzetting, hoe vaak je oefent, en of je een betaalde cursus nodig hebt.',
@@ -60,6 +69,8 @@ export default {
   // De spokes: elk gericht op één long-tail zoekvraag.
   articles: [
     {
+      // key: cross-locale hreflang key — en counterpart /en/blog/what-age-to-learn-typing/.
+      key: 'age',
       slug: 'op-welke-leeftijd-leren-typen',
       title: 'Op welke leeftijd kan een kind leren typen?',
       description: 'Wat is de beste leeftijd om te leren blind typen? Praktische richtlijnen per leeftijd (7–12 jaar) en waar je op let voordat je begint.',
@@ -173,6 +184,8 @@ export default {
       faq: [{ q: 'Kan mijn kind in een week leren typen?', a: 'In een week leg je de basis van de thuisrij, maar vlot blind typen kost een paar maanden dagelijks oefenen. Verwacht groei, geen wonder.' }],
     },
     {
+      // key: cross-locale hreflang key — en counterpart /en/blog/free-typing-games-for-kids/.
+      key: 'games-listicle',
       slug: 'beste-gratis-typspelletjes-kinderen',
       title: 'De beste gratis typspelletjes voor kinderen',
       description: 'Op zoek naar een gratis typspel dat je kind écht leert typen? Waar je op let, en waarom een spel dat typen beloont beter werkt dan losse spelletjes.',
@@ -318,6 +331,10 @@ export default {
       ],
     },
     {
+      // key: cross-locale hreflang key — pre-planned per research/en-keyword-research.md
+      // §4 (spoke 3, fast-follow); no en counterpart yet, so this key currently clusters
+      // nl-only (self + x-default, no false en alternate) until the en article lands.
+      key: 'nitro',
       slug: 'nitro-type-alternatief',
       title: 'Nitro Type alternatief: een typspel dat vanaf nul leert typen',
       description: 'Op zoek naar een Nitro Type alternatief? Een eerlijke vergelijking: Nitro Type is leuke racepraktijk voor wie al kan typen; Typcoon leert je kind vanaf nul blind typen. Kies op basis van waar je kind nu staat.',
