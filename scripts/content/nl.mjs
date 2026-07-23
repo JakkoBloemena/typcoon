@@ -317,6 +317,43 @@ export default {
         { q: 'Mijn kind vindt een spel leuk dat niet aan de checklist voldoet — moet ik het verbieden?', a: 'Nee, plezier is ook waardevol. Laat het gerust als extraatje, maar zorg dat het hoofdgedeelte van de oefentijd bij een spel zit dat wél letter voor letter opbouwt en nauwkeurigheid beloont.' },
       ],
     },
+    {
+      slug: 'nitro-type-alternatief',
+      title: 'Nitro Type alternatief: een typspel dat vanaf nul leert typen',
+      description: 'Op zoek naar een Nitro Type alternatief? Een eerlijke vergelijking: Nitro Type is leuke racepraktijk voor wie al kan typen; Typcoon leert je kind vanaf nul blind typen. Kies op basis van waar je kind nu staat.',
+      h1: 'Nitro Type alternatief: een typspel dat vanaf nul leert typen',
+      date: '2026-07-23', updated: '2026-07-23', readMin: 6,
+      lead: 'Zoek je een Nitro Type alternatief voor je kind? Dan zoek je waarschijnlijk een van twee dingen: een oefenplek die net zo leuk racet maar wél vanaf nul leert typen, of gewoon een tweede plek om lekker te racen. Nitro Type zelf is een leuk en razendsnel typespel — maar het is gebouwd voor kinderen die de toetsen al kunnen vinden, niet om ze dat te léren. In dit artikel lees je eerlijk waar Nitro Type goed in is, waar het van uitgaat, en hoe je op basis daarvan kiest voor jouw kind.',
+      sections: [
+        { h2: 'Wat is Nitro Type precies?', html: `
+          <p>Nitro Type is een gratis online typespel waarbij je racet tegen andere spelers: hoe sneller en nauwkeuriger je typt, hoe harder je auto gaat. Je verdient virtueel geld met races, waarmee je nieuwe auto's en een eigen garage vrijspeelt, en je kunt je aansluiten bij een team dat meestrijdt op de ranglijsten. Spelen is gratis; wie wil kan een betaalde Gold-membership nemen die advertenties verwijdert en extra auto's ontgrendelt — verplicht is dat niet.</p>
+          <p>Het is geen kleine, onbekende site: Nitro Type is een van de bekendste typespellen ter wereld, en niet voor niets — het racen is verslavend leuk en de teamcompetitie geeft net dat extra duwtje om door te oefenen. Ook in Nederland komt de naam regelmatig voorbij als "leuke oefensite" naast typecursussen.</p>` },
+        { h2: 'Waar Nitro Type van uitgaat', html: `
+          <p>Nitro Type is gebouwd om te racen, niet om vanaf nul te leren typen. Het spel legt geen vingerzetting uit, wijst geen thuisrij aan en introduceert geen letters stap voor stap — je krijgt een tekst en een klok, en de rest is aan jou. Dat is prima als je kind al weet waar de letters zitten en al enigszins blind kan typen: dan is Nitro Type fantastische oefening voor snelheid en plezier.</p>
+          <p>Maar voor een kind dat nog met twee vingers zoekt, werkt Nitro Type minder goed: de klok tikt door, ongeacht welke vingers je gebruikt. Zonder de basis eerst te leggen, slijpt een kind hier vooral de zoekgewoonte in die je later weer moet afleren. Ook reviewers die Nitro Type bespreken zijn het daarover eens: het is bedoeld als oefening voor wie de toetsen al kent, niet als eerste kennismaking met het toetsenbord.</p>` },
+        { h2: 'Check dit eerst: kan je kind al typen?', html: `
+          <ul>
+            <li><strong>Vindt het de thuisrij zonder te kijken?</strong> Kan je kind A-S-D-F en J-K-L-; blind terugvinden?</li>
+            <li><strong>Gebruikt het alle tien de vingers?</strong> Of typt het vooral zoekend met de wijsvingers?</li>
+            <li><strong>Kijkt het naar het scherm, niet naar de toetsen?</strong></li>
+          </ul>
+          <p>Drie keer "ja"? Dan is je kind klaar voor Nitro Type. Nog niet zo ver? Dan begin je beter bij de basis.</p>` },
+        { h2: 'Nog niet zo ver? Begin bij de basis', html: `
+          <p>Typcoon is het tegenovergestelde vertrekpunt: een gratis typspel dat een kind vanaf nul leert blind typen, met een adaptieve leer-engine die letters één voor één introduceert — pas als de vorige echt zit — en nauwkeurigheid beloont in plaats van snelheid. Elke letter die je kind typt levert munten op voor een eigen muntenfabriek; netjes typen levert tot 3× zoveel op. Zo bouwt een kind eerst de techniek op, spelenderwijs, zonder ooit een race te hoeven winnen.</p>
+          <p>De thuisrij en de eerste machines zijn volledig gratis, zonder tijdslimiet en zonder account. Meer opties (en waar je op moet letten) vind je in <a href="/blog/beste-gratis-typspelletjes-kinderen/">de beste gratis typspelletjes voor kinderen</a>.</p>` },
+        { h2: 'Kan al typen en wil vooral snelheid? Nitro Type is een prima keuze', html: `
+          <p>Typt je kind al vlot blind, en wil het vooral sneller worden en lol maken met racen tegen anderen? Dan is Nitro Type gewoon een goede keuze — dat is precies waar het spel sterk in is. De teamcompetitie en de garage maken oefenen leuk, en er is niets mis met een kind dat zijn typesnelheid op die manier verder opschroeft.</p>
+          <p>Twee dingen om in de gaten te houden: de gratis versie toont advertenties, en de klok beloont vooral snelheid. Merk je dat de nauwkeurigheid inzakt omdat je kind te snel wil racen, dan is dat een goed moment om samen weer even op nauwkeurigheid te letten. Wil je geen advertenties zien, dan is de betaalde Gold-membership daarvoor bedoeld — maar nodig is die niet om mee te racen.</p>` },
+        { h2: 'Allebei gebruiken kan ook', html: `
+          <p>De twee spellen bijten elkaar niet. Veel gezinnen beginnen met Typcoon om de techniek stevig neer te zetten, en laten hun kind daarna los op Nitro Type om te racen en snelheid op te bouwen. Andersom werkt ook: merk je tijdens het racen dat de vingerzetting rommelig blijft, dan is een paar weken terug naar de basis nooit verkeerd. Zie het niet als "in plaats van", maar als twee spellen die elk hun eigen fase bedienen — eerst de techniek, dan de snelheid.</p>
+          <p>Meer achtergrond over hoe je kind het snelst naar blind typen groeit, vind je in de <a href="/leren-typen-voor-kinderen/">complete gids: leren typen voor kinderen</a>.</p>` },
+      ],
+      faq: [
+        { q: 'Is Nitro Type geschikt om mee te leren typen vanaf nul?', a: 'Niet echt — Nitro Type legt geen vingerzetting uit en introduceert geen letters stap voor stap. Het is een uitstekende oefenplek zodra een kind de thuisrij en de basis al beheerst.' },
+        { q: 'Is Nitro Type gratis?', a: 'Ja, racen is gratis. Er is een optionele betaalde Gold-membership die advertenties verwijdert en extra auto\'s ontgrendelt, maar die is niet nodig om te spelen.' },
+        { q: 'Wat is het verschil tussen Typcoon en Nitro Type?', a: 'Typcoon leert een kind vanaf nul blind typen met een adaptieve leer-engine; Nitro Type is racepraktijk voor wie dat al kan. Ze zijn eigenlijk complementair — eerst de techniek, dan het racen.' },
+      ],
+    },
   ],
 
   // Standalone landingpagina's (geen blogartikel): bv. de scholen-pagina.
