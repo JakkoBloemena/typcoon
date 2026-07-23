@@ -4,7 +4,7 @@ title: Typie pings — message on every site visit + signup, and a daily digest
 owner: developer
 status: needs_verification
 priority: 2
-blocked_by: []
+blocked_by: [038]
 opened_by: ceo
 ---
 
