@@ -48,7 +48,11 @@ function withBackend({ raceDelay = false } = {}) {
   process.env.TELEGRAM_BOT_TOKEN = 'test-token';
   process.env.TELEGRAM_CHAT_ID = 'test-chat';
 
-  const DB = { events: [], rate_limits: [], rate_limit_claims: [], tg: [], tgThrows: false };
+  // countFailTables (assignment 044): tabelnamen waarvoor een count=exact-rijtelling
+  // moet mislukken (netwerk-/DB-storing simuleren) — voor de fail-safe digest-rijtelling
+  // in api/cron/notify.js. Andere query's op diezelfde tabel (zonder count=exact) blijven
+  // gewoon werken, zoals een echte gedeeltelijke storing dat ook zou doen.
+  const DB = { events: [], rate_limits: [], rate_limit_claims: [], tg: [], tgThrows: false, countFailTables: new Set() };
   let seq = 0;
   const tick = () => new Promise((r) => setImmediate(r));
   function jsonResp(data, headers = {}, status = 200) {
@@ -75,6 +79,7 @@ function withBackend({ raceDelay = false } = {}) {
     const prefer = opts.headers?.Prefer || opts.headers?.prefer || '';
 
     if (method === 'GET') {
+      if (/count=exact/.test(prefer) && DB.countFailTables.has(table)) throw new Error(`count query failed (test): ${table}`);
       let rows = DB[table] || [];
       for (const [k, v] of u.searchParams) {
         const m = /^(eq|gt)\.(.*)$/s.exec(v);
@@ -377,6 +382,117 @@ test('admin/funnel: met CRON_SECRET (header of ?token=) geeft wekelijkse telling
   const viaQuery = await call(funnel, { method: 'GET', query: { token: 'testsecret' } });
   assert.equal(viaQuery.statusCode, 200);
   assert.equal(viaQuery.body.ok, true);
+});
+
+// --- FUNNEL_READ_TOKEN (assignment 044, decisions/008 gap 2): een los, zwakker geheim
+// naast CRON_SECRET dat precies dit tellingen-alleen/geen-PII-antwoord ontgrendelt --------
+test('admin/funnel: onbekend/leeg FUNNEL_READ_TOKEN geeft geen toegang (unset grants nothing)', async () => {
+  withBackend();
+  delete process.env.FUNNEL_READ_TOKEN; // withBackend() zet 'm niet — expliciet ook hier zeker weten
+  const funnel = (await import('../api/admin/funnel.js')).default;
+  const r = await call(funnel, { method: 'GET', headers: { authorization: 'Bearer whatever-someone-guesses' } });
+  assert.equal(r.statusCode, 401);
+  const viaQuery = await call(funnel, { method: 'GET', query: { token: '' } });
+  assert.equal(viaQuery.statusCode, 401);
+});
+
+test('admin/funnel: geldig FUNNEL_READ_TOKEN geeft dezelfde tellingen-alleen/geen-PII-vorm; CRON_SECRET blijft ongewijzigd werken; garbage blijft 401', async () => {
+  const DB = withBackend();
+  process.env.FUNNEL_READ_TOKEN = 'funnel-secret';
+  try {
+    const track = (await import('../api/track.js')).default;
+    const funnel = (await import('../api/admin/funnel.js')).default;
+    await call(track, { body: { type: 'pageview', sessionId: randomUUID() }, headers: { 'x-forwarded-for': '198.51.100.200' } });
+    assert.equal(DB.events.length, 1);
+
+    const viaHeader = await call(funnel, { method: 'GET', headers: { authorization: 'Bearer funnel-secret' } });
+    assert.equal(viaHeader.statusCode, 200);
+    assert.equal(viaHeader.body.ok, true);
+    assert.deepEqual(viaHeader.body.types, ['pageview', 'game_start', 'engaged_session', 'parent_opt_in']);
+    assert.ok(Array.isArray(viaHeader.body.weeks) && viaHeader.body.weeks.length >= 1);
+    assert.equal(/@/.test(JSON.stringify(viaHeader.body)), false); // geen PII
+
+    const viaQuery = await call(funnel, { method: 'GET', query: { token: 'funnel-secret' } });
+    assert.equal(viaQuery.statusCode, 200);
+
+    // bestaand gedrag ongewijzigd: CRON_SECRET blijft ook gewoon werken
+    const viaCron = await call(funnel, { method: 'GET', headers: { authorization: 'Bearer testsecret' } });
+    assert.equal(viaCron.statusCode, 200);
+
+    // een niet-bestaand/verkeerd token blijft geweigerd
+    const garbage = await call(funnel, { method: 'GET', headers: { authorization: 'Bearer nope-not-a-real-token' } });
+    assert.equal(garbage.statusCode, 401);
+  } finally {
+    delete process.env.FUNNEL_READ_TOKEN;
+  }
+});
+
+test('admin/funnel: FUNNEL_READ_TOKEN gelijk aan CRON_SECRET wordt bij de autorisatie zelf geweigerd (mag het sterkere geheim niet aliasen)', async () => {
+  const { funnelTokenValid, funnelAuthorized } = await import('../api/admin/funnel.js');
+  const reqWith = (auth) => ({ headers: { authorization: auth }, query: {} });
+
+  // los, verschillend token: geldig
+  assert.equal(funnelTokenValid('funnel-secret', 'testsecret', reqWith('Bearer funnel-secret')), true);
+  // FUNNEL_READ_TOKEN === CRON_SECRET: de FUNNEL_READ_TOKEN-tak weigert dit zelf, ook al
+  // presenteert het verzoek precies die (gedeelde) waarde — dit is het alias-geval uit de
+  // acceptatiecriteria, los getest van de (ongewijzigde) CRON_SECRET-tak hieronder.
+  assert.equal(funnelTokenValid('shared-value', 'shared-value', reqWith('Bearer shared-value')), false);
+  // de samengestelde check laat die waarde nog steeds door — maar UITSLUITEND via de
+  // bestaande, ongewijzigde CRON_SECRET-tak (preserve existing CRON_SECRET behavior exactly),
+  // nooit via de (geweigerde) FUNNEL_READ_TOKEN-tak.
+  assert.equal(funnelAuthorized(reqWith('Bearer shared-value'), 'shared-value', 'shared-value'), true);
+});
+
+// --- Dagelijkse digest: rijtellingen als quota-proxy (assignment 044, decisions/008 gap 1) ---
+test('cron/notify: digest bevat de vier gelabelde rijtellingen, bron zijn echte queries', async () => {
+  const DB = withBackend();
+  const cron = (await import('../api/cron/notify.js')).default;
+  const realNow = Date.now;
+  try {
+    Date.now = () => Date.UTC(2026, 6, 16, 10, 0, 0); // 2026-07-16 12:00 Amsterdam (zomertijd)
+    DB.events.push(
+      { id: 1, type: 'pageview', created_at: '2026-07-15T09:00:00.000Z' },
+      { id: 2, type: 'pageview', created_at: '2026-07-15T10:00:00.000Z' },
+      { id: 3, type: 'game_start', created_at: '2026-07-15T11:00:00.000Z' },
+    );
+    DB.rate_limits.push({ id: 1, bucket: 'track:a' }, { id: 2, bucket: 'track:b' });
+    DB.rate_limit_claims.push({ bucket: 'tgflag:2026-07-15T12:00' });
+
+    const r = await call(cron, { method: 'GET', headers: { authorization: 'Bearer testsecret' } });
+    assert.equal(r.statusCode, 200);
+    assert.equal(r.body.digest, true);
+    assert.equal(DB.tg.length, 1);
+    assert.match(DB.tg[0], /bezoeken: 2/);
+    assert.match(DB.tg[0], /spel-starts: 1/);
+    assert.match(DB.tg[0], /accounts: 0/); // geen accounts-rijen geseed
+    assert.match(DB.tg[0], /events: 3/); // rijtelling = hele tabel, niet alleen gisteren
+    assert.match(DB.tg[0], /rate_limits: 2/);
+    assert.match(DB.tg[0], /rate_limit_claims: 1/);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test('cron/notify: een falende rijtelling (events plat) blokkeert de digest niet — "n.b." i.p.v. een gegokt getal, verzending gaat door', async () => {
+  const DB = withBackend();
+  DB.countFailTables.add('events');
+  const cron = (await import('../api/cron/notify.js')).default;
+  const realNow = Date.now;
+  try {
+    Date.now = () => Date.UTC(2026, 6, 17, 10, 0, 0);
+    DB.rate_limits.push({ id: 1, bucket: 'track:a' });
+
+    const r = await call(cron, { method: 'GET', headers: { authorization: 'Bearer testsecret' } });
+    assert.equal(r.statusCode, 200); // geen 500: de falende telling mag de send niet blokkeren
+    assert.equal(r.body.digest, true);
+    assert.equal(DB.tg.length, 1);
+    assert.match(DB.tg[0], /events: n\.b\./);
+    assert.match(DB.tg[0], /accounts: 0/);
+    assert.match(DB.tg[0], /rate_limits: 1/);
+    assert.match(DB.tg[0], /rate_limit_claims: 0/);
+  } finally {
+    Date.now = realNow;
+  }
 });
 
 // --- client-helper: mag nooit crashen zonder browser-API's (server/test), zelfde
