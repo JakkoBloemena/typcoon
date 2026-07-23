@@ -11,7 +11,7 @@
     "prebuild": "node scripts/gen-content.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test test/*.test.js",
+    "test": "node --test test/*.test.js && node scripts/gen-content.mjs && vite build && node scripts/check-no-dutch-en.mjs",
     "sync-engine": "node scripts/sync-engine.mjs"
   },
   "dependencies": {
