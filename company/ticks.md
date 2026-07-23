@@ -23,13 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-24 #15 — OPEN
+## Tick 2026-07-24 #15 — CLOSED
 - opened: 2026-07-24 01:24 (system clock reads ~90s *after* tick #14's close commit e8a4df2 at 01:22:01 commit-clock; ledger stamp 01:26 in #14 is the known few-minute skew — trusting commit order per tick #2/#9 retro)
 - claimed: none — ADR 010 build-hold in force; board re-read directly from disk confirms zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035; 020/021 blocked_by chains unsatisfied). Standing mandate (monitor stage duty + T1–T6 trigger evaluation) executed by tick #14 ~90 seconds ago — healthy, no trigger fired; re-running a health pass inside two minutes measures nothing (tick #13 recency precedent, now at its extreme).
 - worktrees: none — main checkout, ledger writes only
 - ids allocated: none — next free assignment id: 065, next decision id: 011 (unchanged from tick #14)
-- closed:
-- retro:
+- closed: 2026-07-24 01:25 (system clock)
+- outcomes: no-op by design — build-hold stands per decisions/010-post-milestone-direction.md; monitor duty + trigger evaluation deliberately skipped as executed ~90s earlier in tick #14 (healthy, T1–T6 none fired); board, ids, and spend unchanged. **Nothing blocked on a human** — standing recorded asks unchanged, consolidated in ADR 010 §Standing Shareholder asks (FUNNEL_READ_TOKEN provisioning remains the one that unblocks T2/T3/T4 evaluation; weekly digest paste is the ~30-second interim).
+- retro: clean — but note the cadence: this tick fired ~90 seconds after tick #14's close. One-off manual invocation is fine; if back-to-back ticks recur, it points at the scheduler's idle-detection (cc 8b0ad7d) and belongs in the framework loop, not here.
 - opened: 2026-07-24 01:17 (system clock, consistent with commit clock — tick #13 close commit 5a9d4cd ~00:32)
 - claimed: none — ADR 010 build-hold is in force; board holds zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035). This tick executes the ADR's standing mandate: monitor stage duty + revisit-trigger evaluation (last monitor health pass was tick #12, ~2h ago by commit clock; tick #13 skipped it citing recency).
 - worktrees: monitor → C:\companies\typcoon-lanes\mon14 (mon/tick14; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (all ADR 010 ask 3 housekeeping).
