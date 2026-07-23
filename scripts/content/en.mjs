@@ -1,9 +1,9 @@
 // scripts/content/en.mjs — English content-pack for the SEO pages (pillar + blog).
 // Materialises draft D of research/en-locale-scope.md §7. Targets, slugs and intent
 // come verbatim from research/en-keyword-research.md §4 (assignment 014) — native
-// English intent, not a translation of nl.mjs (SEO.md §5). Cross-locale hreflang keys
-// noted in comments only; the actual key-map is assignment E's job
-// (research/en-locale-scope.md §5.2), not built here.
+// English intent, not a translation of nl.mjs (SEO.md §5). Cross-locale `key` fields
+// (assignment E, §5.2) let gen-content.mjs resolve reciprocal hreflang alternates by
+// stable key instead of assuming identical slugs across locales.
 // "Add a data pack" per language: a new language = a new file in this shape.
 
 export default {
@@ -34,8 +34,10 @@ export default {
   },
 
   // The pillar page: the broad guide we want to rank on; links out to the spokes.
-  // hreflang key (assignment E): 'pillar' — nl counterpart /leren-typen-voor-kinderen/.
+  // key: cross-locale hreflang key (assignment E, research/en-locale-scope.md §5.2) —
+  // nl counterpart /leren-typen-voor-kinderen/.
   pillar: {
+    key: 'pillar',
     slug: 'learn-typing-for-kids',
     title: 'Typing for Kids: The Complete Guide to Learning to Type (2026)',
     description: 'Everything about touch typing for kids (8–12): the best age to start, correct finger placement, how much to practice, free vs. paid, and whether a typing game actually works. A practical guide for parents.',
@@ -69,8 +71,9 @@ export default {
   // The spokes: each targets one native-English long-tail query (research/en-keyword-research.md §4).
   articles: [
     {
-      // hreflang key (assignment E): 'games-listicle' — nl counterpart
+      // key: cross-locale hreflang key — nl counterpart
       // /blog/beste-gratis-typspelletjes-kinderen/.
+      key: 'games-listicle',
       slug: 'free-typing-games-for-kids',
       title: 'The Best Free Typing Games for Kids',
       description: 'Looking for a free typing game that actually teaches your kid to type? What to look for, how the big names (TypingClub, Typing.com, Nitro Type) stack up, and why a game that rewards typing beats a pile of disconnected mini-games.',
@@ -97,7 +100,8 @@ export default {
       ],
     },
     {
-      // hreflang key (assignment E): 'age' — nl counterpart /blog/op-welke-leeftijd-leren-typen/.
+      // key: cross-locale hreflang key — nl counterpart /blog/op-welke-leeftijd-leren-typen/.
+      key: 'age',
       slug: 'what-age-to-learn-typing',
       title: 'What Age Should Kids Learn to Type?',
       description: 'What is the best age for kids to learn touch typing? Practical guidance by age (5 to 12) and what to check before you start.',

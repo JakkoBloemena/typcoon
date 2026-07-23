@@ -24,12 +24,59 @@ const pillarUrl = (pack) => `${prefix(pack.locale)}/${pack.pillar.slug}/`;
 const blogUrl = (pack) => `${prefix(pack.locale)}/blog/`;
 const articleUrl = (pack, slug) => `${prefix(pack.locale)}/blog/${slug}/`;
 const pageUrl = (pack, slug) => `${prefix(pack.locale)}/${slug}/`;
+const homeUrl = (pack) => `${prefix(pack.locale)}/`;
 // /speel/ is one build (§3.7 of research/en-locale-scope.md) — locale is a runtime
 // signal the app reads off ?lang=, not a separate URL. Non-default locales must carry
 // it or the CTA silently opens the app in nl (breaking the "zero Dutch" bar).
 const appUrl = (pack) => (pack.locale === DEFAULT ? '/speel/' : `/speel/?lang=${pack.locale}`);
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// ---- Cross-locale page-key map (research/en-locale-scope.md §5.2) -----------
+// Every renderable that has (or may one day have) a counterpart in another locale
+// declares a stable `key` in its content-pack entry (pillar.key, article.key, page.key).
+// This map resolves key -> { locale -> actual URL }, so hreflang alternates never assume
+// identical slugs across locales. Keys with only one locale simply cluster alone (self +
+// x-default, no alternate to a locale that doesn't have that page) — that is the correct,
+// non-broken output for content with no counterpart yet.
+// The hand-authored landings (/, /en/) aren't rendered by this script but still need to
+// participate — in the map (for hreflang) and in the sitemap (for its xhtml:link
+// alternates), so they're registered explicitly here under the shared key 'home'
+// (research/en-locale-scope.md §5.3: "register home in the map regardless of who renders
+// the HTML").
+const LANDINGS = { nl: '/', en: '/en/' };
+const HTML_LANG = Object.fromEntries(LOCALES.map((l) => [l.locale, l.htmlLang]));
+
+function buildKeyMap() {
+  const map = {};
+  const add = (key, locale, url) => {
+    if (!key) return;
+    (map[key] ??= {})[locale] = url;
+  };
+  for (const [locale, url] of Object.entries(LANDINGS)) add('home', locale, url);
+  for (const pack of LOCALES) {
+    add('blog', pack.locale, blogUrl(pack));
+    add(pack.pillar.key, pack.locale, pillarUrl(pack));
+    for (const a of pack.articles) add(a.key, pack.locale, articleUrl(pack, a.slug));
+    for (const pg of pack.pages || []) add(pg.key, pack.locale, pageUrl(pack, pg.slug));
+  }
+  return map;
+}
+const KEY_MAP = buildKeyMap();
+
+// Resolves `key` to its alternates: one { hreflang, href } per locale that has that key,
+// plus x-default -> the nl (DEFAULT) URL for that key (self, when the key is nl-only). No
+// key, or a key with no cluster, yields no alternates — never a link to a URL that wasn't
+// actually rendered. Shared by head()'s <link> tags and the sitemap's <xhtml:link> tags.
+function resolveAlternates(key) {
+  const cluster = key && KEY_MAP[key];
+  if (!cluster) return [];
+  const alts = Object.entries(cluster).map(([locale, u]) => ({ hreflang: HTML_LANG[locale], href: SITE + u }));
+  alts.push({ hreflang: 'x-default', href: SITE + (cluster[DEFAULT] || Object.values(cluster)[0]) });
+  return alts;
+}
+
+const hreflangLinks = (key) => resolveAlternates(key).map((a) => `<link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`).join('\n    ');
 
 const CSS = `
 :root{--night:#101a3d;--panel:#1b2650;--panel-2:#16204a;--line:#33407c;--brass:#ffb915;--brass-hi:#ffd25e;--brass-deep:#c67f00;--mint:#33e6a0;--sky:#5fa8ff;--paper:#f4f7ff;--ink-dim:#93a2d8;--pop:cubic-bezier(.34,1.56,.64,1)}
@@ -72,13 +119,9 @@ footer a{color:var(--ink-dim)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `;
 
-function head(pack, { title, description, url, jsonLd }) {
+function head(pack, { title, description, url, jsonLd, key }) {
   const canonical = SITE + url;
-  const alts = LOCALES.map((l) => {
-    // zelfde pagina in andere talen (nu alleen nl); reciproque hreflang + x-default
-    const u = url; // gelijke padstructuur per taal — nu single-locale
-    return `<link rel="alternate" hreflang="${l.htmlLang}" href="${SITE}${prefix(l.locale)}${u.replace(prefix(pack.locale), '') || '/'}" />`;
-  }).join('\n    ');
+  const alts = hreflangLinks(key);
   return `<!doctype html>
 <html lang="${pack.htmlLang}">
   <head>
@@ -86,9 +129,7 @@ function head(pack, { title, description, url, jsonLd }) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${esc(title)}</title>
     <meta name="description" content="${esc(description)}" />
-    <link rel="canonical" href="${canonical}" />
-    ${alts}
-    <link rel="alternate" hreflang="x-default" href="${SITE}${url.replace(prefix(pack.locale), '') || '/'}" />
+    <link rel="canonical" href="${canonical}" />${alts ? `\n    ${alts}` : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#101a3d" />
     <meta property="og:type" content="article" />
@@ -108,9 +149,8 @@ function head(pack, { title, description, url, jsonLd }) {
 }
 
 function nav(pack) {
-  const p = prefix(pack.locale);
   return `<nav class="nav">
-      <a class="brand" href="${p || '/'}">🏭 <span>Typcoon</span></a>
+      <a class="brand" href="${homeUrl(pack)}">🏭 <span>Typcoon</span></a>
       <a href="${blogUrl(pack)}">${pack.ui.blog}</a>
       <a href="${pillarUrl(pack)}">${pack.ui.guide}</a>
       ${(pack.pages || []).filter((pg) => pg.navLabel).map((pg) => `<a href="${pageUrl(pack, pg.slug)}">${esc(pg.navLabel)}</a>`).join('\n      ')}
@@ -121,13 +161,12 @@ function nav(pack) {
 function footer(pack) {
   return `<footer>
       <p>${pack.ui.footerTag}</p>
-      <p><a href="${p(pack) || '/'}">${pack.ui.home}</a> · <a href="${blogUrl(pack)}">${pack.ui.blog}</a> · <a href="${pillarUrl(pack)}">${pack.ui.guide}</a> · <a href="${appUrl(pack)}">${pack.ui.tryFree.replace('▶ ', '')}</a></p>
+      <p><a href="${homeUrl(pack)}">${pack.ui.home}</a> · <a href="${blogUrl(pack)}">${pack.ui.blog}</a> · <a href="${pillarUrl(pack)}">${pack.ui.guide}</a> · <a href="${appUrl(pack)}">${pack.ui.tryFree.replace('▶ ', '')}</a></p>
     </footer>
     <script src="/track.js" defer></script>
   </body>
 </html>`;
 }
-const p = (pack) => prefix(pack.locale);
 
 function ctaBox(pack) {
   return `<div class="cta-box">
@@ -168,7 +207,7 @@ function write(url, html) {
 // ---- Renderers --------------------------------------------------------------
 function renderArticle(pack, a) {
   const url = articleUrl(pack, a.slug);
-  const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pack.ui.blog, url: blogUrl(pack) }, { name: a.title, url }];
+  const trail = [{ name: pack.ui.home, url: homeUrl(pack) }, { name: pack.ui.blog, url: blogUrl(pack) }, { name: a.title, url }];
   const bc = breadcrumb(pack, trail);
   const fq = faqBlock(pack, a.faq);
   const article = {
@@ -178,7 +217,7 @@ function renderArticle(pack, a) {
     author: { '@type': 'Organization', name: 'Typcoon' }, publisher: { '@type': 'Organization', name: 'Typcoon', logo: { '@type': 'ImageObject', url: SITE + '/og.png' } },
   };
   const graph = [article, bc.schema, fq.schema].filter(Boolean);
-  const html = head(pack, { title: `${a.title} · Typcoon`, description: a.description, url, jsonLd: graph.length > 1 ? { '@context': 'https://schema.org', '@graph': graph } : article })
+  const html = head(pack, { title: `${a.title} · Typcoon`, description: a.description, url, key: a.key, jsonLd: graph.length > 1 ? { '@context': 'https://schema.org', '@graph': graph } : article })
     + nav(pack)
     + `\n    <main>\n      ${bc.html}\n      <h1>${esc(a.h1)}</h1>\n      <div class="meta">${pack.ui.updatedLabel} ${a.updated || a.date} · ${pack.ui.readMin(a.readMin)}</div>\n      <p class="lead">${esc(a.lead)}</p>\n      ${sectionsHtml(a.sections)}\n      ${fq.html}\n      ${ctaBox(pack)}\n      <p><a href="${pillarUrl(pack)}">${pack.ui.readGuide} →</a></p>\n      ${relatedList(pack, a.slug)}\n    </main>\n    `
     + footer(pack);
@@ -189,14 +228,14 @@ function renderArticle(pack, a) {
 function renderPillar(pack) {
   const pil = pack.pillar;
   const url = pillarUrl(pack);
-  const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pil.h1, url }];
+  const trail = [{ name: pack.ui.home, url: homeUrl(pack) }, { name: pil.h1, url }];
   const bc = breadcrumb(pack, trail);
   const article = {
     '@context': 'https://schema.org', '@type': 'Article', headline: pil.title, description: pil.description,
     inLanguage: pack.htmlLang, dateModified: pil.updated, mainEntityOfPage: SITE + url, image: SITE + '/og.png',
     author: { '@type': 'Organization', name: 'Typcoon' }, publisher: { '@type': 'Organization', name: 'Typcoon', logo: { '@type': 'ImageObject', url: SITE + '/og.png' } },
   };
-  const html = head(pack, { title: pil.title, description: pil.description, url, jsonLd: { '@context': 'https://schema.org', '@graph': [article, bc.schema] } })
+  const html = head(pack, { title: pil.title, description: pil.description, url, key: pil.key, jsonLd: { '@context': 'https://schema.org', '@graph': [article, bc.schema] } })
     + nav(pack)
     + `\n    <main>\n      ${bc.html}\n      <h1>${esc(pil.h1)}</h1>\n      <div class="meta">${pack.ui.updatedLabel} ${pil.updated} · ${pack.ui.readMin(pil.readMin)}</div>\n      <p class="lead">${esc(pil.lead)}</p>\n      ${sectionsHtml(pil.sections)}\n      ${ctaBox(pack)}\n      <div class="related"><h2>${pack.ui.related}</h2><ul class="cards">${pack.articles.map((a) => `<li><a href="${articleUrl(pack, a.slug)}">${esc(a.title)}<small>${pack.ui.readMin(a.readMin)}</small></a></li>`).join('')}</ul></div>\n    </main>\n    `
     + footer(pack);
@@ -206,7 +245,7 @@ function renderPillar(pack) {
 
 function renderPage(pack, pg) {
   const url = pageUrl(pack, pg.slug);
-  const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pg.h1, url }];
+  const trail = [{ name: pack.ui.home, url: homeUrl(pack) }, { name: pg.h1, url }];
   const bc = breadcrumb(pack, trail);
   const fq = faqBlock(pack, pg.faq);
   const webpage = {
@@ -214,7 +253,7 @@ function renderPage(pack, pg) {
     inLanguage: pack.htmlLang, url: SITE + url, dateModified: pg.updated,
   };
   const graph = [webpage, bc.schema, fq.schema].filter(Boolean);
-  const html = head(pack, { title: pg.title, description: pg.description, url, jsonLd: { '@context': 'https://schema.org', '@graph': graph } })
+  const html = head(pack, { title: pg.title, description: pg.description, url, key: pg.key, jsonLd: { '@context': 'https://schema.org', '@graph': graph } })
     + nav(pack)
     + `\n    <main>\n      ${bc.html}\n      <h1>${esc(pg.h1)}</h1>\n      <p class="lead">${esc(pg.lead)}</p>\n      ${sectionsHtml(pg.sections)}\n      ${fq.html}\n      ${ctaBox(pack)}\n    </main>\n    `
     + footer(pack);
@@ -224,10 +263,10 @@ function renderPage(pack, pg) {
 
 function renderBlogIndex(pack) {
   const url = blogUrl(pack);
-  const trail = [{ name: pack.ui.home, url: p(pack) || '/' }, { name: pack.ui.blog, url }];
+  const trail = [{ name: pack.ui.home, url: homeUrl(pack) }, { name: pack.ui.blog, url }];
   const bc = breadcrumb(pack, trail);
   const items = [pack.pillar, ...pack.articles];
-  const html = head(pack, { title: `${pack.ui.blogTitle} · Typcoon`, description: pack.ui.blogDescription, url, jsonLd: bc.schema })
+  const html = head(pack, { title: `${pack.ui.blogTitle} · Typcoon`, description: pack.ui.blogDescription, url, key: 'blog', jsonLd: bc.schema })
     + nav(pack)
     + `\n    <main>\n      ${bc.html}\n      <h1>${esc(pack.pillar.blogHeading)}</h1>\n      <p class="lead">${esc(pack.ui.blogLead)}</p>\n      <ul class="cards">\n        <li><a href="${pillarUrl(pack)}">📘 ${esc(pack.pillar.title)}<small>${pack.ui.readMin(pack.pillar.readMin)} · ${pack.ui.guide}</small></a></li>\n        ${pack.articles.map((a) => `<li><a href="${articleUrl(pack, a.slug)}">${esc(a.title)}<small>${pack.ui.readMin(a.readMin)}</small></a></li>`).join('\n        ')}\n      </ul>\n      ${ctaBox(pack)}\n    </main>\n    `
     + footer(pack);
@@ -236,26 +275,35 @@ function renderBlogIndex(pack) {
 }
 
 // ---- Sitemap ----------------------------------------------------------------
+// One sitemap + xhtml:link alternates (research/en-locale-scope.md §5.3 — chosen over
+// per-locale sitemaps: fewer files, robots.txt already points at this single file).
+// Each url's alternates come from the same KEY_MAP that drives head()'s hreflang, so a
+// URL only ever gets an xhtml:link to a page that was actually rendered (or a landing
+// registered in LANDINGS).
+const xhtmlAlternates = (key) => resolveAlternates(key).map((a) => `\n    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`).join('');
+
 function sitemap(urls) {
-  const body = urls.map((u) => `  <url>\n    <loc>${SITE}${u.loc}</loc>${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ''}\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`).join('\n');
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+  const body = urls.map((u) => `  <url>\n    <loc>${SITE}${u.loc}</loc>${xhtmlAlternates(u.key)}${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ''}\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`).join('\n');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${body}\n</urlset>\n`;
   writeFileSync(resolve(ROOT, 'public/sitemap.xml'), xml);
 }
 
 // ---- Run --------------------------------------------------------------------
-const sm = [{ loc: '/', changefreq: 'weekly', priority: '1.0' }];
+// Hand-authored landings first (§5.3: "/" and "/en/" must appear with their alternates
+// even though their HTML isn't rendered by this script).
+const sm = Object.entries(LANDINGS).map(([locale, loc]) => ({ loc, key: 'home', changefreq: 'weekly', priority: '1.0' }));
 for (const pack of LOCALES) {
   const pillar = renderPillar(pack);
-  sm.push({ loc: pillar, lastmod: pack.pillar.updated, changefreq: 'monthly', priority: '0.9' });
+  sm.push({ loc: pillar, key: pack.pillar.key, lastmod: pack.pillar.updated, changefreq: 'monthly', priority: '0.9' });
   const blog = renderBlogIndex(pack);
-  sm.push({ loc: blog, changefreq: 'weekly', priority: '0.6' });
+  sm.push({ loc: blog, key: 'blog', changefreq: 'weekly', priority: '0.6' });
   for (const a of pack.articles) {
     const u = renderArticle(pack, a);
-    sm.push({ loc: u, lastmod: a.updated || a.date, changefreq: 'monthly', priority: '0.7' });
+    sm.push({ loc: u, key: a.key, lastmod: a.updated || a.date, changefreq: 'monthly', priority: '0.7' });
   }
   for (const pg of pack.pages || []) {
     const u = renderPage(pack, pg);
-    sm.push({ loc: u, lastmod: pg.updated, changefreq: 'monthly', priority: '0.8' });
+    sm.push({ loc: u, key: pg.key, lastmod: pg.updated, changefreq: 'monthly', priority: '0.8' });
   }
 }
 sitemap(sm);
