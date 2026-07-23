@@ -2,7 +2,7 @@
 id: 045
 title: Automated no-Dutch-on-en-pages regression test
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: [017]
 opened_by: developer (015 lane proposal, materialized by tick #8 dispatcher from the reservation)
@@ -156,3 +156,113 @@ practice words/sentences/curriculum data, not prose, and isn't where a Dutch reg
 would realistically leak; the AC's own wording treats "built HTML is the contract" as the
 primary target and the strings surface as optional/"if cheaply reachable." The built
 `dist/en/` tree (landing, pillar, blog index, both spokes) is fully covered.
+
+## Verification (tester, 2026-07-23)
+
+Worked exclusively in `C:\companies\typcoon-lanes\v045` (branch `verify/045`, already
+checked out). `npm install` run first (fresh worktree). Did not touch the main checkout
+or any other lane worktree. All claims below were re-derived, not read off the delivery
+note.
+
+**AC1 — check wired into `npm test`, fails on a Dutch hit, allowlists homographs: PASS.**
+`package.json`'s `test` script is confirmed as
+`node --test test/*.test.js && node scripts/gen-content.mjs && vite build && node scripts/check-no-dutch-en.mjs`.
+Ran `npm test` clean:
+```
+# tests 211
+# pass 211
+# fail 0
+...
+check-no-dutch-en: PASS — 5 built en file(s) checked against 59 Dutch lexicon words, zero unallowlisted hits.
+```
+`REAL_EXIT_CODE=0` (captured via `$?` immediately after, not inferred from `tee`). Note:
+211 is the current main baseline, not the 199 the delivery note's rationale section cites
+— later assignments landed unit tests since 045 was scoped; this doesn't affect AC3, which
+only requires the suite be green, and it is.
+
+**AC2 — passes on shipped tree, demonstrably fails on injection: PASS, independently
+reproduced.** Edited `scripts/content/en.mjs`'s pillar `lead` to insert `kinderen leren
+typen` (same injection the delivery note describes), ran `npm test`:
+```
+check-no-dutch-en: FAIL — Dutch text found in 1/5 built en file(s):
+  dist\en\learn-typing-for-kids\index.html :: "typen" (1x)
+  dist\en\learn-typing-for-kids\index.html :: "kinderen" (1x)
+  dist\en\learn-typing-for-kids\index.html :: "leren" (1x)
+```
+`REAL_EXIT_CODE=1`, byte-for-byte matching the delivery note's captured FAIL text.
+Reverted the edit, confirmed `git diff --stat -- scripts/content/en.mjs` empty, re-ran
+`npm test`: back to `check-no-dutch-en: PASS`, `REAL_EXIT_CODE=0`.
+
+**AC3 — full suite green: PASS.** 211/211 unit tests pass on every run above; build and
+checker steps clean.
+
+**AC's "test OR build-time check wired into npm test" wording: satisfied.** Confirmed
+`scripts/check-hreflang.mjs` (016's precedent) is *not* referenced anywhere in
+`package.json` — it genuinely is the standalone-script pattern the delivery note claims,
+so the "same architecture, deliberately different wiring choice" framing is accurate, not
+retconned. Confirmed no existing `test/*.test.js` file shells out to a build (`grep -l
+execSync\|spawnSync\|child_process` → none), supporting the claim that adding that pattern
+to a `.test.js` file would've been new surface. The `&&`-chain propagates exit codes
+correctly on this Windows machine (empirically verified above, not assumed).
+
+**Coverage check — does the checker scan the whole shipped `dist/en/` tree?** `find
+dist/en -type f` after a clean build → exactly the 5 files the checker reports:
+`index.html`, `learn-typing-for-kids/index.html`, `blog/index.html`,
+`blog/free-typing-games-for-kids/index.html`, `blog/what-age-to-learn-typing/index.html`.
+No non-`.html` files exist under `dist/en/` today, so the checker's `.html`-only filter
+doesn't currently miss anything — flagged below as a latent gap, not a present defect.
+
+**Adversarial probing (beyond the ACs), via a synthetic `tmp-dutch-probe/en/` dir scanned
+directly through the exported `scanDistEn()`, deleted after use — worktree left clean
+(`git status --short` empty, confirmed):**
+- Case-insensitivity: `TYPEN`, `Typen`, `tYpEn` in one paragraph → all 3 counted correctly
+  (whole-word regex uses the `i` flag as intended).
+- Attribute-embedded Dutch (`alt="Kind aan het TYPEN oefenen"`, `content="... gratis
+  oefenen voor kinderen"` in a `<meta>` tag): caught correctly — the checker scans raw
+  HTML, not just visible text, so attribute values are not a blind spot in general.
+- `<link>` tag stripping and non-hreflang content: put a Dutch word (`toetsenbord`, in
+  `DUTCH_LEXICON`) inside a `title` attribute on an unrelated `<link rel="stylesheet">`
+  tag. **Result: silently not detected.** The stripper (`LINK_TAG_RE`) removes the entire
+  `<link ...>` element before scanning, not just the `href`/`hreflang` values that
+  motivated it — so any future Dutch text landing in *any* attribute of *any* `<link>`
+  element (title, aria-label, a custom data attribute) would be invisible to this checker,
+  not just the hreflang URLs it was built to exempt. Checked the actual built output:
+  today's `dist/en/*/index.html` `<link>` tags only ever carry `rel/href/hreflang/type/
+  as/crossorigin` — no `title` or prose-bearing attribute currently exists on any `<link>`
+  in this codebase, so this doesn't miss anything on the *current* shipped tree. Judged a
+  real but low-severity latent gap, not a blocker for this AC (which only requires the
+  check to work against real generator output, which it does) — reported separately below
+  for the dispatcher to triage.
+- Allowlist camouflage: a full grammatically-correct Dutch sentence built entirely from
+  allowlisted/short words (`"Was het kind in de hand? Het water was over de arm. Hoe gaat
+  het met de van, door het hek?"`) produced **zero findings** — every content word here is
+  either on `ALLOWLIST` (`kind`, `water`, `over`, `hand`, `arm`, `hoe`, `van`, `door`) or a
+  short function word never lexicon'd (`was`, `het`, `in`, `de`, `met`). This is an
+  inherent property of any keyword-allowlist checker (the same 13-word allowlist that
+  suppresses `kind`/`letters` false positives also suppresses genuine Dutch using only
+  those words) rather than an implementation bug — judged acceptable scope: the real
+  regression vector this check guards against (generator/content-pipeline reusing actual
+  `nl.mjs` prose on an en page) hits high-signal lexicon words (`typen`, `kinderen`,
+  `leren`, `gratis`, `oefenen`, etc., as the real injection test above demonstrates), not
+  a hand-crafted sentence assembled purely from the allowlist. Noting it for visibility,
+  not filing as a defect.
+- Diacritic false-positive check: grepped `scripts/content/en.mjs` for the same
+  accented-character class the checker flags — zero matches, so the diacritic signal
+  currently has no false-positive risk against real en content.
+
+**Worktree hygiene.** Every `npm test`/`npm run build` regenerates `public/**/index.html`
+and `public/sitemap.xml` with CRLF/LF churn only — confirmed via `git diff
+--ignore-all-space -- public/` producing zero `+`/`-` lines after a run. Reverted with
+`git checkout -- public/` before committing this verification. `dist/` is gitignored
+(confirmed via `git check-ignore -v dist`).
+
+**Verdict: all three acceptance criteria hold, independently re-derived. Assignment
+flipped to `done`.**
+
+**New defect filed separately (not blocking this assignment, reported to the dispatcher
+for triage):** `<link>`-tag stripping in `scripts/check-no-dutch-en.mjs` (`LINK_TAG_RE`)
+removes the entire tag rather than just URL-bearing attributes, so Dutch text in a
+non-URL attribute of any `<link>` element (e.g. a `title` attribute) would silently pass
+the checker. No current `<link>` tag in the built site carries such an attribute, so this
+is latent, not active — severity 4 (cosmetic/theoretical), low confidence it will ever
+matter given current `<link>` usage in `scripts/gen-content.mjs`.
