@@ -2,7 +2,7 @@
 id: 024
 title: "Deel je fabriek" share card (REVENUE.md §5 virality)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [012]
 opened_by: ceo
