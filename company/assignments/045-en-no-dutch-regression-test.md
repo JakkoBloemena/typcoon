@@ -2,7 +2,7 @@
 id: 045
 title: Automated no-Dutch-on-en-pages regression test
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [017]
 opened_by: developer (015 lane proposal, materialized by tick #8 dispatcher from the reservation)
