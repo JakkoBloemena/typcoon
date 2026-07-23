@@ -2,7 +2,7 @@
 id: 032
 title: mint-licence.mjs — clean error on malformed --days/--expires
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: dispatcher (tick 2026-07-23 #2), proposed by the 019 verification tester
