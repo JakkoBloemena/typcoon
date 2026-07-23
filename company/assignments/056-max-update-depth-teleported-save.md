@@ -2,7 +2,7 @@
 id: 056
 title: React "Maximum update depth exceeded" on artificially seeded end-state saves
 owner: developer
-status: blocked
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 050 delivery, 2026-07-23; materialized by the tick #10 dispatcher from the 055–059 reservation)
@@ -156,3 +156,32 @@ completion, extended play, free-tier churn check), `qa-scripts/probe-056-
 dashboard.mjs` (dashboard/records/friends/sharecard/handscheck/themepicker browser
 tour), `qa-scripts/probe-056-print.mjs` (exam-final print/`@media print` flow), and
 `company/assignments/056-screenshots/*.png` (10 screenshots).
+
+## Unblocked (tick #10 dispatcher, 2026-07-23) — exact repro recipe from the 050 developer
+
+The dispatcher queried the 050 developer's session directly. Answer (from actual
+session history, three distinct repro runs, including one against clean baseline
+commit 6717928 with all 050 changes stashed):
+
+- **The trigger is the typing input pattern, not the seed alone.** All three repro
+  runs typed the exam text via a **tight `page.keyboard.press()` loop with ZERO
+  delay between presses**. The warning appeared once per run, interleaved between
+  reading the exam text and the pass overlay appearing — i.e. during the rapid
+  keystroke burst or the exam-completion transition, never on load (load-only was
+  explicitly isolated: no warning).
+- Reproduces with the committed `qa-scripts/gen-final-exam-save.mjs` seed (exam-final
+  path, "Typdiploma") AND with a simpler variant seeding stage 19 with `exams` left
+  default (which resolves to exam-1, "Thuisrij-toets") — so it is exam-surface
+  generic, not exam-final-specific.
+- Environment: headless Chromium 1228 via playwright-core, **vite dev server** (not
+  preview), viewport 1280×900. StrictMode involvement unchecked.
+- Key discrepancy vs. the 8 non-reproducing paths: the committed
+  `probe-050-cert-dashboard.mjs` types with a 15ms per-keystroke delay and NEVER
+  showed the warning. The 056 lane's probes were paced/varied too. A zero-delay
+  burst on the exam TypingSurface is the untested variable.
+- Related prior art: 049's delivery notes record fixing a "Maximum update depth
+  exceeded" under synthetic zero-delay keystrokes (unstable inline `onKeystroke`
+  prop → module-level `EXAM_NOOP`). Repro B was on a baseline that already contains
+  that fix — so this is a second, distinct instability in the same class. Start
+  there: what else in the exam typing path re-registers or feeds back per keystroke
+  when keystrokes arrive faster than React commits?
