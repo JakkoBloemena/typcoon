@@ -2,7 +2,7 @@
 id: 027
 title: Write nl article — typen leren met een spelletje (pedagogy / E-E-A-T)
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [026]
 opened_by: ceo
