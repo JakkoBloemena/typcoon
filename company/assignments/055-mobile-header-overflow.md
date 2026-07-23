@@ -2,7 +2,7 @@
 id: 055
 title: Game header horizontally overflows at narrow mobile viewports
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester (reproduced during 049 verification; materialized by the tick #10 dispatcher from the 055–059 reservation)
