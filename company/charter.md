@@ -87,7 +87,9 @@ This is a kids' product. These are hard lines, not preferences:
   casually — a deliberate reversal gets an ADR.
 - **Framework testbed:** by Shareholder intent, typcoon's `company/retro/` is expected
   to feed cc framework improvements. Write retro entries generously.
-- **Known open threads not yet on the board** (next dispatcher allocates ids; noted
-  here so they are not lost): ongoing content cadence toward SEO.md's ~12–15 article
-  target (9 exist); the "deel je fabriek" share card (REVENUE.md §5 virality item);
-  the €14,99 first-session offer (folded into the 002 pricing decision).
+- **Known open threads — all resolved as of 2026-07-24 (decisions/010):** the content
+  hub reached 13 articles (inside SEO.md's 12–15 target; further content is
+  measurement-gated via assignment 035); the "deel je fabriek" share card shipped
+  (assignment 024, done); the €14,99 first-session offer was folded into the 002
+  pricing decision as recorded. No unlisted threads remain — a new bet requires a
+  decisions/ entry, not a charter footnote.
