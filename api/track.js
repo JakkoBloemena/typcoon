@@ -27,9 +27,6 @@ export default async function handler(req, res) {
 
   const b = req.body || {};
   const type = String(b.type || '');
-  // Onbekend type: stil laten vallen (204), niet aftastbaar — zelfde beleid als de
-  // sessionId/path-validatie hieronder (assignment 025), niet meer het oude 400.
-  if (!TYPES.has(type)) return res.status(204).end();
 
   const db = supa();
   if (!db) return res.status(204).end(); // geen backend geconfigureerd: netjes negeren
@@ -38,12 +35,17 @@ export default async function handler(req, res) {
 
   try {
     // anti-misbruik: max 120 events per IP per uur + een globaal kostenplafond (zelfde
-    // patroon als api/account/create.js).
+    // patroon als api/account/create.js). Dit moet vóór elke shape-validatie draaien
+    // (assignment 030): anders telt malformed traffic (incl. onbekend type) niet mee
+    // tegen de limiet en is er een onbemeten flood-pad op dit publieke endpoint.
     if (await rateLimited(base, RH, 'track:' + ipHash(req), 120, 3600000)) return res.status(429).end();
     if (await rateLimited(base, RH, 'g:track', Number(process.env.MAX_TRACK_HOUR) || 2000, 3600000)) return res.status(204).end();
 
     // Shape-validatie: fout laat het hele event stil vallen (204, niets opgeslagen) — niet
     // alleen het veld leegmaken, want een deels-opgeslagen rij is nog steeds een lek.
+    // Onbekend type telt hierboven al mee tegen de rate-limit; hier alleen nog de opslag
+    // stoppen (204, niet aftastbaar — zelfde beleid als sessionId/path hieronder).
+    if (!TYPES.has(type)) return res.status(204).end();
     const sessionId = String(b.sessionId || '');
     if (!UUID_RE.test(sessionId)) return res.status(204).end();
     const path = b.path ? String(b.path) : null;
