@@ -23,14 +23,15 @@ Entry format:
 
 ---
 
-## Tick 2026-07-23 #1 — OPEN
+## Tick 2026-07-23 #1 — CLOSED
 - opened: 2026-07-23 13:27
 - claimed: 012, 018, 023, 025 — verification pass (statuses stay needs_verification; this entry is the claim)
 - worktrees: C:\companies\typcoon-lanes\v012 / v018 / v023 / v025 (branches verify/012 …); main checkout: dispatcher/integration only
 - ids allocated: 026–029 reserved for the four article write-assignments from research/content-batch-2-scope.md §write-assignments, materialized only if 023 verifies done; testers report other defects to the dispatcher (next free after reservation: 030)
 - notes: all open assignments blocked (013/024←012, 019←018, 015/016/17 chain, 020/021/022←010, 014←§6 trigger). Verified-done completions unblock 013 (then maybe article-026); 024 waits behind 013 (strings.js collision). 009 closed by Shareholder yesterday/today (GSC pre-existing + Bing imported).
-- closed:
-- retro:
+- closed: 2026-07-23 17:05
+- outcomes: verification — 012, 018, 023, 025 ALL verified done (second consecutive zero-bounce pass; 018 survived forging/replay/browser attacks, 012's SSR+simulation re-derived independently). One defect from 025's verification (unknown-type flood unmetered) filed as 030 and FIXED same tick. Builds landed (all needs_verification): 013 en strings full parity 224/224 keys; 019 licence tooling (migration NOT yet applied to prod — apply after verification); 024 share card (image-only, PII gate default-off); 026–029 all four batch-2 articles (gratis-leren-typen-kind, typen-leren-met-een-spelletje, nitro-type-alternatief, typles-op-school-of-thuis — competitor/school claims web-checked and dated); 030 ratelimit order fix. Board additions: 026–030. Combined main: 126/126 tests, clean build, pushed. Mid-tick Shareholder events recorded separately: 009 closed (GSC pre-existing + Bing), Supabase events migration applied to prod, metrics/search-console.md baseline.
+- retro: clean — serialization chain (026→027→028→029, one nl.mjs lane at a time) worked; slot-freed-on-merge dispatch kept the pipeline full the whole tick
 
 ## Tick 2026-07-22 #2 — CLOSED
 - opened: 2026-07-22 21:38
