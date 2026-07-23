@@ -2,7 +2,7 @@
 id: 049
 title: Wire the engine exam/diploma system into the Typcoon game loop
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -26,7 +26,7 @@ developer's terminal state is `needs_verification` (PROTOCOL); the tester flips 
 
 ## Acceptance criteria
 
-- [ ] **Before (or alongside) any wiring, `src/engine/exams.js` gains direct
+- [x] **Before (or alongside) any wiring, `src/engine/exams.js` gains direct
       engine-level tests** — this module has zero direct coverage today and its logic
       has never been executed by the suite. A new `test/exams.test.js` must pin, at
       minimum: `gradeExam` (pass exactly at `passAcc`, fail just below; final exam
@@ -39,32 +39,139 @@ developer's terminal state is `needs_verification` (PROTOCOL); the tester flips 
       a seeded rng); and `applyExamResult` (records the pass, is idempotent on
       re-pass, grants nothing on a fail). These tests must pass **before** the exam
       grading is exposed to a child.
-- [ ] Playing to home-row mastery as a **new/free** player, the game offers exam-1 as
+- [x] Playing to home-row mastery as a **new/free** player, the game offers exam-1 as
       an optional exam (clearly labelled a "toets"/exam, distinct from a normal
       exercise) and lets the player decline and keep playing.
-- [ ] Taking exam-1 presents an exam text (longer than a normal exercise, covering the
+- [x] Taking exam-1 presents an exam text (longer than a normal exercise, covering the
       exam's keys) and, on typing it at ≥ the exam's `passAcc`, shows a **pass** result
       with a celebration and grants the mapped Typcoon reward (coins and/or a prestige
       star); the reward is visible in the balance/stars immediately after.
-- [ ] Failing an exam (accuracy below the bar, or below `minKpm` on the final) shows
+- [x] Failing an exam (accuracy below the bar, or below `minKpm` on the final) shows
       an encouraging retry message, grants **no** reward, and returns the player to
       normal play — no dead-end, no lockout.
-- [ ] Passed exams **persist** across a hard refresh and across "opnieuw beginnen" if
+- [x] Passed exams **persist** across a hard refresh and across "opnieuw beginnen" if
       the curriculum progress persists (verify: pass exam-1, refresh, confirm it is
       not re-offered and the passed state is retained).
-- [ ] The exam reward is sourced from Typcoon's economy — grep confirms the game does
+- [x] The exam reward is sourced from Typcoon's economy — grep confirms the game does
       **not** grant `state.rewards.stars`; the wiring uses `tycoon` coins and/or
       `rebirths`/prestige.
-- [ ] **No content or machine is gated behind passing any exam** — all premium content
+- [x] **No content or machine is gated behind passing any exam** — all premium content
       still unlocks purely by learning letters (verify: a player who never takes an
       exam can still reach every machine and letter they otherwise could). The diploma
       is recognition only. *(Hard line per decisions/009 — the optional diploma-gated
       expansion was cut specifically to keep this criterion intact; do not weaken it.)*
-- [ ] The final exam's speed requirement (100 keys/min) is the only place speed is
+- [x] The final exam's speed requirement (100 keys/min) is the only place speed is
       required, and it gates **only the final certificate**, nothing else.
-- [ ] `npm test` green (add tests for the reward mapping and the "no reward on fail"
+- [x] `npm test` green (add tests for the reward mapping and the "no reward on fail"
       path); `npm run build` clean; zero console errors across an exam pass and an
       exam fail.
+
+## Delivery notes (developer, 2026-07-23)
+
+Worked exclusively in `C:\companies\typcoon-lanes\b049` (branch `build/049`).
+
+**AC1 — engine tests first.** `test/exams.test.js` (23 tests, all new) pins
+`gradeExam`, `examReady`/`nextAvailableExam`/`examStatus`, `generateExamText` and
+`applyExamResult` at the exact boundaries the AC lists, using real engine state built
+via `newState`/`newProfile` (not hand-faked shortcuts) plus a `withConfidence` helper
+for the few fields the module actually reads. Ran and confirmed green **before** any
+UI wiring existed. Two real bugs surfaced and were fixed minimally in
+`src/engine/exams.js` (each has a comment at the fix site):
+1. `generateExamText` only guaranteed symbol coverage, never letter coverage — a
+   toets text could omit one of its own required letters. Added the same
+   "guarantee it appears at least once" pass already used for symbols.
+2. `applyExamResult` was not idempotent: a repeated pass of an already-passed exam
+   re-granted the bonus every time (`state.rewards.stars` kept climbing). Now a
+   repeated pass on an already-passed exam is a no-op reward-wise (attempts still
+   increments). Verified both bugs were real by re-running the new tests against a
+   git-stash of the pre-fix module: 2/23 failed (`15 !== 0` on the idempotence
+   assertion) before the fix, 23/23 pass after.
+
+**AC2/AC3/AC4 — offer/decline/pass/fail.** `GameScreen.jsx`: `nextAvailableExam(state)`
+is read every render (`availableExam`); a persistent mint "🏅 Toets beschikbaar" pill
+(reuses the existing `.checkhands-chip`/`.form-nudge` mint-gradient idiom, not the
+gold `.unlock-pill` treatment, so it never reads as a paywall CTA) sits in the header
+whenever an exam is available and not in progress. The *first* transition into
+readiness (snapshotted per-exercise in `examWasReadyRef`, since keystrokes update
+confidence live — comparing "before this exercise" against "after" would otherwise
+miss the transition, see bug note below) queues a celebratory offer overlay (`toets`
+clearly labelled, "Start de toets!" / "Nog even niet" — declining just closes it,
+normal play is untouched). Taking it (`startExam`) generates the exam text via
+`generateExamText`, renders it in the same `TypingSurface` under a mint "TOETS: …"
+banner, and is entirely decoupled from the learn-engine (its `onKeystroke` is a
+no-op) so a failed attempt cannot corrupt keyStats/promotion. `finishExam` grades
+with `gradeExam`, calls the new `applyTypcoonExamResult` (economy.js) and shows a
+pass (celebration + `+N` coins, visible in the coin pill immediately) or fail
+(gentle "Nog niet helemaal — geen zorgen!", no `.celebrate` glow, single "Gaaf!"
+button back to normal play — pill stays, no lockout) moment.
+
+**AC5 — persistence.** No new storage code needed: `state.exams` already flows
+through `newState`/`hydrateState`/`saveGame` unchanged; verified live (see below).
+
+**AC6 — reward economy.** `economy.js` adds `EXAM_COIN_REWARD` (150/300/450/600/1000
+for exam-1..exam-final) and `applyTypcoonExamResult(state, exam, pass)`, which takes
+*only* `exams.passed/attempts` from the engine's `applyExamResult` result and
+discards its `rewards.stars` mutation entirely — the returned state's `.rewards` is
+untouched (asserted in `economy.test.js`). `grep -rn "rewards.stars" src/game/`
+matches only the explanatory comment in `economy.js`, no code.
+
+**AC7 — no gating.** The exam wiring never reads/touches `premium.js`,
+`machineLocked`, or `FREE_LETTER_CAP`; grep confirms zero coupling. exam-1 sits at
+stage 5 (9 letters: f j d k s l a g h), inside the 10-letter free cap — reachable
+without unlocking.
+
+**AC8 — final exam speed.** Untouched engine logic (`exam.minKpm` only set on
+`exam-final`); pinned by the engine tests above.
+
+**AC9 — test/build/console.** `npm test`: **181/181 green** (154 baseline + 23
+`exams.test.js` + 4 reward-mapping tests in `economy.test.js`, which also asserts
+"no reward, no `rewards` mutation" on a fail — plus 3 new key entries wired into
+`locale.test.js`'s flow-key/dynamic-key lists). `npm run build`: clean (95 modules,
+no warnings). Browser-verified with Playwright against the dev server on port 4186
+(`qa-scripts/gen-exam-save.mjs` + `qa-scripts/probe-049-exam-flow.mjs`, screenshots in
+`company/assignments/049-screenshots/`): live offer→decline, pill→take→**pass**
+(coins 500→650, pill disappears, survives a hard reload), pill→take→**fail**
+(coins unchanged, encouraging copy, pill and normal exercise both still there) — zero
+console errors/warnings in every run except the pre-existing `/api/track` 404 (dev
+server has no backend; present identically on baseline code, unrelated to this
+assignment). One real bug found and fixed *during* this browser verification: the
+offer's readiness check originally compared `nextAvailableExam` before vs. after
+`finalizeExercise` inside `handleComplete` — but per-keystroke confidence updates
+already land in `engineRef.current` *during* the exercise (via `processKeystroke`),
+so by the time `handleComplete` ran, "before" and "after" were often both already
+"ready" and the transition was silently missed. Fixed by snapshotting readiness in
+`examWasReadyRef` at exercise-*start* instead (the effect that generates each new
+exercise). Also fixed an unrelated instability: the exam `TypingSurface`'s
+`onKeystroke` was a fresh inline `() => {}` every render, destabilizing its internal
+keydown-listener effect under rapid typing (surfaced as a React "Maximum update
+depth exceeded" warning under synthetic zero-delay keystrokes in testing); replaced
+with a module-level stable `EXAM_NOOP`.
+
+**i18n.** 15 new `exam.*` keys added to both `nl` and `en` maps in `strings.js`
+(native English copy, not translated word-for-word); `locale.test.js` extended
+(`EXAMS`-driven dynamic keys + static flow keys) — full parity suite green.
+
+**Design system.** No new colors/tokens invented — the exam pill/banner reuse the
+existing mint-gradient chip idiom already used twice in `game.css`
+(`.form-nudge`/`.checkhands-chip`); the offer/pass/fail cards reuse the existing
+`.overlay`/`.card`/`.celebrate` vier-moment pattern (fail intentionally omits
+`.celebrate`'s gold glow — DESIGN.md's no-punishment tone, not a celebration but not
+a scolding either).
+
+**Reward-amount choice.** Went with coins-only (no `rebirths` bump) — the assignment
+text allows "coins and/or a prestige star"; granting `tycoon.rebirths` directly would
+hand out the permanent economy multiplier without its intended sell-off tradeoff,
+disproportionate for a home-row mini-exam. A coin lump sum uses the exact same
+faucet/mechanics as normal play, just sized to feel like a milestone.
+
+**Out of scope, noted not fixed:** `state.speedAvg` is never updated anywhere in
+`src/game/` (only `rewards.js`'s unused `applyExerciseRewards` touches it), so in
+real play the final exam's `minKpm` gate can never open — harmless for *this*
+assignment (exam-final is premium, no AC requires browser-verifying it, and the
+engine-level speed-gating logic itself is correctly pinned), but it means exam-final
+is currently unreachable through real gameplay. Opening a p4 assignment for this
+(proposed by the developer) since it's outside 049's scope (wiring exam-1's full
+loop) — 050/052 may need it.
 
 ## Notes
 

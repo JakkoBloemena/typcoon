@@ -10,11 +10,13 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { processKeystroke, finalizeExercise, generateExercise } from '../engine/index.js';
 import { activeKeys, activeLetters } from '../engine/curriculumCore.js';
+import { nextAvailableExam, generateExamText, gradeExam } from '../engine/exams.js';
+import { sessionKpm } from '../engine/speed.js';
 import {
   BUILDINGS, UPGRADES, GOLDEN_CHANCE, buildingCost, buildingUnlocked, coinsPerSecond,
   accuracyMultiplier, comboMultiplier, prestigeMultiplier, milestoneMultiplier,
   nextMilestone, buyBuilding, buyUpgrade, earnFromExercise, tick,
-  rebirthCost, canRebirth, rebirth,
+  rebirthCost, canRebirth, rebirth, applyTypcoonExamResult,
 } from './economy.js';
 import { pendingAchievements, achievementDef } from './achievements.js';
 import { getPack } from '../data/packs.js';
@@ -34,6 +36,12 @@ import { fmt } from './format.js';
 import { gt } from './strings.js';
 
 const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden getypt is
+
+// De toets-TypingSurface hoeft niets terug te melden per aanslag (losstaand van de
+// leer-engine, zie startExam) — een STABIELE no-op: een nieuwe inline functie per
+// render zou TypingSurface's keydown-listener-effect (dependency `onKeystroke`) op
+// elke render laten afbreken/opnieuw opzetten.
+const EXAM_NOOP = () => {};
 
 // Koopknop met vasthouden-om-te-herhalen: één klik = één keer; ingedrukt houden
 // (na ~420ms) blijft kopen zolang het kan. Zo hoeft een kind niet 25× te klikken.
@@ -76,6 +84,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const [comboFlash, setComboFlash] = useState(null); // { n } bij een combo-mijlpaal
   const [nudge, setNudge] = useState(null); // zachte houding-hint { key, text }
   const [checkHands, setCheckHands] = useState(false); // korte tussen-level opfris
+  const [examMode, setExamMode] = useState(null); // null | { exam, text, startedAt } — toets in uitvoering
 
   const engineRef = useRef(state);
   engineRef.current = state;
@@ -86,12 +95,16 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const momentsRef = useRef([]); // wachtrij van vier-momenten
   const formRef = useRef(newFormState()); // signaal-venster voor houding-hints
   const sessionExRef = useRef(0); // opdrachten in déze sessie (voor de opfris-cue)
+  const examWasReadyRef = useRef(false); // toets al klaar VOOR déze opdracht begon (§examOffer-poort)
 
   const soundOn = state.profile.geluidAan !== false;
   useEffect(() => { setMuted(!soundOn); }, [soundOn]);
 
   const lettersLearned = activeLetters(state.curriculum, state.profile.curriculumIndex).length;
   const unlockedKeys = activeKeys(state.curriculum, state.profile.curriculumIndex);
+  // toets/diploma (assignment 049): optioneel aanbod, nooit gating — de engine bepaalt
+  // zelf wanneer een toets "klaar" is (confidence-poort + niet frustrated).
+  const availableExam = nextAvailableExam(state);
   const cps = coinsPerSecond(state.tycoon);
   const prestige = prestigeMultiplier(state.tycoon);
   const liveAcc = live.keys ? live.correct / live.keys : 1;
@@ -124,6 +137,10 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
     setExercise(generateExercise(engineRef.current, pack, layout));
     exStreakRef.current = 0;
     setGolden(engineRef.current.tycoon.exercisesDone >= 3 && Math.random() < GOLDEN_CHANCE);
+    // toets-aanbod-poort (049): vastleggen VOOR déze opdracht begint — keystrokes
+    // binnen de opdracht werken confidence al bij, dus meten-op-completion zou de
+    // overgang mislopen (hij is dan al "gebeurd" middenin het typen).
+    examWasReadyRef.current = !!nextAvailableExam(engineRef.current);
   }, [step, layout, pack]);
 
   // productie-tick: machines produceren alleen vlak na een aanslag (geen idle winst)
@@ -221,6 +238,14 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
         momentsRef.current.push({ kind: 'thanks', token: makeThanksToken(next.tycoon.referredBy, ownCode()) });
       }
 
+      // toets/diploma (049): één keer aanbieden op de overgang naar "klaar" — geen
+      // herhaalde overlay elke opdracht (de vaste toets-pil hieronder blijft daarna
+      // bereikbaar zodat een kind dat "nog even niet" kiest 'm later alsnog kan starten).
+      const examNowReady = nextAvailableExam(next);
+      if (!examWasReadyRef.current && examNowReady) {
+        momentsRef.current.push({ kind: 'examOffer', examId: examNowReady.id });
+      }
+
       setGame(next);
       if (gained > 0) sound.complete();
       if (golden && gained > 0) setTimeout(() => sound.cheer('cheer-classic'), 150);
@@ -274,6 +299,34 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
     });
   }, [setGame, showNextMoment]);
 
+  // toets starten (vanaf het aanbod-moment of de vaste pil): genereert de examentekst
+  // en schakelt de normale opdracht tijdelijk uit — losstaand van de leer-engine, dus
+  // een gezakte poging heeft geen enkel effect op keyStats/promotie (§geen straf).
+  const startExam = useCallback((exam) => {
+    if (!exam) return;
+    const text = generateExamText(exam, engineRef.current, pack);
+    setMoment(null);
+    setExamMode({ exam, text, startedAt: performance.now() });
+  }, [pack]);
+
+  const finishExam = useCallback(
+    (results) => {
+      const { exam, text, startedAt } = examMode;
+      let att = 0, err = 0;
+      for (const r of results) { att += r.attempts; err += r.errors; }
+      const accuracy = att ? 1 - err / att : 1;
+      const kpm = sessionKpm(text.length, performance.now() - startedAt);
+      const graded = gradeExam(exam, accuracy, kpm);
+      const { state: next, reward } = applyTypcoonExamResult(engineRef.current, exam, graded.pass);
+      setGame(next);
+      sound.unlock?.();
+      if (graded.pass) setTimeout(() => sound.cheer?.('cheer-classic'), 150);
+      setExamMode(null);
+      setMoment({ kind: graded.pass ? 'examPass' : 'examFail', examId: exam.id, accuracy: graded.accuracy, reward });
+    },
+    [examMode, setGame],
+  );
+
   const coins = state.tycoon.coins;
   const accPct = Math.round(liveAcc * 100);
   const rbCost = rebirthCost(state.tycoon.rebirths);
@@ -290,6 +343,9 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
           <button className="btn-ghost icon-btn" onClick={toggleSound} aria-label={soundOn ? gt('play.soundOff') : gt('play.soundOn')} title={soundOn ? gt('play.soundOff') : gt('play.soundOn')}>{soundOn ? '🔊' : '🔇'}</button>
           {!unlocked && (
             <button className="unlock-pill" onClick={() => setUnlockOffer('plain')}>🔓 {gt('premium.unlockShort')}</button>
+          )}
+          {availableExam && !examMode && (
+            <button className="exam-pill" onClick={() => startExam(availableExam)}>🏅 {gt('exam.pillLabel')}</button>
           )}
         </div>
         <div className="wallet">
@@ -308,43 +364,59 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
 
       <div className="game-main">
         <section className="type-pane">
-          {golden && <div className="golden-banner">{gt('play.golden')}</div>}
-          {state.tycoon.boostLeft > 0 && (
-            <div className="boost-chip">{gt('daily.boostChip', { mult: boostMultiplier(state.tycoon.streak), n: state.tycoon.boostLeft })}</div>
+          {examMode ? (
+            <div className="exam-banner">🏅 {gt('exam.banner', { name: gt('exam.' + examMode.exam.id) })}</div>
+          ) : (
+            <>
+              {golden && <div className="golden-banner">{gt('play.golden')}</div>}
+              {state.tycoon.boostLeft > 0 && (
+                <div className="boost-chip">{gt('daily.boostChip', { mult: boostMultiplier(state.tycoon.streak), n: state.tycoon.boostLeft })}</div>
+              )}
+
+              <div className="meters">
+                <div className="meter mult-meter" aria-live="polite">
+                  <span className="meter-face">{liveAcc >= 0.95 ? '🤩' : liveAcc >= 0.8 ? '🙂' : '😌'}</span>
+                  <div>
+                    <div className="meter-big">×{liveMult.toFixed(1)}</div>
+                    <div className="meter-sub">{gt('play.accuracyLever', { pct: accPct })}</div>
+                  </div>
+                </div>
+                <div className={'meter combo-meter' + (combo >= 10 ? ' hot' : '')}>
+                  <span className="meter-face">⚡</span>
+                  <div>
+                    <div className="meter-big">{combo}</div>
+                    <div className="meter-sub">{gt('play.combo')} {combo >= 10 && <b>×{comboMultiplier(combo).toFixed(1)}</b>}</div>
+                  </div>
+                </div>
+              </div>
+
+              {firstRun && <div className="type-hint">{gt('play.typeHint')} 👇</div>}
+              {checkHands && (
+                <div className="checkhands-chip" onAnimationEnd={() => setCheckHands(false)}>
+                  {gt('play.checkHands')}
+                </div>
+              )}
+            </>
           )}
 
-          <div className="meters">
-            <div className="meter mult-meter" aria-live="polite">
-              <span className="meter-face">{liveAcc >= 0.95 ? '🤩' : liveAcc >= 0.8 ? '🙂' : '😌'}</span>
-              <div>
-                <div className="meter-big">×{liveMult.toFixed(1)}</div>
-                <div className="meter-sub">{gt('play.accuracyLever', { pct: accPct })}</div>
-              </div>
-            </div>
-            <div className={'meter combo-meter' + (combo >= 10 ? ' hot' : '')}>
-              <span className="meter-face">⚡</span>
-              <div>
-                <div className="meter-big">{combo}</div>
-                <div className="meter-sub">{gt('play.combo')} {combo >= 10 && <b>×{comboMultiplier(combo).toFixed(1)}</b>}</div>
-              </div>
-            </div>
-          </div>
-
-          {firstRun && <div className="type-hint">{gt('play.typeHint')} 👇</div>}
-          {checkHands && (
-            <div className="checkhands-chip" onAnimationEnd={() => setCheckHands(false)}>
-              {gt('play.checkHands')}
-            </div>
-          )}
-
-          {exercise && (
+          {examMode ? (
             <TypingSurface
-              text={exercise.text}
+              text={examMode.text}
               active={!overlayOpen}
-              onKeystroke={handleKeystroke}
-              onComplete={handleComplete}
+              onKeystroke={EXAM_NOOP}
+              onComplete={finishExam}
               onNextKey={setNextKey}
             />
+          ) : (
+            exercise && (
+              <TypingSurface
+                text={exercise.text}
+                active={!overlayOpen}
+                onKeystroke={handleKeystroke}
+                onComplete={handleComplete}
+                onNextKey={setNextKey}
+              />
+            )
           )}
           <Keyboard layout={layout} activeKeys={unlockedKeys} nextKey={nextKey} />
 
@@ -477,9 +549,21 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
         </div>
       )}
 
-      {moment && moment.kind !== 'paywall' && (
-        <div className="overlay" onClick={showNextMoment}>
+      {moment && moment.kind === 'examOffer' && (
+        <div className="overlay">
           <div className="card celebrate" onClick={(e) => e.stopPropagation()}>
+            <div className="card-icon">🏅</div>
+            <h3>{gt('exam.offerTitle')}</h3>
+            <p>{gt('exam.offerBody', { name: gt('exam.' + moment.examId) })}</p>
+            <button className="btn btn-big" onClick={() => startExam(availableExam)}>{gt('exam.offerStart')}</button>
+            <button className="btn-ghost" onClick={showNextMoment}>{gt('exam.offerDecline')}</button>
+          </div>
+        </div>
+      )}
+
+      {moment && moment.kind !== 'paywall' && moment.kind !== 'examOffer' && (
+        <div className="overlay" onClick={showNextMoment}>
+          <div className={'card' + (moment.kind === 'examFail' ? '' : ' celebrate')} onClick={(e) => e.stopPropagation()}>
             {moment.kind === 'letter' && (<>
               <Mascot pose={0} className="card-mascot" />
               <h3>{gt('play.newLetterTitle')}</h3>
@@ -510,6 +594,17 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
               <h3>{gt('friends.thanksTitle')}</h3>
               <p>{gt('friends.thanksBody')}</p>
               <div className="thanks-token">{moment.token}</div>
+            </>)}
+            {moment.kind === 'examPass' && (<>
+              <Mascot pose={0} className="card-mascot" />
+              <h3>{gt('exam.passTitle')}</h3>
+              <p>{gt('exam.passBody', { name: gt('exam.' + moment.examId), pct: Math.round(moment.accuracy * 100) })}</p>
+              {moment.reward > 0 && <div className="welcome-bonus"><Coin className="btn-coin" /> +{fmt(moment.reward)}</div>}
+            </>)}
+            {moment.kind === 'examFail' && (<>
+              <Mascot pose={1} className="card-mascot" />
+              <h3>{gt('exam.failTitle')}</h3>
+              <p>{gt('exam.failBody', { pct: Math.round(moment.accuracy * 100) })}</p>
             </>)}
             <button className="btn" onClick={showNextMoment}>{gt('play.nice')}</button>
           </div>

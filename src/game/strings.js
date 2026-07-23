@@ -262,6 +262,23 @@ const STRINGS = {
   'desktop.title': 'Pak een toetsenbord erbij!',
   'desktop.body': 'Typcoon speel je met een echt toetsenbord — op een laptop of computer. Tot zo!',
 
+  // Toetsen/typdiploma (assignment 049): optioneel, nooit gating — puur erkenning.
+  'exam.pillLabel': 'Toets beschikbaar',
+  'exam.banner': 'TOETS: {name}',
+  'exam.offerTitle': 'Klaar voor een toets? 🏅',
+  'exam.offerBody': 'Je kent deze letters goed! Wil je de {name} proberen? Gewoon voor de eer — lukt het niet, dan speel je gewoon verder.',
+  'exam.offerStart': 'Start de toets!',
+  'exam.offerDecline': 'Nog even niet',
+  'exam.passTitle': 'Toets gehaald! 🎉',
+  'exam.passBody': 'Knap gedaan! Je haalde de {name} met {pct}% nauwkeurig.',
+  'exam.failTitle': 'Nog niet helemaal — geen zorgen!',
+  'exam.failBody': 'Je zat op {pct}% nauwkeurig. Oefen nog even door, dan lukt de toets zo!',
+  'exam.exam-1': 'Thuisrij-toets',
+  'exam.exam-2': 'Bovenrij-toets',
+  'exam.exam-3': 'Alfabet-toets',
+  'exam.exam-4': 'Hoofdletters-toets',
+  'exam.exam-final': 'Typdiploma',
+
   // kleine taal-neutrale bouwstenen die in JS-logica (niet in strings.js zelf)
   // een taal-specifiek woordje nodig hadden — hoorden hier al thuis, waren
   // per ongeluk hardgecodeerd in GameScreen.jsx (zie assignment 012).
@@ -542,6 +559,23 @@ const STRINGS_EN = {
 
   'desktop.title': 'Grab a keyboard!',
   'desktop.body': 'Typcoon is played with a real keyboard — on a laptop or computer. See you there!',
+
+  // Exams/typing diploma (assignment 049): optional, never gating — recognition only.
+  'exam.pillLabel': 'Exam available',
+  'exam.banner': 'EXAM: {name}',
+  'exam.offerTitle': 'Ready for an exam? 🏅',
+  'exam.offerBody': "You know these letters well! Want to try the {name}? Just for the glory — if it doesn't go your way, you just keep playing.",
+  'exam.offerStart': 'Start the exam!',
+  'exam.offerDecline': 'Not right now',
+  'exam.passTitle': 'Exam passed! 🎉',
+  'exam.passBody': 'Nice work! You passed the {name} with {pct}% accuracy.',
+  'exam.failTitle': "Not quite yet — no worries!",
+  'exam.failBody': "You were at {pct}% accuracy. Practise a bit more and you'll ace it!",
+  'exam.exam-1': 'Home Row Exam',
+  'exam.exam-2': 'Upper Row Exam',
+  'exam.exam-3': 'Alphabet Exam',
+  'exam.exam-4': 'Capitals Exam',
+  'exam.exam-final': 'Typing Diploma',
 
   'common.and': 'and',
 
