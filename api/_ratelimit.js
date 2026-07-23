@@ -30,3 +30,31 @@ export async function rateLimited(base, H, bucket, max, windowMs) {
     return false;
   }
 }
+
+// Twee kleine tellers, hergebruikt buiten het "limiet"-idee van rateLimited() hierboven
+// (die stopt met tellen zodra hij blokkeert — geen bruikbare telling meer eronder).
+// bucketCount() geeft gewoon het aantal rijen voor een EXACTE bucket-naam terug (geen
+// tijdvenster nodig als de bucket zelf al een vaste periode codeert, bv. 'tgping:<minuut>'
+// of 'tg-digest:<datum>' — assignment 036). bucketMark() registreert een hit zonder enige
+// limietcontrole; de aanroeper beslist zelf wanneer "te veel" is.
+export async function bucketCount(base, H, bucket) {
+  try {
+    const q = `${base}/rest/v1/rate_limits?select=id&bucket=eq.${encodeURIComponent(bucket)}`;
+    const r = await fetch(q, { headers: { ...H, Prefer: 'count=exact', Range: '0-0' } });
+    return parseInt((r.headers.get('content-range') || '').split('/')[1] || '0', 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function bucketMark(base, H, bucket) {
+  try {
+    await fetch(`${base}/rest/v1/rate_limits`, {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ bucket }),
+    });
+  } catch {
+    /* best-effort teller: nooit blokkeren op een tel-fout */
+  }
+}

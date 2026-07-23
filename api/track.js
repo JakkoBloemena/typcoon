@@ -10,9 +10,19 @@
 // BSN-vormig) — de kids-product no-PII-guardrail (charter 1) krijgt hier defense-in-depth
 // op de opslaggrens. Afwijzen betekent stil laten vallen (204, dezelfde fire-and-forget-
 // semantiek als de rest van dit endpoint) — nooit een fout die een client kan aftasten.
+//
+// Per-bezoek Telegram-melding (assignment 036): alleen voor daadwerkelijk OPGESLAGEN
+// 'pageview'-events, en pas NA de 204 hierboven — de client wacht hier nooit op, en een
+// falende/tragere Telegram-call raakt de respons niet. Vercel's Node-runtime wacht wel op
+// de promise die deze handler teruggeeft vóórdat hij de functie bevriest, dus dit werkt
+// betrouwbaar zonder een aparte "waitUntil". Bij grote drukte wordt dit te ruizig — dan is
+// alleen de dagelijkse digest (api/cron/notify.js) overhouden een eenregelige revert:
+// verwijder de `pingVisit(...)`-aanroep hieronder.
 
-import { ipHash, rateLimited } from './_ratelimit.js';
+import { ipHash, rateLimited, bucketCount, bucketMark } from './_ratelimit.js';
 import { supa } from './_db.js';
+import { tg } from './_telegram.js';
+import { MAX_PER_MINUTE, minuteKey, shouldPingVisit, overflowCount } from './_visitping.js';
 
 const TYPES = new Set(['pageview', 'game_start', 'engaged_session', 'parent_opt_in']);
 // Canonieme UUID (v1-5, RFC4122-variant) — wat crypto.randomUUID() (src/net/track.js,
@@ -33,6 +43,7 @@ export default async function handler(req, res) {
   const { base, H, RH } = db;
   const cut = (v, n) => (v ? String(v).slice(0, n) : null);
 
+  let stored = null; // pas gezet als de insert hieronder echt lukt (voor de tg-ping)
   try {
     // anti-misbruik: max 120 events per IP per uur + een globaal kostenplafond (zelfde
     // patroon als api/account/create.js). Dit moet vóór elke shape-validatie draaien
@@ -62,6 +73,36 @@ export default async function handler(req, res) {
       headers: { ...H, Prefer: 'return=minimal' },
       body: JSON.stringify(row),
     });
-  } catch { /* meting is best-effort: nooit het spel blokkeren */ }
-  return res.status(204).end();
+    stored = row; // insert niet gegooid → als opgeslagen beschouwd (zelfde standaard als hierboven)
+  } catch { stored = null; /* meting is best-effort: nooit het spel blokkeren */ }
+
+  res.status(204).end();
+
+  if (stored && stored.type === 'pageview') {
+    try { await pingVisit(base, H, RH, stored); } catch (e) { console.error('track: visit-ping mislukt', e); }
+  }
+}
+
+// Best-effort per-bezoek Telegram-melding + de >20/minuut-samenvoegregel (assignment 036).
+// Draait ná de 204 hierboven (zie handler): mag de respons dus nooit raken. Het bericht
+// bevat alleen pad + land — geen sessie-id, geen e-mail: dezelfde velden die al (anoniem)
+// in `events` landen, geen extra PII-oppervlak.
+async function pingVisit(base, H, RH, row) {
+  const now = Date.now();
+  const mk = minuteKey(now);
+  const bucket = `tgping:${mk}`;
+  await bucketMark(base, H, bucket);
+  const countThisMinute = await bucketCount(base, RH, bucket);
+  if (shouldPingVisit(countThisMinute)) {
+    await tg(`👀 bezoek: ${row.path || '/'} (${row.country || '??'})`);
+  }
+
+  // Is de VORIGE minuut zojuist pas echt "afgelopen" met meer dan het maximum? Dan nu —
+  // en maar één keer, dedup via rate_limits — de samengevoegde rest melden.
+  const prevTotal = await bucketCount(base, RH, `tgping:${mk - 1}`);
+  if (prevTotal > MAX_PER_MINUTE) {
+    const alreadyFlagged = await rateLimited(base, RH, `tgflag:${mk - 1}`, 1, 3600000);
+    const n = overflowCount(prevTotal, alreadyFlagged);
+    if (n > 0) await tg(`+${n} bezoeken afgelopen minuut`);
+  }
 }

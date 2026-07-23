@@ -12,11 +12,14 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_key';
 process.env.CRON_SECRET = 'testsecret';
 process.env.RESEND_API_KEY = 'test'; // laat sendEmail 'verzenden' → onze shim vangt het op
 process.env.SITE_URL = 'https://typcoon.test';
+process.env.TELEGRAM_BOT_TOKEN = 'test-token'; // assignment 036: signup-ping + dagdigest
+process.env.TELEGRAM_CHAT_ID = 'test-chat';
 
 // --- in-memory database + fetch-shim -----------------------------------------
-const DB = { accounts: [], auth_codes: [], sessions: [], progress: [], rate_limits: [] };
+const DB = { accounts: [], auth_codes: [], sessions: [], progress: [], rate_limits: [], events: [] };
 let seq = 0;
 const sentEmails = []; // { to, subject, html }
+const sentTelegrams = []; // tekst van elk verstuurd Telegram-bericht
 
 function jsonResp(data, headers = {}, status = 200) {
   return {
@@ -69,6 +72,10 @@ async function shim(url, opts = {}) {
   if (url.startsWith('https://api.resend.com')) {
     sentEmails.push({ to: body.to, subject: body.subject, html: body.html });
     return jsonResp({ id: 'em_' + (++seq) });
+  }
+  if (url.startsWith('https://api.telegram.org')) {
+    sentTelegrams.push(body.text);
+    return jsonResp({ ok: true });
   }
 
   const u = new URL(url);
@@ -143,6 +150,12 @@ test('account aanmaken geeft een token, account-rij en welkomstmail', async () =
   assert.equal(DB.accounts.length, 1);
   assert.equal(DB.sessions.length, 1);
   assert.ok(sentEmails.some((e) => e.to === 'ouder@voorbeeld.nl' && /Welkom/i.test(e.subject)));
+  // assignment 036: de signup-ping is al langer wired in api/account/create.js — dit
+  // verifieert dat hij (met live Telegram-env-vars) ook echt vuurt, en zonder de volledige
+  // e-mail in het bericht (alleen het gemaskeerde adres dat create.js zelf al bouwt).
+  assert.equal(sentTelegrams.length, 1);
+  assert.match(sentTelegrams[0], /Nieuw Typcoon-account/);
+  assert.equal(sentTelegrams[0].includes('ouder@voorbeeld.nl'), false);
 });
 
 test('dubbele gebruikersnaam wordt geweigerd (409)', async () => {
@@ -214,4 +227,8 @@ test('cron: zonder secret 401, met secret draait schoon over de gesyncte data', 
   assert.equal(r.body.ok, true);
   assert.equal(typeof r.body.reports, 'number');
   assert.equal(typeof r.body.reminders, 'number');
+  // assignment 036: het "digest"-veld bestaat altijd; de exacte waarde hangt af van het
+  // echte wall-clock-uur (Amsterdam) waarop de tests draaien — dat gedrag zelf (>=08:00,
+  // dedup, ook bij 0 tellingen) wordt deterministisch getest in test/report.test.js.
+  assert.equal(typeof r.body.digest, 'boolean');
 });
