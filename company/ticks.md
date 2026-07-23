@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #11 — OPEN
+- opened: 2026-07-23 22:24 (system clock, consistent with commit clock — tick #10 close commit c0d04d6 ~22:18)
+- claimed: 045 + 050 + 052 + 055 + 056 + 057 (verification pass — statuses stay needs_verification, this entry is the claim); 058 (developer, in_progress — tick #10's file-coupling hold is resolved: 056's landed fix lives in src/ui/TypingSurface.jsx while 058 targets GameScreen.jsx handleComplete, disjoint; the six verify lanes are read-only against their snapshots regardless)
+- worktrees: 045 → C:\companies\typcoon-lanes\v045 (verify/045 off main, port 4203); 050 → C:\companies\typcoon-lanes\v050 (verify/050, port 4204); 052 → C:\companies\typcoon-lanes\v052 (verify/052, port 4205); 055 → C:\companies\typcoon-lanes\v055 (verify/055, port 4206); 056 → C:\companies\typcoon-lanes\v056 (verify/056, port 4207); 057 → C:\companies\typcoon-lanes\v057 (verify/057, port 4208); 058 → C:\companies\typcoon-lanes\b058 (build/058, port 4209); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049/b050/b051/b052/b055/b056/b056b dirs (esbuild file locks), 4173 held by the dead tick-#2 server.
+- ids allocated: 059–064 reserved for defects/proposals the lanes may report (lanes report to the dispatcher, who materializes them — lanes never compute ids, per tick #9/#10 retro); next free after reservation: 065; next decision id: 010
+- notes: mid-tick plan — no board assignment is blocked_by any of the seven claimed ids, so completions unblock nothing new; a bounce dispatches its rework lane same tick (038/044 precedent). Monitor stage duty not dispatched: monitor ran inside tick #10 (~2h ago by commit clock, healthy post-deploy, spend current). Growth/analyst not dispatched: funnel readout still token-gated (ADR 008 Shareholder asks pending, non-blocking), 035 data-gated, school chain behind 010. 010/020/021/022/003/035 externally gated as before. Per tick #10 retro: every lane ordered to finish synchronously (no waiting on background tasks) and dispatcher inspects branch state on every completion notification.
+
 ## Tick 2026-07-23 #10 — CLOSED
 - opened: 2026-07-23 20:08 (system clock; consistent with commit clock — tick #9 close commit 955d99e ~20:05)
 - claimed: 016 + 044 (re-verify) + 049 + 051 + 054 (verification pass — statuses stay needs_verification, this entry is the claim); monitor stage-duty lane (no assignment id — post-deploy health check after tick #9's four production deploys; writes company/metrics only)

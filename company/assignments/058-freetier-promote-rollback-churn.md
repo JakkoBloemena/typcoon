@@ -2,7 +2,7 @@
 id: 058
 title: Free-tier promote/rollback churn on teleported end-state saves
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 056 diagnosis, 2026-07-23; materialized by the tick #10 dispatcher from the 055–059 reservation)
