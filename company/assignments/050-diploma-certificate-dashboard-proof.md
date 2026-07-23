@@ -2,7 +2,7 @@
 id: 050
 title: Diploma certificate on pass + surface it as parent proof-of-learning
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [049]
 opened_by: ceo

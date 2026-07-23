@@ -2,7 +2,7 @@
 id: 052
 title: Author 3 concrete premium factory themes + make the paywall copy true
 owner: designer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [051]
 opened_by: ceo
