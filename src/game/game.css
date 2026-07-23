@@ -431,6 +431,30 @@ button { font-family: inherit; }
 .finger-hint { color: var(--ink-dim); font-weight: 800; font-size: 0.85rem; padding: 5px 14px; background: var(--panel-2); border: 2px solid var(--line); border-radius: 999px; }
 .shift-hint { color: var(--brass); }
 
+/* Toetsenbord op smalle mobiele viewports (assignment 057): rijen van 10 toetsen ×
+   44px + 9 × 7px gaps waren altijd 503px breed, ongeacht viewport — de enige oorzaak
+   van de document-brede horizontale scroll onder ~540px (zie 055's delivery notes,
+   die het isoleerden). Fluide toetsgrootte i.p.v. een vaste sprong-breakpoint:
+   --kb-key groeit lineair met vw en raakt de originele 44px rond ~570px, dus hij
+   sluit naadloos aan op de ongewijzigde desktop-waarde (≥768px) i.p.v. een
+   zichtbare knik bij de mediaquery-grens. Ondergrens 20px/0,62rem is gekozen op
+   LEESBAARHEID, niet op tikdoel: dit toetsenbord is een pure vinger-hint
+   (aria-hidden, geen click-handlers — er wordt op het fysieke toetsenbord getypt),
+   dus WCAG's 44px-tikdoelnorm is hier niet van toepassing; 0,62rem blijft dicht bij
+   het kleinste bestaande label in dit bestand (.cert-kicker, 0,7rem) voor één vet
+   hoofdletterteken in een gekleurd vlak. */
+@media (max-width: 767px) {
+  .keyboard { --kb-key: clamp(20px, calc(10vw - 13px), 44px); }
+  .kb-row { gap: clamp(3px, 1vw, 7px); }
+  .kb-key {
+    width: var(--kb-key); height: var(--kb-key);
+    font-size: max(0.62rem, calc(var(--kb-key) * 0.345));
+    border-radius: calc(var(--kb-key) * 0.22);
+  }
+  .kb-key.space { width: calc(var(--kb-key) * 6.14); }
+  .kb-key.anchor .kb-bump { width: calc(var(--kb-key) * 0.27); height: calc(var(--kb-key) * 0.068); }
+}
+
 /* ---------- Munt-flash ---------- */
 .coin-flash {
   position: fixed; left: 50%; bottom: 130px; transform: translateX(-50%);
