@@ -2,7 +2,7 @@
 id: 061
 title: Rapid double-click on a locked theme card pops two overlay levels (lands on home instead of unlock)
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: tester (reported during 052 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
@@ -126,3 +126,103 @@ does a same-tick swap, so no other file needed the guard.
 
 Did not touch `game.css` or `qa-scripts/contrast-052.mjs` (assignment 060's
 concurrent lane files) — this was a pure JS logic fix in `Unlock.jsx`.
+
+## Verification (tester, 2026-07-23, verify/061)
+
+Independently re-derived all evidence in `C:\companies\typcoon-lanes\v061`
+(worktree branch `verify/061`, main checked out at `f1213fe`), headless
+Chromium via `playwright-core` (`chromium-1228`, installed locally with
+`npm install --no-save playwright-core` — same convention other lanes use;
+package.json/package-lock stayed untouched), dev server on port 4216 only
+(`npx vite --port 4216 --strictPort`). Adapted the dev's probes into
+`qa-scripts/tester-061-repro.mjs` (port 4212→4216, output dir→this
+worktree's own `061-screenshots/tester`, added an `ITERS`/`LABEL_PREFIX` loop
+so the timing race gets enough tries) and `qa-scripts/tester-061-verify.mjs`
+(same port/dir adaptation, plus two added edge probes for AC3's guard-window
+boundary). Did not take the developer's prose or screenshots on faith — every
+number below came from a script I ran myself against a running server.
+
+**AC1 (before/after, timing race, ≥5/≥8 iterations)** — PASS.
+- Pre-fix: `git checkout 4dadd49^ -- src/game/Unlock.jsx` (confirmed via
+  `git diff --stat` showing the guard code removed, and `grep` showing plain
+  `onClick={onClose}` on the backdrop with no `closeBackdrop`/`BACKDROP_GUARD_MS`),
+  restarted the dev server, ran the rapid-double-click repro in two separate
+  loops: 6 iterations (4/6 reproduced: `unlockCardCountAfter: 0,
+  overlayCountAfter: 0`, landed on the dashboard, not the unlock card) and a
+  second isolated run of 4 iterations with distinct screenshot filenames to
+  keep persisted evidence (4/4 reproduced this time — bug is a timing race,
+  rate varies run to run but reproduces readily, consistent with the dev's
+  ~4/5 claim). Screenshots:
+  `company/assignments/061-screenshots/tester/PREFIX-bug-persisted-iter0.png`
+  through `iter3.png` (all four show the dashboard/home screen with both
+  overlay levels closed — confirmed visually, not just via selector counts).
+- Restored the fix: `git checkout HEAD -- src/game/Unlock.jsx`, then
+  `git diff HEAD -- src/game/Unlock.jsx` produced empty output (restoration
+  proven clean) and `grep` confirmed `BACKDROP_GUARD_MS`/`closeBackdrop` back
+  in place. Restarted the dev server, ran the double-click repro 8 consecutive
+  times: `unlockCardCountAfter: 1, overlayCountAfter: 1` on all 8/8 runs, 0/8
+  reproductions. Screenshots
+  `company/assignments/061-screenshots/tester/rapid-doubleclick-locked-iter0.png`
+  through `iter7.png`.
+
+**AC2 (single-click unchanged)** — PASS.
+- Locked theme, single click: `unlockCardCount: 1, overlayCount: 1`, `attr`
+  and `storage` both `null` (no bypass) —
+  `verify-single-click-locked.png`.
+- Unlocked theme, single click: `attrRightAfter: "snoepfabriek"`,
+  `storageRightAfter: "snoepfabriek"`, and after a full `page.reload()`,
+  `attrAfterReload: "snoepfabriek"` and `storageAfterReload: "snoepfabriek"` —
+  applies immediately and survives a full reload —
+  `verify-single-click-unlocked-applied.png`.
+
+**AC3 (052 guarantee + guard edge cases)** — PASS.
+- Rapid double-click on locked card: `attr: null, storage: null` (no theme
+  applied/persisted), `unlockCardCount: 1, overlayCount: 1` (lands correctly).
+- Rapid triple-click on locked card: same — `attr: null, storage: null`,
+  `unlockCardCount: 1, overlayCount: 1` —
+  `verify-triple-click-locked.png`.
+- Edge — button inside the 400ms guard window: clicked the "Nog even niet"
+  ghost button immediately after the Unlock overlay mounted (no artificial
+  delay, well under 400ms). Result: `overlayCountAfterButtonClick: 0,
+  unlockCardCountAfterButtonClick: 0` — the button closed the overlay as
+  expected; the guard did not block the deliberate button click —
+  `verify-button-closes-within-guard-window.png`.
+- Edge — backdrop click after the 400ms window: waited ~550ms since mount,
+  then clicked the backdrop itself (position `{5,5}`, well outside the
+  centered card). Result: `overlayCountAfterBackdropClick: 0` — normal
+  dismissal still works once the guard window has elapsed, confirming the fix
+  did not break legitimate backdrop-click dismissal —
+  `verify-backdrop-closes-after-guard-window.png`.
+
+**AC4 (tests/build/console)** — PASS.
+- `npm test`: `1..215` / `# pass 215` / `# fail 0`, `vite build` inside the
+  test script succeeded, `check-no-dutch-en: PASS — 5 built en file(s)
+  checked against 59 Dutch lexicon words, zero unallowlisted hits.`
+- `npm run build` standalone: exit 0, clean output, no errors.
+- Console errors across every probe run (repro loops + verify script, ~10
+  browser pages total): exclusively `Failed to load resource: ... /api/track
+  (404)` — the known dev-environment analytics-endpoint noise, present
+  identically pre-fix and post-fix. Zero new console errors or page errors
+  from the fix.
+- `public/` churn from `npm test`/`npm run build` reverted with
+  `git checkout -- public/` before committing; confirmed via `git status
+  --short` showing no `public/` changes staged.
+
+**Scope claim** — PASS. `git show --stat 4dadd49` (the fix commit) and the
+merge `3240cd5` both show only: `src/game/Unlock.jsx`, `qa-scripts/dev-061-repro.mjs`,
+`qa-scripts/dev-061-verify.mjs`, the assignment file, and dev screenshots
+under `company/assignments/061-screenshots/dev/`. No `ThemePicker.jsx`,
+`App.jsx`, or `game.css` in either diff — confirmed independently, not taken
+from the delivery notes.
+
+No new defects found. The only imprecision noted (not a product bug): the
+`landedOnHome` field in both the dev's and my adapted verify script checks
+DOM presence of a "Verder bouwen" button, which stays in the DOM behind the
+modal overlay regardless of overlay state, so it reads `true` even when the
+overlay is correctly showing — `unlockCardCount`/`overlayCount` are the
+reliable signals and were used as the actual pass/fail criteria throughout
+this verification.
+
+Environment: worktree `C:\companies\typcoon-lanes\v061`, dev server killed
+and port 4216 confirmed free before finishing; no background tasks left
+running.
