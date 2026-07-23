@@ -23,7 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-23 #8 — OPEN
+## Tick 2026-07-23 #9 — OPEN
+- opened: 2026-07-23 18:36 (system clock — reads *before* tick #8's 18:44 close stamp; commit clock has #8's close commit 0876481 as latest ancestor, tree clean, no OPEN entry → #8 genuinely closed, one clock is skewed; trusting commit order per tick #2 retro)
+- claimed: 015 + 042 + 044 (verification pass — statuses stay needs_verification, this entry is the claim)
+- worktrees: 015 → C:\companies\typcoon-lanes\v015 (verify/015 **off build/015** — en chain accumulates there per tick #8 deploy gate; dev-server port 4184 if needed); 042 → C:\companies\typcoon-lanes\v042r2 (verify/042-r2 off main); 044 → C:\companies\typcoon-lanes\v044 (verify/044 off main, port 4185 if needed); main checkout: dispatcher/integration only. 4173 still held by the dead tick-#2 server.
+- ids allocated: 046–048 reserved for defects the testers may file (testers report to the dispatcher, who materializes them); 049–053 reserved for game-depth build assignments if 042 verifies done and the CEO review materializes them (4+1 per research/game-depth-scope.md §5); decision id 009 reserved for that CEO review's ADR. Next free after reservations: 054 / decision 010.
+- notes: mid-tick plan — 015 verifies done → 016 eligible, dispatch developer branching **from build/015** (still not merged to main: push=deploy, 017 is the merge gate). 042 verifies done → dispatch CEO to review the scope and materialize builds from the 049–053 reservation. 044 verifies done → no downstream build; FUNNEL_READ_TOKEN Vercel setup stays ADR 008's recorded Shareholder ask (non-blocking). Stage duties not dispatched: monitor ran tick #7 (~30 min by commit clock, all healthy; funnel readout still token-gated), no un-gated growth-channel work (035 data-gated, school chain behind 010), analyst has no new funnel data. 010/020/021/022/003/035 externally gated as before.
+
+## Tick 2026-07-23 #8 — CLOSED *(header flipped by tick #9 dispatcher: entry carried full close fields — closed 18:44, outcomes, retro — but the status word was left OPEN)*
 - opened: 2026-07-23 18:13 (system clock; agrees with commit clock — tick #7 close commit bec4f8a ~18:11)
 - claimed: 014 + 042 (verification pass — statuses stay needs_verification, this entry is the claim), 043 (ceo — observability access decision, in_progress)
 - worktrees: 014 → C:\companies\typcoon-lanes\v014 (verify/014, dev-server port 4180 if needed); 042 → C:\companies\typcoon-lanes\v042 (verify/042, port 4181 if needed); 043 → C:\companies\typcoon-lanes\c043 (ceo/043); main checkout: dispatcher/integration only. 4173 still held by the dead tick-#2 server.
