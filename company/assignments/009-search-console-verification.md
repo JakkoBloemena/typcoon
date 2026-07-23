@@ -37,7 +37,11 @@ pushed; verified: REST resolves `events` (RLS blocks anon, correct), and a live
 POST to typcoon.com/api/track returned 204. Funnel data lands as of now. One CEO
 test pageview (session 00000000-…) is in this week's counts.
 
-Remaining: ONLY the Search Console / Bing verification (Shareholder's Google
-account) — https://search.google.com/search-console, add `https://typcoon.com`,
-submit `https://typcoon.com/sitemap.xml`; then https://www.bing.com/webmasters →
-"Import from GSC".
+**GSC: ALREADY DONE, pre-adoption — evidence seen 2026-07-23.** The Shareholder
+showed the Search Console property in the /ceo channel: typcoon.com verified,
+sitemap.xml submitted 2026-07-08, last read 2026-07-15, status "Succesvol",
+13 pages discovered (matches the 13 generated URLs exactly). Search data has been
+accumulating since early July.
+
+Remaining: ONLY Bing — https://www.bing.com/webmasters → "Import from GSC" (one
+click with the same Google account). Then this assignment closes done.
