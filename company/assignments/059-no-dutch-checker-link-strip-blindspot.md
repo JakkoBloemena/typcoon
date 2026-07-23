@@ -2,7 +2,7 @@
 id: 059
 title: check-no-dutch-en.mjs strips whole <link> tags, blinding it to Dutch in non-URL attributes
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: tester (reported during 045 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
@@ -138,3 +138,102 @@ with `git checkout -- public/` before committing. Synthetic probe dir
 
 **Nothing new to report to the dispatcher** — the adjacent-tag check above found no
 live or latent gap beyond what this assignment already fixed.
+
+## Verification (tester, 2026-07-23, verify/059)
+
+Worked exclusively in `C:\companies\typcoon-lanes\v059` (branch `verify/059`, checked out
+at `main` `f1213fe`). `npm install` run first (fresh worktree). Did not merge, did not
+push, did not touch any other lane worktree. Re-derived all evidence myself with
+independently-constructed synthetic cases (not the developer's example) and captured
+exit codes directly (`echo $?`/`echo "EXIT=$?"` immediately after each command, not read
+off logs).
+
+**AC1 — PASS.** Own synthetic file (`tmp-tester-059/c1/en/index.html`, deleted after use,
+not the dev's example — different filename, different Dutch words):
+```html
+<link rel="stylesheet" href="/style.css" title="Speciale toetsenbord stijl voor kinderen">
+```
+`scanDistEn()` against it → 3 hits (`kinderen`, `toetsenbord`, `voor`), `EXIT=1`. Confirmed.
+
+Adjacent-edge-case probe (6 independent synthetic cases, own `run.mjs` harness, each in
+its own dir so results don't cross-contaminate):
+- **c1** `title` attr Dutch, double-quoted `<link>`: **FAIL** (3 hits) — AC1 core case,
+  reconfirmed.
+- **c2** single-quoted legitimate `hreflang`/`href`
+  (`<link rel='alternate' hreflang='nl' href='https://typcoon.com/leren-typen-voor-kinderen/' />`):
+  **FAIL** — `LINK_URL_ATTR_RE` is `/\b(href|hreflang)(\s*=\s*)"[^"]*"/gi`, hard-coded to
+  double quotes only. A single-quoted reciprocal hreflang href is **not** blanked and its
+  Dutch slug words (`typen`, `kinderen`, `leren`, `voor`) leak through and fail the check —
+  this would be a **false positive** on a legitimate case if it ever occurred in real
+  output.
+- **c3** unquoted legitimate `hreflang`/`href`
+  (`<link rel=alternate hreflang=nl href=https://typcoon.com/leren-typen-voor-kinderen/ />`):
+  **FAIL** — same root cause, unquoted values aren't blanked either.
+- **c4** multiple `<link>` tags on one line, Dutch in a `title` on the 2nd tag plus a
+  legitimate double-quoted hreflang href on the 3rd: **FAIL** correctly on `gratis`/
+  `oefenen` (the `title`) only — zero hits for `leren`/`typen`/`kinderen` from the 3rd
+  tag's href, confirming the regex handles multiple `<link>`s per line correctly when
+  double-quoted.
+- **c5** Dutch words in `media` and a made-up `data-note` attribute (neither `title` nor
+  `href`/`hreflang`): **FAIL** correctly (`schoolcursus`, `zonder`, `alleen`, `niet`,
+  `voor`) — confirms the fix catches Dutch in *any* non-URL attribute, not just `title`,
+  per the assignment's goal text.
+- **c6** legitimate double-quoted 3-way hreflang alternate (`nl`/`en`/`x-default`), no
+  other prose: **PASS**, zero findings — confirms no false-positive on the real-shape
+  legitimate case.
+
+**Verdict on c2/c3 (single-quote/unquoted gap):** per the task brief's own framing, this
+is judged against the ACs, not bounced. Checked `scripts/gen-content.mjs` directly (lines
+79, 132–133, 143–144, 283): every `<link>` emission is template-literal double-quoted
+(`hreflang="${a.hreflang}" href="${a.href}"`, etc.) — there is no code path that emits a
+single-quoted or unquoted `<link>` attribute today. AC2 only requires the *real* built
+tree not to false-positive, and it doesn't (see below). Reported to the dispatcher as a
+separate low-severity observation, not a bounce of 059 — see repro recipe below.
+
+**AC2 — PASS, non-vacuous.** Clean `npm run build` → `BUILD_EXIT=0`. Then
+`node scripts/check-no-dutch-en.mjs` →
+`check-no-dutch-en: PASS — 5 built en file(s) checked against 59 Dutch lexicon words, zero unallowlisted hits.`,
+`CHECKER_EXIT=0`. Confirmed non-vacuous myself:
+`grep -o '<link rel="alternate"[^>]*>' dist/en/**/index.html | grep -i "leren\|typen\|kinderen\|gratis"` →
+```
+dist/en/learn-typing-for-kids/index.html:<link rel="alternate" hreflang="nl" href="https://typcoon.com/leren-typen-voor-kinderen/" />
+dist/en/learn-typing-for-kids/index.html:<link rel="alternate" hreflang="x-default" href="https://typcoon.com/leren-typen-voor-kinderen/" />
+```
+Real en page really does carry Dutch-slug hreflang hrefs, and the checker still passes.
+
+**AC3 — PASS.** `npm test > log 2>&1; echo "REAL_EXIT_CODE=$?"` → tail shows
+`# tests 215`, `# pass 215`, `# fail 0`, build succeeds, `check-no-dutch-en: PASS`, then
+`REAL_EXIT_CODE=0`.
+
+**Scope claim — confirmed.** `git show --stat f4738f2` (the 059 build commit): only
+`scripts/check-no-dutch-en.mjs` (code) and the assignment file itself changed. No other
+files touched.
+
+**Worktree hygiene.** `git diff --ignore-all-space -- public/` → 0 lines after
+`npm run build`/`npm test` regenerated `public/**` (same CRLF/LF churn documented since
+016/017/045/059-dev). Reverted with `git checkout -- public/`. My synthetic probe dir
+(`tmp-tester-059/`, 6 case files + 1 harness script) deleted immediately after use;
+`git status --short` clean before committing this file.
+
+**New defect reported to dispatcher (not a bounce of 059 — separate low-severity
+observation, no assignment file created here per workspace rules):**
+`LINK_URL_ATTR_RE` in `scripts/check-no-dutch-en.mjs`
+(`/\b(href|hreflang)(\s*=\s*)"[^"]*"/gi`) only blanks double-quoted `href`/`hreflang`
+values. A single-quoted or unquoted `href`/`hreflang` value on a `<link>` tag is left
+un-blanked, so a legitimate Dutch nl-slug reciprocal hreflang written with single/no
+quotes would false-positive FAIL the checker. Not live today — confirmed
+`scripts/gen-content.mjs` always double-quotes `<link>` attributes (lines 79, 132-133,
+143-144, 283) — but latent: any future hand-edit or generator change that emits
+single-quoted/unquoted `<link>` attributes would silently reintroduce a false-positive
+failure mode on the very case this checker exists to protect. Repro: create
+`some-dir/en/index.html` containing
+`<link rel="alternate" hreflang="nl" href='https://typcoon.com/leren-typen-voor-kinderen/' />`
+(single-quoted `href`) and run `scanDistEn('some-dir/en')` — it reports hits on `typen`,
+`kinderen`, `leren` and exits 1, despite this being a legitimate reciprocal-hreflang case
+identical in shape to the double-quoted one that correctly passes. Suggested fix: make
+`LINK_URL_ATTR_RE` quote-agnostic, e.g. match `"[^"]*"|'[^']*'|[^\s>]*` for the value, or
+normalize quote style before matching. Priority 4 (theoretical/future-proofing, no live
+user impact, same class as 059 itself).
+
+**Verdict: all three ACs pass on independently-derived evidence. Status flipped
+`needs_verification` → `done`.**
