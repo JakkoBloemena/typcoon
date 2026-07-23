@@ -23,7 +23,7 @@ Entry format:
 
 ---
 
-## Tick 2026-07-23 #2 — OPEN
+## Tick 2026-07-23 #2 — INTERRUPTED
 - opened: 2026-07-23 19:35
 - claimed: 013, 019, 024, 026, 027, 028, 029, 030 — verification pass (statuses stay needs_verification; this entry is the claim)
 - worktrees: C:\companies\typcoon-lanes\v013 / v019 / v024 / v026 / v027 / v028 / v029 / v030 (branches verify/013 …); main checkout: dispatcher/integration only
@@ -31,6 +31,9 @@ Entry format:
 - notes: article chain 026→027→028→029 blocked_by was a build-time nl.mjs file-collision guard (tick #1 ledger); verification lanes are read-only against landed main, so all four verify in parallel. 019 note carried: licenses migration NOT yet applied to prod — dispatcher applies after 019 verifies. All other open work blocked on external triggers (010 traction tripwire, 014 §6 six-week window, 003/022 payments deferral).
 - mid-tick (after 8/8 verified done): 031 (ceo — apply licenses migration; dispatcher's `supabase db push` denied by session permission classifier, human-gated) and 032 (mint arg robustness, 019-tester proposal) materialized. 032 claimed in_progress → worktree C:\companies\typcoon-lanes\b032 (build/032). Product-owner dispatched to scope the next milestone (board has no other actionable work until external triggers) → worktree C:\companies\typcoon-lanes\po33 (po/next-milestone), ids 033–036 pre-allocated for whatever it opens.
 - mid-tick 2: 032 landed needs_verification (130/130), PO landed 033 (acceptance-QA gate, tester, p1) / 034 (ceo stage proposal ← 033) / 035 (content tripwire, data-gated); 036 left unallocated. 033 claimed in_progress → worktree C:\companies\typcoon-lanes\q033 (qa/033); ids 036–038 reserved for defects the QA pass may file.
+- closed: 2026-07-23 16:30 (by the tick #3 dispatcher, reconciling)
+- outcomes: everything up to the last claim landed and was committed before the session ended — 8/8 verification lanes verified done (013, 019, 024, 026–030), 032 built (needs_verification), PO scope landed (033/034/035), 031 opened. The final QA lane on 033 ended ~14:52 mid browser-test with zero commits on qa/033; 033 flipped back to open by the reconciler. The 036–038 defect-id reservation lapses with this entry.
+- retro: INTERRUPTED — dispatcher session ended mid-QA-lane (~10 min into browser testing; cause unknown, possibly a session or rate cap in the 2h scheduler chain). Loss was minimal *because* every mid-tick integration was committed immediately — the only lost work was the one uncommitted lane. Two lessons: (1) this entry's opened timestamp (19:35) disagrees with the 14:41–14:42 commit clock — reconcilers should trust commit timestamps, dispatchers should read the system clock before writing the ledger; (2) the interrupted lane left its dev server running on port 4173 and a dirty worktree behind — successor lanes should use a different port and a fresh worktree, and per-lane port allocation should be the norm.
 
 ## Tick 2026-07-23 #1 — CLOSED
 - opened: 2026-07-23 13:27

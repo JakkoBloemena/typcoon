@@ -2,7 +2,7 @@
 id: 033
 title: Acceptance-QA over the shipped MVP scope (building→growing gate)
 owner: tester
-status: in_progress
+status: open
 priority: 1
 blocked_by: []
 opened_by: product-owner
@@ -73,6 +73,12 @@ core-flow-breaking, block this assignment from `done`.
       filed with a dispatcher-allocated id and blocks `done` until fixed.
 
 ## Notes
+
+**Interrupted run (tick 2026-07-23 #2):** a QA lane was dispatched at ~14:42 and died
+~14:52 mid browser-test (dispatcher process gone, no commits on its branch). Its worktree
+`C:\companies\typcoon-lanes\q033` holds only scratch screenshots and uncommitted build
+churn — nothing to carry over; a fresh lane starts from scratch. Reset by the tick #3
+dispatcher during reconciliation.
 
 Authority: PROTOCOL § Stage transitions (building→growing checklist), and
 research/next-milestone-scope.md §1. This assignment does not build anything; it verifies
