@@ -2,7 +2,7 @@
 id: 054
 title: state.speedAvg is never updated in Typcoon's game loop — final exam unreachable
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 049 delivery, 2026-07-23)
@@ -136,3 +136,90 @@ predates it; 049 simply never needed a live `speedAvg` for the criteria it had t
 satisfy (exam-1 has no `minKpm`). Likely relevant to 050 (diploma certificate +
 dashboard proof) and any future "reach the eindtoets" playtest, so it should land
 before either of those treats the final exam as reachable.
+
+## Verification (2026-07-23, tester)
+
+Independent pass in worktree `C:\companies\typcoon-lanes\v054` (branch `verify/054`,
+off main where 054 is merged). All 4 acceptance criteria checked directly — code
+read, tests run, mutation-checked, and browser-driven — not taken on the delivery
+notes' word.
+
+**AC1 — sole writer, correct EMA, correct kpm, correct ordering. PASS.**
+`grep -rn speedAvg src/game/` shows exactly one write site:
+`src/game/GameScreen.jsx:211` inside `handleComplete`
+(`next = { ...next, speedAvg: updateSpeedAvg(next.speedAvg || 0, exerciseKpm) }`),
+computed from `sessionKpm(exerciseRef.current?.text.length || 0, performance.now() -
+exerciseStartRef.current)` — a real elapsed-time-over-real-text-length measurement,
+same convention already used for exam texts (`GameScreen.jsx:329`). Confirmed line
+211 executes *before* line 255's `nextAvailableExam(next)` call, in the same
+handler — the exam-offer check on that same tick sees the just-updated `speedAvg`.
+`src/engine/speed.js: updateSpeedAvg` is `prevAvg ? Math.round(0.7*prevAvg +
+0.3*kpm) : kpm` — byte-for-byte the same formula as `rewards.js:90`'s (inert,
+unused) `applyExerciseRewards` EMA, so no new convention was invented.
+`finishExam`/`applyTypcoonExamResult` (`GameScreen.jsx:323`, `economy.js:282`) were
+diffed against the 054 commit and confirmed untouched — `applyTypcoonExamResult`
+only writes `exams`/`tycoon.coins`, never `speedAvg`; `rewards.js` and `economy.js`
+do not appear in `git show 116ab00 --stat` at all.
+
+**AC2 — realistic progression test + browser E2E. PASS.**
+`test/exams.test.js`'s new progression test starts from a fresh `speedAvg: 0`,
+pre-passes exam-1..4 so `nextAvailableExam` resolution is unambiguous, replays
+`updateSpeedAvg` over 25 exercises with kpm climbing 40→115, and asserts the gate
+does not open in the first 5 exercises, opens once the EMA crosses `minKpm*0.9`,
+and `nextAvailableExam(s)?.id === 'exam-final'`. Mutation check: changed
+`updateSpeedAvg` to `return prevAvg` (frozen average), re-ran `npm test` — 4 tests
+failed as expected (the 3 direct `updateSpeedAvg` unit tests in `test/speed.test.js`
+plus this progression test), confirming the test genuinely exercises the function
+rather than passing vacuously. Restored the file; `git status`/`git diff` confirmed
+clean afterward.
+Browser E2E (own re-derivation of the delivery's scripts, not a re-run of the
+developer's originals — committed as `qa-scripts/gen-speedavg-save-verify.mjs` +
+`qa-scripts/probe-054-speedavg-verify.mjs`, pointed at this worktree and port 4194
+instead of `b054`/4189): `npm install`, `npm install --no-save playwright-core`,
+`npm run dev -- --port 4194`. Seeded a save at exam-final's stage (all content
+mastered via real `processKeystroke` drilling, all mini-exams pre-passed,
+`speedAvg` parked 6 below the 90% gate), then played real exercises through
+Playwright/Chromium. Result: `speedAvg` moved from the seeded 84 to 475 on the very
+first completed exercise (bot-typing at 20ms/key produces implausibly high kpm —
+expected artifact of scripted typing speed, not a bug), the exam-final offer fired
+on the second exercise, clicking "Start de toets!" showed banner "🏅 TOETS:
+Typdiploma" (confirms exam-final specifically, not a mini-exam), typing the exam
+text produced the pass overlay ("Toets gehaald! ... Je haalde de Typdiploma met
+100% nauwkeurig", +1.000 munten), and the resulting save's `exams.passed` included
+`exam-final` alongside exam-1..4. Zero new console errors — the only entries are 5×
+`/api/track` 404s, confirmed pre-existing/unrelated (`src/net/track.js` posts
+analytics to an endpoint the dev server doesn't serve; not touched by this
+assignment). Screenshots: `company/assignments/054-screenshots/
+01-exam-final-offer-verify.png` and `02-exam-final-pass-verify.png` (both visually
+inspected — text matches console output).
+
+**AC3 — no regression. PASS.**
+`git show 116ab00 --stat`: only `src/engine/speed.js`, `src/game/GameScreen.jsx`,
+`test/speed.test.js`, `test/exams.test.js`, `qa-scripts/*`, and the assignment/
+screenshots changed — `rewards.js` and `economy.js` do not appear, confirmed
+unmodified. `test/speed.test.js` was reviewed: its `sessionKpm`/`bestKpm`/
+`speedRevealed`/`isNewRecord` tests assert the pre-existing formulas verbatim
+(divide-by-minutes rounding, zero-duration guard, reveal-at-13-letters-with-data,
+last-session-beats-previous-best) — they pin existing behavior, not anything the
+054 diff changed; only the `updateSpeedAvg` tests exercise new code. Full suite
+green (below).
+
+**AC4 — green suite, clean build. PASS.**
+`npm install` (fresh worktree, `node_modules` was absent) then `npm test`:
+**199/199**, 0 failing — matches the delivery's claimed count exactly.
+`npm run build`: clean (`gen-content` prebuild + `vite build`, no warnings, no
+errors).
+
+**Verdict: all 4 acceptance criteria independently verified PASS. No defects found.**
+Frontmatter flipped to `done`.
+
+Minor, non-blocking observations (not filed as defects, informational only):
+- The browser-observed `speedAvg` jump to 475 in one exercise is purely a
+  scripted-typing artifact (real children cannot type at Playwright's 20ms/key);
+  worth knowing if a future assignment wants to sanity-cap `sessionKpm`/`updateSpeedAvg`
+  against implausible input, but out of scope here and not something a real save can
+  trigger.
+- Running `npm run dev`/`npm run build` in this worktree regenerates
+  `public/blog/**/index.html` and `public/sitemap.xml` via the `gen-content.mjs`
+  prebuild script with LF→CRLF-normalized/date-refreshed content; left unstaged and
+  uncommitted as build noise unrelated to this assignment.
