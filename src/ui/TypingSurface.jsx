@@ -21,10 +21,21 @@ export default function TypingSurface({ text, active = true, onKeystroke, onComp
     resultsRef.current = {};
   }, [text]);
 
-  // meld de volgende verwachte toets aan het on-screen toetsenbord
+  // meld de EERSTE verwachte toets aan het on-screen toetsenbord bij een nieuwe
+  // oefening. Per-aanslag updates lopen NIET meer via een effect op `pos` (zie
+  // onKeyDown hieronder) — dat effect vuurde bij elke aanslag een aparte, door een
+  // passive effect geplande extra render (setPos -> commit -> effect -> onNextKey ->
+  // nog een render), en bij een aaneengesloten aanslag-burst zonder frame-yield
+  // ertussen (bv. een geautomatiseerde toets, of een heel snel kind) stapelt die
+  // keten sneller op dan React's ingebouwde limiet voor geneste updates verwacht —
+  // "Maximum update depth exceeded", ook al eindigt de reeks gewoon na de laatste
+  // letter (§056, tweede instabiliteit in dezelfde klasse als 049's onKeystroke-fix).
+  // Rechtstreeks aanroepen in onKeyDown houdt setPos + onNextKey in dezelfde
+  // React-batch, zonder de tussenliggende effect-cyclus.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    onNextKey?.(text[pos] ?? null);
-  }, [pos, text, onNextKey]);
+    onNextKey?.(text[0] ?? null);
+  }, [text]);
 
   // window-niveau toetsvanger — werkt zonder dat er ergens geklikt hoeft te worden
   useEffect(() => {
@@ -70,6 +81,7 @@ export default function TypingSurface({ text, active = true, onKeystroke, onComp
         setErrorAt(-1);
         const nextPos = pos + 1;
         setPos(nextPos);
+        onNextKey?.(text[nextPos] ?? null); // zelfde batch als setPos — zie effect-comment hierboven
         if (nextPos >= text.length) onComplete?.(buildResults(resultsRef.current));
       } else {
         sound.error();
@@ -79,7 +91,7 @@ export default function TypingSurface({ text, active = true, onKeystroke, onComp
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [active, pos, text, onKeystroke, onComplete]);
+  }, [active, pos, text, onKeystroke, onComplete, onNextKey]);
 
   const total = text.length || 1;
   const pct = Math.round((pos / total) * 100);

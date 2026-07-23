@@ -2,7 +2,7 @@
 id: 056
 title: React "Maximum update depth exceeded" on artificially seeded end-state saves
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 050 delivery, 2026-07-23; materialized by the tick #10 dispatcher from the 055–059 reservation)
@@ -20,13 +20,17 @@ end-states render without an effect loop.
 
 ## Acceptance criteria
 
-- [ ] The repro (seed `curriculumIndex = 19`, all confidences maxed, no practice
+- [x] The repro (seed `curriculumIndex = 19`, all confidences maxed, no practice
       history, load the game) no longer emits "Maximum update depth exceeded".
-- [ ] The root cause is identified and documented in the delivery notes (which effect
+      (Precise trigger, confirmed by the 050 dev's actual session history and
+      reproduced here: a zero-delay `page.keyboard.press()` burst on the exam
+      TypingSurface, not the seed/load alone — see the "Unblocked" and "Delivery
+      notes" sections below.)
+- [x] The root cause is identified and documented in the delivery notes (which effect
       loops, and why only on the teleported state).
-- [ ] Realistic-play flows are unaffected: full suite green, and a normal
+- [x] Realistic-play flows are unaffected: full suite green, and a normal
       play/exam/theme browser pass shows zero new console errors.
-- [ ] `npm test` green; `npm run build` clean.
+- [x] `npm test` green; `npm run build` clean.
 
 ## Notes
 
@@ -185,3 +189,144 @@ commit 6717928 with all 050 changes stashed):
   that fix — so this is a second, distinct instability in the same class. Start
   there: what else in the exam typing path re-registers or feeds back per keystroke
   when keystrokes arrive faster than React commits?
+
+## Delivery notes — status: needs_verification
+
+**Repro confirmed on unmodified `build/056-r2` baseline.** Adapted
+`qa-scripts/probe-056-repro.mjs`'s paced typing into a new
+`qa-scripts/probe-056-burst-repro.mjs`: seeds the committed
+`gen-final-exam-save.mjs` save, opens the exam-final pill, and types the exam text
+via a tight `page.keyboard.press()` loop with **zero delay** between presses (no
+`{delay: …}` option, nothing awaited except the press itself — the exact shape the
+050 dev's session used). On baseline (verified via `git stash` of the fix,
+re-running the probe, then `git stash pop`) this reliably produces:
+```
+error: Warning: Maximum update depth exceeded. This can happen when a component
+calls setState inside useEffect, but useEffect either doesn't have a dependency
+array, or one of the dependencies changes on every render.
+```
+(fired twice per run — once per StrictMode double-render pass). Paced typing (15ms
+per keystroke, matching `probe-050-cert-dashboard.mjs` and all 8 non-reproducing
+paths from this assignment's earlier blocked pass) never triggers it — confirmed
+again on this baseline before touching any code.
+
+**Root cause.** `src/ui/TypingSurface.jsx` had a second `useEffect` (the "meld de
+volgende verwachte toets" one, right after the reset-on-new-exercise effect) whose
+sole job is telling the parent which key to highlight next on the on-screen
+keyboard:
+```js
+useEffect(() => {
+  onNextKey?.(text[pos] ?? null);
+}, [pos, text, onNextKey]);
+```
+`onNextKey` is `setNextKey`, a state setter in `GameScreen` — i.e. **this effect
+calls `setState` from inside `useEffect`, with `pos` in its own dependency array**,
+which is exactly the pattern React's own warning text describes. `pos` advances on
+every correct keystroke (`setPos` inside the `onKeyDown` native listener), so this
+effect fires once per keystroke too. Under **paced** typing, each keystroke's
+render→commit→passive-effect→`setNextKey`→render chain completes and the browser
+returns to idle before the next keydown arrives, so React's internal nested-update
+counter (the "you might have an infinite loop" heuristic, tripped past a fixed
+threshold — React's own `NESTED_UPDATE_LIMIT`) resets between characters and never
+accumulates. Under a **zero-delay burst**, keydown events arrive faster than the
+browser ever reaches that idle point: each keystroke still produces the same
+two-hop chain (1: `onKeyDown` → `setPos` → render/commit → 2: the `pos`-effect →
+`setNextKey` → another render/commit), and because the *next* native keydown is
+already queued before step 2 finishes, the chain from one keystroke runs directly
+into the chain from the next with no gap the heuristic recognizes as "settled" —
+across a ~100–110 character exam string this accumulates past React's limit and it
+throws the warning. Confirmed empirically with a temporary instrumentation pass
+(reverted before commit, not part of this diff): every keydown was still processed
+**exactly once** with the correct `pos` (110/110 keystrokes → 110 effect setups →
+1 `onComplete` call, no double-processing/stale-closure bug) — ruling out a
+duplicate-dispatch theory and confirming the issue is chain *length/density* per
+keystroke, not correctness of any single keystroke. This is the second, distinct
+instability in the same class as 049's `onKeystroke` fix: 049 stabilized a prop
+*reference* that was recreated every render (a real runaway); this one is a
+`setState`-inside-`useEffect` call chained to a fast-changing dependency, which is
+finite (bounded by exam text length) but dense enough under a no-yield burst to trip
+React's heuristic. Generic to the exam surface (and to the normal, non-exam
+`TypingSurface` — same component, same effect) — not specific to `curriculumIndex
+19` or the `exam-final` seed; those just happened to be how it was first found.
+
+**Fix (`src/ui/TypingSurface.jsx`, minimal, effect/state logic only).** Removed the
+per-keystroke `setState`-in-`useEffect` link entirely: the "next key" signal for a
+new exercise still fires from a `useEffect` (now depending only on `text`, so it
+fires once when a new exercise/exam text is loaded — `onNextKey?.(text[0] ?? null)`),
+but the **per-keystroke** notification now happens directly inside the `onKeyDown`
+native handler, in the same call as `setPos`:
+```js
+const nextPos = pos + 1;
+setPos(nextPos);
+onNextKey?.(text[nextPos] ?? null); // same batch as setPos, no effect hop
+if (nextPos >= text.length) onComplete?.(buildResults(resultsRef.current));
+```
+Both `setPos` and the `onNextKey` call (which invokes `setNextKey` in `GameScreen`)
+now originate from the same synchronous native-event-handler invocation, so React 18
+batches them into one render instead of chaining a second effect-triggered render
+after the first commits. This removes the per-keystroke effect hop entirely — there
+is no longer a `useEffect` whose own dependency (`pos`) both triggers it and is
+mutated by the keystroke that triggers it. `onNextKey` was added to the keydown
+effect's own dependency array (line it's now called from) for correctness; it's
+`setNextKey` in both the normal and exam call sites (`GameScreen.jsx`), a raw
+`useState` setter — referentially stable, so this doesn't reintroduce the
+instability class 049 already fixed for `onKeystroke`.
+
+**Verification.**
+1. **Burst repro, fixed code:** `qa-scripts/probe-056-burst-repro.mjs` — 3 clean runs
+   in a row, `MAX_UPDATE_DEPTH_COUNT 0` every time, exam-pass overlay still renders
+   correctly (`EXAM_RESULT_OVERLAY_VISIBLE true`), screenshot
+   `056-screenshots/11-burst-after-exam.png`. Re-confirmed the warning returns when
+   the fix is `git stash`ed (2/2) and disappears again on `git stash pop` (0/0,
+   twice) — a clean before/after pair on the identical probe.
+2. **Exam-surface-generic, not exam-final-specific:** same zero-delay burst against
+   `gen-exam-save.mjs ready` (exam-1, "Thuisrij-toets", a completely different seed
+   at stage 5) — `EXAM1_MAX_UPDATE_DEPTH_COUNT 0`, matching the 050 dev's report
+   that it reproduced on exam-1 too pre-fix.
+3. **Normal (non-exam) TypingSurface, burst:** 5 rounds of ordinary exercises typed
+   via the same zero-delay `page.keyboard.press()` loop — `NORMAL_MAX_UPDATE_DEPTH_
+   COUNT 0`, zero unexpected console output. The shared component is now burst-safe
+   on both call sites, not just the one that was reported.
+4. **Paced/realistic play unaffected:** new `qa-scripts/probe-056-paced-regression.
+   mjs` (15ms/keystroke `page.keyboard.type`, matching `probe-050-cert-dashboard.
+   mjs`'s pace) — exam-final pass overlay renders, 3 further paced rounds all
+   complete normally, `MAX_UPDATE_DEPTH_COUNT 0`, zero unexpected console output.
+   Also re-ran the three probes from this assignment's earlier blocked pass against
+   the fixed code: `probe-056-repro.mjs` (paced load/exam/extended-play phases —
+   identical console-message count to the pre-fix baseline, 11 msgs = only the
+   pre-existing `/api/track` 404s), `probe-056-dashboard.mjs` (dashboard/records/
+   friends/sharecard/handscheck/themepicker tour — zero unexpected messages),
+   `probe-056-print.mjs` (exam-final print/`@media print` flow — zero unexpected
+   messages). Paced play is byte-for-byte the same set of console output as before
+   the fix.
+5. `npm test`: **211/211** unit tests green (unchanged — no test files touched, this
+   is a DOM-timing bug not expressible as a pure-function unit test per the
+   assignment's own allowance; the burst probe is the regression artifact).
+   `node scripts/gen-content.mjs` → 22 URLs + sitemap, unchanged. `vite build` →
+   99 modules, clean, no warnings. `node scripts/check-no-dutch-en.mjs` → PASS, 5
+   built en files checked against the 59-word lexicon, zero unallowlisted hits.
+
+**Per-criterion status:**
+1. Repro no longer warns — **met**: burst probe clean on fixed code (3/3 runs),
+   confirmed warning was present pre-fix on the identical probe (2/2), gone
+   post-fix (0/0 across a stash/pop pair).
+2. Root cause identified and documented — **met**: see "Root cause" above —
+   `setState`-inside-`useEffect` on a `pos`-keyed dependency in
+   `TypingSurface.jsx`'s next-key-signal effect, which under a zero-delay keydown
+   burst never lets the browser reach the idle point React's nested-update
+   heuristic resets on.
+3. Realistic-play flows unaffected — **met**: `npm test` 211/211; paced browser
+   passes (play, exam-final, exam-1, dashboard/records/friends/sharecard/
+   handscheck/themepicker, print) all show zero new console errors, identical
+   output to pre-fix baseline.
+4. `npm test` green / `npm run build` clean — **met**: see exact output above.
+
+**Files touched:** `src/ui/TypingSurface.jsx` (the fix — 3-line effect restructure
++ comment). New: `qa-scripts/probe-056-burst-repro.mjs` (the regression artifact —
+zero-delay burst repro against the exam-final surface), `qa-scripts/probe-056-paced-
+regression.mjs` (fast paced-play sanity check), `company/assignments/056-
+screenshots/11-burst-after-exam.png`. Carried over from the earlier blocked pass
+(unchanged): `qa-scripts/probe-056-repro.mjs`, `qa-scripts/probe-056-dashboard.mjs`,
+`qa-scripts/probe-056-print.mjs`, `company/assignments/056-screenshots/01..10-*.png`.
+`src/ui/Keyboard.jsx` and `.kb-*` CSS were not touched (lane 057's mobile keyboard
+fix, already merged into this worktree's `main` ancestry, was left untouched).
