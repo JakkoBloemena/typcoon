@@ -2,7 +2,7 @@
 id: 029
 title: Write nl article — typles op school of thuis (schools-channel feeder)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [028]
 opened_by: ceo
