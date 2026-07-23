@@ -2,7 +2,7 @@
 id: 060
 title: contrast-052.mjs checks fictional onMint/onSky values instead of the shipped ink literals
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: tester (reported during 052 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
@@ -22,12 +22,12 @@ the tokens) so its numbers can't drift from the CSS.
 
 ## Acceptance criteria
 
-- [ ] The script's checked color pairs for the mint/sky surfaces come from the
+- [x] The script's checked color pairs for the mint/sky surfaces come from the
       actual shipped `game.css` values (parsed, or via tokens the CSS actually
       uses) — no hand-maintained copies that can drift.
-- [ ] Deliberately worsening one of those ink literals in game.css (scratch change,
+- [x] Deliberately worsening one of those ink literals in game.css (scratch change,
       reverted) makes the script fail — proven with a red run in the delivery notes.
-- [ ] Script still passes on the shipped four themes; `npm test` green.
+- [x] Script still passes on the shipped four themes; `npm test` green.
 
 ## Notes
 
@@ -108,3 +108,66 @@ silently drifted too). It now:
 No shipped CSS or gameplay code changed — the CONSTRAINT section's tokenize-route
 verification (computed-style equality) does not apply since that route wasn't taken.
 No new defects found; nothing to report to the dispatcher beyond this assignment.
+
+---
+
+## Verification (tester, 2026-07-23, verify/060)
+
+Independent re-derivation, worktree `C:\companies\typcoon-lanes\v060` (branch
+`verify/060`, `main` at f1213fe), `npm install` clean.
+
+**AC1 — no hand-maintained copies, parsed at run time — PASS.**
+Read `qa-scripts/contrast-052.mjs` end to end: the only `#[0-9a-fA-F]{6}` literal in
+the file is inside the regex pattern used to *find* a hex value in the CSS text
+(`/color:\s*(#[0-9a-fA-F]{6})/`), not a checked value — grepping the script for any
+standalone hex literal used as an actual color returns nothing. Confirmed by reading:
+`:root` parsed via `/:root\s*{([^}]*)}/`, each `[data-theme='...'] { ... }` block
+parsed and cascaded on top of the `:root` base (`{ ...rootTokens, ...parseTokens(body) }`
+— matches the real CSS cascade), and `.exam-pill`/`.star-pill` literal `color:` values
+pulled from their own rule bodies with a `body.includes('var(--mint'/'var(--sky')`
+assertion that the sourced literal really backgrounds on that surface. Verified in
+`src/game/game.css` directly: `.exam-pill` (line 359-364) has `color: #0d2a1e` and
+`background: linear-gradient(180deg, #7ff0c0, var(--mint) 55%)`; `.star-pill` (line
+228-231) has `color: #0d1836` and `background: linear-gradient(180deg, #9cc6ff,
+var(--sky) 60%)` — both anchor assertions hold.
+
+Independently recomputed 4 contrast ratios by hand (own WCAG relative-luminance
+script, values read by me from `game.css`, not copied from the dev's numbers):
+- muntpers ink-dim(`#93a2d8`) on panel-2(`#16204a`) = **6.27:1** — script prints 6.27:1. Match.
+- nachtploeg on-accent(`#1c0a3e`) on brass(`#b491ff`) = **7.26:1** — script prints 7.26:1. Match.
+- diepzee on-sky(`#0d1836` constant) on sky(`#4fd4ff`) = **10.15:1** — script prints 10.15:1. Match. (on-sky row)
+- snoepfabriek on-mint(`#0d2a1e` constant) on mint(`#4ce0a6`) = **9.16:1** — script prints 9.16:1. Match. (on-mint row)
+
+All four match the script's own output exactly (`node qa-scripts/contrast-052.mjs`,
+full 60/60 transcript captured). AC1 holds.
+
+**AC2 — red run + loud-failure probe — PASS.**
+Scratch-edited a *different* literal than the dev's example: `.exam-pill`'s
+`color: #0d2a1e` → `color: #d8fbe8` (near-white, poor contrast on mint) in
+`src/game/game.css`. Ran `node qa-scripts/contrast-052.mjs`: exit 1, `on-mint ink on
+mint (exam/chip)` FAILs on all four themes (1.41:1-1.51:1, all < 4.5:1), final line
+`SOME CHECKS FAILED`. Reverted with `git checkout -- src/game/game.css`; `git diff --
+src/game/game.css` empty (confirmed twice); rerun: exit 0, `ALL CHECKS PASS`.
+
+Parser failure-mode probe: renamed `.star-pill {` to `.star-pillx {` (anchor selector
+the script depends on). Script THREW loudly: `Error: game.css: could not find rule
+.star-pill — has the CSS structure changed?` at `extractBlock`, exit 1, non-zero exit,
+stack trace printed — not a silent pass with missing data. Reverted; `git diff --
+src/game/game.css` empty again; `git status --short` clean.
+
+**AC3 — shipped themes pass, npm test green — PASS.**
+`node qa-scripts/contrast-052.mjs` on the clean tree: 60/60 individual checks PASS
+across muntpers, nachtploeg, snoepfabriek, diepzee, exit 0, `ALL CHECKS PASS`.
+Grepped the script for `ruimtebasis`/`zonnesmederij` (the two unshipped candidate
+themes) — zero matches, confirmed gone. `npm test`: TAP `# tests 215 / # pass 215 /
+# fail 0`, `vite build` clean (99 modules, ~0.8s), `check-no-dutch-en: PASS — 5 built
+en file(s) checked against 59 Dutch lexicon words, zero unallowlisted hits`, overall
+exit 0. `public/` build churn (20 files, gen-content + sitemap regen) reverted with
+`git checkout -- public/` before this commit; `git status --short` clean afterward.
+
+**Scope claim — confirmed.** `git show --stat` on both `068b9cc6` (dev commit) and
+merge `d94223a` show only `company/assignments/060-contrast-script-fictional-ink-values.md`
+and `qa-scripts/contrast-052.mjs` touched — no shipped code.
+
+**Verdict: all 3 acceptance criteria PASS.** No new defects found. Status flipped
+needs_verification → done.
