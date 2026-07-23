@@ -24,6 +24,7 @@ import Onboarding from './Onboarding.jsx';
 import Dashboard from './Dashboard.jsx';
 import Friends from './Friends.jsx';
 import Records from './Records.jsx';
+import ShareCard from './ShareCard.jsx';
 import Unlock from './Unlock.jsx';
 import SchoolCode from './SchoolCode.jsx';
 import ParentEmail from './ParentEmail.jsx';
@@ -201,6 +202,10 @@ export default function App() {
     return <Records game={game} onBack={() => setView('home')} />;
   }
 
+  if (view === 'share' && game) {
+    return <ShareCard game={game} onBack={() => setView('home')} />;
+  }
+
   const badges = game?.tycoon?.badges || [];
 
   return (
@@ -232,6 +237,7 @@ export default function App() {
             <button className="link-parents" onClick={() => setView('refresh')}>✋ {gt('home.handsCheck')}</button>
             <button className="link-parents" onClick={() => setView('records')}>🏆 {gt('home.records')}</button>
             <button className="link-parents" onClick={() => setView('friends')}>🎁 {gt('home.invite')}</button>
+            <button className="link-parents" onClick={() => setView('share')}>📸 {gt('home.share')}</button>
             <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
             {session
               ? <button className="link-parents" onClick={unlink} title={session.kidUsername}>✅ {gt('home.emailLinked')}</button>

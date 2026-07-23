@@ -467,6 +467,10 @@ button { font-family: inherit; }
 .records-grid { max-width: none; grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 560px) { .records-grid { grid-template-columns: repeat(2, 1fr); } }
 
+/* ---------- Deel je fabriek (share-kaart) ---------- */
+.share-card-panel { max-width: 560px; gap: 14px; }
+.share-canvas { width: 100%; height: auto; border-radius: var(--r-md); border: 2px solid var(--line); background: var(--night); }
+
 /* ---------- Leer-toetsenbord: thuisrij-ring + F/J-bultjes ---------- */
 .kb-key.home-lit { border-color: var(--mint); border-bottom-color: var(--mint-deep); box-shadow: 0 0 12px rgba(51, 230, 160, 0.35); }
 .kb-key.anchor { position: relative; }
