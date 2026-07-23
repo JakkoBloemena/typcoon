@@ -53,6 +53,7 @@ const STATIC_FLOW_KEYS = [
   'unlock.later',
   'play.back', 'play.soundOff', 'play.soundOn', 'play.coins', 'play.perSec', 'play.stars',
   'play.factory', 'play.upgrades', 'play.accuracyLever', 'play.combo', 'play.typeHint',
+  'play.flashNeat', 'play.flashGold', 'play.flashWarmup',
   'play.golden', 'play.unlockIn', 'play.unlockIn1', 'play.nextMilestone', 'play.milestoneReached',
   'play.newMachineTitle', 'play.newMachineBody', 'play.newLetterTitle', 'play.newLetterBody',
   'play.nice', 'play.checkHands', 'play.idleFloor', 'play.floorEmpty', 'play.achievement', 'play.buyLabel',

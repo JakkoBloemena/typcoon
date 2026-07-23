@@ -352,10 +352,10 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
             <div className={'coin-flash' + (coinFlash.golden ? ' gold' : '')} key={step} onAnimationEnd={() => setCoinFlash(null)}>
               <span className="flash-amount"><Coin className="flash-coin" /> +{fmt(coinFlash.gained)}</span>
               <small>
-                ×{coinFlash.acc.toFixed(1)} netjes
+                ×{coinFlash.acc.toFixed(1)} {gt('play.flashNeat')}
                 {coinFlash.comboMult > 1 && <> · ×{coinFlash.comboMult.toFixed(1)} combo</>}
-                {coinFlash.golden && <> · ×3 goud</>}
-                {coinFlash.boost > 1 && <> · ×{coinFlash.boost} opwarm</>}
+                {coinFlash.golden && <> · ×3 {gt('play.flashGold')}</>}
+                {coinFlash.boost > 1 && <> · ×{coinFlash.boost} {gt('play.flashWarmup')}</>}
               </small>
             </div>
           )}
