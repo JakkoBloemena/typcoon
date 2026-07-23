@@ -3,6 +3,13 @@
 // assignment 006). Leest alleen events.type + created_at en telt per week — geen
 // individuele rijen, geen PII. Beveiligd met CRON_SECRET (zelfde geheim als de cron):
 // Bearer-header óf ?token= (voor snel handmatig opvragen).
+//
+// Sinds assignment 044 (decisions/008 gap 2) accepteert dit endpoint ook FUNNEL_READ_
+// TOKEN als los, zwakker env-geheim dat precies dit tellingen-alleen/geen-PII-antwoord
+// ontgrendelt — zodat tick-sessies een funnel-readout kunnen krijgen zonder CRON_SECRET
+// (dat blijft Shareholder/production-only, decisions/006). FUNNEL_READ_TOKEN mag nooit
+// gelijk zijn aan CRON_SECRET (zou het sterkere geheim aliasen); die gelijkheid wordt
+// bij de autorisatie zelf geweigerd, zie funnelAuthorized() hieronder.
 
 import { supa } from '../_db.js';
 
@@ -19,11 +26,32 @@ function weekKey(epoch) {
   return dt.toISOString().slice(0, 10);
 }
 
+// Presenteert het verzoek `value` als Bearer-header óf ?token=? Zelfde dubbele check als
+// vóór 044, nu herbruikbaar voor zowel CRON_SECRET als FUNNEL_READ_TOKEN.
+function matches(req, value) {
+  if (!value) return false;
+  const q = req.query || {};
+  return req.headers.authorization === `Bearer ${value}` || q.token === value;
+}
+
+// FUNNEL_READ_TOKEN is alleen geldig als het (a) is ingesteld — een unset token geeft
+// nooit toegang — én (b) niet gelijk is aan CRON_SECRET: die gelijkheid zou het zwakkere
+// token het sterkere, cron-brede geheim laten aliasen, en wordt daarom hier zelf geweigerd
+// (los geëxporteerd zodat dit exact geval direct unit-test-baar is, ongeacht wat de
+// — ongewijzigde — CRON_SECRET-tak in funnelAuthorized() los daarvan toestaat).
+export function funnelTokenValid(funnelToken, secret, req) {
+  return !!funnelToken && funnelToken !== secret && matches(req, funnelToken);
+}
+
+// Autorisatie: CRON_SECRET (ongewijzigd t.o.v. vóór 044) OF FUNNEL_READ_TOKEN.
+export function funnelAuthorized(req, secret, funnelToken) {
+  return matches(req, secret) || funnelTokenValid(funnelToken, secret, req);
+}
+
 export default async function handler(req, res) {
   const secret = process.env.CRON_SECRET;
-  const q = req.query || {};
-  const authed = !!secret && (req.headers.authorization === `Bearer ${secret}` || q.token === secret);
-  if (!authed) return res.status(401).json({ error: 'unauthorized' });
+  const funnelToken = process.env.FUNNEL_READ_TOKEN;
+  if (!funnelAuthorized(req, secret, funnelToken)) return res.status(401).json({ error: 'unauthorized' });
 
   const db = supa();
   if (!db) return res.status(500).json({ error: 'not_configured' });
