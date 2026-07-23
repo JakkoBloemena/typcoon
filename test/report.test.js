@@ -2,7 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { lettersLearned, weeklyDue, reminderDue, weeklyStats, activeThisWeek } from '../api/cron/_report.js';
+import { lettersLearned, weeklyDue, reminderDue, weeklyStats, activeThisWeek, digestDue, yesterdayKey, tallyByType } from '../api/cron/_report.js';
+import { digestMessage } from '../api/cron/notify.js';
 
 test('lettersLearned mapt de curriculum-index op geleerde letters', () => {
   assert.equal(lettersLearned(0), 0);
@@ -65,4 +66,43 @@ test('activeThisWeek: alleen als de weeksleutel matcht én er is geoefend', () =
   assert.equal(activeThisWeek(mk('2026-07-06', 3), '2026-07-06'), true);
   assert.equal(activeThisWeek(mk('2026-06-29', 3), '2026-07-06'), false); // vorige week
   assert.equal(activeThisWeek(mk('2026-07-06', 0), '2026-07-06'), false); // niets gedaan
+});
+
+// ---- Dagelijkse Telegram-liveness-digest (assignment 036) -------------------------
+test('digestDue: vanaf 08:00 Amsterdam, één keer per dag (dedup), ongeacht de tellingen', () => {
+  assert.equal(digestDue({ hour: 8, alreadySent: false }), true);
+  assert.equal(digestDue({ hour: 23, alreadySent: false }), true); // een gemiste 08:00 wordt later ingehaald
+  assert.equal(digestDue({ hour: 7, alreadySent: false }), false); // nog voor 08:00
+  assert.equal(digestDue({ hour: 8, alreadySent: true }), false); // al verstuurd voor die datum
+});
+
+test('yesterdayKey: Amsterdamse datum van gisteren, ook over maand-/jaargrenzen', () => {
+  assert.equal(yesterdayKey('2026-07-23'), '2026-07-22');
+  assert.equal(yesterdayKey('2026-08-01'), '2026-07-31');
+  assert.equal(yesterdayKey('2026-01-01'), '2025-12-31');
+});
+
+test('tallyByType: telt events per type, negeert onbekende types', () => {
+  const rows = [{ type: 'pageview' }, { type: 'pageview' }, { type: 'game_start' }, { type: 'onbekend' }];
+  const counts = tallyByType(rows, ['pageview', 'game_start', 'engaged_session', 'parent_opt_in']);
+  assert.deepEqual(counts, { pageview: 2, game_start: 1, engaged_session: 0, parent_opt_in: 0 });
+});
+
+test('digestMessage: toont expliciet 0 als er gisteren niets gebeurde — stilte moet zichtbaar blijven', () => {
+  const counts = { pageview: 0, game_start: 0, engaged_session: 0, parent_opt_in: 0 };
+  const text = digestMessage('2026-07-22', counts, 0);
+  assert.match(text, /bezoeken: 0/);
+  assert.match(text, /spel-starts: 0/);
+  assert.match(text, /accounts totaal: 0/);
+  assert.equal(/@/.test(text), false); // geen PII
+});
+
+test('digestMessage: telt gisterens werkelijke aantallen mee', () => {
+  const counts = { pageview: 42, game_start: 9, engaged_session: 3, parent_opt_in: 1 };
+  const text = digestMessage('2026-07-22', counts, 17);
+  assert.match(text, /bezoeken: 42/);
+  assert.match(text, /spel-starts: 9/);
+  assert.match(text, /betrokken sessies: 3/);
+  assert.match(text, /ouder-opt-ins: 1/);
+  assert.match(text, /accounts totaal: 17/);
 });

@@ -1,16 +1,21 @@
 // api/cron/notify.js — Uurlijkse Vercel-cron voor ouder-mails: wekelijkse voortgangsdigest
-// (zondagavond) + vriendelijke oefen-herinnering (streak in gevaar). Eén run evalueert
-// alle opted-in accounts (O(N)) uit de gesyncte voortgang — geen timers per kind.
+// (zondagavond) + vriendelijke oefen-herinnering (streak in gevaar) + de dagelijkse
+// Telegram-liveness-digest (08:00 Amsterdam, assignment 036). Eén run evalueert alle
+// opted-in accounts (O(N)) uit de gesyncte voortgang — geen timers per kind.
 // Alle tijd-logica draait op Europe/Amsterdam. Beveiligd met CRON_SECRET (Bearer-token).
 
 import crypto from 'node:crypto';
 import { sendEmail, emailShell } from '../_email.js';
+import { tg } from '../_telegram.js';
 import { supa } from '../_db.js';
-import { weeklyDue, reminderDue, weeklyStats, activeThisWeek } from './_report.js';
+import { bucketCount, bucketMark } from '../_ratelimit.js';
+import { weeklyDue, reminderDue, weeklyStats, activeThisWeek, digestDue, yesterdayKey, tallyByType } from './_report.js';
 
 const TZ = 'Europe/Amsterdam';
 const SITE = process.env.SITE_URL || 'https://typcoon.com';
+const EVENT_TYPES = ['pageview', 'game_start', 'engaged_session', 'parent_opt_in'];
 const prefsToken = (u) => crypto.createHmac('sha256', process.env.CRON_SECRET || '').update(u.toLowerCase()).digest('hex').slice(0, 32);
+const fmt = (n) => new Intl.NumberFormat('nl-NL').format(Math.round(n || 0));
 
 // Datumdelen in Amsterdamse tijd (matcht de client-dayKey/weekKey van een NL-kind).
 function amsParts(epoch) {
@@ -28,7 +33,6 @@ function amsWeekMonday(epoch) {
   return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
 }
 const nlDate = (epoch) => new Intl.DateTimeFormat('nl-NL', { timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(epoch));
-const fmt = (n) => new Intl.NumberFormat('nl-NL').format(Math.round(n || 0));
 
 async function markDate(base, RH, username, col, val) {
   await fetch(`${base}/rest/v1/accounts?kid_username=eq.${encodeURIComponent(username)}`, {
@@ -62,23 +66,47 @@ function reminderHtml(naam, streak, manageUrl) {
   return emailShell(`${naam} heeft vandaag nog niet geoefend`, body, `<a href="${manageUrl}" style="color:#6f4fe6;text-decoration:none;">Meldingen aanpassen</a>`);
 }
 
+// Dagelijkse Telegram-liveness-digest (assignment 036): gisterens tellingen + totaal
+// accounts. Alleen aantallen, geen PII. Toont expliciet 0 — stilte moet een zichtbaar
+// signaal blijven, geen gat (zie de retro hierboven).
+export function digestMessage(day, counts, totalAccounts) {
+  return `📊 <b>Typcoon — ${day}</b>\n👀 bezoeken: ${fmt(counts.pageview)}\n🎮 spel-starts: ${fmt(counts.game_start)}\n⏱️ betrokken sessies: ${fmt(counts.engaged_session)}\n👪 ouder-opt-ins: ${fmt(counts.parent_opt_in)}\n📦 accounts totaal: ${fmt(totalAccounts)}`;
+}
+
 export default async function handler(req, res) {
   const secret = process.env.CRON_SECRET;
   if (!secret || req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'unauthorized' });
 
   const db = supa();
   if (!db) return res.status(500).json({ error: 'not_configured' });
-  const { base, RH } = db;
+  const { base, H, RH } = db;
 
   const now = Date.now();
   const { day: today, hour, weekday } = amsParts(now);
   const weekMonday = amsWeekMonday(now);
   const isSunday = weekday === 'Sun';
 
+  let digest = false;
   try {
+    // ---- Dagelijkse Telegram-digest — draait ONAFHANKELIJK van of er ouder-accounts
+    // zijn (moet ook op een dag met 0 bezoekers versturen, vóór de early-return hieronder).
+    const yesterday = yesterdayKey(today);
+    const digestBucket = `tg-digest:${yesterday}`;
+    const alreadySent = (await bucketCount(base, RH, digestBucket)) > 0;
+    if (digestDue({ hour, alreadySent })) {
+      const since = new Date(now - 2 * 86400000).toISOString(); // ruim: gisteren zit hier sowieso in
+      const evRes = await fetch(`${base}/rest/v1/events?select=type,created_at&created_at=gt.${encodeURIComponent(since)}&limit=200000`, { headers: RH });
+      const evRows = await evRes.json().catch(() => []);
+      const yesterdayRows = (Array.isArray(evRows) ? evRows : []).filter((r) => amsParts(new Date(r.created_at).getTime()).day === yesterday);
+      const counts = tallyByType(yesterdayRows, EVENT_TYPES);
+      const accCountRes = await fetch(`${base}/rest/v1/accounts?select=id&limit=1`, { headers: { ...RH, Prefer: 'count=exact', Range: '0-0' } });
+      const totalAccounts = parseInt((accCountRes.headers.get('content-range') || '').split('/')[1] || '0', 10) || 0;
+      if ((await tg(digestMessage(yesterday, counts, totalAccounts))).ok) { digest = true; await bucketMark(base, H, digestBucket); }
+    }
+
     const accRes = await fetch(`${base}/rest/v1/accounts?select=kid_username,parent_email,pref_weekly_report,pref_reminders,last_report_date,last_reminder_date&or=(pref_weekly_report.eq.true,pref_reminders.eq.true)&limit=5000`, { headers: RH });
     const accounts = await accRes.json().catch(() => []);
-    if (!Array.isArray(accounts) || !accounts.length) return res.status(200).json({ ok: true, reports: 0, reminders: 0 });
+    if (!Array.isArray(accounts) || !accounts.length) return res.status(200).json({ ok: true, reports: 0, reminders: 0, digest });
 
     const names = accounts.map((a) => String(a.kid_username).toLowerCase());
     const prRes = await fetch(`${base}/rest/v1/progress?select=kid_username,state&kid_username=in.(${names.join(',')})&limit=5000`, { headers: RH });
@@ -105,7 +133,7 @@ export default async function handler(req, res) {
         if ((await sendEmail(acc.parent_email, `${naam} heeft vandaag nog niet geoefend`, html)).ok) { reminders++; await markDate(base, RH, acc.kid_username, 'last_reminder_date', today); }
       }
     }
-    return res.status(200).json({ ok: true, reports, reminders });
+    return res.status(200).json({ ok: true, reports, reminders, digest });
   } catch {
     return res.status(500).json({ error: 'server_error' });
   }

@@ -53,3 +53,30 @@ export function activeThisWeek(state, weekMonday) {
   const wk = (state.tycoon || {}).weekly || {};
   return wk.key === weekMonday && (wk.exercises || 0) > 0;
 }
+
+// ---- Dagelijkse Telegram-liveness-digest (assignment 036) ------------------------
+// Verstuur de digest? Vanaf 08:00 Amsterdam, één keer voor "gisteren" (dedup: de
+// aanroeper geeft door of er al een bevestigde send was voor die datum). `hour>=` in
+// plaats van `hour===` haalt een gemiste/trage 08:00-cronrun bij een latere uurlijkse
+// tick alsnog in — zelfde veerkracht-patroon als weeklyDue's `hour >= 18`. Let op: dit
+// kijkt NOOIT naar de tellingen — de digest moet ook op een dag met 0 bezoekers gaan,
+// want stilte is precies hoe de maandenlange backend-uitval verborgen bleef
+// (company/retro/2026-07-23-env-outage-and-headless-lessons.md).
+export function digestDue({ hour, alreadySent }) {
+  return hour >= 8 && !alreadySent;
+}
+
+// Amsterdamse datum van "gisteren" (yyyy-mm-dd), uit de 'yyyy-mm-dd'-sleutel van vandaag.
+export function yesterdayKey(today) {
+  const [y, m, d] = today.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() - 1);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+// Telt rijen per event-type (puur — de aanroeper filtert de rijen al op de juiste dag).
+export function tallyByType(rows, types) {
+  const counts = Object.fromEntries(types.map((t) => [t, 0]));
+  for (const r of rows) if (Object.prototype.hasOwnProperty.call(counts, r.type)) counts[r.type]++;
+  return counts;
+}

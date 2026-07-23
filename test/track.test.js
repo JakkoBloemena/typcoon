@@ -30,13 +30,17 @@ function noBackend() {
 }
 
 // In-memory Supabase/PostgREST-shim (zelfde stijl als test/backend.integration.test.js),
-// hier beperkt tot de tabellen die de meting gebruikt.
+// hier beperkt tot de tabellen die de meting gebruikt. Plus een Telegram-spy (assignment
+// 036): `DB.tg` verzamelt elke verstuurde tekst, `DB.tgThrows = true` simuleert een
+// falende Telegram-call (zonder de rest van de shim te raken).
 function withBackend() {
   process.env.SUPABASE_URL = 'http://mock';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_key';
   process.env.CRON_SECRET = 'testsecret';
+  process.env.TELEGRAM_BOT_TOKEN = 'test-token';
+  process.env.TELEGRAM_CHAT_ID = 'test-chat';
 
-  const DB = { events: [], rate_limits: [] };
+  const DB = { events: [], rate_limits: [], tg: [], tgThrows: false };
   let seq = 0;
   function jsonResp(data, headers = {}, status = 200) {
     return {
@@ -47,6 +51,13 @@ function withBackend() {
     };
   }
   globalThis.fetch = async (url, opts = {}) => {
+    if (String(url).startsWith('https://api.telegram.org')) {
+      if (DB.tgThrows) throw new Error('telegram-down (test)');
+      const body = opts.body ? JSON.parse(opts.body) : {};
+      DB.tg.push(body.text);
+      return jsonResp({ ok: true });
+    }
+
     const method = (opts.method || 'GET').toUpperCase();
     const u = new URL(url);
     const table = u.pathname.replace('/rest/v1/', '');
@@ -167,6 +178,62 @@ test('track: elk pad dat de echte clients versturen (nl-marketingpaginas + /spee
   }
   assert.equal(DB.events.length, realPaths.length);
   assert.deepEqual(DB.events.map((e) => e.path), realPaths);
+});
+
+// --- per-bezoek Telegram-melding (assignment 036) -----------------------------------
+test('track: een opgeslagen pageview stuurt precies één Telegram-melding (pad + land, geen PII)', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  const r = await call(track, { body: { type: 'pageview', path: '/speel/', sessionId: randomUUID() }, headers: { 'x-vercel-ip-country': 'NL' } });
+  assert.equal(r.statusCode, 204);
+  assert.equal(DB.tg.length, 1);
+  assert.match(DB.tg[0], /\/speel\//);
+  assert.match(DB.tg[0], /NL/);
+  assert.equal(/@/.test(DB.tg[0]), false); // geen e-mail/PII in het bericht
+});
+
+test('track: niet-pageview-events (game_start e.a.) sturen geen Telegram-melding', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  for (const type of ['game_start', 'engaged_session', 'parent_opt_in']) {
+    await call(track, { body: { type, sessionId: randomUUID() } });
+  }
+  assert.equal(DB.events.length, 3);
+  assert.equal(DB.tg.length, 0);
+});
+
+test('track: afgewezen/niet-opgeslagen pageviews (ongeldige sessionId/pad) sturen geen Telegram-melding', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  await call(track, { body: { type: 'pageview', path: '/', sessionId: 'not-a-uuid' } });
+  await call(track, { body: { type: 'pageview', path: 'attacker@evil.com', sessionId: randomUUID() } });
+  assert.equal(DB.events.length, 0);
+  assert.equal(DB.tg.length, 0);
+});
+
+test('track: de 204 blijft staan én de rij blijft opgeslagen als de Telegram-melding faalt (throwing tg-stub)', async () => {
+  const DB = withBackend();
+  DB.tgThrows = true;
+  const track = (await import('../api/track.js')).default;
+  const r = await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() } });
+  assert.equal(r.statusCode, 204);
+  assert.equal(r.ended, true);
+  assert.equal(DB.events.length, 1); // de meting zelf is niet geraakt door de falende melding
+  assert.equal(DB.tg.length, 0); // en er is niets (half) verstuurd
+});
+
+// >20 bezoeken binnen dezelfde minuut: de eerste 20 sturen los, de rest wordt stilgehouden
+// (het samengevoegde "+N bezoeken afgelopen minuut"-bericht volgt pas zodra de vólgende
+// minuut een nieuw bezoek binnenkrijgt — zie api/_visitping.js voor de pure regels).
+test('track: >20 bezoeken binnen dezelfde minuut sturen na de 20e geen losse melding meer', async () => {
+  const DB = withBackend();
+  const track = (await import('../api/track.js')).default;
+  for (let i = 0; i < 25; i++) {
+    const r = await call(track, { body: { type: 'pageview', path: '/', sessionId: randomUUID() }, headers: { 'x-forwarded-for': `203.0.113.${i}` } });
+    assert.equal(r.statusCode, 204);
+  }
+  assert.equal(DB.events.length, 25); // alle bezoeken blijven gewoon geteld/opgeslagen
+  assert.equal(DB.tg.length, 20); // maar vanaf de 21e geen losse Telegram-melding meer
 });
 
 test('track: rate-limit per IP blokkeert na de limiet (429), zoals de account-API\'s', async () => {
