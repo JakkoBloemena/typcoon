@@ -186,3 +186,45 @@ task instructions (not reopened) so the developer picks it up.
 
 Committed alongside this report: `qa-scripts/probe-044-accounts-total-failsafe.mjs`,
 `qa-scripts/probe-044-all-fail-and-non2xx.mjs`, `qa-scripts/probe-044-funnel-edge-cases.mjs`.
+
+## Rework (developer, 2026-07-23)
+
+Fixed the bounced criterion 1 defect: `api/cron/notify.js` was collapsing a failed
+accounts count (`null`) to an invented `0` via `quota.accounts ?? 0` *before*
+`digestMessage`'s null-aware `nb()` renderer ever saw it, so the "📦 accounts totaal"
+line showed a fabricated `0` next to the honest "🧮 rijen — accounts: n.b." for the
+same failed query.
+
+Two changes, both minimal:
+- `digestMessage`'s "accounts totaal" line now renders via `nb(totalAccounts)`
+  instead of `fmt(totalAccounts)` — the same null-aware helper already used for the
+  four quota row counts, so `null` → `"n.b."` instead of a formatted number.
+- The call site no longer pre-collapses the value: `quota.accounts` is passed to
+  `digestMessage` unchanged (removed the `const totalAccounts = quota.accounts ?? 0`
+  line entirely) — a failed query's `null` now travels intact into the renderer.
+
+Send-not-aborted behavior is untouched (`rowCount()`'s try/catch → `null` and the
+digest's `if (... .ok)` gate are unchanged), so the fail-safe "digest still sends"
+half of criterion 1 keeps holding.
+
+Tests added (both follow existing patterns in their files):
+- `test/report.test.js` — pure `digestMessage` case: `quota.accounts = null` now
+  renders "accounts totaal: n.b." (and "rijen — accounts: n.b." for the same data
+  point), never "accounts totaal: 0".
+- `test/track.test.js` — end-to-end case using the existing `DB.countFailTables`
+  shim, now with `'accounts'` failing: asserts 200/`digest: true` (send not
+  aborted) and "accounts totaal: n.b." in the sent Telegram text.
+
+`npm test` in the worktree: **156 pass, 0 fail, 0 skipped** (up from 154; 2 new
+tests). Re-ran both of the tester's bounce-reproduction probes
+(`qa-scripts/probe-044-accounts-total-failsafe.mjs`,
+`qa-scripts/probe-044-all-fail-and-non2xx.mjs`) against the fixed code — both now
+report "accounts totaal: n.b." (never "0") in every failure combination (single
+table, all four, network-throw, and non-2xx), with the send still going through.
+Also re-ran `qa-scripts/probe-044-funnel-edge-cases.mjs` (criteria 2/3, untouched
+by this fix) to confirm no regression — still passes.
+
+`git diff` confined to `api/cron/notify.js` (2 lines changed, comment updated) plus
+the two test files. Nothing pushed; work confined to
+`C:\companies\typcoon-lanes\b044fix` (branch `build/044-fix`). Status left at
+`needs_verification` for re-verification.

@@ -93,7 +93,7 @@ function reminderHtml(naam, streak, manageUrl) {
 export function digestMessage(day, counts, totalAccounts, quota) {
   const nb = (n) => (n == null ? 'n.b.' : fmt(n));
   const quotaLine = quota ? `\n🧮 rijen — accounts: ${nb(quota.accounts)}, events: ${nb(quota.events)}, rate_limits: ${nb(quota.rate_limits)}, rate_limit_claims: ${nb(quota.rate_limit_claims)}` : '';
-  return `📊 <b>Typcoon — ${day}</b>\n👀 bezoeken: ${fmt(counts.pageview)}\n🎮 spel-starts: ${fmt(counts.game_start)}\n⏱️ betrokken sessies: ${fmt(counts.engaged_session)}\n👪 ouder-opt-ins: ${fmt(counts.parent_opt_in)}\n📦 accounts totaal: ${fmt(totalAccounts)}${quotaLine}`;
+  return `📊 <b>Typcoon — ${day}</b>\n👀 bezoeken: ${fmt(counts.pageview)}\n🎮 spel-starts: ${fmt(counts.game_start)}\n⏱️ betrokken sessies: ${fmt(counts.engaged_session)}\n👪 ouder-opt-ins: ${fmt(counts.parent_opt_in)}\n📦 accounts totaal: ${nb(totalAccounts)}${quotaLine}`;
 }
 
 export default async function handler(req, res) {
@@ -124,8 +124,10 @@ export default async function handler(req, res) {
       const counts = tallyByType(yesterdayRows, EVENT_TYPES);
       const quota = {};
       for (const table of QUOTA_TABLES) quota[table] = await rowCount(base, RH, table);
-      const totalAccounts = quota.accounts ?? 0; // fail-safe: dezelfde telling voedt de bestaande "accounts totaal"-regel
-      if ((await tg(digestMessage(yesterday, counts, totalAccounts, quota))).ok) { digest = true; await bucketMark(base, H, digestBucket); }
+      // fail-safe: dezelfde telling voedt de bestaande "accounts totaal"-regel; `null` bij
+      // een mislukte query gaat ongewijzigd door naar digestMessage's nb()-renderer ("n.b."),
+      // in plaats van hier al tot 0 verzonnen te worden (bounce op 044: zie assignment).
+      if ((await tg(digestMessage(yesterday, counts, quota.accounts, quota))).ok) { digest = true; await bucketMark(base, H, digestBucket); }
     }
 
     const accRes = await fetch(`${base}/rest/v1/accounts?select=kid_username,parent_email,pref_weekly_report,pref_reminders,last_report_date,last_reminder_date&or=(pref_weekly_report.eq.true,pref_reminders.eq.true)&limit=5000`, { headers: RH });
