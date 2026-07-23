@@ -78,17 +78,21 @@ function walkHtmlFiles(dir) {
   return out;
 }
 
-// <link .../> tags never carry human-readable prose, only URLs — and hreflang alternates
-// (research/en-locale-scope.md §5.2) legitimately point at the real nl counterpart URL,
-// e.g. <link rel="alternate" hreflang="nl" href=".../leren-typen-voor-kinderen/" />. Left
-// in, every en page would "fail" on its own correct reciprocal hreflang link. Stripped
-// before scanning; nothing else in <head> or <body> carries a bare URL like this.
+// <link .../> tags' URL-bearing attributes (href, hreflang) legitimately carry real nl
+// content — hreflang alternates (research/en-locale-scope.md §5.2) point at the real nl
+// counterpart URL, e.g. <link rel="alternate" hreflang="nl" href=".../leren-typen-voor-kinderen/" />.
+// Left in, every en page would "fail" on its own correct reciprocal hreflang link. Only
+// those two attributes' VALUES are blanked before scanning — not the whole tag — so any
+// other attribute on a <link> (a `title`, `aria-label`, or future prose-bearing attribute)
+// stays scannable for Dutch (assignment 059: the old whole-tag strip blinded the checker
+// to exactly that class of attribute).
 const LINK_TAG_RE = /<link\b[^>]*>/gi;
+const LINK_URL_ATTR_RE = /\b(href|hreflang)(\s*=\s*)"[^"]*"/gi;
 
 // Scans one file's raw HTML source. Returns [{ word, count }] for every non-allowlisted
 // lexicon hit, plus a diacritic hit if any accented character is present.
 function scanFile(html) {
-  const text = html.replace(LINK_TAG_RE, '');
+  const text = html.replace(LINK_TAG_RE, (tag) => tag.replace(LINK_URL_ATTR_RE, '$1$2""'));
   const hits = [];
   for (const word of DUTCH_LEXICON) {
     if (ALLOWLIST.has(word.toLowerCase())) continue; // never even test allowlisted words
