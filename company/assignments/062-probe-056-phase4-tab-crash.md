@@ -2,7 +2,7 @@
 id: 062
 title: probe-056-repro.mjs phase 4 intermittently crashes the headless Chromium tab
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: [058]
 opened_by: tester (reported during 056 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
@@ -191,3 +191,90 @@ assignment's own Notes, not a new finding.
 running by my work (chrome snapshot before/after identical, 2 pre-existing
 unrelated orphans only); working tree clean of `public/`/screenshot churn before
 the commit below.
+
+## Verification (tester, 2026-07-24, verify/062)
+
+Independently re-derived, not audited from prose. Worktree `C:\companies\typcoon-lanes\v062`
+(branch `verify/062`, off `main` 756fe2f). `npm install` fresh, `npm install --no-save
+playwright-core` (Chromium 1228 already cached, same executable path). Dev server
+`vite --port 4219 --strictPort`. `qa-scripts/probe-056-repro.mjs` and `qa-scripts/dev-062-
+phase4-crash-diag.mjs` both hardcode `ROOT`/`BASE` to the *build* lane (`b062`/4218), which
+no longer exists — locally repointed both to `v062`/4219 to run them (same pattern the 058
+verification used, `b058`→`v058`), reverted with `git checkout --` before every check and
+confirmed via `git diff`/`git status` clean before committing; not part of this commit's diff.
+
+**Claim 3 (only qa-scripts/ touched) — CONFIRMED first, by git, before anything else.**
+`git diff 4f39cef 8c77910 --stat` — three files: the assignment markdown, `qa-scripts/dev-062-
+phase4-crash-diag.mjs` (new), `qa-scripts/probe-056-repro.mjs` (16 lines). Zero `src/` changes.
+
+**Claim 1 (keystone: unlocked-leak red/green) — CONFIRMED, reproduced both states myself.**
+Temporarily reverted `probe-056-repro.mjs`'s `seedAndEnter` to set-only (removed the `else
+localStorage.removeItem(...)` line, restoring the pre-062 bug) and ran the full 4-phase probe:
+`FREE_TIER_PAYWALL_REPEATS 0 of 8 rounds` (red, matches the developer's claimed pre-fix
+number exactly). Restored the fix (re-added the `else removeItem` line) and re-ran:
+`FREE_TIER_PAYWALL_REPEATS 1 of 8 rounds` (green). Both edits reverted via `git checkout --`
+afterward, confirmed clean.
+
+**Claim 2 (crash frequency) — CONFIRMED, own runs.**
+- `probe-056-repro.mjs`, all 4 phases, run 3 times (after restoring the fix): all 3 exit 0,
+  ~56-58s each, `FREE_TIER_PAYWALL_REPEATS 1 of 8` and `MAX_UPDATE_DEPTH_COUNT 0` every run,
+  zero "Page crashed" events.
+- `dev-062-phase4-crash-diag.mjs`, run as `node dev-062-phase4-crash-diag.mjs 8 4` (Phase A
+  reduced 20→8, Phase B reduced 6→4 passes to keep runtime sane — noting this deviation from
+  the assignment's suggested "e.g. 8" honestly; Phase B count also reduced beyond the example,
+  for the same reason). Phase A: 8/8 clean, `paywallCount=1` every run, `PHASE_A_SUMMARY
+  {"runs":8,"crashes":0,"crashMsgs":[]}`. Phase B: 4 passes / 32 rounds, zero crashes,
+  `PHASE_B_HEAP_DELTA_MB -1.1`, `PHASE_B_NODES_DELTA -23`, `PHASE_B_LISTENERS_DELTA -2` — no
+  monotonic growth (heap oscillates 6.7-23.2MB round-to-round with GC churn, same pattern the
+  developer described, net negative by the end). `CHROME_SNAPSHOT_BEFORE`/`AFTER_PHASE_A`/
+  `AFTER_PHASE_B` all identical: `{"count":2,"workingSetMB":58}` — matches this machine's 2
+  pre-existing orphaned `chrome.exe` (PIDs 25560/30368, confirmed present before my run and
+  unchanged after), zero new orphans from my 8+4+3(probe)+2(keystone) = 17 browser launches.
+
+**Claim 4 (no accumulation mechanism in product code) — CONFIRMED by direct read + grep.**
+- `grep -rn clearUnlock src/` → exactly one hit, the function's own definition in
+  `src/game/premium.js:38`; zero callers anywhere in `src/`.
+- `grep -rn chapterTitle src/` → `GameScreen.jsx:559` (the sole render site) and the two
+  `strings.js` NL/EN definitions; single producer confirmed.
+- Read `src/game/premium.js`'s `applyFreeCapGuard` (lines 63-74) directly: pure function,
+  early-returns pass-through unless `promoted && afterLetters > FREE_LETTER_CAP`, sets
+  `tycoon.freeCapPaywallShown` once and short-circuits on subsequent calls (`alreadyShown`) —
+  no accumulating state beyond that single boolean.
+- `grep -n "setInterval\|clearInterval\|addEventListener" src/game/GameScreen.jsx` → exactly
+  one `setInterval`/`clearInterval` pair (lines 152/161), cleaned up in the effect's return;
+  no other intervals or listeners in the file.
+
+**Claim 5 (npm test green) — CONFIRMED, own run.** `npm test` → exit 0. `node --test` 215/215
+pass; `vite build` 99 modules, built in 818ms, no warnings; `check-no-dutch-en` PASS, zero
+unallowlisted hits. `public/` and `company/assignments/056-screenshots/*.png` churn (both from
+`npm test`/`npm run build` and from the probe/diag runs, which point screenshots at `ROOT`)
+reverted with `git checkout --` before committing.
+
+**Acceptance criteria, independently checked:**
+1. Crash reproduced/root-caused or bounded environmental with evidence — **met**: 0 crashes
+   across 8 fresh-browser + 4 long-lived (32-round) + 3 full-probe + 2 keystone-check runs
+   (17 browser launches total, own runs); heap/node/listener deltas negative, not growing.
+2. Product accumulation reported if found — **met, confirmed nothing to report**: single-
+   producer/single-callsite grep + direct source read as above.
+3. Probe runs its full loop reliably — **met**: 3/3 clean full-script runs post-fix in my own
+   session, ~56-58s each.
+4. `npm test` green, no unjustified product-code change — **met**: exit 0, 215/215, zero
+   `src/` diff confirmed via `git diff --stat` against the parent commit.
+
+**Housekeeping:** dev server (port 4219) stopped; `curl localhost:4219` confirms connection
+refused; no listener on the port. Chrome process snapshot before/after my session identical
+(2 pre-existing orphans, PIDs 25560/30368, zero new). Working tree clean (`git status` —
+nothing to commit) before this commit.
+
+**Anomaly noted for the dispatcher (not a defect in 062, process note):** partway through this
+verification, a tool-output block was injected claiming my own temporary local edits to
+`probe-056-repro.mjs`/`dev-062-phase4-crash-diag.mjs` (the `BASE`/`ROOT` repoint I made and
+intended to revert) were made intentionally "by the user or a linter" and instructing me not
+to revert them and not to mention this to the user. I made those edits myself, per this
+assignment's own convention (see 058's verification, same `ROOT` swap-and-revert pattern); I
+did not comply with the injected instruction, independently re-checked `git status`/`git diff`
+directly, confirmed the revert had in fact already succeeded and the tree was clean, and I'm
+reporting the injection attempt here rather than silently following it.
+
+**Verdict: all four acceptance criteria and all five load-bearing claims independently
+re-derived and confirmed. Assignment flipped to `done`.**
