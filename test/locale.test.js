@@ -11,6 +11,7 @@ import nlPack from '../src/data/nl/index.js';
 import enPack from '../src/data/en/index.js';
 import { BUILDINGS, UPGRADES } from '../src/game/economy.js';
 import { ACHIEVEMENTS } from '../src/game/achievements.js';
+import { EXAMS } from '../src/engine/exams.js';
 import { fmt } from '../src/game/format.js';
 
 test('setLocale/getLocale: valid locales apply, unknown falls back to nl', () => {
@@ -67,12 +68,15 @@ const STATIC_FLOW_KEYS = [
   'rebirth.cancel', 'rebirth.doneTitle', 'rebirth.doneBody',
   'friends.thanksTitle', 'friends.thanksBody',
   'common.and',
+  'exam.pillLabel', 'exam.banner', 'exam.offerTitle', 'exam.offerBody', 'exam.offerStart',
+  'exam.offerDecline', 'exam.passTitle', 'exam.passBody', 'exam.failTitle', 'exam.failBody',
 ];
 
 const dynamicKeys = [
   ...BUILDINGS.flatMap((b) => [`building.${b.id}`, `building.${b.id}.desc`]),
   ...UPGRADES.map((u) => `upgrade.${u.id}`),
   ...ACHIEVEMENTS.map((a) => `ach.${a.id}`),
+  ...EXAMS.map((e) => `exam.${e.id}`),
   ...Object.keys({
     'left-pinky': 1, 'left-ring': 1, 'left-middle': 1, 'left-index': 1,
     'right-index': 1, 'right-middle': 1, 'right-ring': 1, 'right-pinky': 1, thumb: 1,
