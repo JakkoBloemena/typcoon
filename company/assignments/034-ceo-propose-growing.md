@@ -2,7 +2,7 @@
 id: 034
 title: Recommend the CEO propose building→growing to the Shareholder
 owner: ceo
-status: in_progress
+status: blocked
 priority: 2
 blocked_by: [033]
 opened_by: product-owner
@@ -48,3 +48,18 @@ paid family unlocks/week, proxy = parent opt-ins/week); research/next-milestone-
 Blocked on 033 (the QA gate must be tester-`done` before the CEO can honestly propose).
 This is an `owner: ceo` escalation of a stage decision, not build work — the PO does not
 set strategy or move the stage.
+
+**CEO verdict (2026-07-23, lane ceo/034): gate SATISFIED — proposal written, now
+human-blocked on the Shareholder.** All four checklist items confirmed against reality;
+provisioning record resolved as DEPLOY.md + metrics/spend.md (consolidated by reference in
+ADR 006); tripwires 010, 014→017, 020→021, 035 confirmed carrying into growing; 037 (en
+coin-flash Dutch leak) and the QA credential gaps evaluated and judged non-gating — full
+reasoning in **decisions/006-propose-growing.md (status: PROPOSED)**.
+
+**Blocked on (named human action): the Shareholder must, via the /ceo channel, approve or
+decline the building→growing transition proposed in decisions/006-propose-growing.md.** On
+approval (in the Shareholder's own session, never this lane): amend 006 to APPROVED citing
+the approval, update charter.md stage to `growing`, make the one registry/stage commit in
+cc citing 006, then set this assignment `done`. Secondary ask bundled in 006's operational
+note: confirm how the growing-stage monitor reads the funnel (provide `CRON_SECRET` to the
+monitor environment, or rely on 036's Telegram daily digest once verified).
