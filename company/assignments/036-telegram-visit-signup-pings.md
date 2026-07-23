@@ -115,3 +115,101 @@ committing, per established precedent; no public/ files are part of this commit.
 No new assignment/decision ids allocated. No schema/migration changes (reused the
 existing `rate_limits` table for both the digest dedup and the per-minute ping
 counters instead of adding a table).
+
+## Verification (tester, 2026-07-23)
+
+**Setup.** Fresh worktree at `verify/036` (main `8245c9b`), `npm install` (no
+node_modules present), `npm test`, `npm run build`, reverted the established
+`public/**` gen-content churn with `git checkout -- public/` before finishing.
+
+**Results:** `npm test` → **143/143 passing** (matches build notes). `npm run build` →
+clean (`vite build` succeeds, 94 modules transformed). No console errors during build.
+
+**Criteria independently re-derived from code (not from build notes):**
+- Stored pageview → exactly one ping; rejected/non-pageview/non-stored → none. Verified
+  by reading `api/track.js` (ping only inside `if (stored && stored.type === 'pageview')`,
+  `stored` only set after a non-throwing insert) and re-running the existing
+  `test/track.test.js` suite (5 new cases cover this).
+- 204-never-blocked-by-Telegram: verified structurally, not just by test — `res.status
+  (204).end()` (track.js:79) executes unconditionally *before* `pingVisit()` is ever
+  called, and `tg()` (api/_telegram.js) wraps its fetch in try/catch and can never throw
+  by construction, so there is no code path where a Telegram failure could reach the
+  response. Confirmed with the existing `DB.tgThrows` test (event still stored, 204
+  still returned, `DB.tg.length === 0`).
+- Digest window/DST/dedup: wrote `qa-scripts/probe-036-digest.mjs` (freezes `Date.now()`
+  to exercise real wall-clock scenarios the unit tests can't reach) — probed: digest
+  fires at 08:00 Amsterdam in both winter (CET, UTC+1) and summer (CEST, UTC+2) from a
+  UTC-based hourly cron tick (confirms `amsParts()`'s `Intl.DateTimeFormat` with
+  `timeZone: 'Europe/Amsterdam'` is genuinely timezone-aware, not a hardcoded offset);
+  does not fire before 08:00 local; correctly tallies only the Amsterdam yesterday-window
+  (an event at 22:01 UTC, i.e. just after midnight Amsterdam, is correctly excluded from
+  "yesterday"); sends explicit-zero counts for empty categories; when `tg()` returns
+  `ok:false` the digest bucket is *not* marked sent and a later hourly tick correctly
+  retries and then dedupes; when the events-table query throws, the cron returns 500
+  without marking the bucket sent, and recovers cleanly on the next hourly tick (no
+  digest is permanently lost). All 8 probes in this script pass — **no defect found**
+  here; this is solid.
+- `tg()` errors: confirmed `console.error` on both non-OK HTTP status and thrown/rejected
+  fetch, never rethrows (api/_telegram.js).
+- No PII: `pingVisit`'s message uses only `row.path` (already constrained by `PATH_RE`,
+  so no `<`/`&`/`@` can reach it) and `row.country` (4-char cut of the Vercel geo header);
+  digest message is counts-only; signup ping (pre-existing, untouched, not duplicated —
+  confirmed only one `tg()` call in `api/account/create.js`) uses the masked email it
+  already built. No raw email/session-id path found in any of the three message builders.
+- Collapse rule (>20/min): unit tests + read confirm the first 20 in a fixed minute send
+  individually and the 21st+ are silently counted, with the summary opportunistically
+  sent once a pageview lands in a later minute.
+
+**Defect found — collapse-summary can double-send under concurrent invocations.**
+`api/_visitping.js`'s dedup for the overflow summary rides `rateLimited()`
+(`tgflag:<minute>`, max 1) in `api/_ratelimit.js`, which does a non-atomic
+SELECT-count-then-INSERT. Two pageviews landing in the same "next minute" close enough
+in time (realistic on Vercel during exactly the traffic-spike conditions this feature
+exists to handle — multiple concurrent invocations are the norm, not the exception,
+right when a minute has overflowed) can both read `count === 0` on the `tgflag:<minute>`
+bucket before either has inserted, so both compute `alreadyFlagged = false` and both
+send the "+N bezoeken afgelopen minuut" summary — a duplicate Telegram message for the
+same overflowed minute. This violates the acceptance criterion "one ... summary message
+sent once (deduped)".
+
+Reproduced deterministically in `qa-scripts/probe-036-race.mjs`: fill minute 0 with 25
+pageviews (prevMinuteTotal 25, i.e. overflowed by 5), then fire two pageviews
+"concurrently" (`Promise.all`) in minute 1 against a fetch shim that yields a tick
+(`setImmediate`) between the SELECT and INSERT phases of every rate_limits call, mirroring
+real network latency. Result: **`+5 bezoeken afgelopen minuut` sent twice**, not once.
+Run with `node qa-scripts/probe-036-race.mjs` (exits 1 and prints both duplicate messages
+on failure).
+
+Filing as a defect for the developer (dispatcher to allocate the id from 038-039):
+Telegram digest/ping duplicate-summary race — the per-minute overflow dedup uses a
+check-then-act pattern (`rateLimited()`) that isn't atomic against concurrent serverless
+invocations; needs either an atomic upsert/unique-constraint-based claim on
+`tgflag:<minute>`, or an equivalent compare-and-swap, to guarantee at-most-one send.
+Proposed severity: 3 (duplicate ops-notification spam under real traffic spikes — the
+exact scenario the feature is meant to handle gracefully; not a security or core-flow
+issue, no PII, no data loss, no user-facing impact).
+
+**Other observations, not filed as defects (low confidence / low severity / pre-existing
+patterns, listed for completeness):**
+- The digest's events query (`limit=200000`, no explicit `order=`) could theoretically
+  under-count "yesterday" if the 2-day window ever exceeds 200k rows and PostgREST's
+  default ordering doesn't favor the most recent rows — unrealistic at current traffic,
+  and mirrors the `limit=5000` pattern used elsewhere in this cron already.
+- `bucketMark`/`bucketCount` add unbounded rows to `rate_limits` (one per stored
+  pageview, forever — no prune/TTL job exists for this table). This already happens
+  today for the pre-existing `track:<iphash>`/`g:track` buckets on every non-blocked
+  `track.js` call; 036 adds one more bucket to the same pattern rather than introducing
+  a new problem. Flagging only as a heads-up for whoever eventually owns table hygiene.
+- The overflow summary is, by design, never sent if no pageview lands in a later minute
+  (traffic just stops after the spike) — confirmed via probe. This matches the
+  assignment's own description ("zodra het eerstvolgende bezoek in de volgende minuut
+  binnenkomt") so it is not treated as a defect, just documented as a known edge the
+  feature accepts.
+
+**Verdict: NOT verified done.** All criteria pass except the collapse-rule dedup
+guarantee, which fails under concurrent invocations (reproduced above). Leaving
+`status: needs_verification` per instructions; re-verify once the race is fixed.
+
+Files touched by this verification pass: this assignment file (this section) and two
+new throwaway-but-worth-keeping probe scripts, `qa-scripts/probe-036-digest.mjs` and
+`qa-scripts/probe-036-race.mjs` (not part of `npm test`, run standalone with `node`).
