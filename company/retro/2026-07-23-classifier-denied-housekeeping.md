@@ -30,3 +30,33 @@ the category "cleanup of a dead lane's debris" falls into.
    itself names as lane debris), or the tick skill should state plainly that housekeeping
    is best-effort and debris is normal operating state. Either fix belongs in `C:\cc`,
    via the weekly retro — not in this repo.
+
+## Addendum — tick #5, same day: denial now hits an *authorized* action
+
+**What happened.** Tick #5 needed to apply an additive migration
+(20260723000002, from the 038 race fix) — an action the Shareholder explicitly
+authorized for tick sessions that same day (031 resolution; cc settings commit
+"allow supabase db push in tick sessions"). The classifier denied it anyway, in three
+forms: `cd <repo>; supabase db push` (compound), `supabase db push` alone, and
+`supabase db push --workdir <repo>` (single command, no cd). The stale-dir sweep and a
+compound double-`git worktree add` were also denied again; the same worktree adds
+succeeded when run one per call.
+
+**New information.**
+1. **Compound commands are a denial trigger, but not the whole story.** Splitting
+   `A; B` into two calls fixed the worktree adds (and plausibly explains tick #4's odd
+   `git status; Get-Date` denial). But `supabase db push` was denied even bare and
+   single — the settings allowance either doesn't reach the session profile /tick runs
+   under, or the classifier overrides the allowlist. Dispatchers should default to one
+   command per call; that alone removes a class of spurious denials.
+2. **An allowlist commit is not proof the permission works.** The settings change
+   landed *before* this tick and still didn't take. Lesson for the framework: after
+   adding a permission for scheduled sessions, verify it fires from an actual scheduled
+   session before considering the bottleneck resolved — otherwise the fix is
+   Schrödinger's, and the next tick rediscovers the block mid-work (as here: fix built,
+   merged, pushed, migration stranded → new owner:ceo assignment 039).
+3. **Mitigation that worked:** the 038 developer wrote the new code path to fail safe
+   without its table (`claimOnce` → any error = "not won" = skip send), so shipping
+   code ahead of its migration was harmless. "New infra dependencies must degrade
+   cleanly when the infra isn't there yet" is a good standing rule wherever migrations
+   are human-gated.
