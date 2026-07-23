@@ -2,7 +2,7 @@
 id: 054
 title: state.speedAvg is never updated in Typcoon's game loop — final exam unreachable
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 049 delivery, 2026-07-23)
