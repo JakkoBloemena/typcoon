@@ -225,6 +225,54 @@ export default {
       ],
       faq: [{ q: 'Krijgen kinderen op de basisschool typles?', a: 'Soms, maar het staat niet standaard in het lesprogramma. Veel ouders regelen het zelf, thuis, met een cursus of leerspel.' }],
     },
+    {
+      slug: 'gratis-leren-typen-kind',
+      title: 'Gratis leren typen: kan een kind dat écht?',
+      description: 'Kan een kind écht gratis leren typen? Het eerlijke antwoord, het concrete gratis leerpad (thuisrij, letter voor letter, 10 minuten per dag) en waar de gratis basis precies ophoudt.',
+      h1: 'Gratis leren typen: kan een kind dat écht?',
+      date: '2026-07-23', updated: '2026-07-23', readMin: 7,
+      lead: 'Kort antwoord: ja, een kind kan prima gratis leren typen — mits het leerpad klopt. Je hebt geen betaalde cursus nodig om de thuisrij te leren, letter voor letter uit te breiden en netjes te typen voordat snelheid volgt. In dit artikel lees je precies hoe: het concrete gratis leerpad, wat gratis betrouwbaar oplevert, en — net zo belangrijk — waar de gratis basis eerlijk ophoudt.',
+      sections: [
+        { h2: 'Ja — een kind kan gratis leren typen', html: `
+          <p>Misschien denk je: gratis kan nooit zo goed zijn als een betaalde cursus. Dat is een begrijpelijke twijfel, maar de techniek zelf is geen geheim dat achter een betaalmuur zit. Blind typen is een <strong>motorische vaardigheid</strong>: vingers die de weg naar toetsen leren zonder te kijken. Die vaardigheid bouw je op met herhaling, niet met een prijskaartje.</p>
+          <p>De thuisrij, de vingerzetting, het letter-voor-letter opbouwen, nauwkeurigheid vóór snelheid — dat zijn dezelfde stappen bij een gratis programma als bij een cursus van €200. Wat een kind écht vooruit helpt, is een programma dat die stappen in de goede volgorde aanbiedt en je kind genoeg laat oefenen om ze te laten beklijven.</p>` },
+        { h2: 'Het gratis leerpad, stap voor stap', html: `
+          <p>Dit is het pad dat werkt, of je nu gratis begint of betaalt:</p>
+          <ul>
+            <li><strong>1. Start bij de thuisrij.</strong> Linkerhand op A-S-D-F, rechterhand op J-K-L-;, duimen op de spatiebalk. Alles bouwt hierop voort — lees ook <a href="/blog/welke-vinger-welke-toets/">welke vinger bij welke toets hoort</a>.</li>
+            <li><strong>2. Eén letter tegelijk erbij.</strong> Voeg pas een nieuwe letter toe als de vorige echt zit. Te veel tegelijk levert alleen fouten op die je later moet afleren.</li>
+            <li><strong>3. Nauwkeurigheid vóór snelheid.</strong> Laat je kind rustig en netjes typen. Snelheid komt vanzelf zodra de vingers de weg kennen.</li>
+            <li><strong>4. Elke dag ongeveer 10 minuten.</strong> Kort en regelmatig verslaat lang en af en toe — zie ook <a href="/blog/typen-oefenen-10-minuten-per-dag/">waarom 10 minuten per dag genoeg is</a>.</li>
+          </ul>
+          <p>Dat is het hele geheim. Geen enkele stap hierboven kost geld — je kunt er vandaag mee beginnen.</p>` },
+        { h2: 'Wat gratis betrouwbaar levert', html: `
+          <p>Met dit pad en een programma dat écht adaptief is (nieuwe letters op het juiste moment, slimme herhaling van zwakke letters) zie je binnen een paar weken dat je kind de thuisrij en de eerste letters blind beheerst. De vaardigheid zelf — vlot en nauwkeurig blind typen — is precies wat gratis oefenen oplevert, mits je kind regelmatig blijft oefenen.</p>
+          <p>Wat gratis dus <em>niet</em> is: een verwaterde afkooksel van "het echte werk". De thuisrij die je kind gratis leert, is exact dezelfde thuisrij die een betaalde cursus onderwijst.</p>` },
+        { h2: 'De eerlijke grens: wat is écht gratis?', html: `
+          <p>Hier moeten we eerlijk zijn, want dit is waar veel gratis aanbod vaag over blijft. Gratis leren typen betekent niet dat het hele alfabet, alle oefenstof en alle functies voor niets zijn — dat is bij geen enkel serieus programma zo, ook niet bij Typcoon.</p>
+          <p>Bij Typcoon is de gratis basis expliciet: de <strong>thuisrij (de eerste letters) plus de eerste twee machines</strong> zijn volledig gratis, zonder tijdslimiet en zonder account. Dat is geen proefversie van vijf minuten — het is een compleet, op zichzelf staand hoofdstuk waarmee een kind écht leert blind typen. Het volledige alfabet (hoofdletters, leestekens, cijfers), alle machines en de rest van de fabriek zitten in een eenmalige familie-unlock. Zo weet je precies waar je aan toe bent, in plaats van halverwege tegen een betaalmuur aan te lopen die nergens werd genoemd.</p>` },
+        { h2: 'Wat betaald toevoegt — en wanneer dat de moeite waard is', html: `
+          <p>Als je kind eenmaal de thuisrij beheerst en met plezier oefent, is de vraag niet meer "kan het gratis?" maar "wil ik meer?". Wat een betaalde stap typisch toevoegt:</p>
+          <ul>
+            <li><strong>Het volledige alfabet</strong> — hoofdletters, leestekens en cijfers, in plaats van alleen de basisletters.</li>
+            <li><strong>Meer speeldiepte</strong> — alle machines en fabrieksonderdelen in plaats van de eerste twee.</li>
+            <li><strong>Zicht op de voortgang</strong> — een ouder-account met een wekelijkse voortgangsmail, zodat je ziet dat het echt werkt, niet alleen dat je kind speelt.</li>
+            <li><strong>Voor het hele gezin</strong> — vaak met één betaling voor alle kinderen, in plaats van per kind opnieuw.</li>
+          </ul>
+          <p>Twijfel je nog of je die stap wilt zetten, of gewoon gratis wilt blijven oefenen? Dat weeg je uitgebreider af in <a href="/blog/gratis-of-betaalde-typecursus/">Gratis of betaalde typecursus — wil je vergelijken?</a></p>` },
+        { h2: 'Niet elk "gratis" is hetzelfde', html: `
+          <p>Een laatste eerlijke kanttekening: veel gratis typsites verdienen hun geld met advertenties, en advertenties naast een scherm waar een kind van 8 achter zit, voelt voor de meeste ouders niet goed. Let er bij elk gratis aanbod op of het écht adverteervrij is, of alleen "gratis" met kleine lettertjes.</p>
+          <p>Typcoon is gebouwd zonder advertenties, zonder tracking en zonder aankopen die een kind zelf kan doen — spelen kan volledig zonder account, de voortgang blijft gewoon op het apparaat.</p>` },
+        { h2: 'Begin vandaag: het eerste stappenplan', html: `
+          <p>Concreet, voor vanmiddag: zet je kind 10 minuten achter het toetsenbord, wijs de thuisrij aan (A-S-D-F en J-K-L-;), en laat het typen zonder naar de toetsen te kijken. Fouten mogen — corrigeer rustig, beloon nauwkeurigheid, niet snelheid. Morgen weer 10 minuten, met misschien één nieuwe letter erbij.</p>
+          <p>In Typcoon is dat pad al voor je uitgestippeld: elke letter die je kind typt levert munten op voor de fabriek, netjes typen levert tot 3× zoveel op, en een adaptieve leer-engine introduceert nieuwe letters pas als de vorige echt zitten. Precies het gratis leerpad hierboven, maar dan met een fabriek die meegroeit. Meer achtergrond vind je in de <a href="/leren-typen-voor-kinderen/">complete gids: leren typen voor kinderen</a>.</p>` },
+      ],
+      faq: [
+        { q: 'Wat kost gratis leren typen echt?', a: 'Niets, voor de basis. De thuisrij en de eerste twee machines zijn bij Typcoon volledig gratis, zonder tijdslimiet en zonder account — je kunt vandaag beginnen zonder iets te betalen.' },
+        { q: 'Is écht alles gratis, ook het hele alfabet?', a: 'Nee, en dat zeggen we liever eerlijk vooraf: gratis is de thuisrij plus de eerste machines — een compleet hoofdstuk op zich. Het volledige alfabet en alle machines zitten in een eenmalige familie-unlock.' },
+        { q: 'Heeft mijn kind een account nodig om gratis te oefenen?', a: 'Nee. Gratis spelen kan volledig zonder account; de voortgang blijft op het apparaat. Een ouder-account is optioneel, voor voortgang op meerdere apparaten en een wekelijkse voortgangsmail.' },
+      ],
+    },
   ],
 
   // Standalone landingpagina's (geen blogartikel): bv. de scholen-pagina.
