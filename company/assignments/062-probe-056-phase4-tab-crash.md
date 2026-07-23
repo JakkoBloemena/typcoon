@@ -2,7 +2,7 @@
 id: 062
 title: probe-056-repro.mjs phase 4 intermittently crashes the headless Chromium tab
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: [058]
 opened_by: tester (reported during 056 verification; materialized by the tick #11 dispatcher from the 059-064 reservation)
