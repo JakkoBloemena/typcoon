@@ -23,6 +23,13 @@ Entry format:
 
 ---
 
+## Tick 2026-07-23 #10 — OPEN
+- opened: 2026-07-23 20:08 (system clock; consistent with commit clock — tick #9 close commit 955d99e ~20:05)
+- claimed: 016 + 044 (re-verify) + 049 + 051 + 054 (verification pass — statuses stay needs_verification, this entry is the claim); monitor stage-duty lane (no assignment id — post-deploy health check after tick #9's four production deploys; writes company/metrics only)
+- worktrees: 016 → C:\companies\typcoon-lanes\v016 (verify/016 **off build/016** — en chain stays gated from main per deploy gate, 017 is the merge gate; port 4190 if needed); 044 → C:\companies\typcoon-lanes\v044r2 (verify/044-r2 off main, port 4191); 049 → C:\companies\typcoon-lanes\v049 (verify/049, port 4192); 051 → C:\companies\typcoon-lanes\v051 (verify/051, port 4193); 054 → C:\companies\typcoon-lanes\v054 (verify/054, port 4194); monitor → C:\companies\typcoon-lanes\mon10 (mon/tick10); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049/b051 dirs (file locks), 4173 held by the dead tick-#2 server.
+- ids allocated: 055–059 reserved for defects the testers may file (testers report to the dispatcher, who materializes them — lanes never compute ids, per tick #9 retro); next free after reservation: 060, next decision id: 010
+- notes: mid-tick plan — 016 verifies done → 017 eligible (tester, en launch/merge gate: the whole build/015→build/016 chain merges to main only through it); 049 done → 050 eligible (developer); 051 done → 052 eligible (designer); 044 done → no downstream. Growth/analyst not dispatched: funnel readout still token-gated (ADR 008 Shareholder asks pending, non-blocking), 035 data-gated, school chain behind 010. 010/020/021/022/003/035 externally gated as before.
+
 ## Tick 2026-07-23 #9 — CLOSED
 - opened: 2026-07-23 18:36 (system clock — reads *before* tick #8's 18:44 close stamp; commit clock has #8's close commit 0876481 as latest ancestor, tree clean, no OPEN entry → #8 genuinely closed, one clock is skewed; trusting commit order per tick #2 retro)
 - claimed: 015 + 042 + 044 (verification pass — statuses stay needs_verification, this entry is the claim)
