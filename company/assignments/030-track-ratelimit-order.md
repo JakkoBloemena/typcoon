@@ -2,7 +2,7 @@
 id: 030
 title: Rate-limit unknown-type track requests (check-order fix)
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -71,3 +71,85 @@ Terminal state needs_verification.
   baseline plus the 1 new test. No skips, no todos, no failures.
 - `git status`/`git diff` reviewed before commit: only `api/track.js` and
   `test/track.test.js` touched by hand; no other files staged.
+
+### Verification (tester, 2026-07-23)
+
+**Verdict: all three acceptance criteria met. Status → `done`.**
+
+**Build/test — re-run independently in the tester's worktree (`typcoon-lanes/v030`,
+current main tip):**
+- `npm install`: clean, 22 packages, no drift.
+- `npm test`: **126/126 pass, 0 fail** (`node --test test/*.test.js`) — this is the
+  current combined main-tip baseline (board log: tick 2026-07-23 #1 closed at
+  126/126 after 8 builds landed), not the 112/112 figure quoted in the build note,
+  which was this assignment's own before/after delta at build time (111 baseline +
+  1 new test = 112). No discrepancy — different baselines, same delta.
+- `npm run build`: clean — `prebuild` regenerates 17 URLs + sitemap, `vite build` 94
+  modules, no errors/warnings. Regenerated `public/**`/`sitemap.xml` (line-ending
+  noise only, `git diff` empty of content) reverted with `git checkout -- public/`
+  before/after testing, per prior-lane precedent — not part of this commit.
+
+**Criterion 1 — unknown-type requests count against both rate limits (121st →
+429):**
+- Read `api/track.js`: `TYPES.has(type)` now sits at line 48, immediately after
+  both `rateLimited()` calls (lines 41-42) and immediately before the `sessionId`
+  UUID check (line 49) — exactly the position the sessionId/path validation
+  occupied pre-fix, as claimed.
+- Read `test/track.test.js`'s new test (`onbekend type telt ook mee...`, line 185):
+  confirmed it asserts 204 on each of the first 120 `nonsense-type-flood` requests,
+  429 on the 121st, and `DB.events.length === 0` throughout. Not a tautology.
+- **Regression-proofed it myself**, not just trusted the test: temporarily edited
+  the live `api/track.js` to move `TYPES.has(type)` back to its pre-fix position
+  (immediately after parsing `type`, before `supa()`/both `rateLimited()` calls),
+  ran the new test in isolation — it failed exactly as expected
+  (`AssertionError: 204 !== 429` at the `last.statusCode` assertion). Restored the
+  file from a backup (`git diff` empty afterward, confirmed byte-identical to
+  HEAD). This proves the test is a real regression guard for this exact bug, not
+  a vacuous assertion.
+- **Reproduced the original attack independently**, own from-scratch shim in a
+  temp scratch script outside the repo (not `test/track.test.js`, deleted after
+  use, no repo files touched): 121 consecutive `{type:'totally-bogus-flood-type'}`
+  from one IP → first 120 all `204`, 121st `429`, `DB.events.length === 0`
+  throughout, `DB.rate_limits.length === 240` (2 buckets × 120 counted hits before
+  the block). Matches the developer's test exactly under an independently-written
+  harness.
+- **Adversarial extension — mixed valid+invalid traffic from one IP shares the
+  same bucket**: alternated `bogus-mixed-flood` and valid `pageview` (odd/even) for
+  121 requests from one IP. 429 fired on request 121 as expected (bucket is keyed
+  on IP only, not type, so it can't be evaded by alternating shapes); 60 valid
+  pageviews landed before the limit hit. Confirms the fix isn't type-scoped in a
+  way that would leave a bypass via type-alternation.
+
+**Criterion 2 — unknown type below the limit still 204, stores nothing (025's
+probe-proof ruling preserved):**
+- Confirmed in both the full suite (multiple `track.test.js` cases) and the
+  independent scratch repro: a single unknown-type request returns `204` (not
+  `400`) and leaves `DB.events` unchanged. No status-code oracle distinguishing
+  "unknown type" from "accepted."
+
+**Criterion 3 — valid events still land:**
+- Full suite's existing valid-event tests (anonymous landing, real-client path
+  regression across all 5 real path shapes, funnel readout) all pass at 126/126.
+- Independent scratch repro: a `pageview` with valid UUID `sessionId` and `path:
+  '/'` returns `204` and lands in `DB.events` with the correct `type`.
+
+**Sweep for other pre-rate-limit early-return paths in `api/track.js`:** only two
+remain, both reviewed and judged not in scope / not new flood vectors:
+- Line 26, `req.method !== 'POST'` → `405`: never touches `supa()` or
+  `rateLimited()` at all, so there is no Supabase cost to meter on this path
+  either way (the rate limiter's own purpose, per its file comment, is guarding
+  Supabase query/write cost). Pre-existing since assignment 006, untouched by 025
+  or 030, not the class of bug being fixed here (that bug was "shape-valid POST
+  traffic bypassing metering," not "non-POST traffic").
+- Line 32, `if (!db) return res.status(204).end()`: only reachable when
+  Supabase env vars are entirely unconfigured, in which case `rateLimited()`
+  itself is uncallable (no `base`/`H` to build the request from) — nothing to
+  meter by construction, not a runtime attack surface on a deployed instance with
+  a configured backend. Pre-existing, not introduced or touched by 030.
+- No other `return` precedes both `rateLimited()` calls. The `TYPES.has`/
+  `sessionId`/`path` checks are the only three shape-validation gates, and all
+  three now sit consecutively after both rate-limit calls, in that order.
+- The `//evil.com`-shaped and `/../`-style path regex admission (informational
+  from 025) is out of scope per this assignment's notes — not re-litigated.
+
+**Adjacent defects found:** none. No new issues to report to the dispatcher.
