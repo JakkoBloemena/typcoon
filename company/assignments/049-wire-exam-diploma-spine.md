@@ -2,7 +2,7 @@
 id: 049
 title: Wire the engine exam/diploma system into the Typcoon game loop
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -187,3 +187,113 @@ letters. Guardrails: G2 (exams earned by typing, never bought; diploma gates
 nothing), G5 (free chapter earns its own thuisrij-diploma inside the 10-letter cap).
 Unblocks 050 (certificate + dashboard proof). Independent of the theme track
 (051/052) — parallel lanes are fine per scope §4.
+
+## Verification (2026-07-23, tester)
+
+Independently re-derived every criterion in `C:\companies\typcoon-lanes\v049` (branch
+`verify/049`, off main, never merged/pushed). Did not take the delivery notes' word for
+anything; ran the suite, mutation-tested the two claimed engine bug fixes, and drove the
+real app with Playwright/Chromium (port 4192) against my own probe scripts.
+
+- **AC1 (engine tests first) — PASS.** `test/exams.test.js` (23 tests) pins every
+  boundary the AC lists: `gradeExam` pass-exactly-at/fail-just-below `passAcc`,
+  final-exam `minKpm` both sides + independently below `passAcc`; `examReady` locked
+  below `stage`, blocked while `governor.state==='frustrated'`, requires every covered
+  key at/above `EXAM_READY` (0.82) with an exact-boundary case, final withheld until
+  `speedAvg >= minKpm*0.9` (plus a realistic EMA-progression test, not just a hand-set
+  value); `generateExamText` letter+symbol/punct/digit coverage and seeded
+  determinism (mulberry32); `applyExamResult` records-pass/idempotent-on-repeat/
+  no-grant-on-fail. Mutation-checked both claimed bug fixes by reverting each in
+  `src/engine/exams.js` one at a time and rerunning `npm test`: reverting the
+  letter-coverage pass in `generateExamText` → 1 test fails (`generateExamText: dekt
+  ook leestekens/hoofdletter-modus/cijfers...`, missing `l,w,v,z`); reverting the
+  idempotence guard in `applyExamResult` → 2 tests fail (one in `exams.test.js`, one in
+  `economy.test.js`'s `applyTypcoonExamResult` idempotence test). Restored the file
+  after each mutation; `git diff --stat src/engine/exams.js` is empty — worktree
+  diff-clean, confirmed after the full session.
+- **AC2 (offer + decline) — PASS.** Live-play transition (near-ready seed, real
+  `processKeystroke` confidence build-up) fired the offer overlay within 2 exercises:
+  "🏅 Klaar voor een toets? 🎖️ Je kent deze letters goed! Wil je de Thuisrij-toets
+  proberen? Gewoon voor de eer — lukt het niet, dan speel je gewoon verder." — clearly
+  labelled a toets, distinct from a normal exercise, framed as low-stakes. "Nog even
+  niet" declines cleanly: exercise/keyboard stay usable, the persistent green "🏅 Toets
+  beschikbaar" pill remains for a later attempt, no repeated overlay nagging (verified
+  the ref-based single-fire-per-transition design in code and confirmed no re-offer
+  after decline). Screenshots: `v-02-live-offer-verify.png`, `v-03-declined-verify.png`.
+- **AC3 (take/pass) — PASS.** Exam text is materially longer than a normal exercise
+  (68 chars vs. short drill words) and covers exam-1's full key set (`generateExamText`
+  coverage guarantee, independently confirmed live). Typing it at 100% accuracy → "Toets
+  gehaald! 🎉" card with `.celebrate` gold-glow class, `+150` coin chip, coins visibly
+  went 500 → 650 in the header pill immediately after dismissal. Screenshots:
+  `v-04-exam-in-progress-verify.png`, `v-05-exam-pass-verify.png`,
+  `v-06-after-pass-verify.png`.
+- **AC4 (fail) — PASS.** Deliberately-wrong keystrokes (accuracy 50%) → "Nog niet
+  helemaal — geen zorgen!" with a plain smiley (no `.celebrate` gold-glow class present
+  on the fail card — confirmed by locator count), "Je zat op 50% nauwkeurig. Oefen nog
+  even door, dan lukt de toets zo!" — encouraging, not punitive, no reward (coins
+  unchanged 500 → 500), single "Gaaf!" button back to normal play; the typing surface
+  and the exam pill are both still present immediately after — no dead-end, no lockout,
+  and a normal exercise is typeable right after. Screenshot: `v-08-exam-fail-verify.png`.
+- **AC5 (persistence) — PASS.** Passed exam-1 survives a hard refresh (pill count 0
+  before and after two consecutive reloads) — `state.exams` round-trips through
+  save/hydrate unchanged, as claimed. Went further than the AC's own wording and also
+  tested "opnieuw beginnen" (rebirth/prestige reset): seeded a save with exam-1 already
+  passed and `totalCoins` above the rebirth threshold, sold the factory live in the
+  browser (`rebirth.confirm` button) — `localStorage`'s persisted state afterward still
+  shows `exams.passed: ["exam-1"]`, `attempts: {"exam-1":1}` while `tycoon.coins` reset
+  to 0 and `rebirths: 1`, exactly matching `rebirth()`'s code (only touches
+  `tycoon.*`, never `state.exams`). Screenshots: `v-07-after-refresh-verify.png`,
+  `v-10-rebirth-confirm-verify.png`, `v-11-rebirth-done-verify.png`.
+- **AC6 (Typcoon economy, not typie's stars) — PASS.** `grep -rn "rewards.stars"
+  src/game/` matches only the explanatory comment in `economy.js` — zero code
+  references. Read `applyTypcoonExamResult`: it takes only `examState.exams` from the
+  engine's `applyExamResult` result (`next = { ...state, exams: examState.exams }`) and
+  never spreads `examState.rewards` into the returned state — the mutation the engine
+  makes to `state.rewards.stars` is discarded outright. `economy.test.js` asserts the
+  reward mapping (`EXAM_COIN_REWARD` positive per exam id) and the fail/idempotent
+  no-reward paths.
+- **AC7 (no gating) — PASS.** `grep -n "premium\.js\|machineLocked\|FREE_LETTER_CAP"
+  src/game/GameScreen.jsx` shows those symbols used only in the pre-existing paywall
+  logic (letter-cap check, machine-lock render); none of the exam-specific code
+  (`availableExam`, `examWasReadyRef`, `startExam`, `finishExam`,
+  `applyTypcoonExamResult`) references any of the three. Computed exam-1's actual key
+  set via the real engine (`newState` + `activeLetters` at stage 5): `f j d k s l a g
+  h` — 9 letters, under `FREE_LETTER_CAP` (10), confirming exam-1 is genuinely
+  reachable free. `minKpm` exists only on `exam-final` (grep confirms, one match).
+- **AC8 (speed gates only the certificate) — PASS.** `minKpm` appears in
+  `src/engine/exams.js` only in the `exam-final` entry and the two places that read it
+  (`examReady`'s pre-check, `gradeExam`'s `speedOk`) — no other exam or non-exam code
+  path reads `minKpm` or `speedAvg` as a gate. `exam-1` (the only exam actually
+  reachable free) has no speed requirement at all — confirmed live: `examReady` for
+  exam-1 ignored `speedAvg=0` in the engine test suite and the browser-verified free
+  flow never touched typing speed.
+- **AC9 (test/build/console) — PASS.** `npm test`: **199/199 green** (matches main's
+  count exactly — the delivery notes' own count, 181/181, is stale/pre-merge and refers
+  to the build lane before other work landed on main; 199 is what this worktree, cut
+  from main, actually runs). `npm run build`: clean, 97 modules, no warnings. Console
+  errors across a full pass run and a full fail run: only the pre-existing
+  `/api/track` 404 (dev server has no backend; identical on baseline code) — zero
+  errors attributable to the exam feature, checked via `page.on('console'/'pageerror')`
+  across every seeded run (offer, decline, pass, refresh, fail, rebirth, mobile).
+
+**Additional exploratory checks (beyond the 9 ACs), all clean:**
+- Mobile viewport (390×844): exam pill renders, exam mode opens and is typeable,
+  zero exam-attributable console errors. Noted but **not a 049 defect**: the game
+  header already horizontal-overflows at this viewport width (521px content in a
+  390px client width) identically with and without the exam pill present (measured
+  `scrollWidth`/`clientWidth` both ways — 131px overflow in both cases) — this is a
+  pre-existing header-layout issue, not something this assignment introduced or
+  worsened. Flagging for a future p4 mobile-layout assignment, not blocking this one.
+- Re-verified the "no gating" claim isn't just a grep artifact by reading
+  `rebirth()`/`premium.js` end to end — the paywall unlock lives in its own
+  `localStorage` key (`typcoon:unlocked`) entirely orthogonal to `state.exams`.
+
+**Verdict: all 9 acceptance criteria PASS.** Status flipped to `done`.
+
+Probe scripts committed to `qa-scripts/`: `probe-049-verify.mjs` (main AC2–AC5 flow,
+own independent assertions), `gen-exam-passed-rebirth-save.mjs` +
+`probe-049-rebirth-persist.mjs` (AC5 "opnieuw beginnen" persistence),
+`probe-049-mobile.mjs` + `probe-049-mobile-baseline.mjs` +
+`probe-049-mobile-overflow-check.mjs` (exploratory mobile check). Screenshots in
+`company/assignments/049-screenshots/*-verify.png` (suffixed to avoid clobbering the
+developer's own `01`–`09` set).
