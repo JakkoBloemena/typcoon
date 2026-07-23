@@ -9,6 +9,7 @@ import { ACHIEVEMENTS } from './achievements.js';
 import { getPack } from '../data/packs.js';
 import { loadGame, saveGame, clearGame } from './store.js';
 import { isUnlocked } from './premium.js';
+import { loadTheme, applyTheme } from './theme.js';
 import { isOnboarded, markOnboarded } from './onboard.js';
 import { readRefParam, ownCode, WELCOME_BONUS } from './referral.js';
 import { readSchoolCodeParam } from './schoolLicence.js';
@@ -26,6 +27,7 @@ import Friends from './Friends.jsx';
 import Records from './Records.jsx';
 import ShareCard from './ShareCard.jsx';
 import Unlock from './Unlock.jsx';
+import ThemePicker from './ThemePicker.jsx';
 import SchoolCode from './SchoolCode.jsx';
 import ParentEmail from './ParentEmail.jsx';
 import Login from './Login.jsx';
@@ -59,6 +61,8 @@ export default function App() {
   const [name, setName] = useState('');
   const [unlocked, setUnlocked] = useState(() => isUnlocked()); // familie-unlock (of school-licentie)
   const [showUnlock, setShowUnlock] = useState(false);
+  const [theme, setTheme] = useState(() => loadTheme()); // gekozen cosmetisch thema (assignment 051)
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const [showSchoolCode, setShowSchoolCode] = useState(() => !!readSchoolCodeParam()); // licentielink geopend
   const [session, setSession] = useState(() => getSession()); // ouder-account + token, of null
   const [showAccount, setShowAccount] = useState(false); // "voortgang per e-mail"
@@ -69,6 +73,10 @@ export default function App() {
   // instelling (gt() leest 'm), bewust vóór elke gt()-aanroep in deze render gezet
   // — geen effect, anders flitst het eerste scherm even Nederlands.
   setLocale(game?.profile?.uiTaal ?? loadGame()?.profile?.uiTaal ?? detectLocale());
+  // thema toepassen (assignment 051): zelfde reden als setLocale hierboven — bewust
+  // vóór de render gezet, geen effect, anders flitst het eerste scherm even het
+  // standaard-thema voordat het gekozen thema aanslaat.
+  applyTheme(theme);
 
   // meting (assignment 006): bezoek + "betrokken" (≥2 sessies) — één keer bij het openen.
   useEffect(() => { trackPageview('/speel/'); markSession(); }, []);
@@ -239,6 +247,7 @@ export default function App() {
             <button className="link-parents" onClick={() => setView('friends')}>🎁 {gt('home.invite')}</button>
             <button className="link-parents" onClick={() => setView('share')}>📸 {gt('home.share')}</button>
             <button className="link-parents" onClick={() => setView('dashboard')}>📊 {gt('home.parents')}</button>
+            <button className="link-parents" onClick={() => setShowThemePicker(true)}>🎨 {gt('home.theme')}</button>
             {session
               ? <button className="link-parents" onClick={unlink} title={session.kidUsername}>✅ {gt('home.emailLinked')}</button>
               : <button className="link-parents" onClick={() => setShowAccount(true)}>📧 {gt('home.emailProgress')}</button>}
@@ -289,6 +298,16 @@ export default function App() {
 
       {showLogin && (
         <Login onClose={() => setShowLogin(false)} onLoggedIn={onLoggedIn} />
+      )}
+
+      {showThemePicker && (
+        <ThemePicker
+          current={theme}
+          unlocked={unlocked}
+          onClose={() => setShowThemePicker(false)}
+          onSelect={setTheme}
+          onLocked={() => { setShowThemePicker(false); setShowUnlock(true); }}
+        />
       )}
     </div>
   );
