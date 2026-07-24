@@ -23,11 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-24 #18 — OPEN
+## Tick 2026-07-24 #18 — CLOSED
 - opened: 2026-07-24 04:17 (system clock; tick #17 closed 03:24 — ~53 min ago, one scheduler heartbeat)
 - claimed: none — ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied — 020←010 blocked, 021←020). This tick executes the ADR's standing mandate: monitor stage duty + T1–T6 trigger evaluation (last pass tick #17 at ~03:24, one heartbeat ago — due per one-pass-per-heartbeat cadence, cc f7b7db3).
 - worktrees: monitor → C:\companies\typcoon-lanes\mon18 (mon/tick18; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
 - ids allocated: 065–066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them); next free after reservation: 067; next decision id: 011
+- closed: 2026-07-24 04:24 (system clock)
+- outcomes: monitor stage duty **healthy** — 27/27 checks pass, matching tick #17 exactly: all 12 public pages 200, /speel/ bundle hashes byte-identical to tick #12/#14/#16/#17 (git log cross-check: only tick #17/#18 bookkeeping since, nothing touching api/src/config — 4dadd49 remains the live deploy), sitemap steady at 22 URLs, auth boundaries hold 401 on both endpoints under all three token shapes with no data leak, /api/track (GET 405, empty POST 204) and /api/school/redeem (bogus code 400 malformed) match documentation, spend.md unchanged since ADR 003 creation commit c68f46a (€0 recurring, confirmed via git history). Quota-consumption gap carried (ADR 008 accepted; no VERCEL_TOKEN/SUPABASE keys in this tick's env either). **ADR 010 triggers T1–T6 evaluated, NONE FIRED**: T1 not fired (~1 day GSC baseline vs ~4wk, search-console.md git-confirmed unchanged), T2/T3/T4 unevaluable (funnel.md still empty — FUNNEL_READ_TOKEN gap, ADR 008; no digest paste landed), T5 not fired (27 days out), T6 zero incidents. Zero incidents/defects; ids 065–066 lapse unused — **next free assignment id: 065, next decision id: 011**. mon/tick18 merged (health.md only, lane commit d084a1e), worktree + branch swept clean. Board unchanged: build-hold stands. **Nothing blocked on a human** — standing recorded asks unchanged, consolidated in ADR 010 §Standing Shareholder asks (FUNNEL_READ_TOKEN provisioning remains the one that unblocks T2/T3/T4 evaluation; weekly digest paste is the ~30-second interim).
+- retro: clean — routine hold-tick per ADR 010's standing mandate, executed at the intended one-pass-per-heartbeat cadence.
 
 ## Tick 2026-07-24 #17 — CLOSED
 - opened: 2026-07-24 03:17 (system clock; tick #16 closed 02:24 — ~53 min ago, one scheduler heartbeat)
