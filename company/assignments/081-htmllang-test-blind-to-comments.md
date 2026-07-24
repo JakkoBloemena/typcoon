@@ -2,7 +2,7 @@
 id: 081
 title: "test/htmllang.test.js's static source-check does not distinguish live code from a comment (would pass even if the fix were commented out)"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: []
 opened_by: tester
@@ -76,3 +76,30 @@ $ node --test test/htmllang.test.js     # not ok 1 (correctly fails), ok 2
 $ git checkout -- src/game/App.jsx      # restore exactly
 $ node --test test/htmllang.test.js     # ok 1, ok 2 (back to green)
 ```
+
+## Delivery notes (developer, dev/081, 2026-07-24)
+
+Changed `test/htmllang.test.js` only. Added a small `stripComments(src)` helper (walks the
+source char-by-char, passes string/template literals through untouched, drops `//`-to-EOL
+and `/* */` spans) and ran it once over `APP_SRC` into `APP_CODE`. The first test's
+`indexOf`/`match` checks now run against `APP_CODE` instead of the raw source, so a match
+that only survives inside a comment no longer counts. The second test (getLocale/setLocale
+contract) was untouched — it's a live runtime check, not a source-text check, so it was
+never in scope for this gap.
+
+Repro evidence (worktree `C:\companies\typcoon-lanes\d081`, branch `dev/081`):
+- Baseline (fix line intact): `node --test test/htmllang.test.js` → `ok 1`, `ok 2`, 2/2 pass.
+- `//`-comment-out the fix line in `App.jsx`: test now **fails** — `not ok 1`, assertion
+  `expected: -1, actual: -1` on the `document.documentElement.lang` indexOf-after-setLocale
+  check (test 2 still passes, as expected — it doesn't touch App.jsx).
+- `/* ... */`-wrap the same line: also **fails**, same assertion, same shape.
+- Restored (`git checkout -- src/game/App.jsx`) after each variant: back to `ok 1`, `ok 2`.
+- Full deletion of the line (no comment, just gone): still **fails** as before (this was
+  already the passing case pre-fix — confirmed it's undisturbed), then restored to green.
+- Full `npm test`: **232/232 pass**, no count change — the two existing tests in
+  `htmllang.test.js` were strengthened in place, not replaced or added to.
+- `git checkout -- public/` run after `npm test`'s build step to discard generated churn;
+  `git status --porcelain` before commit shows only `test/htmllang.test.js` and this
+  assignment file changed.
+
+No new distinct problem found while doing this work — 094 lapses.
