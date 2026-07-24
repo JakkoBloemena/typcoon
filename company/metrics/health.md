@@ -946,3 +946,109 @@ finding. No incident to open, no defect to materialize this tick. Known
 environment debris (stale worktree dirs q033/v026/b049–b056b, orphaned chrome
 PIDs 25560/30368, dead port-4173 dev server) noted per dispatcher brief, not
 re-reported as new, not touched.**
+
+## 2026-07-24 09:17 UTC — tick #23 (ADR 010 stage duty: health + trigger evaluation)
+
+Ninth monitor pass under ADR 010's build-hold, mirroring tick #14/#16–#22's method.
+No product-code deploys happened between tick #22 and this tick — confirmed: `git
+log 4dadd49..main --oneline -- api/ src/ config/ index.html vite.config.js
+vercel.json package.json` returns empty (the only commit on `main` since tick #22's
+close is `a320862`, this tick's own open/bookkeeping commit, touching no product
+path); the live deploy commit is still `4dadd49` (061), same as
+tick #12/#14/#16–#22. The `/speel/` bundle hashes below are byte-identical to tick
+#12 through #22's. This tick's brief correctly names `typcoon.com` as the live host
+(tick #21's `.nl` discrepancy is not repeated).
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, 0.37s, `Last-Modified: Fri, 24 Jul 2026 07:19:51 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle `speel-Dx9n5T0C.js` / `speel-B2OxpAxn.css` — **identical hashes to tick #12–#22**, no drift |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** (`<url>`/`<loc>`/`</url>` counts all agree at 22) — matches tick #12–#22, no change |
+| Static assets: `/assets/speel-Dx9n5T0C.js`, `/assets/speel-B2OxpAxn.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+27 checks this tick, same set as tick #16–#22 (all three token shapes tested
+against both `/api/admin/funnel` and `/api/cron/notify`). All results match tick
+#12–#22 exactly where directly comparable (same status codes, same bundle hashes,
+same sitemap count). No 4xx/5xx surprises, no auth boundary breach on either
+endpoint under any of the three tested token shapes, no data leak in any 401 body,
+no stale or drifted content. **27/27 pass.**
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, not
+re-opened.** No Vercel/Supabase dashboard or API credentials in this environment
+this tick either — checked explicitly (`env | grep -i` for `FUNNEL|VERCEL|SUPABASE|
+CRON` returns only `SUPABASE_GO_BINARY`, the local CLI binary path, not a hosted
+credential; `FUNNEL_READ_TOKEN` is absent, consistent with ADR 010 standing ask 1
+still open — not treated as an incident per this tick's brief). Standing
+Shareholder ask 4 in decisions/010 (monthly glance at usage pages) remains open
+and unactioned as of this tick. Per ADR 010's framing that a Supabase free-tier
+pause is a priority-1 incident, this monitor still cannot itself detect an
+approaching-pause scenario before it becomes a visible outage in the endpoint
+checks above — flagging explicitly again, not papering over it. Endpoint checks
+above found no 5xx/pause symptoms (no Supabase-down error shapes on any DB-backed
+route probed).
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7 —
+confirmed via git history this tick, not just re-read.** `git log --oneline --
+company/metrics/spend.md` shows only two commits, both pre-dating this monitor's
+first tick: `aa85ab4` (adoption overlay creation) and `c68f46a` (ADR 003, budget
+ceiling confirmed). No commit has touched the file since. Four lines unchanged:
+domain (Shareholder-owned auto-renew, immaterial, untracked per decisions/003),
+Vercel/Supabase/Resend all €0 free tier (escalate to CEO before any paid-plan
+upgrade). Checked `company/decisions/` explicitly this tick — directory listing
+still tops out at `010-post-milestone-direction.md`, no new decision file since
+010; no new recurring commitment. No line carries a Shareholder "approved
+one-time, cancel before renewal" condition to watch — nothing to escalate
+pre-renewal this tick. Budget ceiling €50/month (decisions/003) — current recorded
+recurring spend: **€0**.
+
+**ADR 010 revisit-trigger evaluation (T1–T6):**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` unchanged since its creation commit `be2a450` (git log confirms, re-checked this tick) — baseline still dated 2026-07-23; today is 2026-07-24, ~1 day of possible data. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (re-read directly this tick; `git log` confirms unchanged since creation at 043/`c7f29a6`); `FUNNEL_READ_TOKEN` absent from this environment (checked this tick, see quota section above); no Shareholder digest paste has landed since tick #22 (`git log 2d7d654..HEAD -- company/` shows only this tick's own open/bookkeeping commit). |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no Telegram access in this environment, no repo artifact records one — checked explicitly this tick, none found. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. |
+| T6 | Any production incident or new defect | **NOT FIRED.** This tick's health check found zero incidents: 27/27 endpoint checks pass, auth boundaries intact under all three token shapes on both endpoints, bundle byte-identical since tick #12, spend clean. |
+
+**No trigger fired this tick.** The build-hold stands unchanged; nothing reopens
+dispatchable work.
+
+**Verdict: HEALTHY. Bundle byte-identical since tick #12 (zero product-code
+commits on `main` since tick #14's close, confirmed via `git log` again this
+tick — only this tick's own bookkeeping commit since tick #22), all 27 checks
+pass against the documented live domain `typcoon.com`, sitemap steady at 22 URLs,
+spend ledger clean and unchanged (verified via git log, not just re-read), no
+renewal risk. All six ADR 010 revisit triggers evaluated explicitly; none fired
+(T1/T5 not yet due, T2/T3/T4 unevaluable for lack of data — no new Shareholder
+digest paste or GSC update since tick #22, T6 clear). One carried-forward
+measurement gap (quota consumption, ADR 008, unchanged, explicitly re-checked
+this tick — `FUNNEL_READ_TOKEN` confirmed absent, not treated as an incident per
+ADR 010's own framing of that ask as optional/interim) — not a new finding. No
+incident to open, no defect to materialize this tick. Known environment debris
+(stale worktree dirs q033/v026/b049–b056b, orphaned chrome PIDs 25560/30368, dead
+port-4173 dev server) noted per dispatcher brief, not re-reported as new, not
+touched.**
