@@ -2,7 +2,7 @@
 id: 099
 title: Stale comment above .ghost .ghost-ico now describes the wrong filter
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 092)

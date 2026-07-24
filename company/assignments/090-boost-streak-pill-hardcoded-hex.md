@@ -2,7 +2,7 @@
 id: 090
 title: .boost-chip / .streak-pill use raw hex colours, not theme tokens
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 083)
