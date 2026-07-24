@@ -2,7 +2,7 @@
 id: 082
 title: World-pass build cut — slice the verified Maquette design (079) into developer assignments
 owner: product-owner
-status: needs_verification
+status: done
 priority: 1
 blocked_by: [079]
 opened_by: ceo
@@ -130,3 +130,72 @@ flywheel), `design/DESIGN-FACTORY.md` PART II (W0–W8, verified in 079). This i
 product delivered this dispatch, so terminal state `needs_verification` — a role that did not
 write it confirms the cut is faithful to PART II and the dispositions are truthful before it
 is `done`. Milestone map appended to `research/milestone-factory.md` §8.
+
+## Verification (tester, tick #30)
+
+Worktree `v082` (branch `verify/082`, off `main` at `d2833b3`). Docs/board-consistency pass
+only — no app serving, no npm. Read `company/assignments/082-worldpass-build-cut.md`,
+`design/DESIGN-FACTORY.md` PART II W0–W8 (esp. W7), ADR 012, ADR 013, `company/charter.md`,
+all six slice files (083–088), and every disposition target (069, 070, 073, 075, 076, 080) by
+reading their frontmatter and body directly on disk — nothing taken on the cut's word.
+
+1. **Slice files exist and match the cut table — PASS.** `company/assignments/083…088` all
+   exist with exactly the owner/priority/blocked_by the table states: 083 `developer/2/[]`,
+   084 `developer/2/[]`, 085 `developer/2/[084]`, 086 `developer/3/[085]`, 087
+   `developer/2/[069]`, 088 `developer/3/[085]` (verified via each file's frontmatter). Each
+   slice's ACs are concrete/checkable (DOM selector counts, `getComputedStyle` checks,
+   `git diff --stat` file lists, rendered-break spot checks) and each cites the PART II
+   section it traces to: 083→W3/W4, 084→W2d, 085→W2a/W2b/W2c/W2e (+W7 items 1–3),
+   086→W3 (+W7 item 6), 087→W2f (+W7 item 4), 088→W5 (+W7 slice 6). Every slice carries a
+   "File surfaces" note naming exact files and explicitly flagging overlap with sibling
+   slices (e.g. 085's "the dispatcher should expect to merge `Shop.jsx`/`game.css`").
+
+2. **Coverage faithful to PART II — PASS.** W7's designer-proposed six-slice build order
+   (typing strip → ledger → diorama floor → atmosphere/motion → werkbank+080 → edge states)
+   maps 1:1 onto 083–088 in the same order, same defect closures (073→083, 070→084, 080→087),
+   same "absorbs 075" landing (→088). Nothing in W0–W8 is unaccounted for; no slice invents
+   scope PART II doesn't contain — checked each AC list against its cited W-section and found
+   no addition beyond what the section specifies. Presentation-only claim holds: all six
+   slices (083–088) carry an explicit AC requiring `git diff --stat` show `store.js`,
+   `economy.js`, `src/engine/`, `theme.js`, `goals.js` untouched.
+
+3. **Dispositions truthfully recorded on disk — PASS**, each read directly:
+   - `069-html-lang-locale-sync.md`: priority `2` (raised from 3, per its own cut-note banner),
+     `blocked_by: []` (dispatchable now), and it is `087`'s `blocked_by` — confirmed in
+     087's own frontmatter (`blocked_by: [069]`).
+   - `070-factory-page-missing-coin-star-readout.md`: `status: blocked`, `blocked_by: [084]`.
+   - `073-calm-typing-view.md`: `status: blocked`, `blocked_by: [083]`.
+   - `075-mobile-reflow-states.md`: `status: blocked`, `blocked_by: [088]`, with the explicit
+     absorption/supersession banner citing ADR 012 ruling 3 (mobile half cancelled, edge-states
+     half absorbed into 088).
+   - `076-factory-playtest-critique.md`: `blocked_by: [083, 084, 085, 086, 087, 088]` exactly.
+   - `080-obj-name-overflow-wrap-anywhere-ugly-break.md`: `status: blocked`,
+     `blocked_by: [087]`.
+   All match the cut record's claims exactly.
+
+4. **Authority — PASS.** Read ADR 012 and ADR 013 in full: 082's citations of ruling 1
+   (earnings-first typing strip), ruling 2 (Bouwplan grows, doesn't replace), ruling 3
+   (keyboard-first, 075's mobile half cancelled) and ADR 013's flywheel-intake framing for 076
+   all match the source ADRs verbatim in substance — no forged authority. Charter guardrails
+   (no idle income, no pressure mechanics, breadth-not-power, €50/mo ceiling) are respected:
+   this is a scope/sequencing document, zero spend, zero new recurring commitment, and no
+   slice's ACs permit a guardrail violation. Nothing here usurps a CEO/Shareholder decision —
+   082 explicitly defers the one open judgment call (076's future goal-thread re-add) to a
+   future PO/CEO call rather than deciding it now.
+
+5. **Id hygiene — PASS.** Directory listing of `company/assignments/` confirms exactly one
+   file per id, no collisions. Ids 083–088 used as claimed; 082 is the cut record itself. 089
+   does not exist anywhere in the tree (never consumed). 090 exists
+   (`090-boost-streak-pill-hardcoded-hex.md`, `open`/priority 4) — per the brief this was filed
+   by a developer lane in tick #29 *after* the cut returned it to the pool, which is legitimate
+   dispatcher re-allocation, not a cut error; 082's own "returned unused: 089, 090" claim was
+   true at the time the cut landed.
+
+6. **Sequencing sanity — PASS.** Chain verified directly from frontmatter, not from the cut's
+   prose: 085←[084], 086←[085] (084→085→086 holds); 087←[069] (069→087 holds); 088←[085]
+   (085→088 holds). 083, 084, 069 are all `blocked_by: []` and immediately dispatchable. No
+   cycles (each blocker set is upstream-only, terminating at the three unblocked ids). No slice
+   is unreachable — every one of 083–088 either has no blocker or chains back to one that does.
+
+**Overall: PASS on all six checks.** No dropped scope, no untruthful disposition, no
+sequencing error, no authority overreach. Status set `done`.
