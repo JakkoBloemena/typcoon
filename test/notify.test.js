@@ -188,3 +188,108 @@ test('admin/notify: zonder Supabase-env-vars (niet geconfigureerd) geeft 500, on
   const r = await call(notify, { body: { text: 'hallo' }, headers: { authorization: 'Bearer testsecret' } });
   assert.equal(r.statusCode, 500);
 });
+
+// --- OPS_NOTIFY_TOKEN (assignment 097): los, zwakker geheim naast CRON_SECRET, zelfde
+// idioom als funnel.js's FUNNEL_READ_TOKEN sinds 044 ------------------------------------
+test('admin/notify: onbekend/leeg OPS_NOTIFY_TOKEN geeft geen toegang (unset grants nothing)', async () => {
+  withBackend();
+  delete process.env.OPS_NOTIFY_TOKEN; // withBackend() zet 'm niet — expliciet ook hier zeker weten
+  const notify = (await import('../api/admin/notify.js')).default;
+  // Precies het scenario uit de acceptatiecriteria: Authorization: Bearer undefined/empty
+  // terwijl de env-var niet bestaat — geen undefined-equals-undefined gat.
+  const bearerUndefined = await call(notify, { body: { text: 'hallo' }, headers: { authorization: 'Bearer undefined' } });
+  assert.equal(bearerUndefined.statusCode, 401);
+  const bearerEmpty = await call(notify, { body: { text: 'hallo' }, headers: { authorization: 'Bearer ' } });
+  assert.equal(bearerEmpty.statusCode, 401);
+  const queryEmpty = await call(notify, { body: { text: 'hallo' }, query: { token: '' } });
+  assert.equal(queryEmpty.statusCode, 401);
+  const queryUndefinedWord = await call(notify, { body: { text: 'hallo' }, query: { token: 'undefined' } });
+  assert.equal(queryUndefinedWord.statusCode, 401);
+});
+
+test('admin/notify: lege string als OPS_NOTIFY_TOKEN env-waarde geeft ook geen toegang', async () => {
+  withBackend();
+  process.env.OPS_NOTIFY_TOKEN = ''; // ingesteld, maar leeg — moet net zo min toegang geven als unset
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const viaHeader = await call(notify, { body: { text: 'hallo' }, headers: { authorization: 'Bearer ' } });
+    assert.equal(viaHeader.statusCode, 401);
+    const viaQuery = await call(notify, { body: { text: 'hallo' }, query: { token: '' } });
+    assert.equal(viaQuery.statusCode, 401);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('admin/notify: geldig OPS_NOTIFY_TOKEN (Bearer-header) autoriseert precies zoals CRON_SECRET', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'ops-secret';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const r = await call(notify, { body: { text: 'ops via alt token' }, headers: { authorization: 'Bearer ops-secret' } });
+    assert.equal(r.statusCode, 200);
+    assert.deepEqual(r.body, { ok: true });
+    assert.equal(DB.tg.length, 1);
+    assert.equal(DB.tg[0], 'ops via alt token');
+
+    // bestaand gedrag ongewijzigd: CRON_SECRET blijft ook gewoon werken
+    const viaCron = await call(notify, { body: { text: 'via cron secret' }, headers: { authorization: 'Bearer testsecret' } });
+    assert.equal(viaCron.statusCode, 200);
+
+    // een niet-bestaand/verkeerd token blijft geweigerd
+    const garbage = await call(notify, { body: { text: 'nope' }, headers: { authorization: 'Bearer nope-not-a-real-token' } });
+    assert.equal(garbage.statusCode, 401);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('admin/notify: geldig OPS_NOTIFY_TOKEN via ?token= werkt ook', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'ops-secret';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const r = await call(notify, { body: { text: 'via query-token' }, query: { token: 'ops-secret' } });
+    assert.equal(r.statusCode, 200);
+    assert.equal(r.body.ok, true);
+    assert.equal(DB.tg.length, 1);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('admin/notify: OPS_NOTIFY_TOKEN gelijk aan CRON_SECRET wordt bij de autorisatie zelf geweigerd (mag het sterkere geheim niet aliasen)', async () => {
+  const { opsTokenValid, notifyAuthorized } = await import('../api/admin/notify.js');
+  const reqWith = (auth) => ({ headers: { authorization: auth }, query: {} });
+
+  // los, verschillend token: geldig
+  assert.equal(opsTokenValid('ops-secret', 'testsecret', reqWith('Bearer ops-secret')), true);
+  // OPS_NOTIFY_TOKEN === CRON_SECRET: de OPS_NOTIFY_TOKEN-tak weigert dit zelf, ook al
+  // presenteert het verzoek precies die (gedeelde) waarde.
+  assert.equal(opsTokenValid('shared-value', 'shared-value', reqWith('Bearer shared-value')), false);
+  // de samengestelde check laat die waarde nog steeds door — maar UITSLUITEND via de
+  // bestaande, ongewijzigde CRON_SECRET-tak (preserve existing CRON_SECRET behavior exactly),
+  // nooit via de (geweigerde) OPS_NOTIFY_TOKEN-tak.
+  assert.equal(notifyAuthorized(reqWith('Bearer shared-value'), 'shared-value', 'shared-value'), true);
+});
+
+// --- rate limit ordering blijft ongewijzigd ondanks de alt-token toevoeging (030-les) ----
+test('admin/notify: rate-limit-vóór-validatie-ordening blijft ongewijzigd met OPS_NOTIFY_TOKEN als credential', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'ops-secret';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const headers = { authorization: 'Bearer ops-secret' };
+    let last;
+    for (let i = 0; i < 31; i++) {
+      const r = await call(notify, { body: { text: 12345 }, headers });
+      if (i < 30) assert.equal(r.statusCode, 400, `verzoek ${i}: verwacht 400 (ongeldige tekst, nog onder de cap)`);
+      last = r;
+    }
+    assert.equal(last.statusCode, 429);
+    assert.deepEqual(last.body, { error: 'rate_limited' });
+    assert.equal(DB.tg.length, 0);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});

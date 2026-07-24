@@ -5,10 +5,19 @@
 // tokens hoeft te hebben. Beveiligd zoals api/admin/funnel.js: CRON_SECRET via Bearer-
 // header óf ?token=.
 //
+// Sinds assignment 097: dit endpoint accepteert ook OPS_NOTIFY_TOKEN als los, zwakker
+// env-geheim naast CRON_SECRET — zelfde idioom als funnel.js's FUNNEL_READ_TOKEN sinds 044.
+// Reden: dit Vercel-project bewaart ALLE env vars write-only (2026-07-24 — zelfs SITE_URL
+// pullt als "[Sensitive]"), dus de scheduler-kant kan CRON_SECRET nergens uitlezen; het
+// CEO-kanaal heeft daarom OPS_NOTIFY_TOKEN los in productie geprovisioneerd. OPS_NOTIFY_TOKEN
+// mag nooit gelijk zijn aan CRON_SECRET (zou het sterkere geheim aliasen); die gelijkheid
+// wordt bij de autorisatie zelf geweigerd, zie opsTokenValid() hieronder — zelfde fail-safe
+// als funnel.js's funnelTokenValid(): een unset/lege token geeft nooit toegang.
+//
 // De tekst gaat verbatim door (het is onze eigen ops-inhoud — geen PII-verwerking, niets
 // wordt opgeslagen), alleen type-gecheckt en lengte-begrensd (~3500 tekens; Telegrams eigen
 // berichtlimiet is 4096). Rate-limited (bestaand api/_ratelimit.js-patroon), bewust één
-// enkele globale bucket — geen per-IP, dit is een intern CRON_SECRET-gated ops-kanaal, geen
+// enkele globale bucket — geen per-IP, dit is een intern token-gated ops-kanaal, geen
 // publieke oppervlak — op een bescheiden plafond. Telt vóór de validatie (assignment 030-
 // les: een limiter die alleen geldige verzoeken telt is te omzeilen door ongeldige probes).
 
@@ -25,11 +34,27 @@ function matches(req, value) {
   return req.headers.authorization === `Bearer ${value}` || q.token === value;
 }
 
+// OPS_NOTIFY_TOKEN is alleen geldig als het (a) is ingesteld — een unset/lege token geeft
+// nooit toegang, geen undefined-equals-undefined gat — én (b) niet gelijk is aan CRON_SECRET:
+// die gelijkheid zou het zwakkere token het sterkere, cron-brede geheim laten aliasen, en
+// wordt daarom hier zelf geweigerd (los geëxporteerd zodat dit exact geval direct
+// unit-test-baar is, ongeacht wat de — ongewijzigde — CRON_SECRET-tak in notifyAuthorized()
+// los daarvan toestaat). Zelfde vorm als funnel.js's funnelTokenValid().
+export function opsTokenValid(opsToken, secret, req) {
+  return !!opsToken && opsToken !== secret && matches(req, opsToken);
+}
+
+// Autorisatie: CRON_SECRET (ongewijzigd t.o.v. vóór 097) OF OPS_NOTIFY_TOKEN.
+export function notifyAuthorized(req, secret, opsToken) {
+  return matches(req, secret) || opsTokenValid(opsToken, secret, req);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const secret = process.env.CRON_SECRET;
-  if (!matches(req, secret)) return res.status(401).json({ error: 'unauthorized' });
+  const opsToken = process.env.OPS_NOTIFY_TOKEN;
+  if (!notifyAuthorized(req, secret, opsToken)) return res.status(401).json({ error: 'unauthorized' });
 
   const db = supa();
   if (!db) return res.status(500).json({ error: 'not_configured' });
