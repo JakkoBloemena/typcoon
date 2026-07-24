@@ -528,6 +528,28 @@ button { font-family: inherit; }
   font-family: var(--data); font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap;
   color: var(--mint); background: var(--night); border: 2px solid var(--mint-deep); border-radius: 999px; padding: 7px 14px;
 }
+.planhead-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+/* 084 (design/DESIGN-FACTORY.md §W2d, closes defect 070 AC1): de control-desk-
+   ledger — de fabriekspagina toonde nergens de RUWE besteedbare munten (alleen
+   levenslang-verdiend en doel-relatieve kosten), dus een kind kon "hoeveel heb ik
+   nu?" niet aflezen zonder terug te gaan naar het typen. Munten/tempo/sterren als
+   LED-cellen, zelfde --data/tabular-nums-idioom als .coin-pill/.cps-pill/.star-pill
+   hierboven. Sterren is het ENE legitieme niet-prestige --sky-gebruik (sterren-
+   context IS prestige-context, §W6) — de rest gebruikt bestaande tokens, geen
+   nieuwe --sN-afstandstokens (zelfde ad-hoc-px-precedent als de rest van dit bestand). */
+.ledger {
+  display: flex; gap: 14px; align-items: center; background: var(--panel);
+  border: 3px solid var(--line); border-radius: var(--r-lg); padding: 10px 14px; box-shadow: 0 6px 0 var(--sink);
+}
+.ledger .cell { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.05; padding: 0 8px; }
+.ledger .cell + .cell { border-left: 2px solid var(--line); }
+.ledger .lab { font-family: var(--data); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.6rem; color: var(--ink-dim); font-weight: 800; }
+.ledger .val { font-family: var(--data); font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.25rem; }
+.ledger .val.money { color: var(--reward); display: inline-flex; align-items: center; gap: 7px; }
+.ledger-coin { width: 18px; height: 18px; }
+.ledger .val.rate { color: var(--mint); }
+.ledger .val.star { color: var(--sky); }
 
 /* de weg: één station per machine, links-naar-rechts, verbonden door een lijn.
    overflow-x:auto is een BEWUSTE binnen-het-paneel-scroll (nooit een pagina-brede

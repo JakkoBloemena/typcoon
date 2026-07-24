@@ -224,6 +224,13 @@ const STRINGS = {
   'factory.prestigeReady': 'Klaar om te verkopen!',
   'factory.contextLine': '{coins} ooit verdiend · ⭐ {stars}',
 
+  // de ledger (assignment 084, design/DESIGN-FACTORY.md §W2d): sluit defect 070 AC1
+  // — de RUWE besteedbare munten, tempo en sterren, altijd zichtbaar op de
+  // fabriekspagina zelf.
+  'factory.ledger.coins': 'Munten',
+  'factory.ledger.perSecond': 'Per seconde',
+  'factory.ledger.stars': 'Sterren',
+
   'reminders.home': 'Vingers terug op de thuisrij! 🏠',
   'reminders.peek': 'Niet spieken — voel de bultjes op F en J 👀',
 
@@ -542,6 +549,10 @@ const STRINGS_EN = {
   'factory.prestigeMeta': '+{bonus}% ⭐ · {n} to go',
   'factory.prestigeReady': 'Ready to sell!',
   'factory.contextLine': '{coins} ever earned · ⭐ {stars}',
+
+  'factory.ledger.coins': 'Coins',
+  'factory.ledger.perSecond': 'Per second',
+  'factory.ledger.stars': 'Stars',
 
   'reminders.home': 'Fingers back on the home row! 🏠',
   'reminders.peek': "Don't peek — feel the bumps on F and J 👀",
