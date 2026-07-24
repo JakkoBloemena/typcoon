@@ -79,7 +79,6 @@ export default function Unlock({ offer = false, onClose, onPurchased }) {
           </ul>
           <div className="price-row">
             <span className="price-now">€{price}</span>
-            {offer && <span className="price-tag">{gt('unlock.today')}</span>}
           </div>
           <div className="trust-line">{gt('unlock.trust')}</div>
           <button className="btn btn-big" onClick={buy}>{gt('unlock.buy', { price })}</button>
