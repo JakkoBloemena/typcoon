@@ -2,7 +2,7 @@
 id: 095
 title: shareCard.js's STREAK_* hex constants no longer match the live .streak-pill (post-090)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 090)
