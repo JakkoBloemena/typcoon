@@ -2,7 +2,7 @@
 id: 115
 title: "Build the diorama place-ness backdrop/depth/scale per the 114 spec (closes the \"blueprint, not place\" gap)"
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: [114]
 opened_by: product-owner
