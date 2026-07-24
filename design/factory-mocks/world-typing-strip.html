@@ -1,0 +1,98 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wereld-pass — Typweergave, verdiensten-eerst (ADR 012 ruling 1)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* ============================================================================
+   TYPING-STRIP RE-SPEC — "verdiensten-eerst" (ADR 012 ruling 1)
+   The typing view carries ONLY high-level earnings: earn RATE (+N/s) and earned
+   TOTAL (coins). The goal sliver (067/073) is REMOVED from this surface — the
+   goal now lives fully on the factory page's build ticket. Accuracy ×mult stays
+   as small SECONDARY teaching feedback (it is "what it can earn" — the lever),
+   quieter than the earnings. Nothing else from the factory world appears here.
+   MOTION POLICY (banned side): ZERO ambient/idle animation on this surface. The
+   three chips that carried infinite pulses (073 BOUNCE) — .golden, .boost,
+   .hint — now use ONE-SHOT entrance only (dropIn, one spring, then still).
+   Only the caret and next-key hint move per keystroke. Desktop/keyboard only.
+   ============================================================================ */
+.play{max-width:760px;margin:0 auto;padding:var(--s5) var(--s4)}
+
+.bar{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+  background:var(--panel);border:3px solid var(--line);border-radius:var(--r-lg);padding:10px 14px;box-shadow:0 8px 0 var(--sink)}
+.bar-left{display:flex;gap:8px;align-items:center}
+.gbtn{background:var(--panel-2);border:2px solid var(--line);color:var(--ink-dim);font-weight:800;font-size:.9rem;
+  padding:8px 14px;border-radius:var(--r-sm);box-shadow:0 4px 0 var(--sink);cursor:pointer;font-family:inherit}
+.gbtn.factory{color:var(--paper)}
+
+/* THE earnings cluster: rate + total, primary, in the LED --data face. */
+.earn{display:flex;align-items:center;gap:var(--s3)}
+.earn .rate{font-family:var(--data);font-variant-numeric:tabular-nums;font-weight:800;font-size:1.05rem;color:var(--mint);
+  background:var(--panel-2);border:2px solid var(--line);border-radius:999px;padding:7px 14px;box-shadow:0 4px 0 var(--sink)}
+.earn .total{font-family:var(--data);font-variant-numeric:tabular-nums;font-weight:900;font-size:1.2rem;color:var(--on-accent);
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass) 60%);border-radius:999px;padding:7px 18px;box-shadow:0 4px 0 var(--brass-deep);
+  display:inline-flex;align-items:center;gap:7px}
+.earn .total .coin{width:19px;height:19px}
+/* secondary teaching feedback — smaller, quieter than the earnings */
+.lever{display:flex;gap:6px;align-items:center;margin-left:2px}
+.lever .chip{font-family:var(--data);font-variant-numeric:tabular-nums;font-weight:800;font-size:.82rem;color:var(--mint);
+  background:var(--panel-2);border:2px solid var(--line);border-radius:999px;padding:5px 11px}
+
+/* the typing card: the dominant element (no goal sliver above it any more) */
+.playcard{margin-top:var(--s5);padding:var(--s6) var(--s5);text-align:center;
+  background:var(--panel);border:3px solid var(--line);border-radius:var(--r-lg);box-shadow:0 8px 0 var(--sink)}
+.playcard .type-text{font-size:2.1rem;letter-spacing:.02em}
+.playcard .kbd{margin-top:var(--s5);justify-content:center}
+
+/* the three status chips — ONE-SHOT entrance, then STILL. No infinite pulse. */
+.chips{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:var(--s5)}
+@keyframes dropIn{from{opacity:0;transform:translateY(-10px) scale(.94)}to{opacity:1;transform:none}}
+.chip-golden{font-family:'Lilita One',sans-serif;font-size:1.02rem;letter-spacing:.4px;color:var(--on-accent);
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass));border-radius:999px;padding:9px 24px;
+  box-shadow:0 5px 0 var(--brass-deep), 0 0 30px color-mix(in srgb,var(--brass) 45%, transparent);
+  animation:dropIn var(--dur-arrive) var(--pop)}
+.chip-boost{font-family:var(--data);font-weight:800;font-size:.92rem;color:var(--mint);
+  background:var(--panel-2);border:2px solid var(--mint-deep);border-radius:999px;padding:8px 18px;animation:dropIn var(--dur-arrive) var(--pop)}
+.chip-hint{font-family:'Lilita One',sans-serif;font-size:1.1rem;color:var(--brass);animation:dropIn var(--dur-arrive) var(--pop)}
+
+.note{max-width:760px;margin:var(--s6) auto 0;color:var(--ink-dim);font-size:.82rem;line-height:1.6;
+  border-top:1px solid var(--line);padding-top:var(--s3)}
+.note b{color:var(--paper)}
+</style></head>
+<body>
+
+<div class="play">
+  <div class="bar">
+    <div class="bar-left">
+      <button class="gbtn">← Menu</button>
+      <button class="gbtn">🔊</button>
+      <button class="gbtn factory">🏭 Fabriek</button>
+    </div>
+    <div class="earn">
+      <span class="rate">⚙️ +66/s</span>
+      <span class="total"><span class="coin"></span> 4.820</span>
+      <span class="lever"><span class="chip">×3.0</span><span class="chip">100%</span></span>
+    </div>
+  </div>
+
+  <div class="chips">
+    <div class="chip-golden">GOUDEN OPDRACHT — 3× munten!</div>
+  </div>
+
+  <div class="playcard">
+    <div class="type-text">
+      <span class="done">fijne</span><span class="sp done">·</span><span class="done">dag</span><span class="sp done">·</span><span class="cur">v</span><span class="up">riend</span><span class="sp up">·</span><span class="up">je</span><span class="sp up">·</span><span class="up">tikt</span><span class="sp up">·</span><span class="up">de</span><span class="sp up">·</span><span class="up">letters</span>
+    </div>
+    <div class="kbd"><b>c</b><b>v</b><b class="hot">b</b><b>n</b><b>m</b></div>
+  </div>
+
+  <div class="note">
+    <b>Wat veranderde t.o.v. 073:</b> de doel-sliver ("JE VOLGENDE MACHINE · nog N")
+    is van de typweergave <b>verwijderd</b> — het doel woont nu volledig op de
+    fabriekspagina (de bouwbon). De strip toont alleen nog <b>verdiensten-eerst</b>:
+    tempo (+N/s) en totaal (munten). ×mult en nauwkeurigheid% blijven als kleine,
+    stille leerfeedback. De drie chips (gouden/boost/hint) gebruiken één entree-veer
+    en staan daarna <b>stil</b> — geen oneindige puls meer (073 AC2).
+  </div>
+</div>
+
+</body></html>

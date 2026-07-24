@@ -1,0 +1,61 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wereld-pass B — De Skyline (dwarsdoorsnede die groeit)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* ============================================================================
+   WORLD-PASS DIRECTION B — "DE SKYLINE" (competitor / not chosen)
+   Concept: a side cross-section of a factory that grows FLOOR BY FLOOR — each
+   machine is a room stacked upward, so "my factory is growing" is literally the
+   building getting taller (Tiny Tower / Fallout Shelter cutaway). Legible growth
+   — but the vertical metaphor is a TOWER, not a "Bouwplan" (drifts from the
+   confirmed direction), and tall growth wants scroll, fighting the "read the
+   whole place at a glance on a desktop" goal. Kept as a strong runner-up.
+   ============================================================================ */
+.stage{max-width:1100px;margin:0 auto;padding:var(--s5)}
+h1{color:var(--paper);font-size:2rem;margin:0 0 var(--s4)}
+.scene{display:grid;grid-template-columns:1fr 300px;gap:var(--s5);align-items:end}
+/* the cut-away building on a ground line under a night blueprint sky */
+.building{position:relative;background:
+    linear-gradient(180deg, color-mix(in srgb,var(--night) 60%,black), var(--night) 70%);
+  border:3px solid var(--line);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:var(--s4) var(--s4) 0;box-shadow:0 10px 0 var(--sink);overflow:hidden}
+.floor{display:flex;align-items:center;gap:var(--s4);background:var(--panel);border:2px solid var(--line);border-bottom:none;
+  border-radius:var(--r-md) var(--r-md) 0 0;padding:var(--s4);margin-bottom:6px}
+.floor .ico{font-size:2.4rem}
+.floor .info{flex:1}
+.floor .fn{font-weight:800;color:var(--paper)}
+.floor .fr{font-family:var(--data);font-weight:700;color:var(--mint);font-size:.8rem}
+.floor .chimney{position:absolute;right:30px;font-size:1.2rem}
+.floor.building-now{border-color:var(--brass);border-style:dashed;background:linear-gradient(180deg,color-mix(in srgb,var(--brass) 12%,transparent),var(--panel))}
+.floor.building-now .fr{color:var(--brass)}
+.floor.locked{opacity:.55;border-style:dashed}
+.floor.locked .ico{filter:grayscale(1)}
+.groundline{height:10px;background:var(--stripe,repeating-linear-gradient(-45deg,var(--brass) 0 12px,var(--sink) 12px 24px));border-radius:0 0 8px 8px}
+.side{background:var(--panel-2);border:2px solid var(--line);border-radius:var(--r-md);padding:var(--s4);box-shadow:0 8px 0 var(--sink)}
+.side .lab{font-family:var(--data);text-transform:uppercase;letter-spacing:.12em;font-size:.62rem;color:var(--ink-dim);font-weight:800}
+.side .val{font-family:var(--data);font-weight:800;font-size:1.6rem;color:var(--brass);font-variant-numeric:tabular-nums}
+.note{margin-top:var(--s4);color:var(--ink-dim);font-size:.85rem;line-height:1.6;max-width:760px}
+.note b{color:var(--paper)}
+</style></head>
+<body><div class="stage">
+<h1>B · De Skyline <span style="color:var(--ink-dim);font-size:1rem">— dwarsdoorsnede die groeit</span></h1>
+<div class="scene">
+  <div class="building">
+    <div class="floor locked"><span class="ico">🏭</span><div class="info"><div class="fn">🔒 Mega-fabriek</div><div class="fr">volledige fabriek</div></div></div>
+    <div class="floor locked"><span class="ico">🏗️</span><div class="info"><div class="fn">Lopende band</div><div class="fr">nog 3 letters</div></div></div>
+    <div class="floor building-now"><span class="ico">🦾</span><div class="info"><div class="fn">Robotarm — NU BOUWEN</div><div class="fr">nog 229 munten</div></div></div>
+    <div class="floor"><span class="ico">🖨️</span><div class="info"><div class="fn">Drukpers</div><div class="fr">Lv 8 · +48/s</div></div><span class="chimney">💨</span></div>
+    <div class="floor"><span class="ico">⌨️</span><div class="info"><div class="fn">Typemachine</div><div class="fr">Lv 12 · +12/s</div></div></div>
+    <div class="groundline"></div>
+  </div>
+  <div class="side">
+    <div class="lab">Munten</div><div class="val">4.820</div>
+    <div class="lab" style="margin-top:12px">Per seconde</div><div class="val" style="color:var(--mint)">+66/s</div>
+    <div class="lab" style="margin-top:12px">2 van 5 gebouwd</div>
+  </div>
+</div>
+<div class="note"><b>Waarom niet gekozen:</b> "groeien" is het meest letterlijk — de
+toren wordt hoger — maar de verticale metafoor is een <b>toren</b>, geen Bouwplan
+(wijkt af van de bevestigde richting), en hoge groei wil scrollen, wat botst met
+"de hele plek in één oogopslag op desktop". Sterke tweede.</div>
+</div></body></html>
