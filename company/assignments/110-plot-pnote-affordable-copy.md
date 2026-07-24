@@ -2,7 +2,7 @@
 id: 110
 title: "Affordable-state copy coherence: fix the \".pnote nog 0 munten\" plot line AND the locked-goal \"bouw maar!\" contradiction (both same family as 104)"
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: tester (t104, verifying assignment 104); re-scoped by product-owner (tick #39 intake) to also carry v104's locked-goal-contradiction finding
@@ -204,3 +204,75 @@ diff is empty.
 
 Genuinely-new-defect id **123 was not used** — no new defect found beyond this
 assignment's scope during this pass; 123 lapses.
+
+## Verification (tester v110, tick #40)
+
+**Verdict: PASS.** All four acceptance criteria verified independently and live,
+against fixtures I constructed myself (different machines/coin amounts/curriculumIndex
+than the dev's `qa-scripts/110-screenshot.mjs`, to avoid rubber-stamping the developer's
+own evidence) — never reused the dev's saves. Own script:
+`qa-scripts/110-tester-verify.mjs`; screenshots: `company/assignments/110-screenshots/t-*.png`.
+
+**Setup**: `npm install` (clean) → `npm test` — **266/266 green**, `vite build` clean,
+`check-no-dutch-en` PASS (5 built en files, zero unallowlisted Dutch hits). `git diff
+--stat` on `src/game/goals.js` confirmed empty (numeric output untouched, copy-only).
+`git checkout -- public/` reverted the harmless build-time churn before verifying, tree
+clean before and after. Ran my own `vite build` + `vite preview --port 4294 --strictPort`
+(my assigned lane port), drove it with Playwright (chromium, headless) against
+localStorage saves I constructed from `newProfile`/`newState` with independently chosen
+buildings/costs (robotarm/assembly instead of the dev's printer/robotarm), reading
+`.pnote`, `.ticket-togo`, goal name and button text directly from the DOM. Server killed
+by PID after.
+
+**AC1 — `.pnote` affordable/not-affordable, both locales** (own fixture: robotarm
+target, buildings `{typewriter, printer}`, premium unlocked):
+- affordable (coins=600, cost=600, remaining=0): nl `.pnote` = `"genoeg munten!"`, en =
+  `"enough coins!"` — old `"nog 0 munten"`/`"0 coins to go"` does not appear. Screenshots
+  `t-01-pnote-affordable-nl-plot.png`, `t-01b-pnote-affordable-en-plot.png` (visually
+  confirmed, not just text-extracted).
+- not-affordable (coins=463, remaining=137): nl `.pnote` = `"nog 137 munten"`, en =
+  `"137 coins to go"` — byte-identical old-format N>0 line, unchanged. Screenshots
+  `t-02-pnote-not-affordable-nl-plot.png`, `t-02b-...-en-plot.png`.
+
+**AC4 (re-scope) — locked-goal contradiction, both locales** (own fixture: assembly
+("Lopende band"/"Conveyor belt", cost 3000, unlockAt 18 letters), buildings
+`{typewriter, printer, robotarm}`, `typcoon:unlocked` NOT set, coins=3000 exact):
+- `.ticket-togo` reads nl `"Je hebt genoeg munten — vraag een volwassene om te
+  ontgrendelen"`, en `"You have enough coins — ask a grown-up to unlock"`, next to a
+  `🔒 Ontgrendel`/`🔒 Unlock` button — the old contradictory `"bouw maar!"`/`"go ahead
+  and build!"` does not appear anywhere. Visually confirmed via
+  `t-03-locked-affordable-nl-ticket.png` and `t-03b-...-en-ticket.png` (full ticket
+  screenshot, not just extracted text) — no "build" copy sits next to the lock icon.
+
+**AC2 — `remaining > 0` unchanged**: covered above (AC1's not-affordable case) plus an
+extra guard case I added — **locked AND not-affordable** (goalLocked=true, remaining=100
+> 0): `.ticket-togo` still reads the old `"nog 100 munten — dat haal je in ± 8
+opdrachten"` togoLine+effort, confirming the new `goalLocked` branch only fires at
+`remaining === 0` and doesn't leak into the ordinary locked-not-yet-affordable path.
+Screenshot `t-05-locked-not-affordable-nl-ticket.png`.
+
+**Unlocked-affordable regression check** (104's `readyLine` must stay unchanged when not
+locked): fresh save, printer target, coins=100 exact, premium unlocked. `.ticket-togo` =
+nl `"Je hebt genoeg munten — bouw maar!"`, en `"You have enough coins — go ahead and
+build!"` — byte-identical to 104's pre-existing string in both locales (dev only
+screenshotted nl for this state; I additionally checked en). Screenshots
+`t-04-unlocked-affordable-nl-ticket.png`, `t-04b-...-en-ticket.png`.
+
+**AC3 — tests**: `npm test` 266/266 green (ran myself, not taken on faith), build clean,
+`check-no-dutch-en` PASS. `test/locale.test.js` `STATIC_FLOW_KEYS` confirmed to include
+both `factory.plotReady` and `goal.lockedReadyLine` (grepped directly).
+
+**Extra edge case beyond the four required states**: empty-factory (`buildings: {}`)
+where the first machine (typewriter, cost 15) is exactly affordable. `.pnote` correctly
+does **not** render here (`t-06-empty-factory-affordable-nl-ticket.png`) — this is
+pre-existing 088 behavior (`{!isEmpty && <div className="pnote">...}`), not a 110
+regression: the "BOUW HIER" empty-factory presentation deliberately omits the cost line
+to avoid clashing with the friendly line underneath. Confirmed 110's new branch lives
+entirely inside the `!isEmpty` guard, so this path is untouched. Not a defect.
+
+**No new defects found.** Grepped source for stray literal `"nog 0 munten"`/`"0 coins to
+go"` outside comments — none. `goals.js` diff confirmed empty via `git show --stat
+2944634`. Scope discipline (no `desktop.*`, no `App.jsx`, no `goals.js` touched) matches
+the delivery notes exactly on inspection of the actual commit diff.
+
+Status set to `done`.
