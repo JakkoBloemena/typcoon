@@ -505,7 +505,11 @@ button { font-family: inherit; }
    i.p.v. losstaand van de buren een nieuwe schaal te introduceren.
    ================================================================================== */
 .plan {
-  width: 100%; max-width: 880px; padding: 20px;
+  /* 085 (design/DESIGN-FACTORY.md PART II W0): het plan groeit van een dashboard-
+     in-een-kaart naar een volle-pagina plek — de diorama-vloer (.hal) heeft meer
+     ademruimte nodig dan de oude 880px chip-rij. Blijft binnen #root's eigen
+     1140px-plafond (bovenaan dit bestand), dus geen aparte wijziging daar nodig. */
+  width: 100%; max-width: 1100px; padding: 20px;
   background:
     repeating-linear-gradient(0deg, transparent 0 31px, var(--bg-grid) 31px 32px),
     repeating-linear-gradient(90deg, transparent 0 31px, var(--bg-grid) 31px 32px),
@@ -551,66 +555,157 @@ button { font-family: inherit; }
 .ledger .val.rate { color: var(--mint); }
 .ledger .val.star { color: var(--sky); }
 
-/* de weg: één station per machine, links-naar-rechts, verbonden door een lijn.
-   overflow-x:auto is een BEWUSTE binnen-het-paneel-scroll (nooit een pagina-brede
-   scroll): op smal mobiel schuift alleen deze rij, niet het document — 075 doet de
-   echte verticale-slang-hertekening, dit voorkomt alleen de 375px-regressie totdat. */
-.road { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
-.station { flex: 1; min-width: 148px; position: relative; padding: 16px 10px 0; text-align: center; }
-.station::before { content: ''; position: absolute; top: 52px; left: -50%; right: 50%; height: 4px; background: var(--mint-deep); z-index: 0; }
-.station:first-child::before { display: none; }
-.station.locked::before { background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 14px); }
-.station-node {
-  position: relative; z-index: 1; width: 76px; height: 76px; margin: 0 auto 10px; border-radius: var(--r-md);
-  display: grid; place-items: center;
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border: 2px solid var(--mint-deep); box-shadow: 0 5px 0 var(--sink);
+/* ==================================================================================
+   DE MAQUETTE — de diorama-vloer (assignment 085, design/DESIGN-FACTORY.md PART II
+   W2a/W2b/W2c). Vervangt de platte `.road`-chiprij: ÉÉN getilde vloerlaag (hergebruikt
+   --bg-grid, dezelfde theming-haak als .plan hierboven) waar machines FLAT bovenop
+   staan — de vloer is het ENIGE getransformeerde element (perspective/rotateX), dus
+   geen icoon/tekst wordt ooit vervormd (W2a). Diepte = de groei-vertelling: dicht bij
+   de horizon (back-baan, klein/plat/blauwdruk) → vooraan op de vloer (front-baan,
+   groot/vol-kleur/schaduw-werpend). Plaatsing is een REGEL (`layoutDiorama` in
+   Shop.jsx) — deze CSS kent zelf geen enkel %-getal per machine, alleen de twee
+   baan-constanten (front/back), dus een 6de machine schuift vanzelf mee (W2c). Geen
+   animaties hier: bewegingsleven is 086's slice — elk station tekent zijn RUSTENDE
+   eindstaat, zodat een reduced-motion kind meteen een complete fabriek ziet.
+   ================================================================================== */
+.hal {
+  position: relative; height: 460px; margin-top: 14px; overflow: hidden;
+  border: 3px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: 0 10px 0 var(--sink), inset 0 40px 90px color-mix(in srgb, var(--night) 82%, black);
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--bg-wash), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--night) 78%, black) 0%, var(--night) 38%, var(--panel-2) 100%);
 }
-.station-icon { width: 46px; height: 40px; }
-.station.cur .station-node {
-  border-color: var(--brass); box-shadow: 0 0 0 4px rgba(255, 185, 21, 0.22), 0 5px 0 var(--sink);
-  background: linear-gradient(180deg, var(--panel), var(--night));
+.floor {
+  position: absolute; left: -20%; right: -20%; bottom: -40px; height: 320px;
+  transform: perspective(560px) rotateX(56deg); transform-origin: bottom center;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 39px, var(--bg-grid) 39px 40px),
+    repeating-linear-gradient(0deg, transparent 0 39px, var(--bg-grid) 39px 40px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, black 45%);
+  mask-image: linear-gradient(180deg, transparent 0, black 45%);
 }
-.station.locked .station-node { border: 2px dashed var(--line); background: transparent; box-shadow: none; }
-.station.locked .station-icon { filter: grayscale(1); opacity: 0.55; }
-.station-name { font-weight: 800; font-size: 0.95rem; color: var(--paper); }
-.station.locked .station-name { color: var(--ink-dim); }
-.station-lv { font-family: var(--data); color: var(--brass); font-weight: 800; font-size: 0.8rem; }
-.station-rate { font-family: var(--data); color: var(--mint); font-size: 0.78rem; font-weight: 700; }
-.station-rate.station-rate-brass { color: var(--brass); }
-.station-rate.station-rate-dim { color: var(--ink-dim); }
-.station .badge {
-  position: absolute; top: 4px; right: 10px; z-index: 2; font-family: var(--data); font-weight: 800;
-  font-size: 0.62rem; white-space: nowrap; background: var(--mint); color: var(--sink); border-radius: 999px; padding: 3px 8px;
+.horizon {
+  position: absolute; left: 0; right: 0; top: 32%; height: 2px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  box-shadow: 0 0 30px 6px color-mix(in srgb, var(--bg-grid) 60%, transparent);
 }
-.station.cur .badge { background: var(--brass); color: var(--on-accent); }
-.station-node.clickable { cursor: pointer; }
 
-/* het uitgelichte volgende doel onder de weg: exact nextGoal (071)'s velden vergroot. */
-.goalspot {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin-top: 18px;
-  padding: 18px; background: linear-gradient(135deg, var(--panel), var(--night)); border: 1px solid var(--brass-deep); border-radius: var(--r-md);
-  overflow: hidden;
+/* gebouwd = een podium (plinth) — het "physical" idioom van deze codebase (dikke
+   onderrand, drukt-echt-in-knop-gevoel), met een ovale slagschaduw op de vloer, een
+   muntgroen statuslampje, naamplaatje en Lv N / +N/s LED-aflezing. Mijlpaal-teaser
+   rijdt op dezelfde mint-badge als de oude .station (ongewijzigde logica). */
+.mch { position: absolute; transform: translateX(-50%); text-align: center; width: 148px; z-index: 2; }
+.mch .plinth {
+  position: relative; width: 116px; margin: 0 auto; border-radius: 18px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 2px solid var(--mint-deep);
+  box-shadow: 0 8px 0 var(--sink), 0 14px 20px color-mix(in srgb, black 45%, transparent);
+  padding: 14px 8px 10px;
 }
-/* de ring is een pure achtergrond-truc (conic-gradient + mask maakt er een donut van);
-   het icoon zit NIET in de gemaskeerde box (een mask knipt z'n hele subtree mee, dus
-   het icoon zou onzichtbaar zijn in het uitgeknipte midden) — het is een ABSOLUTE
-   sibling binnen `.goalspot-ringwrap`, exact zoals de winnende mock (_base.css .rc)
-   het al deed. */
-.goalspot-ringwrap { position: relative; width: 84px; height: 84px; flex: none; display: grid; place-items: center; }
-.goalspot-ring {
+.mch .glass {
+  position: absolute; inset: 6px 6px auto 6px; height: 32px; border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 12%, transparent), transparent);
+  pointer-events: none;
+}
+.mch .mch-ico { width: 62px; height: 54px; filter: drop-shadow(0 4px 6px color-mix(in srgb, black 55%, transparent)); }
+.mch .status {
+  position: absolute; top: 8px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--mint);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--mint) 70%, transparent);
+}
+.mch .plate { margin-top: 9px; font-weight: 800; font-size: 0.92rem; color: var(--paper); }
+.mch .lv { font-family: var(--data); font-weight: 800; font-size: 0.72rem; color: var(--brass); }
+.mch .rate { font-family: var(--data); font-weight: 700; font-size: 0.72rem; color: var(--mint); font-variant-numeric: tabular-nums; }
+.mch .cast {
+  position: absolute; left: 50%; bottom: -14px; width: 118px; height: 24px; transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, black 55%, transparent), transparent 70%); z-index: -1;
+}
+.mch .badge {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%); white-space: nowrap; z-index: 3;
+  font-family: var(--data); font-weight: 800; font-size: 0.6rem; background: var(--mint); color: var(--sink);
+  border-radius: 999px; padding: 3px 9px;
+}
+.mch .badge.cur { background: var(--brass); color: var(--on-accent); }
+/* W2c roster-groei-vak (bij de huidige 5 machines nooit bereikt): trekt zich terug
+   naar een kleiner "gevestigd" plekje in de back-baan als de front-baan ooit voller
+   is dan `layoutDiorama`'s FRONT_LANE_CAP — nog altijd een podium, gewoon kleiner. */
+.mch.established { width: 108px; }
+.mch.established .plinth { width: 86px; padding: 10px 6px 8px; }
+.mch.established .mch-ico { width: 44px; height: 38px; }
+.mch.established .plate { font-size: 0.76rem; }
+.mch.established .lv, .mch.established .rate { font-size: 0.62rem; }
+
+/* de volgende machine = een gloeiend messing bouwterrein: gestreepte tekenlijnen,
+   een messing gloed naar binnen, een spookachtige preview (dezelfde Machine-svg in
+   z'n rustige idle-variant, al gedempt naar 0.42 opacity — precies het "ghosted
+   preview"-gevoel zonder een nieuwe opacity-regel). De 🦾 NU BOUWEN-vlag verschijnt
+   alleen op het station dat ook echt nextGoal's doel is; anders gewoon "te bouwen"
+   (zelfde tweedeling als de oude .road's "overig beschikbaar"-randgeval). */
+.plot { position: absolute; transform: translateX(-50%); width: 156px; text-align: center; z-index: 2; }
+.plot .pad {
+  position: relative; height: 92px; border-radius: 16px; border: 3px dashed var(--brass);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brass) 12%, transparent), transparent),
+    repeating-linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--brass) 16%, transparent) 15px 16px);
+  box-shadow: inset 0 0 30px color-mix(in srgb, var(--brass) 22%, transparent);
+  display: grid; place-items: center;
+}
+.plot .plot-ico { width: 58px; height: 50px; opacity: 0.85; }
+.plot .flag {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  font-family: var(--data); font-weight: 800; font-size: 0.66rem; background: var(--brass); color: var(--on-accent);
+  border-radius: 999px; padding: 4px 12px; box-shadow: 0 4px 0 var(--brass-deep);
+}
+.plot .pname { margin-top: 9px; font-weight: 800; color: var(--paper); }
+.plot .pnote { font-family: var(--data); font-size: 0.72rem; color: var(--brass); font-weight: 700; }
+
+/* op slot = een platte blauwdruk-tekening op het plan, verder naar achteren en
+   kleiner ("komt later"). Letter-poort toont "nog N letters"; premium toont 🔒 +
+   "in de volledige fabriek" en routeert (ongewijzigd) naar Unlock.jsx — een flauwe
+   messing-tint op de rand laat "koopbare breedte" anders lezen dan "nog even leren"
+   (W2b/W8: breedte, nooit macht). */
+.ghost { position: absolute; transform: translateX(-50%); width: 118px; text-align: center; opacity: 0.7; }
+.ghost .draw {
+  height: 68px; border: 2px dashed var(--line); border-radius: 14px; display: grid; place-items: center;
+  background: repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--line) 22%, transparent) 7px 8px);
+}
+.ghost .draw.clickable { cursor: pointer; }
+/* geen extra opacity hier: de idle-variant van Machine is al gedempt (0.42, gebakken
+   in de svg zelf) — een tweede opacity-laag erbovenop maakte het icoon vrijwel
+   onzichtbaar tegen de gearceerde achtergrond; grayscale alleen is genoeg om elke
+   restkleur weg te halen. */
+.ghost .ghost-ico { width: 48px; height: 42px; filter: grayscale(1); }
+.ghost .gname { margin-top: 6px; font-weight: 800; font-size: 0.8rem; color: var(--ink-dim); }
+.ghost .glock { font-family: var(--data); font-size: 0.66rem; color: var(--ink-dim); font-weight: 700; }
+.ghost.premium .draw { border-color: color-mix(in srgb, var(--brass) 60%, var(--line)); }
+
+/* het BOUWBON-werkbon-kaartje: nextGoal (071) vergroot, nu de ÉNE plek waar het
+   volgende doel leeft (083 haalde de doel-sliver al van de typweergave — W2e).
+   Zelfde velden/koopknop als de oude .goalspot, in een dikkere messing-rand met een
+   pinned "BOUWBON"-label. De ring blijft dezelfde conic-gradient+mask-donut-truc met
+   het icoon als ABSOLUTE sibling (een mask knipt zijn hele subtree mee). */
+.ticket {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center;
+  margin-top: 18px; padding: 18px; background: linear-gradient(135deg, var(--panel), var(--night));
+  border: 2px solid var(--brass-deep); border-radius: var(--r-md); box-shadow: 0 8px 0 var(--sink); overflow: hidden;
+}
+.ticket-kicker {
+  position: absolute; top: -11px; left: 20px; font-family: var(--data); font-weight: 800; font-size: 0.62rem;
+  letter-spacing: 0.14em; color: var(--on-accent); background: var(--brass); border-radius: 999px; padding: 3px 10px;
+}
+.ticket .ringwrap { position: relative; width: 84px; height: 84px; flex: none; display: grid; place-items: center; }
+.ticket .ring {
   --p: 0; position: absolute; inset: 0; border-radius: 50%;
   background: conic-gradient(var(--goal) calc(var(--p) * 1%), var(--panel-2) 0);
   mask: radial-gradient(circle 30px at center, transparent 98%, #000 100%);
   transition: background 0.4s ease;
 }
-.goalspot-ringicon { position: relative; font-size: 1.7rem; }
-.goalspot-kick { font-family: var(--data); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.68rem; color: var(--brass); }
-.goalspot-name { font-size: 1.4rem; margin: 2px 0 4px; color: var(--paper); }
-.goalspot-sub { color: var(--ink-dim); font-weight: 700; }
-.goalspot-reward { color: var(--mint); font-variant-numeric: tabular-nums; }
-.goalspot-togo { font-family: var(--data); font-weight: 800; color: var(--paper); margin-top: 8px; font-variant-numeric: tabular-nums; }
-.goalspot-locked-pct { font-family: var(--data); font-weight: 800; color: var(--sky); font-size: 1.2rem; }
+.ticket .ringicon { position: relative; font-size: 1.7rem; }
+.ticket-kick { font-family: var(--data); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.68rem; color: var(--brass); }
+.ticket-name { font-size: 1.4rem; margin: 2px 0 4px; color: var(--paper); }
+.ticket-sub { color: var(--ink-dim); font-weight: 700; }
+.ticket-reward { color: var(--mint); font-variant-numeric: tabular-nums; }
+.ticket-togo { font-family: var(--data); font-weight: 800; color: var(--paper); margin-top: 8px; font-variant-numeric: tabular-nums; }
+.ticket-locked-pct { font-family: var(--data); font-weight: 800; color: var(--sky); font-size: 1.2rem; }
 
 /* onderaan: upgrades + fabriek-verkopen als objectieven op het bouwplan. */
 /* 260px-ondergrens (niet de mock's 200px): bij vijf tegels (vier upgrades + de
