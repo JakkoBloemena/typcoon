@@ -2,7 +2,7 @@
 id: 086
 title: Atmosphere & motion — ambient life, arrival, build moments (world-pass slice 4)
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: [085]
 opened_by: product-owner
@@ -307,3 +307,136 @@ never built — non-blocking, cosmetic, see judgment call 1).
 
 Port 4250 confirmed released (`netstat` shows nothing `LISTENING` after `taskkill`); working
 tree left clean (`public/**` reverted, no stray files) before commit.
+
+### Fix delivery notes (developer, dev/086, 2026-07-24 — bounce fix)
+
+Worktree `C:\companies\typcoon-lanes\d086`, branch `dev/086`, based on `main @ e0db599`.
+Fixes exactly the two defects the tester (v086) reproduced and nothing else — AC3-AC7 were
+independently re-derived as passing and are untouched. Per the retro lesson
+(`company/retro/2026-07-24-tick33-declaration-vs-effect-verification.md`), every check below
+samples the rendered EFFECT (measured computed style over time, screenshot bytes, resolved
+`@keyframes` rules read off the live stylesheet), not declaration text.
+
+**Files touched:** `src/game/game.css` (+33/-7, `git diff --stat` confirms only this file and
+`Shop.jsx`), `src/game/Shop.jsx` (+11/-0). New: `qa-scripts/086-fix-verify.mjs` (30 checks,
+all pass — written fresh for this fix pass, not a copy of `086-verify.mjs` or `086-tester.mjs`),
+`qa-scripts/086-fix-screenshot.mjs`, `company/assignments/086-screenshots/086-fix-idlebob-nonlockstep.png`,
+`086-fix-plotglow-t0.png`, `086-fix-plotglow-t1700ms.png`. `store.js`, `economy.js`,
+`src/engine/`, `theme.js`, `goals.js`, `FactoryPage.jsx`, `assets.jsx` untouched (confirmed via
+`git diff --stat` against every one of those paths — empty output).
+
+**AC1 fix — idleBob lockstep (root cause: stagger keyed off ALL `.hal` children via
+`:nth-child(3n+1)`/`:nth-child(3n+2)`, so `.floor`/`.horizon`/plots/ghosts shifted which
+residue-class a built machine landed in).** Removed both `:nth-child` override rules. Added a
+`--bob-i` inline custom property in `Shop.jsx` — the identical idiom already used for
+`--rise-i`, but a counter that increments ONLY when `item.kind === 'built'` (declared as
+`let builtI = 0` right before the diorama's `.map`, incremented with `style['--bob-i'] =
+builtI++` only inside the `if (item.kind === 'built')` branch). `game.css`'s `.mch .mch-ico`
+rule now derives both `animation-duration` and `animation-delay` as linear functions of
+`--bob-i`: `calc(5s + (var(--bob-i, 0) * 0.3s))` and `calc(var(--bob-i, 0) * 0.15s)`. Since
+`--bob-i` is a strictly unique, monotonically increasing integer per built machine (0, 1, 2,
+…), and both outputs are injective functions of it, no two built machines can ever land on the
+same `(duration, delay)` pair, regardless of how many plots/ghosts/floor/horizon siblings sit
+between them in the DOM — the bug's exact mechanism is structurally impossible now, not just
+untriggered by luck.
+- **Effect-level evidence** (`qa-scripts/086-fix-verify.mjs`, PASS on all): re-ran the tester's
+  exact repro (`buildings: { typewriter: 2, assembly: 4 }`, `curriculumIndex: 25`) plus three
+  more state shapes (1-built, 4-built with a different building mix, 5-built/all-owned) —
+  for every fixture, every PAIR of built machines' `getComputedStyle` `animationDuration`/
+  `animationDelay` was asserted distinct (pairwise, not the old aggregate ">=2 combos
+  somewhere on the page" check that the bounce showed is insufficient), and every duration
+  landed inside the 5–6.5s band. Also confirmed the fixed tester-repro DOM genuinely still
+  has `.floor`/`.horizon`/`.plot` siblings interleaved with `.mch` (i.e. this is a real test of
+  the fix, not an accidentally-distractor-free DOM). Screenshot with an on-page readout of the
+  actual computed values for the tester's exact repro state:
+  `company/assignments/086-screenshots/086-fix-idlebob-nonlockstep.png` (machine 0:
+  `duration=5s delay=0s`, machine 1: `duration=5.3s delay=0.15s` — distinct, where the bounce
+  build produced `5.8s|0s` for both).
+- Cross-checked against the tester's own kept script (`qa-scripts/086-tester.mjs`, unmodified):
+  T2 (">=2 distinct combos") now passes; T12, which encodes the bug itself ("two built machines
+  separated by a multiple of 3 siblings land in the identical bucket → identical duration+delay")
+  now correctly **fails to reproduce** — `mod3` for the two machines is still equal (a coincidence
+  of DOM position, now irrelevant) but their durations are `5s` vs `5.3s`, distinct — which is
+  the expected, desired flip once the fix decouples duration from DOM position. This is not a
+  regression; it's proof the exact mechanism T12 checks for is gone.
+- The dev's original `086-verify.mjs`'s "stagger is expressed via `:nth-child`" check now fails
+  (expected and correct: the fix deliberately replaces the `:nth-child` mechanism with `--bob-i`,
+  per the tester's own bounce-action wording — "keyed off built-machine position... e.g. a
+  per-item inline `--bob-i` counter like the one already used for `--rise-i`"). Every other check
+  in that script (28/29) still passes unmodified, including riseIn/build-moment/no-idle-income/
+  reduced-motion/token-discipline invariants.
+
+**AC2 fix — plotGlow never ran (root cause: `@keyframes plotGlow` was never defined anywhere
+in `game.css`, even though `.plot .pad` carried `animation: plotGlow 3.4s ease-in-out
+infinite` — a silent CSS no-op).** Added the missing `@keyframes plotGlow` block immediately
+after the `.plot .pad` rule (the rule's own pre-existing comment already promised the 16%/34%
+stops "hieronder"/below, so this is exactly where it was meant to live): `0%, 100%` at
+`color-mix(in srgb, var(--brass) 16%, transparent)`, `50%` at `...34%...`, both as
+`box-shadow: inset 0 0 30px ...`, straddling the existing static `22%` declaration (left
+completely unchanged — it remains the deliberate reduced-motion rest midpoint, per the bounce
+notes: "the wiring on `.plot .pad` is otherwise correct and needs no other change"). No other
+line of `.plot .pad` touched.
+- **Effect-level evidence** (`qa-scripts/086-fix-verify.mjs`): `getComputedStyle(pad).boxShadow`
+  sampled 6 times across a 3.4s window is no longer a frozen value (6 distinct values,
+  resolved as `oklab(...)` alpha cycling ~0.16 → ~0.33 → ~0.16). Two `.plot .pad` screenshots
+  1.7s apart (`shot0.equals(shot1)` on the raw PNG buffers) are confirmed NOT byte-identical
+  (`company/assignments/086-screenshots/086-fix-plotglow-t0.png`,
+  `086-fix-plotglow-t1700ms.png` — distinct md5s, `f78f1244...` vs `9786ab2e...`; the bounce's
+  two screenshots at the same offsets had been byte-for-byte identical). Read the actual
+  `CSSKeyframesRule` for `plotGlow` off the live stylesheet (not assumed from source text) and
+  confirmed it resolves; separately sampled the resolved alpha 10 times across a cycle and
+  confirmed the minimum lands within 0.02 of the 16% color-mix stop and the maximum within 0.02
+  of the 34% stop (computed against scratch elements carrying the identical `color-mix`
+  declaration, not eyeballed).
+- Cross-checked against `086-tester.mjs`'s T3/T11 (both unmodified): T3 ("plotGlow box-shadow
+  value genuinely changes") now passes; T11 ("`@keyframes plotGlow` is actually defined") now
+  passes.
+
+**Regression guard — invariants the AC says must not move (re-verified via
+`086-fix-verify.mjs`, all pass):** riseIn `animation-iteration-count` is `1` everywhere, never
+infinite; a real purchase mounts a fresh node only for the newly-built station (pre-existing
+plinths, marked before the buy, are untouched after); zero `.coin`/`.ledger-coin`/`.ledger
+.val`/`.btn-coin` elements carry any animation; every animated property under
+`.hal`/`.ticket`/`.werkbank` (excluding the pre-existing `.svg-machine` carve-out, which this
+fix does not touch or re-litigate, per the brief) is one of
+opacity/transform/box-shadow/background-position — swept via the Web Animations API's
+`getKeyframes()`, excluding the browser-internal `computedOffset`/`offset`/`easing`/`composite`
+bookkeeping keys the API adds automatically; zero new raw hex/`rgba()` and zero new `--token:`
+declarations in the fix diff (fresh grep of `git diff -- src/game/game.css src/game/Shop.jsx`,
+not trusted from memory); `store.js`/`economy.js`/`src/engine/`/`theme.js`/`goals.js`/
+`FactoryPage.jsx`/`assets.jsx` byte-for-byte untouched. Reduced-motion re-verified end-to-end
+with `page.emulateMedia({ reducedMotion: 'reduce' })`: `.plot .pad` box-shadow is byte-identical
+to a scratch element carrying the same static `22%` declaration (not stuck mid-keyframe);
+`.mch-ico` rests at `transform: none` (no residual translateY); no `riseIn` element carries
+`animation-fill-mode: forwards`; every floor station is fully opaque.
+
+**Judgment calls / honest notes for the tester:**
+1. The `.mch .mch-ico` base rule's fallback duration when `--bob-i` is unset (`var(--bob-i, 0)`
+   → `5s`) is slightly below the previous `5.8s` default — this only matters for a `.mch-ico`
+   with no `--bob-i` set, which cannot occur in practice (only built stations render
+   `.mch-ico`, and `Shop.jsx` now sets `--bob-i` for every built station unconditionally). Not
+   flagging as a defect, just noting the fallback exists as a defensive default, not a reachable
+   code path.
+2. Did not add a decorative belt (091 already tracks that separately per the tester's prior
+   verdict) and did not touch the `.svg-machine` running-icon carve-out (already adjudicated
+   twice per the tester's judgment-call log) — both explicitly out of this bounce's two named
+   defects and out of the file-surface hard limit given for this fix.
+3. `playwright-core` was installed locally via `npm install playwright-core --no-save` (matching
+   how the prior dev/tester passes evidently ran their own Playwright-based scripts without it
+   ever appearing in `package.json`/`package-lock.json`) — confirmed `git status` shows zero
+   changes to either file after the install.
+
+**094:** lapsed — no new defect or proposal found during this fix pass; nothing observed beyond
+the two named AC1/AC2 root causes and the already-tracked 091 belt gap.
+
+**Verification commands run:** `npm install`; `npm install playwright-core --no-save`; `npm
+test` (253/253, build, `check-no-dutch-en` all green, both before and after this diff); `npx
+vite build`; `npx vite preview --port 4252 --strictPort`; `node qa-scripts/086-fix-verify.mjs`
+(30/30 pass); `node qa-scripts/086-fix-screenshot.mjs`; cross-checked with the unmodified
+`node qa-scripts/086-verify.mjs` (28/29 — the one expected-to-flip check explained above) and
+`node qa-scripts/086-tester.mjs` (22/23 — the one expected-to-flip check, T12, explained above);
+`taskkill //PID 25940 //F`; confirmed via `netstat -ano` that nothing is `LISTENING` on 4252
+afterward (only expected `TIME_WAIT` remnants); `git checkout -- public/` before committing.
+Working tree confirmed to touch only `src/game/game.css`/`src/game/Shop.jsx` plus new
+`qa-scripts/086-fix-*.mjs` and `company/assignments/086-screenshots/086-fix-*.png` before
+commit.
