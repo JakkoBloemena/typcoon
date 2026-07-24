@@ -2,9 +2,9 @@
 id: 073
 title: Calm typing view — goal sliver, one-line bar, remove FactoryFloor + meters
 owner: developer
-status: blocked
+status: done
 priority: 2
-blocked_by: [083]
+blocked_by: []
 opened_by: product-owner
 ---
 
@@ -249,3 +249,42 @@ guardrail does not apply here — these three chips are unrelated to FactoryFloo
 **Verdict: status → `open`, bounced on AC2.** All other ACs independently re-derived
 and hold. New file: `qa-scripts/073-tester.mjs` (own checks, kept for the next pass).
 Evidence screenshots in `company/assignments/073-screenshots-verify/`.
+
+## Closed via 083 (tester, tick #30)
+
+083 (typing strip earnings-first) folded in the exact AC2 fix this assignment was
+bounced on: `.golden-banner`, `.boost-chip`, `.type-hint` changed from
+`animation: goldpulse/hintPulse … infinite` to a one-shot `dropIn 0.6s var(--pop)`
+(default `animation-iteration-count: 1`).
+
+Independently re-checked on the 083-merged tree (worktree `v083`, branch
+`verify/083`, own script `qa-scripts/083-tester.mjs`, not a re-run of either the dev's
+`083-verify.mjs` or my own prior `073-tester.mjs`):
+
+- **AC2 (zero ambient/idle animation, the three chips one-shot)** — now **holds**. A
+  full `.game *` computed-style animation sweep (caret `tchar` allowlisted) found zero
+  `animationIterationCount === "infinite"` offenders across six driven states:
+  default, first-run pre-keystroke (`.type-hint` iter=`"1"`), forced daily-warmup
+  boost (`.boost-chip` iter=`"1"`), forced golden run (`.golden-banner` iter=`"1"`),
+  boost+golden simultaneously (both render, sweep clean — a combination neither this
+  tester's original bounce script nor the dev's 083 script exercised), and the
+  en-locale in a forced-boost state (sweep clean). All three named offenders from the
+  tick #28 bounce are confirmed fixed; no other ambient/idle animation found anywhere
+  on `.game`.
+- **AC3 (live earn signal)** — still holds under 083. Coin-pill ticked `500` → `550`
+  after a real driven exercise (own fixture); a real `setInterval` production tick +
+  `earnFromExercise` payout, not a decorative loop. (083 removed the goal-sliver-bar
+  half of this AC's original wording — per 083's own explicit, PO-adjudicated design
+  call in `design/DESIGN-FACTORY.md` W4, "removal over demotion" — so only the coin
+  tick-up half of the preserved-value clause still applies; that half holds.)
+- All other 073 ACs (FactoryFloor/.meters/.shop gone, FactoryFloor.jsx deleted,
+  save-compat, tests green) were already independently PASSing at tick #28 and are
+  unaffected by 083's presentation-only diff (`git diff --stat` confirms
+  `store.js`/`economy.js`/`theme.js`/`src/engine/`/`App.jsx`/`Shop.jsx`/
+  `FactoryPage.jsx` untouched by 083 too).
+
+**Verdict: status → `done`.** The 073 AC2 bounce bar holds under an independent sweep
+that specifically re-tried the forcing techniques (`Math.random=()=>0`,
+`boostLeft`+`lastDay` fixture) that caught the original bounce, plus two combinations
+neither prior script tried. No remaining ambient/idle pulse anywhere on the typing
+view.
