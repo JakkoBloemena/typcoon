@@ -61,6 +61,7 @@ const STATIC_FLOW_KEYS = [
   'factory.title', 'factory.navButton', 'factory.backButton',
   'factory.planTitle', 'factory.builtTag', 'factory.currentBadge', 'factory.toBuild',
   'factory.prestigeMeta', 'factory.prestigeReady', 'factory.contextLine',
+  'factory.ledger.coins', 'factory.ledger.perSecond', 'factory.ledger.stars',
   'goal.spotKicker', 'goal.togoLine', 'goal.effort',
   'reminders.home', 'reminders.peek',
   'onb.introTitle', 'onb.introBody', 'onb.introGo', 'onb.homeTitle', 'onb.homeBody', 'onb.homeGo',

@@ -9,7 +9,9 @@
 import { useState } from 'react';
 import Shop from './Shop.jsx';
 import Unlock from './Unlock.jsx';
-import { BUILDINGS } from './economy.js';
+import { BUILDINGS, coinsPerSecond } from './economy.js';
+import { Coin } from './assets.jsx';
+import { fmt } from './format.js';
 import { gt } from './strings.js';
 
 export default function FactoryPage({ state, setGame, unlocked, onUnlock, onBack }) {
@@ -18,6 +20,12 @@ export default function FactoryPage({ state, setGame, unlocked, onUnlock, onBack
   // die de roadmap hieronder ook leest — geen aparte state, kan dus nooit uit sync
   // raken met wat de weg zelf toont.
   const builtCount = BUILDINGS.filter((b) => (state.tycoon.buildings[b.id] || 0) > 0).length;
+  // 084 (design/DESIGN-FACTORY.md §W2d, closes 070 AC1): de control-desk-ledger —
+  // de RUWE besteedbare `tycoon.coins` (nooit lifetime/doel-relatief), coinsPerSecond
+  // en (indien >0) sterren, altijd zichtbaar zonder terug te navigeren naar het typen.
+  // Zuiver weergave: leest dezelfde `state`/economy.js-functie als GameScreen.jsx's
+  // wallet (§7 "reuse"), roept zelf geen enkele buy/upgrade/rebirth-handler aan.
+  const cps = coinsPerSecond(state.tycoon);
 
   return (
     <div className="home">
@@ -27,7 +35,25 @@ export default function FactoryPage({ state, setGame, unlocked, onUnlock, onBack
             <div className="plan-kick">{gt('factory.title')}</div>
             <h2 className="plan-h2">{gt('factory.planTitle')}</h2>
           </div>
-          <span className="progresstag">{gt('factory.builtTag', { built: builtCount, total: BUILDINGS.length })}</span>
+          <div className="planhead-right">
+            <span className="progresstag">{gt('factory.builtTag', { built: builtCount, total: BUILDINGS.length })}</span>
+            <div className="ledger">
+              <div className="cell">
+                <span className="lab">{gt('factory.ledger.coins')}</span>
+                <span className="val money"><Coin className="ledger-coin" /> {fmt(state.tycoon.coins)}</span>
+              </div>
+              <div className="cell">
+                <span className="lab">{gt('factory.ledger.perSecond')}</span>
+                <span className="val rate">+{fmt(cps)}/s</span>
+              </div>
+              {state.tycoon.rebirths > 0 && (
+                <div className="cell">
+                  <span className="lab">{gt('factory.ledger.stars')}</span>
+                  <span className="val star">⭐ {state.tycoon.rebirths}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <Shop state={state} setGame={setGame} unlocked={unlocked} onUnlockOffer={() => setUnlockOffer(true)} />
