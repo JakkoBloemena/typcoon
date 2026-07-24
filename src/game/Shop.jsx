@@ -25,6 +25,12 @@
 // gehydrateerd): een blauwdruk-SKELET vervangt de hele vloer, hergebruikt
 // `layoutDiorama`. Beide zijn puur presentatie + kopij: geen economie-, engine- of
 // store-wijziging, geen nieuwe :root-tokens (game.css).
+// 091 (design/DESIGN-FACTORY.md PART III W12, na de 115-plek-pas): de decoratieve
+// transportband, genoemd sinds W3 maar nooit gebouwd. `beltSegments` (hieronder)
+// is dezelfde REGEL-discipline als `layoutDiorama` — spant zich tussen elke twee
+// opeenvolgende gebouwde machines in de voorbaan, nooit naar een bouwterrein of
+// spookstation. Draagt zelf geen munten/animatie buiten `background-position`
+// (guardrail 2); de keyframe zelf leeft in game.css (`beltDrift`, 5.5s per W12).
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { activeLetters } from '../engine/curriculumCore.js';
 import {
@@ -63,6 +69,35 @@ function layoutDiorama(items) {
     ...it, x: ((i + 1) / (list.length + 1)) * 100, y: LANE[lane].top,
   }));
   return [...place('back', back), ...place('front', front)];
+}
+
+// De transportband (091, design/DESIGN-FACTORY.md PART III W12): net als
+// layoutDiorama hierboven een REGEL, geen hardgecodeerde %-waarde per machine.
+// W12 legt de plaatsing letterlijk vast: de band overspant het horizontale gat
+// tussen elk paar OPEENVOLGENDE gebouwde machines in de voorbaan, nooit naar een
+// bouwterrein of spookstation toe — dus pas zichtbaar vanaf 2 gebouwde machines
+// die naast elkaar in de voorbaan staan. BELT_INSET/BELT_TOP_OFFSET zijn de
+// vaste plaatsingsconstanten uit W12's recept-referentie (world-C-maquette-
+// place.html: machines op x=20%/44%, band op left:16%/width:24%/top:76% — dat is
+// steeds x1-4 / x2-x1 / LANE.front.top+16), toegepast op elk paar, niet één keer
+// per machine.
+const BELT_INSET = 4;
+const BELT_TOP_OFFSET = 16;
+
+function beltSegments(diorama) {
+  const built = diorama.filter((it) => it.kind === 'built' && it.lane === 'front');
+  const segments = [];
+  for (let i = 0; i < built.length - 1; i++) {
+    const a = built[i];
+    const b = built[i + 1];
+    segments.push({
+      key: `belt:${a.b.id}-${b.b.id}`,
+      left: a.x - BELT_INSET,
+      width: b.x - a.x,
+      top: LANE.front.top + BELT_TOP_OFFSET,
+    });
+  }
+  return segments;
 }
 
 // Koopknop met vasthouden-om-te-herhalen: één klik = één keer; ingedrukt houden
@@ -248,6 +283,16 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
               076-kritiek se "blown-out Drukpers"-opmerking). */}
           <div className="warmth" aria-hidden="true" />
           <div className="horizon" aria-hidden="true" />
+          {/* 091 (W12): de band ligt vóór de machine-laag in de DOM (z2 < mch/plot's
+              z3, W10e) en tekent alleen segmenten tussen OPEENVOLGENDE gebouwde
+              machines — bij 0 of 1 gebouwde machine is beltSegments() leeg en er
+              verschijnt niets (geen half getekende band naar een bouwterrein toe). */}
+          {beltSegments(diorama).map((seg) => (
+            <div
+              className="belt" aria-hidden="true" key={seg.key}
+              style={{ left: `${seg.left}%`, width: `${seg.width}%`, top: `${seg.top}%` }}
+            />
+          ))}
           {diorama.map((item, i) => {
             // 086 (W3 aankomstmoment): --rise-i is de positie-index van dit station op
             // de vloer — game.css leest 'm om riseIn ~60ms per index te spreiden. Een

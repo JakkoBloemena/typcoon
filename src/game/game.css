@@ -654,8 +654,11 @@ button { font-family: inherit; }
 /* gebouwd = een podium (plinth) — het "physical" idioom van deze codebase (dikke
    onderrand, drukt-echt-in-knop-gevoel), met een ovale slagschaduw op de vloer, een
    muntgroen statuslampje, naamplaatje en Lv N / +N/s LED-aflezing. Mijlpaal-teaser
-   rijdt op dezelfde mint-badge als de oude .station (ongewijzigde logica). */
-.mch { position: absolute; transform: translateX(-50%); text-align: center; width: 148px; z-index: 2; }
+   rijdt op dezelfde mint-badge als de oude .station (ongewijzigde logica).
+   091 (W10e-ladder): z-index 2 -> 3 — de nieuwe .belt (hieronder, z2) legt zich
+   tussen gebouwde machines, dus alles "leesbaar/interactief" (mch/plot) moet z ≥ 3
+   blijven zodat het atmosfeer-laag nooit vóór een label of knop komt te liggen. */
+.mch { position: absolute; transform: translateX(-50%); text-align: center; width: 148px; z-index: 3; }
 .mch .plinth {
   position: relative; width: 116px; margin: 0 auto; border-radius: 18px;
   background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 2px solid var(--mint-deep);
@@ -694,13 +697,37 @@ button { font-family: inherit; }
 .mch.established .plate { font-size: 0.76rem; }
 .mch.established .lv, .mch.established .rate { font-size: 0.62rem; }
 
+/* 091 (design/DESIGN-FACTORY.md PART III W12): de transportband — genoemd sinds
+   W3 ("beltDrift ... niet met munten") maar nooit gebouwd, nu geplaatst als een
+   model-lopende-band die op de bouwplaat zelf ligt, tussen twee gebouwde machines
+   (Shop.jsx's `beltSegments` beslist WAAR; deze regel alleen hoe hij eruitziet).
+   z-index 2 (W10e: boven vloer/warmte/horizon, onder de machine-laag) — precies
+   het recept uit W12, herbetimed van world-C's oorspronkelijke 1.1s (te snel,
+   trok de blik) naar 5.5s ("barely-there", 22px/5.5s ≈ 4px/s). Geen munt, vonk of
+   pakketje: de band drijft alleen (guardrail 2 — geen idle-inkomen). */
+.belt {
+  position: absolute; height: 14px; border-radius: 8px; transform: translateY(-50%); z-index: 2;
+  background: repeating-linear-gradient(90deg, var(--mint-deep) 0 11px, color-mix(in srgb, var(--mint-deep) 38%, var(--night)) 11px 22px);
+  border: 1px solid var(--mint-deep); box-shadow: 0 3px 0 var(--sink);
+  animation: beltDrift 5.5s linear infinite;
+}
+/* geen `forwards`, zelfde idiom als plotGlow/warmBreath hierboven: `.belt` zet
+   geen eigen `background-position`, dus reduced-motion (globale regel bovenaan
+   dit bestand knijpt de duur naar 0.01ms) valt vanzelf terug op de CSS-default
+   (`0 0`) — een volledig getekende, stilstaande band, geen halverwege-gedrift
+   artefact (W13's reduced-motion-tabel). */
+@keyframes beltDrift { to { background-position: 22px 0; } }
+
 /* de volgende machine = een gloeiend messing bouwterrein: gestreepte tekenlijnen,
    een messing gloed naar binnen, een spookachtige preview (dezelfde Machine-svg in
    z'n rustige idle-variant, al gedempt naar 0.42 opacity — precies het "ghosted
    preview"-gevoel zonder een nieuwe opacity-regel). De 🦾 NU BOUWEN-vlag verschijnt
    alleen op het station dat ook echt nextGoal's doel is; anders gewoon "te bouwen"
-   (zelfde tweedeling als de oude .road's "overig beschikbaar"-randgeval). */
-.plot { position: absolute; transform: translateX(-50%); width: 156px; text-align: center; z-index: 2; }
+   (zelfde tweedeling als de oude .road's "overig beschikbaar"-randgeval).
+   091 (W10e-ladder): z-index 2 -> 3, zelfde reden als .mch hierboven — de band
+   (W12) wordt NOOIT naar een bouwterrein getekend, maar het bouwterrein zelf blijft
+   een leesbaar station en moet dus boven de atmosfeer-laag blijven staan. */
+.plot { position: absolute; transform: translateX(-50%); width: 156px; text-align: center; z-index: 3; }
 .plot .pad {
   position: relative; height: 92px; border-radius: 16px; border: 3px dashed var(--brass);
   background:
@@ -737,8 +764,12 @@ button { font-family: inherit; }
    kleiner ("komt later"). Letter-poort toont "nog N letters"; premium toont 🔒 +
    "in de volledige fabriek" en routeert (ongewijzigd) naar Unlock.jsx — een flauwe
    messing-tint op de rand laat "koopbare breedte" anders lezen dan "nog even leren"
-   (W2b/W8: breedte, nooit macht). */
-.ghost { position: absolute; transform: translateX(-50%); width: 118px; text-align: center; opacity: 0.7; }
+   (W2b/W8: breedte, nooit macht).
+   091 (W10e-ladder): expliciete z-index 2 (was `auto`) — zet spookstations op
+   dezelfde laag als de band, beide atmosfeer, beide onder de leesbare mch/plot-
+   laag (z3), zoals W10e's ladder ("floor 1 · warmth 1 · horizon 1 · belt 2 ·
+   ghost 2 · mch/plot 3 · ruler/pencil 4 · scaletag 6") het vastlegt. */
+.ghost { position: absolute; transform: translateX(-50%); width: 118px; text-align: center; opacity: 0.7; z-index: 2; }
 .ghost .draw {
   height: 68px; border: 2px dashed var(--line); border-radius: 14px; display: grid; place-items: center;
   background: repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--line) 22%, transparent) 7px 8px);
