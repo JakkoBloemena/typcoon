@@ -2,7 +2,7 @@
 id: 076
 title: Milestone gate — playtest-critique the factory experience (kid + parent)
 owner: tester
-status: in_progress
+status: done
 priority: 2
 blocked_by: [083, 084, 085, 086, 087, 088]
 opened_by: product-owner
@@ -64,3 +64,28 @@ This is a critique gate, not a correctness pass — correctness of each surface 
 when its own assignment (071–075) is flipped `done`. Do not verify any assignment whose
 code you wrote. Terminal state: this assignment is `done` when the critique + verdict are
 delivered and any defects are filed. Scope: `research/milestone-factory.md`.
+
+## Delivery note (tester t076, 2026-07-24)
+
+Played both loops (fresh + a real constructed mid-game save) against the built app at
+1360px via Playwright/Chromium, per the world-pass re-cut (083-088). Full critique +
+verdict: `company/research/076-playtest-critique.md`. Screenshots:
+`company/assignments/076-screenshots/`.
+
+**Verdict:** lands the direction (calm typing, legible growing factory, airtight
+save-compat through a full rebirth cycle), but not yet ADR-013's "ultimate experience"
+bar (diorama reads as a blueprint, not yet a place), and ships with one live guardrail
+regression that should block calling this a clean pass. Full reasoning in the critique
+doc.
+
+**Filed defects** (pre-allocated 102-106; used 102-105, **106 lapses unused**):
+- 102 (P1) — fake "ALLEEN VANDAAG" expiry badge on the €14,99 unlock offer, live
+  violation of decisions/002 §3.
+- 103 (P2) — diorama per-station `+N/s` omits the level multiplier, wrong for any
+  machine above Lv 1.
+- 104 (P4) — "± 0 opdrachten" confusing copy when a goal is already affordable.
+- 105 (P3) — typing view's ⭐ star pill vs. ADR 012 ruling 1's "nothing else from the
+  factory world," routed to product-owner as a scope judgment call.
+
+Save-compat (AC2) verified clean: every coin/level/star/badge field round-tripped
+correctly across both surfaces and survived a full rebirth transition.
