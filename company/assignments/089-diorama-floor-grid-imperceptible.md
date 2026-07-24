@@ -2,7 +2,7 @@
 id: 089
 title: Diorama floor grid (--bg-grid) is nearly imperceptible — the "tilted floor" reads as a flat dark backdrop, not terrain
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tester (proposed)

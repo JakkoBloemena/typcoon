@@ -2,7 +2,7 @@
 id: 076
 title: Milestone gate — playtest-critique the factory experience (kid + parent)
 owner: tester
-status: open
+status: in_progress
 priority: 2
 blocked_by: [083, 084, 085, 086, 087, 088]
 opened_by: product-owner
