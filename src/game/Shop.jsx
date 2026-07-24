@@ -261,7 +261,7 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
                 <div className="cast" aria-hidden="true" />
                 <div className="plate">{gt('building.' + b.id)}</div>
                 <div className="lv">Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</div>
-                <div className="rate">+{fmt(b.rate * milestoneMultiplier(level))}/s</div>
+                <div className="rate">+{fmt(level * b.rate * milestoneMultiplier(level))}/s</div>
               </div>
             );
           }
