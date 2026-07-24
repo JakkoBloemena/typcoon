@@ -23,7 +23,13 @@ Entry format:
 
 ---
 
-## Tick 2026-07-24 #22 â€” OPEN
+## Tick 2026-07-24 #23 â€” OPEN
+- opened: 2026-07-24 09:17 (system clock; tick #22 closed 08:26 â€” ~51 min ago, one scheduler heartbeat). Reconciliation note: tick #22's close commit 2d7d654 landed complete (closed/outcomes/retro all present) but its header word was left OPEN â€” flipped to CLOSED in this open commit; cosmetic ledger defect, no recovery needed (tree was clean, all lane output integrated).
+- claimed: none â€” ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied â€” 020â†010 blocked, 021â†020). This tick executes the ADR's standing mandate: monitor stage duty + T1â€“T6 trigger evaluation (last pass tick #22 at ~08:26, one heartbeat ago â€” due per one-pass-per-heartbeat cadence, cc f7b7db3).
+- worktrees: monitor â†’ C:\companies\typcoon-lanes\mon23 (mon/tick23; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049â€“b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
+- ids allocated: 065â€“066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them); next free after reservation: 067; next decision id: 011
+
+## Tick 2026-07-24 #22 â€” CLOSED
 - opened: 2026-07-24 08:17 (system clock; tick #21 closed 07:23 â€” ~54 min ago, one scheduler heartbeat)
 - claimed: none â€” ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied â€” 020â†010 blocked, 021â†020). This tick executes the ADR's standing mandate: monitor stage duty + T1â€“T6 trigger evaluation (last pass tick #21 at ~07:23, one heartbeat ago â€” due per one-pass-per-heartbeat cadence, cc f7b7db3).
 - worktrees: monitor â†’ C:\companies\typcoon-lanes\mon22 (mon/tick22; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049â€“b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
