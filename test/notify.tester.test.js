@@ -215,3 +215,167 @@ test('tester/notify: rate_limits rows never contain the notified text, only the 
     assert.equal(JSON.stringify(row).includes('super secret ops payload'), false);
   }
 });
+
+// =========================================================================================
+// Independent tester probe for assignment 097 (OPS_NOTIFY_TOKEN as an alternative credential
+// alongside CRON_SECRET). Written by the tester (v097), NOT the developer — this file's own
+// header states it exists to avoid re-running the developer's own test/notify.test.js
+// assertions, and the developer deliberately left it untouched for exactly that reason.
+//
+// Angles probed here that test/notify.test.js's own 097 additions do not cover:
+//   - valid OPS_NOTIFY_TOKEN via Bearer AND ?token= using this file's own withBackend()/DB
+//     spy (own construction, not the dev's fixture values), CRON_SECRET still works alongside
+//   - a whitespace-only OPS_NOTIFY_TOKEN env value (distinct from '' — truthy but "looks empty")
+//   - OPS_NOTIFY_TOKEN presented as a duplicated/array ?token= query param (the array-rejection
+//     angle this file already established for CRON_SECRET in 093 — confirmed here for the
+//     097 alt-token path specifically)
+//   - rate-limit-before-validation ordering re-derived with a different invalid body SHAPE
+//     (null, not the dev's invalid-number) and a different cap (MAX_NOTIFY_HOUR override),
+//     not the dev's verbatim 31-request/cap-30 pattern
+//   - method-check-before-auth ordering unaffected by the new token: GET with a valid
+//     OPS_NOTIFY_TOKEN in the query is still 405, not 401 then 405
+//   - the alias judgment call (OPS_NOTIFY_TOKEN === CRON_SECRET), cross-checked directly
+//     against funnel.js's shipped funnelTokenValid/funnelAuthorized for behavioral parity —
+//     not just re-reading the dev's claim that they match
+// =========================================================================================
+
+test('tester/097: valid OPS_NOTIFY_TOKEN via Bearer authorizes; CRON_SECRET keeps working alongside it', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'tester-alt-token-9317';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const r1 = await call(notify, { body: { text: 'probe via alt bearer' }, headers: { authorization: 'Bearer tester-alt-token-9317' } });
+    assert.equal(r1.statusCode, 200);
+    assert.deepEqual(r1.body, { ok: true });
+    assert.equal(DB.tg[0], 'probe via alt bearer');
+
+    const r2 = await call(notify, { body: { text: 'probe via cron, unchanged' }, headers: { authorization: 'Bearer testsecret' } });
+    assert.equal(r2.statusCode, 200);
+    assert.equal(DB.tg.length, 2);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('tester/097: valid OPS_NOTIFY_TOKEN via ?token= authorizes (own fixture, distinct token value)', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'tester-alt-token-9317';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const r = await call(notify, { body: { text: 'probe via alt query' }, query: { token: 'tester-alt-token-9317' } });
+    assert.equal(r.statusCode, 200);
+    assert.equal(DB.tg[0], 'probe via alt query');
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('tester/097: whitespace-only OPS_NOTIFY_TOKEN env is truthy and behaves as a real (if silly) token — not a fail-safe hole', async () => {
+  // '   ' is a non-empty string: !!opsToken is true, and it differs from CRON_SECRET, so
+  // opsTokenValid falls to matches(req, opsToken) — an exact-string match, same as any other
+  // token value. This documents that a whitespace env value is NOT treated as "empty" (only
+  // '' is caught by the falsy check) — the caller would have to send the exact whitespace
+  // string to get in, so it isn't an accidental-access hole, but it is worth recording since
+  // whitespace-only secrets are an easy accidental-provisioning mistake (e.g. a copy-paste of
+  // a blank Vercel field) that this code does not specifically guard against.
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = '   ';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const wrongGuess = await call(notify, { body: { text: 'nope' }, headers: { authorization: 'Bearer wrong' } });
+    assert.equal(wrongGuess.statusCode, 401);
+
+    const exactWhitespace = await call(notify, { body: { text: 'whitespace token works if you know it' }, headers: { authorization: 'Bearer    ' } });
+    assert.equal(exactWhitespace.statusCode, 200);
+    assert.equal(DB.tg.length, 1);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('tester/097: OPS_NOTIFY_TOKEN presented as a duplicated/array ?token= query param never authorizes', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'tester-alt-token-9317';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    // Real query-string parsers (e.g. Express' qs, Vercel's own) turn ?token=a&token=b into
+    // an array — confirm the alt-token path rejects this exactly like the CRON_SECRET path
+    // already established elsewhere in this file (093's array-rejection angle, re-run here
+    // specifically against the new 097 branch).
+    const r = await call(notify, {
+      body: { text: 'should not send' },
+      query: { token: ['tester-alt-token-9317', 'other'] },
+    });
+    assert.equal(r.statusCode, 401);
+    assert.equal(DB.tg.length, 0);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('tester/097: rate-limit still counts before validation with OPS_NOTIFY_TOKEN as credential — different invalid shape (null) and a lowered cap', async () => {
+  const DB = withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'tester-alt-token-9317';
+  process.env.MAX_NOTIFY_HOUR = '5'; // deliberately not the dev's default-30 pattern
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const headers = { authorization: 'Bearer tester-alt-token-9317' };
+    let last;
+    for (let i = 0; i < 6; i++) {
+      // null (not the dev's invalid-number 12345) — still fails the typeof-string check.
+      const r = await call(notify, { body: { text: null }, headers });
+      if (i < 5) assert.equal(r.statusCode, 400, `request ${i}: expected 400 (invalid text, still under the lowered cap)`);
+      last = r;
+    }
+    assert.equal(last.statusCode, 429);
+    assert.deepEqual(last.body, { error: 'rate_limited' });
+    assert.equal(DB.tg.length, 0);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+    delete process.env.MAX_NOTIFY_HOUR;
+  }
+});
+
+test('tester/097: GET with a valid OPS_NOTIFY_TOKEN in the query is still 405, not 401 — method check still precedes auth', async () => {
+  withBackend();
+  process.env.OPS_NOTIFY_TOKEN = 'tester-alt-token-9317';
+  try {
+    const notify = (await import('../api/admin/notify.js')).default;
+    const r = await call(notify, { method: 'GET', query: { token: 'tester-alt-token-9317' } });
+    assert.equal(r.statusCode, 405);
+  } finally {
+    delete process.env.OPS_NOTIFY_TOKEN;
+  }
+});
+
+test('tester/097: alias behavior matches funnel.js byte-for-byte — cross-checked against the shipped funnelTokenValid/funnelAuthorized, not just re-read', async () => {
+  const { opsTokenValid, notifyAuthorized } = await import('../api/admin/notify.js');
+  const { funnelTokenValid, funnelAuthorized } = await import('../api/admin/funnel.js');
+  const reqWith = (auth, query = {}) => ({ headers: { authorization: auth }, query });
+
+  const cases = [
+    // [token, secret, header]
+    ['shared-value', 'shared-value', 'Bearer shared-value'], // aliasing case
+    ['distinct-value', 'shared-value', 'Bearer distinct-value'], // normal distinct-token case
+    ['', 'shared-value', 'Bearer '], // empty token
+    [undefined, 'shared-value', 'Bearer undefined'], // unset token
+  ];
+  for (const [token, secret, header] of cases) {
+    const req = reqWith(header);
+    assert.equal(
+      opsTokenValid(token, secret, req),
+      funnelTokenValid(token, secret, req),
+      `opsTokenValid/funnelTokenValid diverged for token=${JSON.stringify(token)} secret=${JSON.stringify(secret)}`
+    );
+    assert.equal(
+      notifyAuthorized(req, secret, token),
+      funnelAuthorized(req, secret, token),
+      `notifyAuthorized/funnelAuthorized diverged for token=${JSON.stringify(token)} secret=${JSON.stringify(secret)}`
+    );
+  }
+  // The alias case specifically: the composite still authorizes (via the untouched
+  // CRON_SECRET branch), identically in both modules — this is the 097 judgment call,
+  // verified as byte-for-byte parity with the already-shipped 044 idiom, not merely "similar".
+  assert.equal(notifyAuthorized(reqWith('Bearer shared-value'), 'shared-value', 'shared-value'), true);
+  assert.equal(funnelAuthorized(reqWith('Bearer shared-value'), 'shared-value', 'shared-value'), true);
+});
