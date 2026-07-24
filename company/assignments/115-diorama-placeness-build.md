@@ -2,7 +2,7 @@
 id: 115
 title: "Build the diorama place-ness backdrop/depth/scale per the 114 spec (closes the \"blueprint, not place\" gap)"
 owner: developer
-status: needs_verification
+status: open
 priority: 2
 blocked_by: [114]
 opened_by: product-owner
@@ -38,13 +38,13 @@ direction-specific criteria below name the exact W-series layers; the comparison
 layers** (DESIGN-FACTORY §W15) — every other world-C surface (machines, ledger, build
 ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
 
-- [ ] **The desk surround + `.hal` background swap (W10a).** The existing `.hal` is wrapped
+- [x] **The desk surround + `.hal` background swap (W10a).** The existing `.hal` is wrapped
       in a new `.desk` element (physical tabletop: `--sink` border, faint diagonal grain from
       `color-mix` over `--sink`, `--panel-2`/`--sink` gradient, `0 12px 0 var(--sink)` lip),
       and `.hal` loses world-C's radial ceiling-glow for the plainer `--night`→`--panel-2`
       desk-context gradient. The diorama now reads as a **model resting on a desk**, not a
       schematic on a bare panel.
-- [ ] **The `MAQUETTE 1:50` scale tag (W10b).** A `.scaletag` pinned to the desk's top-left
+- [x] **The `MAQUETTE 1:50` scale tag (W10b).** A `.scaletag` pinned to the desk's top-left
       corner (`--data` face, `--ink-dim` on `--night`, the `1:50` in `--brass`), matching the
       mock. This is the primary "these are miniatures" scale cue.
 - [ ] **The warm workshop wash (W10c).** A `.warmth` radial pool of `color-mix` over
@@ -52,11 +52,11 @@ ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
       `.floor` so it sits behind the machine layer (`z3`)** and cannot lower any label's
       contrast. **No hotspot on any single machine** (the fix for the critic's blown-out note).
       It carries the new `warmBreath` 8s ambient motion.
-- [ ] **The scale props (W10d).** A `.ruler` along the near lip of the baseplate and a
+- [x] **The scale props (W10d).** A `.ruler` along the near lip of the baseplate and a
       `.pencil` lying at model scale beside the machines (`--brass` body, wood tip + graphite
       point via pseudo-elements), both decorative (no text, no interaction), both token-derived.
       Together with the tag they deliver "scale" concretely without shrinking the machines.
-- [ ] **Layer order holds (W10e):** `floor 1` · `warmth 1` · `horizon 1` · `belt 2` ·
+- [x] **Layer order holds (W10e):** `floor 1` · `warmth 1` · `horizon 1` · `belt 2` ·
       `ghost 2` · `mch`/`plot 3` · `ruler`/`pencil 4` · `scaletag 6`. **Anything readable or
       interactive stays at `z ≥ 3`; all atmosphere is `z ≤ 2` except the two flat props (z4)
       and the tag (z6), which carry no machine text.** This is what preserves AA by construction.
@@ -66,7 +66,7 @@ ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
       beyond the machine icons themselves. A tester compares the running app at ~1360px to the
       four `world-place-winner-*.png` renders and confirms each named element is present and
       reads as intended.
-- [ ] **Every new atmosphere motion has a finished still resting state.** Under
+- [x] **Every new atmosphere motion has a finished still resting state.** Under
       `prefers-reduced-motion: reduce` the factory is complete and legible instantly — per
       W13's resting-state table: `warmth` at `opacity:.72` (workspace still lit), machines
       standing, plot glowing at mid, props/tag static. No element conveys state or affordance
@@ -79,17 +79,17 @@ ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
       soft), and `riseIn` (380ms one-shot on arrival, loops never) must still read as their
       W13 entries describe on the finished desk backdrop. (The `beltDrift` re-time is
       assignment 091's, not this one — see Notes.)
-- [ ] **Guardrail 2 intact:** no atmosphere element spouts, carries, or implies coins;
+- [x] **Guardrail 2 intact:** no atmosphere element spouts, carries, or implies coins;
       typing stays the only faucet (the same guardrail-2 test 086 established for every
       ambient element on this page).
-- [ ] **Token discipline:** zero new `:root` tokens; every colour is `var(--token)`; tints
+- [x] **Token discipline:** zero new `:root` tokens; every colour is `var(--token)`; tints
       and glows use `color-mix(in srgb, var(--token) N%, transparent)`, never raw
       `rgba()`/hex; `--sky` stays prestige-only. A `[data-theme]` swap recolours the new
       backdrop and dressing for free — verify on at least one non-default theme.
-- [ ] **Keyboard-first, desktop only:** no mobile/narrow-viewport layout is added here
+- [x] **Keyboard-first, desktop only:** no mobile/narrow-viewport layout is added here
       (that is assignment 106's separate concern). Desktop layout at the design widths is
       the deliverable.
-- [ ] **Save-compat / presentation-only:** `store.js`, `economy.js`, `src/engine/`,
+- [x] **Save-compat / presentation-only:** `store.js`, `economy.js`, `src/engine/`,
       `theme.js`, `goals.js` untouched; a save made before this assignment loads and renders
       identically apart from the new backdrop; `npm test` stays green; `check-no-dutch-en`
       passes.
@@ -227,3 +227,183 @@ new backdrop, exactly as the save-compat AC requires.
 
 Commit: see `git log` on `dev/115` for the hash covering `src/game/Shop.jsx`,
 `src/game/game.css`, this file, and `company/assignments/115-screenshots/*.png`.
+
+## Verification (tester v115, tick #41)
+
+**Verdict: FAIL.** Reproduced every check independently in worktree
+`C:\companies\typcoon-lanes\v115` (branch `verify/115`, port 4298) against commit
+`519caff` on main HEAD, with my own save fixture and probe script
+(`qa-scripts/115-tester-verify.mjs`, not copied from the dev's or prior testers'
+scripts). Automated checks: 28/29 PASS. `npm test`: **266/266**. `vite build`: clean.
+`check-no-dutch-en`: **PASS** (5 built en files, zero unallowlisted hits). Everything
+the dev claimed about structure, layering, token hygiene, and three of the four
+motions is **true and independently confirmed**. One acceptance criterion fails, hard,
+in a real browser, for a reason neither the dev's screenshots nor careful diff-reading
+alone would catch.
+
+### The failure: `.warmth` (W10c) never renders — the front wash is invisible
+
+`game.css:640` (`.warmth`'s `background`):
+```css
+background: radial-gradient(78% 100% at 42% 118%,
+  color-mix(in srgb, var(--bg-wash) 130%, transparent) 0,
+  color-mix(in srgb, var(--bg-wash) 60%, transparent) 38%,
+  transparent 66%);
+```
+`color-mix()`'s percentage argument is typed `<percentage [0,100]>` in the CSS Color 4
+spec — a value outside `[0,100]` makes the whole `color-mix()` (and therefore the whole
+`background` declaration containing it) **invalid at parse time**, which falls back to
+the property's initial value. **130% is out of range.** Proven four independent ways in
+the live app, headless Chromium (`HeadlessChrome/149.0.0.0`, the same engine real users
+get):
+1. `CSS.supports('background', 'color-mix(in srgb, red 130%, transparent)')` → `false`.
+   Swept 99–130%: **101% is already invalid**, 100% and below are fine.
+2. `getComputedStyle(document.querySelector('.warmth')).backgroundImage` → `"none"`,
+   `.backgroundColor` → `"rgba(0, 0, 0, 0)"` — the element paints **nothing**, on every
+   page load, every theme.
+3. Reproduced the exact same invalidity by assigning the identical
+   `radial-gradient(...) `string to a throwaway test `<div>` — confirms it's the value,
+   not a Shop.jsx/React quirk.
+4. Screenshots at 1360×1000 in **all four** themes (see
+   `company/assignments/115-screenshots-verify/diorama-{muntpers,nachtploeg,
+   snoepfabriek,diepzee}-theme.png`) show a perfectly flat baseplate front — no warm
+   pool, no glow, nothing distinguishable from `.hal`'s own unrelated background
+   gradient. Compare against the four `world-place-winner-*.png` renders: the renders
+   *also* show no clearly visible wash (the `--bg-wash` alpha is only 5–7% to begin
+   with, so "whisper-subtle but present" and "literally absent" are hard to
+   distinguish by eye alone) — that's *why* this survived three theme-checks by eye in
+   the dev's own verification and wasn't caught: it takes `getComputedStyle`, not a
+   screenshot, to see the difference between "very faint" and "not there."
+
+**This is not a defect the developer invented.** The identical `130%` value is already
+present verbatim in `design/DESIGN-FACTORY.md` W10c's own code block (line ~856) and in
+`design/factory-mocks/world-C-maquette-place.html` line 84 — both are assignment 114
+deliverables, already `status: done`. The dev's job was to build W10a–d "exactly," and
+did — this is a bug the dev *faithfully reproduced* from the spec, not one they
+introduced. But 115's own written AC requires a *working* warm front wash in the
+*shipped app* ("The critique's named gap is visibly closed: ... warm front wash ...
+give a legible sense of a place"), and it is provably not there. That AC fails on its
+own terms regardless of where the bad value originated, so this bounces back to 115 —
+whoever picks this up needs to touch `game.css` (in scope for 115) and should also flag
+`DESIGN-FACTORY.md`/the mock HTML so a future reader doesn't reintroduce the same value.
+
+**Suggested fix (for the next dev pass, not applied by me):** clamp both stops to
+`≤100%`, e.g. `color-mix(in srgb, var(--bg-wash) 100%, transparent) 0,
+color-mix(in srgb, var(--bg-wash) 55%, transparent) 38%, transparent 66%` — preserves
+the "hotter center, fading out" shape W10c describes without the invalid percentage.
+Re-screenshot after the fix; the effect is expected to stay very subtle by design (W3
+restraint), so confirm with `getComputedStyle(...).backgroundImage !== 'none'` and a
+pixel-level before/after diff, not eyeballing alone — that's exactly what let this slip
+through 114 and 115 both.
+
+### AC-by-AC (12 boxes; 9 ticked above, 3 left open — all three trace to the one root cause)
+
+- **W10a desk surround + `.hal` swap — PASS.** `.desk` wraps `.hal` 1:1, grain/lip/
+  gradient all present and token-derived, `.hal`'s ceiling-glow is gone, replaced by
+  the plainer `--night`→`--panel-2` gradient. Confirmed structurally and visually in
+  all 4 themes.
+- **W10b `.scaletag` — PASS.** Pinned top-left, text is exactly `MAQUETTE 1:50`,
+  `1:50` renders in `--brass`, re-tints correctly per theme.
+- **W10c warm wash — FAIL.** See above. `.warmth` exists in the DOM, animates its
+  `opacity` correctly (proven live, see W13 below), but paints **zero pixels** in any
+  theme — the `background` is invalid CSS.
+- **W10d `.ruler`/`.pencil` — PASS.** Both present, `aria-hidden`, token-derived,
+  visually read as a ruled lip + a brass pencil at model scale in every theme.
+- **W10e layer order — PASS.** Probed `z-index` live: `.warmth`=1, `.mch`/`.plot`=2
+  (pre-091, as the dev's judgment call 1 predicts), `.ruler`/`.pencil`=4,
+  `.scaletag`=6; `.floor`/`.horizon` carry no explicit `z-index` (pre-existing,
+  unrelated to 115) but per CSS stacking-order painting rules (`z-index:auto`
+  positioned descendants paint in the same step as `z-index:0`, strictly before any
+  positive-`z-index` descendant) they visually sit below `.warmth` regardless — DOM
+  order confirms `.warmth` sits right after `.floor`, before `.horizon`, matching
+  Shop.jsx. Relative ordering (atmosphere ≤ machines < flat props < tag) holds.
+- **Critique's named gap visibly closed — FAIL.** Desk + tag + ruler + pencil are all
+  present and do read as "a place," but the AC explicitly lists the "warm front wash"
+  as one of the elements that must be present and read as intended, and it is not
+  there. Partial credit isn't a pass.
+- **Reduced-motion resting states — PASS.** `.warmth` freezes at exactly `opacity:.72`
+  (sampled twice, 1s apart, identical) — the freeze *mechanism* is correct even though
+  the layer it freezes is invisible either way. `idleBob` freezes to a standing
+  machine (`transform: none`, stable across two 1s-apart samples). No stuck
+  mid-animation artifact anywhere. Screenshot:
+  `company/assignments/115-screenshots-verify/diorama-reduced-motion.png`.
+- **W13 live motion probe — FAIL (partial).** Sampled `getComputedStyle` every ~0.9s
+  for 10s on a live page (not stills): `idleBob` — two built machines' `.mch-ico`
+  `translateY` visibly out of phase across all 11 samples, never identical, ✔.
+  `plotGlow` — `.plot .pad`'s `box-shadow` alpha (Chromium reports `color-mix()`
+  results as `oklab(... / alpha)`, not `rgba()` — parsed accordingly) oscillated
+  smoothly between 0.162 and 0.340 on the built plot, matching the spec's 16%/34%
+  almost exactly, ✔. `riseIn` — settled, no re-trigger observed late in the run, ✔.
+  `warmBreath` — the underlying `opacity` value **does** animate correctly (0.72↔1.0,
+  smooth, no strobe, confirmed via computed style) — but per W10c above, there is
+  nothing visible for that opacity to apply to, so "the front wash gently breathes"
+  (the AC's actual felt-experience requirement) **cannot be observed on screen at
+  all**, by a human or otherwise. Same root cause as W10c, not a second independent
+  bug, but it means this checkbox can't be honestly ticked either.
+- **Guardrail 2 — PASS.** No coin/spark/parcel imagery/wording anywhere in the 4 new
+  atmosphere layers' markup.
+- **Token discipline — PASS.** Re-read the full `519caff` diff by hand: zero new
+  `:root` tokens, every colour is `var(--token)` or `color-mix(in srgb, var(--token)
+  N%, transparent|black)`, `--sky` untouched, no raw hex/`rgba()` introduced. (The
+  `130%` bug is a malformed *argument* to a correctly-token-sourced `color-mix()`, not
+  a token-discipline violation in the sense this AC is checking — grep confirms it's
+  the *only* `color-mix()` call in the whole file with an out-of-range percentage.)
+  Confirmed all 4 `--bg-wash` values are distinct across themes (re-tint cascade
+  proven to work for the parts of W10 that do render).
+- **Keyboard-first, desktop only — PASS.** No mobile/narrow layout added; out of
+  scope, untouched.
+- **Save-compat / presentation-only — PASS.** `git diff --stat 519caff^..519caff`
+  touches only `src/game/Shop.jsx` and `src/game/game.css` — `store.js`, `economy.js`,
+  `src/engine/`, `src/game/theme.js`, `goals.js` all untouched (confirmed directly,
+  not taken on faith). Full Shop.jsx diff read line-by-line: purely a wrap/reindent
+  plus 4 new decorative elements: zero handler/state logic changed. `npm test`
+  266/266 green.
+
+### Judgment call rulings
+
+1. **Z-index numbers diverging from W10e's literal ladder (091 not landed yet) —
+   UPHELD.** Confirmed live: `.mch`/`.plot` are `z-index:2` today, `.ghost` unset,
+   `.belt` does not exist. The four new layers carry the spec's own numbers verbatim
+   and the *relative* ordering the AC actually cares about holds against both today's
+   numbers and the eventual post-091 ladder. Correctly flagged for 091's future
+   `.mch`/`.plot` renumber.
+2. **`MAQUETTE 1:50` as a hardcoded JSX literal, not a `strings.js` key — UPHELD.**
+   Confirmed `check-no-dutch-en` still passes (independently re-run, PASS). strings.js
+   is explicitly out of this assignment's scope per the PO's kicker-rename ruling; the
+   tag text is decorative/non-prose, same treatment class as the mock's own hardcoded
+   label. Reasonable.
+3. **Loading skeleton `.hal` branch not desk-wrapped — UPHELD.** Confirmed in
+   `Shop.jsx` lines 150–165: the `!state?.tycoon` branch renders raw `.hal` (still
+   gets the W10a background swap for free, same CSS selector) without `.desk`/
+   `.scaletag`/`.warmth`/`.ruler`/`.pencil`. Confirmed via `App.jsx`'s mount-gating
+   comment (factory view only mounts post-hydration) that this path is unreachable via
+   real navigation today. Reasonable, honestly disclosed scope call.
+4. **`.scaletag` not `aria-hidden` — UPHELD.** Consistent with the `.ticket-kicker`
+   precedent (a short, real, visible text label, not decoration). Reasonable
+   accessibility judgment, not a defect.
+
+### What the dispatcher needs to know
+
+- **This is a rendering bug inherited from 114's own spec + mock**, not something the
+  developer introduced during 115's build. Whoever re-opens 115 should fix
+  `src/game/game.css`'s `.warmth` rule (the only file in-scope) and separately flag
+  `design/DESIGN-FACTORY.md` W10c + `design/factory-mocks/world-C-maquette-place.html`
+  line 84 (both outside 115's file scope, both `done` deliverables of 114) so the same
+  invalid value doesn't get copy-pasted again.
+- **091 (`blocked_by: [115]`) should stay blocked** until this re-lands — the belt is
+  meant to land "on this finished backdrop," and the backdrop's warm-lit-front element
+  is currently not finished.
+- Everything else — desk, tag, ruler, pencil, layer order, token hygiene,
+  idleBob/plotGlow/riseIn, reduced-motion freezing, save-compat, guardrail 2 — is
+  solid and independently verified. This is a **one-line-value fix**, not a rebuild.
+- **118 not consumed.** No adjacent defect independent of this root cause was found;
+  everything found traces to the single `.warmth` `color-mix()` percentage. Per
+  filed-not-bounced discipline this stays inside 115 (it fails 115's own written AC)
+  rather than becoming a separate assignment. Id 118 lapses back to the pool for the
+  next tester who needs it.
+
+Screenshots: `company/assignments/115-screenshots-verify/diorama-{muntpers,
+nachtploeg,snoepfabriek,diepzee}-theme.png`, `diorama-reduced-motion.png`. Probe
+script: `qa-scripts/115-tester-verify.mjs` (28/29 automated checks pass; the 1 failure
+is the `.warmth` background-resolves-to-a-gradient check, matching the manual findings
+above exactly).
