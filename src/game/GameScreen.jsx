@@ -65,7 +65,11 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
   engineRef.current = state;
   const exerciseRef = useRef(exercise);
   exerciseRef.current = exercise;
-  const lastKeyRef = useRef(0);
+  // -Infinity: nog geen aanslag deze sessie, dus "active" (regel ~131) moet ONWAAR
+  // zijn tot de eerste ECHTE toets — performance.now() meet vanaf navigation start,
+  // dus een seed van 0 maakte "active" per ongeluk WAAR bij elke sessie-start binnen
+  // ACTIVE_WINDOW_MS na het laden van de pagina (109, idle-income-guardrail-lek).
+  const lastKeyRef = useRef(-Infinity);
   const lastTickRef = useRef(0);
   const comboRef = useRef(0); // bron-van-waarheid voor de combo (mijlpaal-detectie)
   const exStreakRef = useRef(0); // langste foutloze reeks binnen déze opdracht
