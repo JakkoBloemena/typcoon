@@ -2,7 +2,7 @@
 id: 070
 title: Factory page shows no coin/star balance anywhere (only item costs)
 owner: developer
-status: blocked
+status: done
 priority: 3
 blocked_by: [084]
 opened_by: tester (proposed)
@@ -112,3 +112,40 @@ AC3) — should be a small, isolated addition to `Shop.jsx`'s returned JSX plus 
 `strings.js` key if a label is wanted (or bare, matching how `.coin-pill` is used
 elsewhere with just an icon + number, no label). `status` left `open`; not resolved by
 074.
+
+## Adjudication (tester, tick #31, against 084's merged delivery, commit 3fc9cf5)
+
+Re-checked all four ACs independently on the built 084 tree (`C:\companies\typcoon-lanes\
+v084`, `npx vite preview --port 4242`), via my own script `qa-scripts/084-tester.mjs` — not
+the developer's `084-verify.mjs`.
+
+- **AC1 (current coin balance as a number, visible without navigating back) — NOW
+  SATISFIED.** This was the one open item. `FactoryPage.jsx`'s new `.ledger .val.money`
+  renders `fmt(state.tycoon.coins)` — the literal raw balance. Proved with the exact
+  adversarial fixture this defect's own tick-28 adjudication used
+  (`coins:500, totalCoins:650, lifetimeCoins:18400`, all three deliberately different): the
+  ledger shows `500`; the literal lifetime figure (`18.400`/`18400`) and the literal
+  totalCoins figure (`650`) are both **absent** from the ledger's rendered text. Then drove
+  a real buy (`500 → cost 15 → 485`): the ledger balance tracked the true spendable balance
+  live, exact delta, not a cached/derived number. The gap this defect described — "a player
+  can only back-compute the balance by subtracting `remaining` from `cost`" — no longer
+  applies: the raw number is now directly on the page.
+- **AC2 (star/rebirth count when `>0`) — RECONFIRMED SATISFIED.** `.ledger .val.star`
+  renders `⭐ {tycoon.rebirths}`, conditionally shown only when `>0` (a stricter, more
+  correct implementation than 074's unconditional `⭐ 0`-at-zero — still meets this AC's
+  floor). Confirmed absent at `rebirths:0`, present and correct at `rebirths:3`, and
+  appearing correctly (`⭐ 1`) after driving a **real** 0→1 prestige through the actual
+  confirm dialog.
+- **AC3 (no regression to buy/buyUpg/doRebirth/gating) — RECONFIRMED SATISFIED.** Exercised
+  all three handlers for real on the built 084 tree: a building buy (ledger balance dropped
+  by exact cost), an upgrade buy via `buyUpg` (dropped by exact cost; a second,
+  unaffordable upgrade button was confirmed natively HTML-`disabled` and unclickable), and
+  a full prestige with its confirm dialog. `git show 3fc9cf5 --stat` confirms zero changes
+  to `Shop.jsx`'s handlers or any economy/engine file — the ledger is a pure new read-only
+  header block plus one new `economy.js` import (`coinsPerSecond`, already exported and
+  already used identically elsewhere).
+- **AC4 (`npm test` green) — RECONFIRMED SATISFIED.** `232/232` on this tree, run myself
+  (not taken on faith from either delivery's notes).
+
+**Net: 4 of 4 ACs now pass.** AC1, the item left open at tick #28, is resolved by 084's
+`.ledger .val.money` cell. Status flipped `blocked` → `done`.
