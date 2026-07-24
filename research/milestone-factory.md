@@ -39,9 +39,12 @@ Top-to-bottom, centred, max ~760px (design §5a):
    plus a `🏭 Fabriek` button to the factory page.
 2. **Goal sliver** — `🦾 [name] · JE VOLGENDE MACHINE  ▓▓▓▓░ nog N`. This *is* the reward loop:
    single, named, visible-not-shouting; bar uses `--reward`. Fed by the goal helper (§3).
-3. **Typing card** — the sentence in the `--data` face (done = dim, current = brass underline,
-   upcoming = calm-ink) + the **next-key hint only** (`[c][v][B][n]`). This is the existing
-   `ui/TypingSurface.jsx`, unchanged — the split removes what *surrounds* it, not it.
+3. **Typing card** — the sentence with `ui/TypingSurface.jsx`'s **existing char-state colours
+   reused verbatim** (done = mint, current = paper + brass underline, upcoming = ink-dim — the
+   `.tchar` rules in `game.css`, unchanged) + the **next-key hint only** (`[c][v][B][n]`). This
+   is the existing `ui/TypingSurface.jsx`, unchanged — the split removes what *surrounds* it, not
+   it. *(The design docs' draft "done = dim / upcoming = calm-ink" recolour and the `--calm-ink`
+   token are **cut** — PO adjudication 2026-07-24, assignment 077.)*
 4. Nothing else. **No floor strip, no shop rail, no separate meters block.** The four-moment
    celebration overlays still fire between exercises, unchanged.
 

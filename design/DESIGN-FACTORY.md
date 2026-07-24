@@ -22,7 +22,7 @@ new_tokens:
   semantic_roles:         # derived from themed tokens → themes cascade automatically
     --goal: "var(--mint)"        # progress toward a goal = 'production/good'
     --reward: "var(--brass)"     # coins earned = the one loud accent
-    --calm-ink: "#c7d2f2"        # slightly-dimmed paper for the low-arousal typing surface
+    --calm-ink: "#c7d2f2"        # CUT — PO 077 (2026-07-24): unused; typing char-states reuse existing tokens (see §5a/§7). Hardcoded hex — would break the §8 theme-cascade invariant.
   motion:
     --dur-quick: 120ms      # calm surface transitions
     --dur-arrive: 380ms     # one spring (--pop) on a discrete arrival, then still
@@ -219,9 +219,12 @@ Top-to-bottom, centred, max ~760px:
 1. **Thin bar** — `← Menu` · `×mult · acc% · ● coins` (data face). One line, quiet.
 2. **Goal sliver** (`.goalsliver`) — `🦾 [name] · JE VOLGENDE MACHINE  ▓▓▓▓░ nog N`. This
    *is* the reward loop: visible, single, named, not shouting. The bar uses `--reward`.
-3. **Typing card** (`.playcard`) — the sentence in the data face (done = dim, current =
-   brass underline, upcoming = calm-ink), then the **next-key hint only** (`[c][v][B][n]`),
-   not the full keyboard chrome. Mirrors `ui/TypingSurface`'s existing char states.
+3. **Typing card** (`.playcard`) — the sentence in the data face with `ui/TypingSurface`'s
+   **existing char states reused verbatim** (done = mint, current = paper + brass underline,
+   upcoming = ink-dim — the `.tchar` rules in `game.css`), then the **next-key hint only**
+   (`[c][v][B][n]`), not the full keyboard chrome.
+   *(PO adjudication 2026-07-24, assignment 077: the earlier "done = dim / upcoming = calm-ink"
+   recolour and the `--calm-ink` token are **cut** — §7's reuse-as-is ledger governs. See §7.)*
 4. Nothing else. No floor strip, no shop rail. Celebration overlays (the existing
    four-moment cards) still fire between exercises, unchanged.
 
@@ -279,7 +282,13 @@ groeien — typ je eerste opdracht") explains the first move
 - The **entire token layer** and both fonts; the **theme system** (`theme.js`,
   `ThemePicker.jsx`, all `[data-theme]` blocks) — untouched.
 - `ui/TypingSurface.jsx` and its char-state styling — it *is* the calm typing surface;
-  the split removes what surrounds it, not it.
+  the split removes what surrounds it, not it. **This bullet governs:** the `.tchar`
+  char-state colours (done = mint, current = paper + brass, upcoming = ink-dim) are reused
+  **verbatim**; the front matter's `--calm-ink` token and the §5a "done = dim / upcoming =
+  calm-ink" draft are **cut** (PO adjudication 2026-07-24, assignment 077 — the recolour was
+  never carried into this reuse-vs-replace ledger, `--calm-ink` is a hardcoded hex that would
+  break the §8 theme-cascade invariant, and the existing tokens already pass AA and theme for
+  free).
 - `economy.js`, all four-moment celebration overlays, `Unlock.jsx`, the daily/weekly/
   exam/achievement systems, the physical `.btn`, `.pill`, `.overlay`/`.card` primitives.
 - All buy/upgrade/rebirth **logic** in `GameScreen.jsx` (`buy`, `buyUpg`, `doRebirth`,
