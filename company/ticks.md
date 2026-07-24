@@ -23,11 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-24 #16 — OPEN
+## Tick 2026-07-24 #16 — CLOSED
 - opened: 2026-07-24 02:17 (system clock; tick #15 closed 01:25 — ~52 min ago, one scheduler heartbeat)
 - claimed: none — ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035; 020/021 blocked_by chains unsatisfied). This tick executes the ADR's standing mandate: monitor stage duty + T1–T6 trigger evaluation (last pass tick #14 at ~01:24, one heartbeat ago — due per one-pass-per-heartbeat cadence, cc f7b7db3).
 - worktrees: monitor → C:\companies\typcoon-lanes\mon16 (mon/tick16; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
 - ids allocated: 065–066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them); next free after reservation: 067; next decision id: 011
+- closed: 2026-07-24 02:24 (system clock)
+- outcomes: monitor stage duty **healthy** — 27/27 checks pass (this pass added two auth cross-checks tick #14 lacked: bearer-garbage vs /api/admin/funnel, query-garbage vs /api/cron/notify — both 401, no gap); /speel/ bundle hashes byte-identical to tick #12/#14, zero deploy-relevant commits since e8a4df2 confirmed via git log; sitemap steady at 22 URLs; /api/track and /api/school/redeem behavior match documentation; spend.md unchanged (€0 recurring, confirmed via git history not just re-read); funnel.md still empty (no digest paste landed). **ADR 010 triggers T1–T6 evaluated, NONE FIRED**: T1 not fired (~1 day GSC baseline vs ~4wk), T2/T3/T4 unevaluable (funnel.md empty — FUNNEL_READ_TOKEN gap, ADR 008), T5 not fired (27 days out), T6 zero incidents. Quota-consumption gap carried (ADR 008 accepted). Zero incidents/defects; ids 065–066 lapse unused — **next free assignment id: 065, next decision id: 011**. mon/tick16 merged (029a214, health.md only), worktree + branch swept clean. Board unchanged: build-hold stands. **Nothing blocked on a human** — standing recorded asks unchanged, consolidated in ADR 010 §Standing Shareholder asks (FUNNEL_READ_TOKEN provisioning remains the one that unblocks T2/T3/T4 evaluation; weekly digest paste is the ~30-second interim).
+- retro: clean — routine hold-tick per ADR 010's standing mandate, executed at the intended one-pass-per-heartbeat cadence.
 
 ## Tick 2026-07-24 #15 — CLOSED
 - opened: 2026-07-24 01:24 (system clock reads ~90s *after* tick #14's close commit e8a4df2 at 01:22:01 commit-clock; ledger stamp 01:26 in #14 is the known few-minute skew — trusting commit order per tick #2/#9 retro)
