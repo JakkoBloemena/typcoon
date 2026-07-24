@@ -1,0 +1,76 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Richting C — Toestanden (verify)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* State verification for the WINNER (Direction C). The states nobody draws:
+   empty (brand-new player), long-string overflow (Dutch runs long), loading,
+   and offline/error. Same tokens + reflow rules as dir-C-blueprint.html. */
+.play{max-width:760px;margin:0 auto}
+.goalsliver{display:flex;align-items:center;gap:var(--s4);padding:var(--s3) var(--s4);margin-bottom:var(--s5);
+  background:var(--panel);border:1px solid var(--line);border-radius:999px}
+.goalsliver .icon{font-size:1.3rem}.goalsliver .txt{font-weight:800;white-space:nowrap}
+.goalsliver .txt small{display:block;color:var(--ink-dim);font-weight:700;font-size:.72rem;font-family:var(--data);text-transform:uppercase;letter-spacing:.1em}
+.goalsliver .bar{flex:1}.goalsliver .togo{font-family:var(--data);font-weight:800;color:var(--brass);white-space:nowrap}
+.playcard{padding:var(--s6) var(--s5);text-align:center}
+.plan{background:repeating-linear-gradient(0deg,transparent 0 31px,rgba(95,128,220,.10) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(95,128,220,.10) 31px 32px),var(--night);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--s5);box-shadow:0 6px 0 var(--sink)}
+.road{display:flex;gap:0}
+.station{flex:1;min-width:130px;position:relative;padding:var(--s4) var(--s3) 0;text-align:center}
+.station::before{content:'';position:absolute;top:52px;left:-50%;right:50%;height:5px;background:var(--mint-deep);z-index:0}
+.station:first-child::before{display:none}
+.station.locked::before{background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px)}
+.station .node{position:relative;z-index:1;width:70px;height:70px;margin:0 auto var(--s3);border-radius:20px;display:grid;place-items:center;font-size:1.8rem;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:2px solid var(--mint-deep);box-shadow:0 5px 0 var(--sink)}
+.station.cur .node{border-color:var(--brass);box-shadow:0 0 0 4px rgba(255,185,21,.22),0 5px 0 var(--sink)}
+.station.locked .node{border:2px dashed var(--line);background:transparent;filter:grayscale(1) opacity(.6);box-shadow:none}
+.station .sname{font-weight:800;font-size:.9rem}.station .srate{font-family:var(--data);color:var(--ink-dim);font-size:.75rem;font-weight:700}
+.empty-goal{display:flex;gap:var(--s4);align-items:center;justify-content:center;padding:var(--s5);margin-top:var(--s4);background:var(--night);border:1px dashed var(--brass-deep);border-radius:var(--r-md);text-align:center}
+.offline{display:flex;gap:var(--s3);align-items:center;padding:var(--s3) var(--s4);background:var(--panel-2);border:1px solid var(--sky-deep);border-radius:var(--r-md);color:var(--calm-ink);font-weight:700}
+.skl{background:linear-gradient(90deg,var(--panel-2),var(--panel) 40%,var(--panel-2) 80%);border-radius:var(--r-sm)}
+.skrow{display:flex;gap:var(--s4);align-items:center;padding:var(--s3) 0}
+</style></head>
+<body><div class="wrap">
+
+<div class="mocklabel">Verify · <b style="color:var(--flame)">Leeg</b> — gloednieuwe speler, nog 0 machines</div>
+<div class="play">
+  <div class="goalsliver">
+    <span class="icon">⌨️</span>
+    <span class="txt">Je eerste machine<small>typ om munten te maken</small></span>
+    <span class="bar reward"><span style="width:8%"></span></span>
+    <span class="togo">nog 15</span>
+  </div>
+</div>
+<div class="plan">
+  <div style="font-family:var(--data);text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--sky);margin-bottom:8px">Jouw fabriek</div>
+  <h2 style="margin-bottom:var(--s5)">Het Bouwplan</h2>
+  <div class="road">
+    <div class="station cur"><div class="node">⌨️</div><div class="sname">Typemachine</div><div class="srate" style="color:var(--brass)">te bouwen</div></div>
+    <div class="station locked"><div class="node">🖨️</div><div class="sname" style="color:var(--ink-dim)">Drukpers</div><div class="srate">nog 5 letters</div></div>
+    <div class="station locked"><div class="node">🦾</div><div class="sname" style="color:var(--ink-dim)">Robotarm</div><div class="srate">nog 10 letters</div></div>
+    <div class="station locked"><div class="node">📦</div><div class="sname" style="color:var(--ink-dim)">Lopende band</div><div class="srate">nog 18 letters</div></div>
+    <div class="station locked"><div class="node">🏢</div><div class="sname" style="color:var(--ink-dim)">Mega-fabriek</div><div class="srate">volledig</div></div>
+  </div>
+  <div class="empty-goal"><span style="font-size:1.6rem">👋</span><div><b>Je fabriek staat klaar om te groeien.</b><br><span style="color:var(--ink-dim);font-weight:700">Typ je eerste opdracht — met 15 munten bouw je de Typemachine.</span></div></div>
+</div>
+
+<div class="mocklabel">Verify · <b style="color:var(--flame)">Lange tekst</b> — Nederlands loopt langer dan Engels (moet wrappen, niet overlopen)</div>
+<div class="play">
+  <div class="panel playcard">
+    <div class="type-text">
+      <span class="done">de</span><span class="sp done">·</span><span class="done">verschrikkelijk</span><span class="sp done">·</span><span class="cur">i</span><span class="up">ngewikkelde</span><span class="sp up">·</span><span class="up">achtbaanconstructie</span><span class="sp up">·</span><span class="up">wordt</span><span class="sp up">·</span><span class="up">nauwkeurig</span><span class="sp up">·</span><span class="up">samengesteld</span>
+    </div>
+    <div class="kbd"><b>u</b><b class="hot">i</b><b>o</b></div>
+  </div>
+</div>
+
+<div class="mocklabel">Verify · <b style="color:var(--sky)">Laden</b> — skeleton (save wordt gehydrateerd)</div>
+<div class="plan">
+  <div class="skl" style="height:20px;width:120px;margin-bottom:12px"></div>
+  <div class="skl" style="height:34px;width:220px;margin-bottom:20px"></div>
+  <div class="skrow"><div class="skl" style="width:70px;height:70px;border-radius:20px"></div><div style="flex:1"><div class="skl" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skl" style="height:12px;width:35%"></div></div></div>
+  <div class="skrow"><div class="skl" style="width:70px;height:70px;border-radius:20px"></div><div style="flex:1"><div class="skl" style="height:14px;width:50%;margin-bottom:8px"></div><div class="skl" style="height:12px;width:30%"></div></div></div>
+</div>
+
+<div class="mocklabel">Verify · <b style="color:var(--sky)">Offline / fout</b> — kalm, geruststellend (geen paniek voor een kind)</div>
+<div class="offline">📴 <div><b>Geen verbinding.</b> Je fabriek is lokaal opgeslagen — je raakt niets kwijt en je kunt gewoon doortypen.</div></div>
+
+</div></body></html>

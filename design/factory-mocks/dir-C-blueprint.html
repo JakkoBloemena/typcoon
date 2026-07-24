@@ -1,0 +1,169 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Richting C — Het Bouwplan</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* DIRECTION C — "Het Bouwplan" (the build-plan / blueprint roadmap).
+   Concept: the organizing metaphor is the GOAL, drawn as a blueprint you fill in —
+   not a shopping list. The factory page is a roadmap PATH of machines: built ones
+   are inked and running, the next one is spotlit with a progress ring, later ones
+   are ghosted blueprint outlines you can see coming. "How far I've come" is the
+   filled-in path itself; "my next goal" is the one lit station. The typing view
+   stays calm with a single slim goal sliver so the reward loop = visible progress
+   toward the named goal, not raw coins. Answers the brief's exact words:
+   "clear goals", "see how it's going", "my factory is growing". */
+
+/* --- typing view: calm, one goal sliver --- */
+.play{max-width:760px;margin:0 auto}
+.goalsliver{display:flex;align-items:center;gap:var(--s4);padding:var(--s3) var(--s4);margin-bottom:var(--s5);
+  background:var(--panel);border:1px solid var(--line);border-radius:999px}
+.goalsliver .icon{font-size:1.3rem}
+.goalsliver .txt{font-weight:800;white-space:nowrap}
+.goalsliver .txt small{display:block;color:var(--ink-dim);font-weight:700;font-size:.72rem;font-family:var(--data);text-transform:uppercase;letter-spacing:.1em}
+.goalsliver .bar{flex:1}
+.goalsliver .togo{font-family:var(--data);font-weight:800;color:var(--brass);white-space:nowrap}
+.play .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s5);color:var(--ink-dim);font-weight:700}
+.play .acc{font-family:var(--data);color:var(--mint);font-weight:800}
+.playcard{padding:var(--s6) var(--s5);text-align:center}
+.playcard .type-text{font-size:2.1rem}
+.playcard .kbd{margin-top:var(--s5);justify-content:center}
+
+/* --- factory page: the blueprint roadmap --- */
+.plan{background:
+    repeating-linear-gradient(0deg,transparent 0 31px,rgba(95,128,220,.10) 31px 32px),
+    repeating-linear-gradient(90deg,transparent 0 31px,rgba(95,128,220,.10) 31px 32px),
+    var(--night);
+  border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--s5);box-shadow:0 6px 0 var(--sink)}
+.plan .planhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s5)}
+.plan .planhead .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--sky)}
+.plan .planhead h2{font-size:1.5rem}
+.progresstag{font-family:var(--data);font-weight:800;color:var(--mint);background:var(--night);border:1px solid var(--mint-deep);border-radius:999px;padding:6px 14px}
+
+/* the road */
+.road{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:var(--s3)}
+.station{flex:1;min-width:150px;position:relative;padding:var(--s4) var(--s3) 0;text-align:center}
+.station::before{content:'';position:absolute;top:52px;left:-50%;right:50%;height:5px;background:var(--mint-deep);z-index:0}
+.station:first-child::before{display:none}
+.station.locked::before{background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px)}
+.station .node{position:relative;z-index:1;width:76px;height:76px;margin:0 auto var(--s3);border-radius:20px;
+  display:grid;place-items:center;font-size:2rem;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:2px solid var(--mint-deep);box-shadow:0 5px 0 var(--sink)}
+.station.cur .node{border-color:var(--brass);box-shadow:0 0 0 4px rgba(255,185,21,.22),0 5px 0 var(--sink);
+  background:linear-gradient(180deg,var(--panel),var(--night))}
+.station.locked .node{border:2px dashed var(--line);background:transparent;filter:grayscale(1) opacity(.6);box-shadow:none}
+.station .sname{font-weight:800;font-size:.95rem}
+.station .slv{font-family:var(--data);color:var(--brass);font-weight:800;font-size:.8rem}
+.station .srate{font-family:var(--data);color:var(--mint);font-size:.78rem;font-weight:700}
+.station.locked .sname,.station.locked .srate{color:var(--ink-dim)}
+.station .badge{position:absolute;top:6px;right:24px;z-index:2;font-family:var(--data);font-weight:800;font-size:.62rem;
+  background:var(--mint);color:var(--sink);border-radius:999px;padding:2px 7px}
+.station.cur .badge{background:var(--brass);color:var(--on-accent)}
+
+/* spotlit goal panel under the road */
+.goalspot{display:grid;grid-template-columns:auto 1fr auto;gap:var(--s5);align-items:center;margin-top:var(--s5);
+  padding:var(--s5);background:linear-gradient(135deg,var(--panel),var(--night));border:1px solid var(--brass-deep);border-radius:var(--r-md)}
+.goalspot .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.68rem;color:var(--brass)}
+.goalspot h3{font-size:1.6rem;margin:2px 0 4px}
+.goalspot .sub{color:var(--ink-dim);font-weight:700}
+.goalspot .togo{font-family:var(--data);font-weight:800;color:var(--paper);margin-top:8px}
+.goalspot .togo b{color:var(--brass)}
+
+/* bottom: quick actions row (upgrades + prestige as objectives) */
+.objrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s3);margin-top:var(--s4)}
+.obj{padding:var(--s4);background:var(--night);border:1px solid var(--line);border-radius:var(--r-md);display:flex;gap:var(--s3);align-items:center}
+.obj .mchip{background:var(--panel)}
+.obj .info{flex:1}
+.obj .oname{font-weight:800;font-size:.92rem}
+.obj .ometa{color:var(--ink-dim);font-family:var(--data);font-size:.78rem;font-weight:700}
+.obj .buy{background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);color:var(--on-accent);border:none;
+  border-radius:var(--r-sm);padding:7px 12px;font-family:var(--data);font-weight:800;box-shadow:0 4px 0 var(--brass-deep);cursor:pointer;font-size:.85rem}
+.obj .done{color:var(--mint);font-weight:800}
+.starobj{border-color:var(--sky-deep)}
+.starobj .buy{background:var(--night);color:var(--sky);border:1px solid var(--sky-deep);box-shadow:0 4px 0 var(--sink)}
+
+/* ---- mobile reflow (fixes the critic's 4 flaws) ----
+   Roadmap becomes a VERTICAL snake so all 5 stations + the growth story stay
+   visible without horizontal scrolling; goalspot, objrow and the goal-sliver stack. */
+@media (max-width:620px){
+  /* goal sliver: bar on its own row so it never collapses to a toggle */
+  .goalsliver{flex-wrap:wrap}
+  .goalsliver .bar{flex-basis:100%;order:3;margin-top:6px}
+  .goalsliver .togo{margin-left:auto}
+  /* the road: vertical rail, connectors run top-to-bottom, every station in view */
+  .road{flex-direction:column;overflow:visible;gap:var(--s2)}
+  .station{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:var(--s4);
+    min-width:0;text-align:left;padding:var(--s2) 0}
+  .station::before{top:-8px;left:37px;right:auto;bottom:auto;width:5px;height:16px}
+  .station:first-child::before{display:none}
+  .station .node{margin:0}
+  .station .badge{position:static;display:inline-block;margin-top:4px}
+  .station .sname,.station .slv,.station .srate{grid-column:2}
+  /* goalspot + objrow stack */
+  .goalspot{grid-template-columns:1fr;text-align:center;gap:var(--s3)}
+  .goalspot .ring-wrap{margin:0 auto}
+  .goalspot .btn{width:100%}
+  .objrow{grid-template-columns:1fr}
+}
+</style></head>
+<body><div class="wrap">
+
+<div class="mocklabel">Richting C · Het Bouwplan · <b style="color:var(--calm-ink)">① Typweergave — één rustige doel-strip</b></div>
+
+<div class="play">
+  <div class="top">
+    <button class="btn ghost" style="padding:8px 16px">← Menu</button>
+    <span class="acc">×3.0 · 100% netjes · <span class="coin" style="width:14px;height:14px;vertical-align:-2px"></span> 4.820</span>
+  </div>
+  <!-- the single calm goal sliver: reward loop = progress to the named goal -->
+  <div class="goalsliver">
+    <span class="icon">🦾</span>
+    <span class="txt">Robotarm<small>je volgende machine</small></span>
+    <span class="bar reward"><span style="width:78%"></span></span>
+    <span class="togo">nog 229</span>
+  </div>
+  <div class="panel playcard">
+    <div class="type-text">
+      <span class="done">fijne</span><span class="sp done">·</span><span class="done">dag</span><span class="sp done">·</span><span class="cur">v</span><span class="up">riend</span><span class="sp up">·</span><span class="up">je</span><span class="sp up">·</span><span class="up">tikt</span><span class="sp up">·</span><span class="up">de</span><span class="sp up">·</span><span class="up">letters</span>
+    </div>
+    <div class="kbd"><b>c</b><b>v</b><b class="hot">b</b><b>n</b><b>m</b></div>
+  </div>
+</div>
+
+<div class="mocklabel">Richting C · Het Bouwplan · <b style="color:var(--brass)">② Fabriekspagina — de blauwdruk die je invult</b></div>
+
+<div class="plan">
+  <div class="planhead">
+    <div><div class="kick">Jouw fabriek</div><h2>Het Bouwplan</h2></div>
+    <span class="progresstag">3 van 5 machines gebouwd</span>
+  </div>
+
+  <!-- the roadmap path: built = inked & running, next = spotlit, later = ghosted blueprint -->
+  <div class="road">
+    <div class="station"><div class="node">⌨️</div><div class="sname">Typemachine</div><div class="slv">Lv 12</div><div class="srate">+12/s</div></div>
+    <div class="station"><span class="badge">Lv10 →×2</span><div class="node">🖨️</div><div class="sname">Drukpers</div><div class="slv">Lv 8</div><div class="srate">+48/s</div></div>
+    <div class="station cur"><span class="badge">NU BOUWEN</span><div class="node">🦾</div><div class="sname">Robotarm</div><div class="slv">Lv 4</div><div class="srate">+28/s</div></div>
+    <div class="station locked"><div class="node">📦</div><div class="sname">Lopende band</div><div class="srate">nog 3 letters</div></div>
+    <div class="station locked"><div class="node">🏢</div><div class="sname">🔒 Mega-fabriek</div><div class="srate">volledige fabriek</div></div>
+  </div>
+
+  <!-- spotlit next goal -->
+  <div class="goalspot">
+    <div class="ring-wrap" style="--sz:84px"><div class="ring" style="--p:78;--sz:84px"></div><span class="rc" style="font-size:1.7rem">🦾</span></div>
+    <div>
+      <div class="kick">Nu bouwen</div>
+      <h3>Robotarm</h3>
+      <div class="sub">Werkt onvermoeibaar door · <b style="color:var(--mint)">+28/s</b> erbij</div>
+      <div class="togo">nog <b>229</b> munten — dat haal je in ± 2 opdrachten</div>
+    </div>
+    <button class="btn big"><span class="coin"></span> 1.049</button>
+  </div>
+
+  <!-- upgrades + prestige framed as objectives on the plan -->
+  <div class="objrow">
+    <div class="obj"><span class="mchip">⚙️</span><div class="info"><div class="oname">Snellere assen</div><div class="ometa">alle machines ×2</div></div><span class="done">✓</span></div>
+    <div class="obj"><span class="mchip">💰</span><div class="info"><div class="oname">Dikkere munten</div><div class="ometa">uitbetaling ×2</div></div><button class="buy">2.500</button></div>
+    <div class="obj starobj"><span class="mchip">🌟</span><div class="info"><div class="oname">Fabriek verkopen</div><div class="ometa">+25% ⭐ · nog 6.600</div></div><button class="buy">74%</button></div>
+  </div>
+</div>
+
+</div></body></html>
