@@ -23,11 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-24 #17 — OPEN
+## Tick 2026-07-24 #17 — CLOSED
 - opened: 2026-07-24 03:17 (system clock; tick #16 closed 02:24 — ~53 min ago, one scheduler heartbeat)
 - claimed: none — ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied — 020←010 blocked, 021←020). This tick executes the ADR's standing mandate: monitor stage duty + T1–T6 trigger evaluation (last pass tick #16 at ~02:24, one heartbeat ago — due per one-pass-per-heartbeat cadence, cc f7b7db3).
 - worktrees: monitor → C:\companies\typcoon-lanes\mon17 (mon/tick17; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
 - ids allocated: 065–066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them); next free after reservation: 067; next decision id: 011
+- closed: 2026-07-24 03:24 (system clock)
+- outcomes: monitor stage duty **healthy** — 27/27 checks pass, matching tick #16 exactly: all 11 public pages 200, /speel/ bundle hashes byte-identical to tick #12/#14/#16 (git log cross-check: only tick bookkeeping since #16, nothing deploy-relevant), sitemap steady at 22 URLs, auth boundaries hold 401 on both endpoints under all three token shapes, /api/track and /api/school/redeem match documentation, spend.md unchanged since ADR 003 (€0 recurring, confirmed via git history). This pass additionally ruled out two candidate quota-credential sources (SUPABASE_GO_BINARY is only a CLI path; the supabase/ dir is tracked migrations, not credentials) — quota-consumption gap carried (ADR 008 accepted). **ADR 010 triggers T1–T6 evaluated, NONE FIRED**: T1 not fired (~1 day GSC baseline vs ~4wk), T2/T3/T4 unevaluable (funnel.md empty — FUNNEL_READ_TOKEN gap, ADR 008), T5 not fired (27 days out), T6 zero incidents. Zero incidents/defects; ids 065–066 lapse unused — **next free assignment id: 065, next decision id: 011**. mon/tick17 merged (fd0a109, health.md only), worktree + branch swept clean. Board unchanged: build-hold stands. **Nothing blocked on a human** — standing recorded asks unchanged, consolidated in ADR 010 §Standing Shareholder asks (FUNNEL_READ_TOKEN provisioning remains the one that unblocks T2/T3/T4 evaluation; weekly digest paste is the ~30-second interim).
+- retro: clean — routine hold-tick per ADR 010's standing mandate, executed at the intended one-pass-per-heartbeat cadence.
 
 ## Tick 2026-07-24 #16 — CLOSED
 - opened: 2026-07-24 02:17 (system clock; tick #15 closed 01:25 — ~52 min ago, one scheduler heartbeat)
