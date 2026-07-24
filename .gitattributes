@@ -1,0 +1,10 @@
+# Generated output of scripts/gen-content.mjs (runs via pretest/prebuild). The script
+# always writes LF, regardless of platform; on a Windows checkout with core.autocrlf=true
+# git's checkout smudges these to CRLF, so every regeneration reports them as "modified"
+# with an empty diff (assignment 113). Force LF here so the working tree matches what the
+# script writes and status stays clean after `npm test` / `npm run build`.
+public/blog/** text eol=lf
+public/en/** text eol=lf
+public/leren-typen-voor-kinderen/** text eol=lf
+public/voor-scholen/** text eol=lf
+public/sitemap.xml text eol=lf
