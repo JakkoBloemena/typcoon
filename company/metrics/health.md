@@ -847,6 +847,157 @@ materialize this tick. Known environment debris (stale worktree dirs
 q033/v026/b049–b056b, orphaned chrome PIDs 25560/30368, dead port-4173 dev
 server) noted per dispatcher brief, not re-reported as new, not touched.**
 
+## 2026-07-24 11:48 UTC — tick #28 (health + ADR 010 trigger evaluation)
+
+Twelfth monitor pass, repeating tick #25's 27-check method. **Headline finding:
+the `/speel/` bundle has changed — production is no longer serving the tick
+#12–#25 baseline.** This tick's brief, written earlier, anticipated the
+factory-milestone commits (071/072/073/074) as landed on `main` but **not yet
+deployed**, and instructed reporting that undeployed state rather than treating
+drift-from-main as an incident. By the time this check ran (11:48 UTC), that had
+changed: **the deploy has caught up to `main` and 071–074 are now live.**
+
+**Deploy cross-check.** `git log 4dadd49..HEAD --oneline -- api/ src/ config/
+index.html vite.config.js vercel.json package.json` returns four product
+commits: `7947500` (071, nextGoal + save-schema test), `14a38b3`/`e284cde` (072,
+factory route split), `bb6844d` (073, calm typing view), `05f66e6`/`0598f24`
+(074, Bouwplan factory page). `main` HEAD is `8ebae88` (this tick's own open
+commit); everything after `0598f24` (`80912c0`, `8ebae88`) is `company/`
+bookkeeping only — no product path touched. `0598f24` (074's merge) landed at
+2026-07-24 13:39:02 local (11:39:02 UTC, per `git show -s --format=%ad`). The
+live `/` response's `Last-Modified: Fri, 24 Jul 2026 11:46:34 GMT` postdates
+that merge by ~7 minutes, consistent with a normal Vercel auto-deploy-on-push
+lag, not a stale cache artifact. **Conclusion: the live deploy is at parity
+with `main` (071–074 all live); nothing is undeployed as of this check.** This
+reverses the brief's "not yet deployed" expectation — reporting the reversal
+explicitly rather than either (a) repeating the brief's now-stale claim or (b)
+treating the bundle change as an unexplained incident.
+
+**Bundle identity: changed, and explained — not a defect.** `/speel/` bundle
+is now `speel-CEtBe2Ge.js` / `speel-C07YbkOj.css` (both 200), replacing the
+tick #12–#25 baseline `speel-Dx9n5T0C.js` / `speel-B2OxpAxn.css` — **the old
+baseline filenames now 404** (`curl` confirmed both), i.e. a clean full
+replacement, not two builds coexisting. sha256 of the new bytes: JS
+`7586651c37a9cf2a9ff71c2f6bcac26cc1f13f3ece4f54649d613b937239abcc`, CSS
+`77a38ff7a49ee87674cd0f9e1680c3b8312454be1376cdeedc539685a030526f` — both
+differ from the tick #24 baseline (JS `44edca9d…504e5f4`, CSS
+`8d015d0d…67f9e9d`) as expected, since this is a genuinely different, newer
+build. Spot-checked the new JS bundle for content consistent with 074's shipped
+copy: `grep -i` finds `Fabriek`/`Jouw` (Dutch factory-page strings) present;
+page fetches and asset loads all return 200 with no 4xx/5xx — no evidence of a
+broken build from outside. Recording this new pair as the bundle-identity
+baseline going forward (superseding tick #24's).
+
+**Process note, not an incident:** 073 and 074's assignment files
+(`company/assignments/073-calm-typing-view.md`,
+`company/assignments/074-factory-page-bouwplan.md`) both still show `status:
+needs_verification` — tester sign-off has not yet landed for either, but both
+are live in production right now. This matches this company's established
+pattern (e.g. tick #10, four merges live same-day pre-full-verification) —
+Vercel deploys on every push to `main` regardless of internal board status;
+verification is a parallel/downstream check, not a deploy gate. Not flagging
+as new or as a gap — the endpoint checks below found the deployed code
+functioning correctly from outside.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, `Last-Modified: Fri, 24 Jul 2026 11:46:34 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle **`speel-CEtBe2Ge.js` / `speel-C07YbkOj.css`** — new build, see headline finding above; both assets fetched directly, 200, sha256 recorded above as new baseline |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** (`<url>`/`<loc>`/`</url>` counts all agree at 22) — matches tick #12–#25, no change despite the product-code deploy (sitemap is content-driven, not touched by 071–074) |
+| Static assets: `/assets/speel-CEtBe2Ge.js`, `/assets/speel-C07YbkOj.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+**27/27 checks pass** (13 page/resource checks incl. sitemap count, 5 static
+asset checks, 6 auth-boundary checks across all three token shapes on both
+admin-facing endpoints, 2 `/api/track` checks, 1 `/api/school/redeem` check).
+No 4xx/5xx surprises outside documented/expected behavior, no auth boundary
+breach, no data leak in any 401 body, no broken asset despite the bundle
+changing underneath this pass.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged,
+not re-opened.** `env | grep -iE "FUNNEL|VERCEL|SUPABASE|CRON"` this tick
+returned only `SUPABASE_GO_BINARY` (local CLI binary path, not a hosted
+credential) — the command ran cleanly this tick, unlike tick #25 where the
+session's permission classifier blocked it. No Vercel/Supabase dashboard or
+API credentials in this environment. Standing Shareholder ask 4 in
+decisions/010 (monthly glance at usage pages) remains open and unactioned. Per
+ADR 010's framing that a Supabase free-tier pause is a priority-1 incident,
+this monitor still cannot itself detect an approaching-pause scenario before
+it becomes a visible outage — flagging again, not papering over it. Endpoint
+checks above found no 5xx/pause symptoms on any DB-backed route probed.
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick
+#7 — confirmed via git history this tick.** `git log --oneline --
+company/metrics/spend.md` still shows only the two pre-monitor commits
+(`aa85ab4`, `c68f46a`). Four lines unchanged: domain (Shareholder-owned
+auto-renew, immaterial, untracked per decisions/003), Vercel/Supabase/Resend
+all €0 free tier (escalate to CEO before any paid-plan upgrade). **Checked ADR
+012 and ADR 013 explicitly for spend language** (both new since tick #25): ADR
+012 (tycoon-world direction, keyboard-first ruling) contains no spend line —
+it's a design/scope ruling, opens 079 (designer) and blocks 075's mobile half,
+no money. ADR 013 (standing autonomous-iteration mandate) explicitly carves out
+"real-money spend or anything above the €50/mo ceiling" as still escalating to
+the Shareholder — it removes the *approval gate* for product/design decisions,
+not the spend ceiling; §Consequences names no new recurring commitment. No new
+recurring spend found anywhere in the repo. No line in spend.md carries a
+Shareholder "approved one-time, cancel before renewal" condition to watch —
+nothing to escalate pre-renewal this tick. Budget ceiling €50/month
+(decisions/003) — current recorded recurring spend: **€0**.
+
+**ADR 010 revisit-trigger evaluation (T1–T6) — still armed per ADR 011
+§Consequences:**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` unchanged since its creation commit `be2a450` (git log confirms, re-checked this tick) — baseline still dated 2026-07-23; today is 2026-07-24, ~1 day of possible data. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (git log confirms unchanged since creation at 043/`c7f29a6`); no `FUNNEL_READ_TOKEN` in this environment (confirmed this tick); no Shareholder digest paste has landed since tick #25 (`git log 4dadd49..HEAD -- company/metrics/funnel.md company/metrics/search-console.md` returns empty). |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no repo artifact records one — checked explicitly this tick, none found. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. |
+| T6 | Any production incident or new defect | **NOT FIRED.** 27/27 endpoint checks pass, auth boundaries intact under all three token shapes on both endpoints, spend clean. The bundle change (headline finding above) is a confirmed, explained deploy of already-merged, in-progress-verification work — not an incident: no broken page, no broken asset, no 4xx/5xx regression traced to it. |
+
+**No trigger fired this tick.** Nothing reopens or blocks dispatchable work.
+
+**Verdict: HEALTHY. All 27 checks pass against the documented live domain
+`typcoon.com`. Production bundle identity changed this tick from the tick
+#12–#25 baseline to a new build (`speel-CEtBe2Ge.js` / `speel-C07YbkOj.css`) —
+fully explained: 071–074 merged to `main` and Vercel auto-deployed within ~7
+minutes, so the live deploy is now at parity with `main` HEAD (`8ebae88`,
+modulo bookkeeping-only commits). This reverses the "not yet deployed" state
+this tick's brief anticipated — reported explicitly as a state change, not
+treated as drift or an incident, since every check against the new build
+passed clean. 073/074 are still `needs_verification` on the board despite
+being live — normal for this company's continuous-deploy pattern, not a new
+gap. Sitemap steady at 22 URLs, spend ledger clean and unchanged (ADR 012/013
+both checked explicitly for spend language, neither adds any), no renewal
+risk. All six ADR 010 revisit triggers evaluated explicitly; none fired
+(T1/T5 not yet due, T2/T3/T4 unevaluable for lack of data — no new
+Shareholder digest paste or GSC update since tick #25, T6 clear). Two
+carried-forward, accepted measurement gaps (quota consumption / ADR 008,
+FUNNEL_READ_TOKEN absent) — not new findings, not re-opened. No incident to
+open, no defect to materialize this tick.**
+
 ## 2026-07-24 08:19 UTC — tick #22 (ADR 010 stage duty: health + trigger evaluation)
 
 Eighth monitor pass under ADR 010's build-hold, mirroring tick #14/#16–#21's
