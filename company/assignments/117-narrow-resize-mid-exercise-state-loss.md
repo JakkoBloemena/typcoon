@@ -2,7 +2,7 @@
 id: 117
 title: "Narrowing the window below the 1024px desktop floor mid-exercise silently discards the current typed exercise/combo/exam state (reactive width gate unmounts GameScreen)"
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 106, tick #40)
