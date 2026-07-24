@@ -568,13 +568,39 @@ button { font-family: inherit; }
    animaties hier: bewegingsleven is 086's slice — elk station tekent zijn RUSTENDE
    eindstaat, zodat een reduced-motion kind meteen een complete fabriek ziet.
    ================================================================================== */
+
+/* 115 (plek-pas, design/DESIGN-FACTORY.md PART III W10a) — de "De Werktafel"-winnaar
+   (114): .desk is de NIEUWE buitenste wikkel om .hal — een fysiek bureaublad (korrel +
+   dikke rand + lip), zodat de bouwplaat leest als een schaalmodel dat op een tafel
+   rust, niet als een los paneel op de pagina. .hal blijft precies dezelfde bouwplaat
+   erbinnen (zelfde rand/radius/hoogte/overflow hieronder, ONGEWIJZIGD) — alleen zijn
+   achtergrond wisselt van wereld-C's plafond-gloed naar een plattere bureau-context
+   gradient (W10a, tweede regel hieronder). .scaletag is vastgepind op de bureau-hoek:
+   de primaire "dit zijn miniaturen"-schaal-aanwijzing (W10b) die de 076-kritiek miste. */
+.desk {
+  position: relative; margin-top: 14px; padding: 22px 26px 26px; border-radius: calc(var(--r-lg) + 8px);
+  border: 3px solid var(--sink);
+  background:
+    /* een vage diagonale korrel zodat de wikkel als een fysiek bureaublad leest, niet als een UI-paneel */
+    repeating-linear-gradient(46deg, transparent 0 22px, color-mix(in srgb, var(--sink) 40%, transparent) 22px 23px),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 82%, black), color-mix(in srgb, var(--sink) 70%, var(--panel-2)));
+  box-shadow: 0 12px 0 var(--sink), inset 0 2px 0 color-mix(in srgb, var(--paper) 8%, transparent);
+}
+.scaletag {
+  position: absolute; top: 12px; left: 24px; z-index: 6; font-family: var(--data); font-weight: 800;
+  letter-spacing: 0.12em; font-size: 0.6rem; color: var(--ink-dim); background: var(--night);
+  border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; box-shadow: 0 3px 0 var(--sink);
+}
+.scaletag b { color: var(--brass); }
+
 .hal {
-  position: relative; height: 460px; margin-top: 14px; overflow: hidden;
+  position: relative; height: 460px; overflow: hidden;
   border: 3px solid var(--line); border-radius: var(--r-lg);
   box-shadow: 0 10px 0 var(--sink), inset 0 40px 90px color-mix(in srgb, var(--night) 82%, black);
-  background:
-    radial-gradient(120% 80% at 50% -10%, var(--bg-wash), transparent 55%),
-    linear-gradient(180deg, color-mix(in srgb, var(--night) 78%, black) 0%, var(--night) 38%, var(--panel-2) 100%);
+  /* 115 (W10a): vervangt wereld-C's plafond-gloed (radiale --bg-wash-vlek bovenaan) —
+     dat "een diagram bekijken"-gevoel hoort niet meer bij een model op een bureau. De
+     ENIGE lichtbron is nu de .warmth-wasem hieronder (W10c), vlak boven de vloer. */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--night) 86%, black) 0%, var(--night) 45%, var(--panel-2) 100%);
 }
 .floor {
   position: absolute; left: -20%; right: -20%; bottom: -40px; height: 320px;
@@ -596,6 +622,27 @@ button { font-family: inherit; }
   background: color-mix(in srgb, var(--line) 70%, transparent);
   box-shadow: 0 0 30px 6px color-mix(in srgb, var(--bg-grid) 60%, transparent);
 }
+
+/* 115 (W10c): de warme werkplaats-wasem — een brede, lage, zachte lichtplas over de
+   VOORKANT van de bouwplaat, DOM-direct na .floor in Shop.jsx (z1, onder de machine-
+   laag), zodat ze nooit het contrast van een label kan verlagen. Geen hotspot op één
+   machine: de fix voor de 076-kritiek se "blown-out Drukpers"-opmerking op de eerdere
+   werklamp-poging (114/W9). --bg-wash is al de thema-haak (052), dus de wasem kleurt
+   per thema gratis mee. `opacity: .72` hieronder is met opzet warmBreath's eigen
+   0%/100%-waarde (niet 1, de keyframe-default) — zonder `forwards` valt de animatie
+   hierop terug zodra reduced-motion haar duur naar 0.01ms knijpt, dus "de werkplaats
+   blijft rustend verlicht" (W13) is een gevolg van déze regel, zelfde idioom als
+   plotGlow's 22%-tint hierboven. */
+.warmth {
+  position: absolute; left: 0; right: 0; bottom: -30px; height: 62%; z-index: 1; pointer-events: none;
+  opacity: 0.72;
+  background: radial-gradient(78% 100% at 42% 118%,
+    color-mix(in srgb, var(--bg-wash) 130%, transparent) 0,
+    color-mix(in srgb, var(--bg-wash) 60%, transparent) 38%,
+    transparent 66%);
+  animation: warmBreath 8s ease-in-out infinite;
+}
+@keyframes warmBreath { 0%, 100% { opacity: 0.72; } 50% { opacity: 1; } }
 
 /* gebouwd = een podium (plinth) — het "physical" idioom van deze codebase (dikke
    onderrand, drukt-echt-in-knop-gevoel), met een ovale slagschaduw op de vloer, een
@@ -701,6 +748,38 @@ button { font-family: inherit; }
 .ghost .gname { margin-top: 6px; font-weight: 800; font-size: 0.8rem; color: var(--ink-dim); }
 .ghost .glock { font-family: var(--data); font-size: 0.66rem; color: var(--ink-dim); font-weight: 700; }
 .ghost.premium .draw { border-color: color-mix(in srgb, var(--brass) 60%, var(--line)); }
+
+/* 115 (W10d): de schaal-props — een geliniëerde rand vooraan de bouwplaat en een
+   potlood op modelschaal naast de machines. Samen met .scaletag leveren ze "dit zijn
+   miniaturen" concreet, zonder de machines zelf te verkleinen (W11). Puur decoratief
+   (geen tekst, geen interactie, aria-hidden in Shop.jsx) en volledig token-afgeleid,
+   dus een [data-theme]-wissel kleurt ze gratis mee. */
+.ruler {
+  position: absolute; left: 5%; right: 5%; bottom: 12px; height: 16px; z-index: 4; border-radius: 3px;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--paper) 42%, transparent) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, var(--paper)), var(--panel-2));
+  border: 1px solid var(--line); box-shadow: 0 2px 0 var(--sink);
+}
+.ruler::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 4px; height: 6px;
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--paper) 55%, transparent) 0 1px, transparent 1px 12px);
+}
+.pencil {
+  position: absolute; left: 15%; bottom: 40px; width: 112px; height: 9px; z-index: 4; transform: rotate(-7deg);
+  border-radius: 3px 2px 2px 3px;
+  background: linear-gradient(90deg, var(--brass) 0 78%, color-mix(in srgb, var(--paper) 70%, var(--brass)) 78% 90%, var(--sink) 90%);
+  box-shadow: 0 3px 5px color-mix(in srgb, black 50%, transparent);
+}
+.pencil::before { /* houten punt */
+  content: ''; position: absolute; left: -11px; top: -3px; width: 0; height: 0;
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+  border-right: 12px solid color-mix(in srgb, var(--paper) 78%, var(--brass));
+}
+.pencil::after { /* graffietpunt */
+  content: ''; position: absolute; left: -4px; top: -1px; width: 0; height: 0;
+  border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-right: 5px solid var(--sink);
+}
 
 /* ==================================================================================
    ATMOSFEER & BEWEGING (assignment 086, design/DESIGN-FACTORY.md PART II W3). De

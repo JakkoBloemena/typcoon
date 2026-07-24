@@ -225,105 +225,127 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
 
   return (
     <>
-      {/* de vloer: een getilde blauwdruk-laag onder alles, alleen dat ene element
-          heeft een 3D-transform (rotateX) — machines/tekst staan er flat bovenop
-          (W2a). Gebouwde machines staan als podium (plinth) vooraan; het volgende
-          bouwterrein gloeit messing; op-slot machines zijn platte lijn-tekeningen
-          richting de horizon. */}
-      <div className="hal">
-        <div className="floor" aria-hidden="true" />
-        <div className="horizon" aria-hidden="true" />
-        {diorama.map((item, i) => {
-          // 086 (W3 aankomstmoment): --rise-i is de positie-index van dit station op
-          // de vloer — game.css leest 'm om riseIn ~60ms per index te spreiden. Een
-          // REGEL (de indexteller), geen handmatige per-machine vertraging.
-          const style = { left: `${item.x}%`, top: `${item.y}%`, '--rise-i': i };
-          if (item.kind === 'built') style['--bob-i'] = builtI++;
-          // De sleutel bevat item.kind: zodra een station van plot/ghost naar built
-          // kipt (een echte aankoop) mount React een NIEUW knooppunt op dezelfde
-          // plek, dus riseIn speelt opnieuw af — precies eenmalig, voor dat ene
-          // station (het bouwmoment). Blijft kind gelijk (elke andere re-render,
-          // bijv. het muntsaldo dat elders verandert), dan blijft de sleutel gelijk
-          // en her-triggert niets.
-          const key = `${item.b.id}:${item.kind}`;
-          if (item.kind === 'built') {
-            const { b, level, isCurrentLevelup, nextMs, established } = item;
-            return (
-              <div className={'mch' + (established ? ' established' : '')} style={style} key={key}>
-                {isCurrentLevelup
-                  ? <span className="badge cur">{gt('factory.currentBadge')}</span>
-                  : nextMs && <span className="badge">{gt('play.nextMilestone', { n: nextMs })}</span>}
-                <div className="plinth">
-                  <span className="status" aria-hidden="true" />
-                  <div className="glass" aria-hidden="true" />
-                  <Machine id={b.id} running className="mch-ico" />
-                </div>
-                <div className="cast" aria-hidden="true" />
-                <div className="plate">{gt('building.' + b.id)}</div>
-                <div className="lv">Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</div>
-                <div className="rate">+{fmt(level * b.rate * milestoneMultiplier(level))}/s</div>
-              </div>
-            );
-          }
-          if (item.kind === 'plot') {
-            const { b, isCurrentBuild } = item;
-            return (
-              <div className="plot" style={style} key={key}>
-                {isCurrentBuild && (
-                  <span className="flag">
-                    {/* 088 (W5): een verse save benoemt het eerste bouwterrein
-                        expliciet anders ("BOUW HIER") dan de gewone "NU BOUWEN"-
-                        vlag die elders ook op een niet-lege fabriek verschijnt —
-                        precies de kopij die de AC citeert. */}
-                    {isEmpty ? gt('factory.buildHereBadge') : `🦾 ${gt('factory.currentBadge')}`}
-                  </span>
-                )}
-                <div className="pad"><Machine id={b.id} className="plot-ico" /></div>
-                <div className="pname">{gt('building.' + b.id)}</div>
-                {/* 088 (W5): op een verse save is dit bouwterrein het ENIGE station
-                    op de vloer en staat de vriendelijke regel er al pal onder — de
-                    "nog N munten"-kostenregel (mock world-states.html laat 'm hier
-                    bewust weg) botste anders visueel met die regel. Overal elders
-                    (niet-lege fabriek) blijft de kostenregel gewoon staan. */}
-                {!isEmpty && (
-                  <div className="pnote">
-                    {/* 110: bij isCurrentBuild && goal.remaining === 0 (al betaalbaar)
-                        is "nog 0 munten" een gek soort niet-goed-nieuws — swap naar
-                        een korte goed-nieuws-regel, zelfde familie als 104's
-                        goal.readyLine maar zonder inspannings-clausule om te verbergen. */}
-                    {isCurrentBuild
-                      ? (goal.remaining === 0
-                        ? gt('factory.plotReady')
-                        : gt('factory.plotRemaining', { n: fmt(goal.remaining) }))
-                      : gt('factory.toBuild')}
+      {/* 115 (plek-pas, design/DESIGN-FACTORY.md PART III W10a/b): de bouwplaat rust nu
+          fysiek op een bureau — .desk is de nieuwe buitenste wikkel (tafelrand + korrel);
+          .hal blijft precies dezelfde bouwplaat erbinnen (zelfde rand/radius/hoogte,
+          alleen de achtergrond wisselt van plafond-gloed naar bureau-context, W10a). De
+          .scaletag ("MAQUETTE 1:50") zit vastgepind op de bureau-hoek — de schaal-
+          aanwijzing die de 076-kritiek miste, letterlijk (hardcoded, geen strings.js-
+          sleutel: de 115-opdracht sluit strings.js expliciet uit van de scope). */}
+      <div className="desk">
+        <span className="scaletag">MAQUETTE <b>1:50</b></span>
+        {/* de vloer: een getilde blauwdruk-laag onder alles, alleen dat ene element
+            heeft een 3D-transform (rotateX) — machines/tekst staan er flat bovenop
+            (W2a). Gebouwde machines staan als podium (plinth) vooraan; het volgende
+            bouwterrein gloeit messing; op-slot machines zijn platte lijn-tekeningen
+            richting de horizon. */}
+        <div className="hal">
+          <div className="floor" aria-hidden="true" />
+          {/* 115 (W10c): een brede, lage, warme lichtplas over de VOORKANT van de
+              bouwplaat — DOM-direct na .floor, onder de machines (z1 < de machine-
+              laag), zodat ze nooit het contrast van een label kan verlagen. Ademt traag
+              (warmBreath, 8s in game.css); geen hotspot op één machine (de fix voor de
+              076-kritiek se "blown-out Drukpers"-opmerking). */}
+          <div className="warmth" aria-hidden="true" />
+          <div className="horizon" aria-hidden="true" />
+          {diorama.map((item, i) => {
+            // 086 (W3 aankomstmoment): --rise-i is de positie-index van dit station op
+            // de vloer — game.css leest 'm om riseIn ~60ms per index te spreiden. Een
+            // REGEL (de indexteller), geen handmatige per-machine vertraging.
+            const style = { left: `${item.x}%`, top: `${item.y}%`, '--rise-i': i };
+            if (item.kind === 'built') style['--bob-i'] = builtI++;
+            // De sleutel bevat item.kind: zodra een station van plot/ghost naar built
+            // kipt (een echte aankoop) mount React een NIEUW knooppunt op dezelfde
+            // plek, dus riseIn speelt opnieuw af — precies eenmalig, voor dat ene
+            // station (het bouwmoment). Blijft kind gelijk (elke andere re-render,
+            // bijv. het muntsaldo dat elders verandert), dan blijft de sleutel gelijk
+            // en her-triggert niets.
+            const key = `${item.b.id}:${item.kind}`;
+            if (item.kind === 'built') {
+              const { b, level, isCurrentLevelup, nextMs, established } = item;
+              return (
+                <div className={'mch' + (established ? ' established' : '')} style={style} key={key}>
+                  {isCurrentLevelup
+                    ? <span className="badge cur">{gt('factory.currentBadge')}</span>
+                    : nextMs && <span className="badge">{gt('play.nextMilestone', { n: nextMs })}</span>}
+                  <div className="plinth">
+                    <span className="status" aria-hidden="true" />
+                    <div className="glass" aria-hidden="true" />
+                    <Machine id={b.id} running className="mch-ico" />
                   </div>
-                )}
-              </div>
-            );
-          }
-          if (item.kind === 'ghost-premium') {
-            const { b } = item;
+                  <div className="cast" aria-hidden="true" />
+                  <div className="plate">{gt('building.' + b.id)}</div>
+                  <div className="lv">Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</div>
+                  <div className="rate">+{fmt(level * b.rate * milestoneMultiplier(level))}/s</div>
+                </div>
+              );
+            }
+            if (item.kind === 'plot') {
+              const { b, isCurrentBuild } = item;
+              return (
+                <div className="plot" style={style} key={key}>
+                  {isCurrentBuild && (
+                    <span className="flag">
+                      {/* 088 (W5): een verse save benoemt het eerste bouwterrein
+                          expliciet anders ("BOUW HIER") dan de gewone "NU BOUWEN"-
+                          vlag die elders ook op een niet-lege fabriek verschijnt —
+                          precies de kopij die de AC citeert. */}
+                      {isEmpty ? gt('factory.buildHereBadge') : `🦾 ${gt('factory.currentBadge')}`}
+                    </span>
+                  )}
+                  <div className="pad"><Machine id={b.id} className="plot-ico" /></div>
+                  <div className="pname">{gt('building.' + b.id)}</div>
+                  {/* 088 (W5): op een verse save is dit bouwterrein het ENIGE station
+                      op de vloer en staat de vriendelijke regel er al pal onder — de
+                      "nog N munten"-kostenregel (mock world-states.html laat 'm hier
+                      bewust weg) botste anders visueel met die regel. Overal elders
+                      (niet-lege fabriek) blijft de kostenregel gewoon staan. */}
+                  {!isEmpty && (
+                    <div className="pnote">
+                      {/* 110: bij isCurrentBuild && goal.remaining === 0 (al betaalbaar)
+                          is "nog 0 munten" een gek soort niet-goed-nieuws — swap naar
+                          een korte goed-nieuws-regel, zelfde familie als 104's
+                          goal.readyLine maar zonder inspannings-clausule om te verbergen. */}
+                      {isCurrentBuild
+                        ? (goal.remaining === 0
+                          ? gt('factory.plotReady')
+                          : gt('factory.plotRemaining', { n: fmt(goal.remaining) }))
+                        : gt('factory.toBuild')}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            if (item.kind === 'ghost-premium') {
+              const { b } = item;
+              return (
+                <div className="ghost premium" style={style} key={key} onClick={() => onUnlockOffer('plain')}>
+                  <div className="draw clickable"><Machine id={b.id} className="ghost-ico" /></div>
+                  <div className="gname">🔒 {gt('building.' + b.id)}</div>
+                  <div className="glock">{gt('premium.inFull')}</div>
+                </div>
+              );
+            }
+            const { b, remaining } = item; // ghost-letters
             return (
-              <div className="ghost premium" style={style} key={key} onClick={() => onUnlockOffer('plain')}>
-                <div className="draw clickable"><Machine id={b.id} className="ghost-ico" /></div>
-                <div className="gname">🔒 {gt('building.' + b.id)}</div>
-                <div className="glock">{gt('premium.inFull')}</div>
+              <div className="ghost" style={style} key={key}>
+                <div className="draw"><Machine id={b.id} className="ghost-ico" /></div>
+                <div className="gname">{gt('building.' + b.id)}</div>
+                <div className="glock">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</div>
               </div>
             );
-          }
-          const { b, remaining } = item; // ghost-letters
-          return (
-            <div className="ghost" style={style} key={key}>
-              <div className="draw"><Machine id={b.id} className="ghost-ico" /></div>
-              <div className="gname">{gt('building.' + b.id)}</div>
-              <div className="glock">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</div>
-            </div>
-          );
-        })}
-        {/* 088 (W5): één vriendelijke regel op een verse save — het plan staat er
-            wel degelijk, maar is nog leeg; deze regel zegt wat de eerste stap is.
-            Nooit getoond zodra er ook maar één machine gebouwd is. */}
-        {isEmpty && <div className="emptyline">{gt('factory.emptyLine')}</div>}
+          })}
+          {/* 088 (W5): één vriendelijke regel op een verse save — het plan staat er
+              wel degelijk, maar is nog leeg; deze regel zegt wat de eerste stap is.
+              Nooit getoond zodra er ook maar één machine gebouwd is. */}
+          {isEmpty && <div className="emptyline">{gt('factory.emptyLine')}</div>}
+          {/* 115 (W10d): schaal-props op modelschaal — een potlood naast de machines
+              en een geliniëerde rand vooraan de bouwplaat. Puur decoratief (geen
+              tekst, geen interactie): samen met de tag leveren ze "schaal" zonder de
+              machines zelf te verkleinen. */}
+          <div className="pencil" aria-hidden="true" />
+          <div className="ruler" aria-hidden="true" />
+        </div>
       </div>
 
       {/* BOUWBON: het bouwbriefje voor nextGoal (071), nu de ENE plek waar het

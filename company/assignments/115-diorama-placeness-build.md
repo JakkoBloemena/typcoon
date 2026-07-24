@@ -2,7 +2,7 @@
 id: 115
 title: "Build the diorama place-ness backdrop/depth/scale per the 114 spec (closes the \"blueprint, not place\" gap)"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: [114]
 opened_by: product-owner
@@ -136,3 +136,94 @@ worktrees or serialise if a single checkout is used.
 
 Priority 2: the highest-value work in this iteration, but enhancement (not a broken flow),
 so not priority 1.
+
+## Delivery notes (developer d115, tick #40)
+
+**Built exactly W10a–d, additive, on `src/game/Shop.jsx` + `src/game/game.css`, nothing
+else in `src/**`.** `.hal` is now wrapped in a new `.desk` (tabletop surround: `--sink`
+border, diagonal grain via `color-mix`, `--panel-2`/`--sink` gradient, `0 12px 0 --sink`
+lip) carrying a pinned `.scaletag` (`MAQUETTE **1:50**`, `--data`/`--ink-dim` on `--night`,
+the ratio in `--brass`). `.hal` itself keeps its existing border/radius/height/overflow
+verbatim and only its `background` changed, from world-C's radial ceiling-glow to the
+plainer `--night`→`--panel-2` desk-context gradient (W10a). `.warmth` (W10c) sits DOM-
+right-after `.floor` in Shop.jsx, `z-index:1`, `warmBreath 8s` — its base `opacity:.72`
+(not the animation's implicit default) is deliberately the keyframe's own 0%/100% value,
+same idiom the codebase already uses for `plotGlow`'s static mid-tint, so the reduced-
+motion freeze lands on the documented resting state without a separate override. `.ruler`
++ `.pencil` (W10d) are appended at the end of `.hal`'s children, both `aria-hidden`,
+z-index 4, fully token/`color-mix`-derived.
+
+**Verification run (this tick, worktree `C:\companies\typcoon-lanes\d115`, port 4297):**
+- `npm install`, `npm test` → **266/266 passing**, `vite build` clean, `check-no-dutch-en`
+  → PASS (5 built en files, zero unallowlisted hits — irrelevant here since Shop.jsx/
+  game.css never touch the `en/` content pages, but ran it as instructed).
+- Ran the app on `localhost:4297`, seeded a mid-game save via the real onboarding→start
+  flow (`typcoon:onboarded`/`typcoon:save` localStorage, mutated only `tycoon.{coins,
+  totalCoins,lifetimeCoins,buildings,upgrades,rebirths}` after a real save existed — no
+  hand-built engine/profile shape), then screenshotted the factory diorama at 1360×1000.
+  Screenshots committed under `company/assignments/115-screenshots/`:
+  `diorama-default-theme.png` (Muntpers), `diorama-nachtploeg-theme.png`,
+  `diorama-diepzee-theme.png` (both via `data-theme` swap — CSS re-tint check only, not
+  the unlock-gated theme picker), `diorama-reduced-motion.png` (Playwright
+  `reducedMotion:'reduce'` emulation). Compared against
+  `design/factory-mocks/world-place-winner-{muntpers,nachtploeg,diepzee}.png`: desk
+  surround, `MAQUETTE 1:50` tag, front warmth wash, ruler, and pencil are all present and
+  read as intended in every theme checked; no hotspot on either built machine; all
+  atmosphere re-tints per theme with zero per-theme code (as W14 predicts).
+- **W13 live motion probe** (not stills): sampled `getComputedStyle` on the running app
+  every 1s for 10s. `.warmth`'s `opacity` traced a smooth continuous 8s sine between
+  `.72` and `1.0` (e.g. .73→.82→.94→**1.0**(t3)→.98→.90→.78→**.72**(t7)→.74→.83) — no
+  step/strobe. The two built machines' `.mch-ico` `translateY` stayed visibly out of
+  phase across all 10 samples (e.g. t4: −0.13px vs −0.66px; t8: −2.05px vs −3.53px),
+  amplitude ≈0–4px — never lockstep, matches idleBob's existing (unchanged) stagger.
+  `.plot .pad`'s inset `box-shadow` alpha oscillated continuously between ≈.16 and ≈.34
+  on a ≈3.4s period (verified with `unlocked` + `curriculumIndex` bumped locally so a
+  `.plot` existed to sample) — soft breathing glow, not a notification pulse. `riseIn`
+  and `beltDrift` are unchanged/out-of-scope respectively; not touched, not re-verified
+  beyond confirming no stuck mid-animation artifact in the reduced-motion screenshot.
+- Read every line of the `Shop.jsx`/`game.css` diff back against W10a–e and W14's
+  token-hygiene rule by hand: zero new `:root` tokens; every new colour is `var(--token)`
+  or `color-mix(in srgb, var(--token) N%, transparent|black)` (the `black`-mix is the
+  same idiom `.hal`/`.mch .cast` already use elsewhere in this file, not a new pattern);
+  `--sky` untouched; `store.js`/`economy.js`/`src/engine/`/`theme.js`/`goals.js`
+  untouched (`git diff --stat` confirms only `Shop.jsx` + `game.css` changed).
+
+**Judgment calls for the tester to weigh:**
+1. **Z-index numbers diverge from W10e's literal ladder, on purpose.** The mock's finished
+   ladder (`belt 2 · ghost 2 · mch/plot 3`) assumes 091's belt has already landed and
+   renumbered `.mch`/`.plot`/`.ghost`. Live `game.css` today still has `.mch`/`.plot` at
+   `z-index:2` and `.ghost` unset — those are explicitly out of this assignment's scope
+   ("every other world-C surface... untouched"). I gave the four NEW layers the spec's
+   own numbers verbatim (`warmth:1`, `ruler`/`pencil:4`, `scaletag:6`), which preserves
+   the *relative* ordering the AC actually cares about (atmosphere ≤ machines < flat
+   props < tag) against the current numbers too. 091 will need to bump `.mch`/`.plot` to
+   `3` when it adds the belt at `2` — flagging so that lane doesn't assume today's `2`s
+   are the final ladder.
+2. **`.scaletag`'s "MAQUETTE 1:50" copy is a hardcoded JSX literal, not a `strings.js`
+   key.** The assignment explicitly puts `strings.js` out of scope (the declined kicker
+   rename). "Maquette" is a real, common Dutch word (unrelated to the declined "Jouw
+   maquette" kicker rename — it's not user-facing prose, just the scale-tag's literal
+   label, same treatment class as the mock's own hardcoded tag text), so this doesn't
+   regress `check-no-dutch-en` (which only scans built `dist/en/` content pages, which
+   this tag never appears on) or the guardrail against a second product-vocabulary word
+   replacing "fabriek" (the page header stays exactly "JOUW FABRIEK", untouched).
+3. **The loading skeleton (`Shop.jsx`'s `!state?.tycoon` branch) was NOT wrapped in
+   `.desk`.** It's a separate `.hal` render Shop.jsx already documents as unreachable via
+   real navigation today (App.jsx only mounts `factory` view after full hydration). The
+   `.hal` background swap (W10a) still applies to it for free since it's the same CSS
+   selector, but it won't get the desk frame/tag/warmth/props. Kept out of scope per "the
+   diorama render" (the real one) rather than expanding into a second, currently-dead
+   code path; flag in case a future async-load path makes this branch reachable.
+4. **`.scaletag` is not `aria-hidden`.** `.floor`/`.horizon`/`.warmth`/`.ruler`/`.pencil`
+   are all `aria-hidden` (pure decoration, no text). `.scaletag` has real text ("MAQUETTE
+   1:50"), so I followed the closest existing precedent (`.ticket-kicker`'s visible
+   "BOUWBON" label, also un-hidden) rather than hiding it — a screen-reader user gets one
+   extra short label naming the diorama as a scale model, which reads as legitimate
+   context rather than noise.
+
+**122 not consumed** — no new defect found; the existing world-C surfaces (machines,
+ledger, ticket, werkbank, floor/horizon, all handlers) render unchanged apart from the
+new backdrop, exactly as the save-compat AC requires.
+
+Commit: see `git log` on `dev/115` for the hash covering `src/game/Shop.jsx`,
+`src/game/game.css`, this file, and `company/assignments/115-screenshots/*.png`.
