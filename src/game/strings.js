@@ -214,6 +214,20 @@ const STRINGS = {
   'goal.sliverLabel': 'JE VOLGENDE MACHINE',
   'goal.remaining': 'nog {n}',
 
+  // fabriekspagina "Het Bouwplan" (assignment 074): roadmap + spotlit doel +
+  // objectieven-rij — zie design/DESIGN-FACTORY.md §5b/§6. `goal.spotKicker`/
+  // `goal.togoLine` gelden voor élk doel-soort (build/levelup/upgrade/prestige),
+  // niet alleen machines — vandaar generieker dan `goal.sliverLabel`.
+  'goal.spotKicker': 'JE VOLGENDE DOEL',
+  'goal.togoLine': 'nog {n} munten — dat haal je in {effort}',
+  'factory.planTitle': 'Het Bouwplan',
+  'factory.builtTag': '{built} van {total} machines gebouwd',
+  'factory.currentBadge': 'NU BOUWEN',
+  'factory.toBuild': 'te bouwen',
+  'factory.prestigeMeta': '+{bonus}% ⭐ · nog {n}',
+  'factory.prestigeReady': 'Klaar om te verkopen!',
+  'factory.contextLine': '{coins} ooit verdiend · ⭐ {stars}',
+
   'reminders.home': 'Vingers terug op de thuisrij! 🏠',
   'reminders.peek': 'Niet spieken — voel de bultjes op F en J 👀',
 
@@ -524,6 +538,16 @@ const STRINGS_EN = {
 
   'goal.sliverLabel': 'YOUR NEXT MACHINE',
   'goal.remaining': '{n} to go',
+
+  'goal.spotKicker': 'YOUR NEXT GOAL',
+  'goal.togoLine': '{n} coins to go — about {effort} away',
+  'factory.planTitle': 'The Build Plan',
+  'factory.builtTag': '{built} of {total} machines built',
+  'factory.currentBadge': 'BUILDING NOW',
+  'factory.toBuild': 'to build',
+  'factory.prestigeMeta': '+{bonus}% ⭐ · {n} to go',
+  'factory.prestigeReady': 'Ready to sell!',
+  'factory.contextLine': '{coins} ever earned · ⭐ {stars}',
 
   'reminders.home': 'Fingers back on the home row! 🏠',
   'reminders.peek': "Don't peek — feel the bumps on F and J 👀",
