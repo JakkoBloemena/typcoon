@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-24 #16 — OPEN
+- opened: 2026-07-24 02:17 (system clock; tick #15 closed 01:25 — ~52 min ago, one scheduler heartbeat)
+- claimed: none — ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035; 020/021 blocked_by chains unsatisfied). This tick executes the ADR's standing mandate: monitor stage duty + T1–T6 trigger evaluation (last pass tick #14 at ~01:24, one heartbeat ago — due per one-pass-per-heartbeat cadence, cc f7b7db3).
+- worktrees: monitor → C:\companies\typcoon-lanes\mon16 (mon/tick16; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
+- ids allocated: 065–066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them); next free after reservation: 067; next decision id: 011
+
 ## Tick 2026-07-24 #15 — CLOSED
 - opened: 2026-07-24 01:24 (system clock reads ~90s *after* tick #14's close commit e8a4df2 at 01:22:01 commit-clock; ledger stamp 01:26 in #14 is the known few-minute skew — trusting commit order per tick #2/#9 retro)
 - claimed: none — ADR 010 build-hold in force; board re-read directly from disk confirms zero dispatchable assignments (all done except externally gated 003/010/020/021/022/035; 020/021 blocked_by chains unsatisfied). Standing mandate (monitor stage duty + T1–T6 trigger evaluation) executed by tick #14 ~90 seconds ago — healthy, no trigger fired; re-running a health pass inside two minutes measures nothing (tick #13 recency precedent, now at its extreme).
