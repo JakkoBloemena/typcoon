@@ -2,7 +2,7 @@
 id: 077
 title: Typing-card recolor ("done=dim / upcoming=calm-ink") is specified but no assignment builds it
 owner: product-owner
-status: open
+status: in_progress
 priority: 4
 opened_by: tester (proposed)
 blocked_by: []

@@ -2,7 +2,7 @@
 id: 073
 title: Calm typing view — goal sliver, one-line bar, remove FactoryFloor + meters
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: [071, 072]
 opened_by: product-owner
