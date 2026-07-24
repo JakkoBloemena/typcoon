@@ -2,7 +2,7 @@
 id: 086
 title: Atmosphere & motion — ambient life, arrival, build moments (world-pass slice 4)
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [085]
 opened_by: product-owner

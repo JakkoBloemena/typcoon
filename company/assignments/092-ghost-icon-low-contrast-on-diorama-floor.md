@@ -2,7 +2,7 @@
 id: 092
 title: Locked ghost machine icon is nearly invisible on the diorama floor
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 085)
