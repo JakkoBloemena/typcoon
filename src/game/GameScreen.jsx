@@ -14,7 +14,7 @@ import { nextAvailableExam, generateExamText, gradeExam, getExam } from '../engi
 import { sessionKpm, updateSpeedAvg } from '../engine/speed.js';
 import {
   BUILDINGS, GOLDEN_CHANCE, coinsPerSecond,
-  accuracyMultiplier, comboMultiplier, prestigeMultiplier,
+  accuracyMultiplier, comboMultiplier,
   earnFromExercise, tick, applyTypcoonExamResult,
 } from './economy.js';
 import { pendingAchievements, achievementDef } from './achievements.js';
@@ -84,7 +84,6 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
   // zelf wanneer een toets "klaar" is (confidence-poort + niet frustrated).
   const availableExam = nextAvailableExam(state);
   const cps = coinsPerSecond(state.tycoon);
-  const prestige = prestigeMultiplier(state.tycoon);
   const liveAcc = live.keys ? live.correct / live.keys : 1;
   const liveMult = accuracyMultiplier(liveAcc);
 
@@ -310,14 +309,16 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
           {state.tycoon.streak > 0 && (
             <span className="streak-pill" title={gt('daily.streakTip', { n: state.tycoon.streak })}>🔥 {state.tycoon.streak}</span>
           )}
-          {state.tycoon.rebirths > 0 && (
-            <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
-          )}
           {/* 083 (design/DESIGN-FACTORY.md §W4, ADR 012 ruling 1): the earnings
               cluster — earn rate + earned total — is the PRIMARY readout on the typing
               view; the old goal sliver is gone (the goal now lives on the factory
               page's build ticket, 074). ×mult/acc% stay as smaller, quieter secondary
-              "lever" feedback (accuracy IS the earn multiplier). */}
+              "lever" feedback (accuracy IS the earn multiplier). The ⭐ rebirths pill
+              that used to sit here was removed to the factory ledger's STERREN cell
+              (ADR 014, ruling on ADR 012's ruling 1: rebirths are factory-world
+              information, off the calm typing surface). 🔥 streak stays — it is a
+              daily-return/typing-habit signal native to this loop, not factory-world,
+              and is retained as a documented exception (ADR 014). */}
           <span className="earn-cluster">
             <span className="cps-pill" title={gt('play.perSec')}>⚙️ {fmt(cps)}/s</span>
             <span className="coin-pill" key={coinPop} title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>

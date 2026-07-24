@@ -2,7 +2,7 @@
 id: 105
 title: Remove the ⭐ rebirths pill from the typing view (ADR 012 ruling 1); keep 🔥 streak
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)
@@ -67,3 +67,85 @@ streak stays, with reasoning). Milestone map: `research/milestone-factory.md` §
 `company/research/076-playtest-critique.md` (finding 4). This closes the fidelity gap
 076 raised; a future tester re-reading ADR 012 against this bar will find the star
 removed and the streak's presence documented as intentional.
+
+## Delivery notes (developer, dev/105, 2026-07-24)
+
+**Exact change made, in `src/game/GameScreen.jsx` only:**
+
+1. Removed the `⭐ rebirths` star-pill JSX block (was ~313–315: the
+   `{state.tycoon.rebirths > 0 && (<span className="star-pill" …>⭐ …</span>)}` block).
+2. Removed the orphaned `const prestige = prestigeMultiplier(state.tycoon);` (was
+   line 87) and dropped `prestigeMultiplier` from the `./economy.js` import (was line
+   17). **Orphan check performed before removal:**
+   `grep -n "prestigeMultiplier\|prestige" src/game/GameScreen.jsx` against the
+   pre-edit file returned exactly three hits — the import, the `const prestige =`
+   line, and the star pill's `title` interpolation — confirming no other use existed.
+   Re-ran the same grep after the edit: zero code hits remain (only the word "prestige"
+   appears in the updated 083 comment's prose, not as an identifier).
+3. `🔥 streak` pill left byte-for-byte unchanged.
+4. Rewrote the 083 comment above the `.wallet` earn cluster to document both: the ⭐
+   pill's removal to the factory ledger's STERREN cell (ADR 014, on ADR 012 ruling 1),
+   and the 🔥 streak pill's retention as a typing-loop daily-return exception (ADR 014).
+
+**Diff scope:** `git diff --stat` shows exactly one file, `src/game/GameScreen.jsx`
+(+8/−7 lines: two 1-line import/const removals, one 3-line JSX block removal, one
+comment rewrite). No other file touched — `FactoryPage.jsx`, `game.css`, `strings.js`
+(`play.stars`), `Shop.jsx`, `Unlock.jsx`, `premium.js` all untouched, confirmed by
+`git status --porcelain` before commit showing only that path plus new
+`company/assignments/105-screenshots/` and `qa-scripts/105-verify.mjs`.
+
+**Live verification (not diff-only):** `npm ci` → `npm install playwright-core
+--no-save` (package.json/package-lock.json diff-clean, confirmed via
+`git status --porcelain -- package.json package-lock.json` before and after) →
+`npx vite build` → `npx vite preview --port 4279 --strictPort`. Wrote
+`qa-scripts/105-verify.mjs` (own script, following the 076/084 constructed-save
+pattern: app's own `newProfile`/`newState` + a hand-set `tycoon` with
+`rebirths: 1, streak: 4`, localStorage-injected, loaded fresh) and ran it with
+Playwright/Chromium against the preview server:
+
+```
+PASS - .wallet renders on the typing view
+PASS - AC: no .star-pill on the typing view (rebirths=1)
+PASS - AC: .streak-pill still renders (streak=4)
+PASS - streak pill shows a positive streak (🔥 N, N > 0)   [🔥 1 — checkDailyReturn
+       rolls the persisted streak=4 to today's count on load since lastDay was null;
+       unrelated to this change, streak > 0 as required]
+PASS - no stray ⭐ glyph anywhere in the wallet bar
+PASS - .ledger renders on the factory page
+PASS - AC: STERREN star cell present on the factory ledger (rebirths=1)
+PASS - ledger star cell shows 1
+PASS - ledger has a Sterren label
+=== RESULT: 9 passed, 0 failed ===
+```
+
+Screenshots (`company/assignments/105-screenshots/`):
+`41-loaded-save-typing-view.png` (no ⭐, `🔥 1` chip present alongside `⚙️ 87/s`,
+`850` coins, `×3.0`, `100% netjes`) and `42-loaded-save-factory-ledger.png`
+(STERREN cell reads `⭐ 1`, single-surfaced). Visually inspected both — matches the
+before-shot's layout (`076-screenshots/41-loaded-save-typing-view.png`) minus the
+removed pill; nothing else shifted.
+
+**Test suite:** `npm test` → 266/266 passing (`# tests 266 / # pass 266 / # fail 0`),
+matching the stated baseline, including `check-no-dutch-en: PASS`. Ran twice (once
+mid-flow, once after final `public/` revert) — both green.
+
+**No change to `store.js`, `economy.js`'s data/exports beyond the removed
+`prestigeMultiplier` *import*, engine, or `theme.js`** — `git status --porcelain`
+confirms only `GameScreen.jsx` under `src/` changed. `economy.js` itself is untouched
+(its `prestigeMultiplier` export still exists and is still used elsewhere, e.g.
+`FactoryPage.jsx`'s rebirth flow — only `GameScreen.jsx`'s now-unused import/call
+were removed).
+
+**`public/**` churn:** `npx vite build` and `npm test`'s internal build regenerate
+`public/blog/**`, `public/sitemap.xml`, etc. (unrelated `gen-content` output, not
+from this change). Reverted both times with `git checkout -- public/` before
+committing; final `git status --porcelain` shows no `public/` churn.
+
+**Assignment 114 (pre-allocated for a genuinely new defect): not used.** Nothing
+encountered during this assignment rose to a new defect — the only surprise (streak
+rolling from 4→1 via `checkDailyReturn` on a `lastDay: null` load) is pre-existing,
+unrelated daily-return behavior, not a regression from this change, and not in scope
+to file. 114 lapses.
+
+**Status set to `needs_verification`** (never `done` — that flip belongs to the
+tester per PROTOCOL.md).
