@@ -4,9 +4,19 @@ title: Milestone gate — playtest-critique the factory experience (kid + parent
 owner: tester
 status: open
 priority: 2
-blocked_by: [072, 073, 074, 075]
+blocked_by: [083, 084, 085, 086, 087, 088]
 opened_by: product-owner
 ---
+
+> **World-pass cut (082, 2026-07-24):** `blocked_by` re-pointed from the obsolete
+> `[072, 073, 074, 075]` chain (072/074 done; 073 folded into 083; 075 superseded/absorbed
+> into 088) to the world-pass build chain **[083, 084, 085, 086, 087, 088]**. This gate now
+> plays the *world-pass* factory — the diorama, the earnings-only typing strip, the ledger,
+> the werkbank — and tests ADR 012's own words ("does it actually feel like they are
+> experiencing a tycoon game, or a gimmick next to typing?"). Per ADR 013 it is the
+> flywheel's **intake**, not a pass/fail gate: its findings seed the next iteration's
+> assignments. (069's `<html lang>` fix is a precondition of 087, not a surface this gate
+> plays directly.)
 
 ## Goal
 

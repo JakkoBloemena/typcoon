@@ -283,3 +283,43 @@ shape, `economy.js` data, engine state, or `theme.js`; a save made before this a
 renders identically; `npm test` stays green."*
 
 See the individual assignment files for the full text; this document is the rationale and the map.
+
+---
+
+## 8. World-pass re-cut (product-owner, 2026-07-24, assignment 082) — appended, not a rewrite
+
+The 071–076 chain above shipped its first form (071/072/074 done; 073 bounced), and then the
+Shareholder saw 074 rendered and intervened mid-milestone: **ADR 012** (the factory must be a
+full-page tycoon *world*, not a panel; typing view carries only high-level earnings;
+keyboard-first, no mobile) and **ADR 013** (iterate autonomously toward the ultimate experience;
+playtest gates become the flywheel's intake). The designer's world-pass deep dive landed as
+assignment **079** (`design/DESIGN-FACTORY.md` **PART II — WORLD PASS, W0–W8**), verified `done`
+by the tester on tick #29. This section records how 079 was cut into build lanes. **History above
+stands; this is the current plan.**
+
+**The re-cut chain (assignment 082 is the cut record):**
+
+| Id  | Title | Owner | Prio | blocked_by | Demonstrable result |
+|-----|-------|-------|------|------------|---------------------|
+| 069 | `<html lang>` syncs to active locale | developer | 2 | — | English sessions carry `lang="en"`; hyphenation dictionary correct (precondition for 087) |
+| 083 | Typing strip — earnings-first, one-shot chips | developer | 2 | — | Typing view is earnings-only + calm; **closes 073** |
+| 084 | Factory ledger — coin/rate/star | developer | 2 | — | Spendable balance visible; **closes 070** |
+| 085 | The Maquette diorama floor | developer | 2 | 084 | Factory reads as a place/world, not a dashboard |
+| 086 | Atmosphere & motion | developer | 3 | 085 | Ambient life + arrival/build moments; reduced-motion correct |
+| 087 | Werkbank + 080 hyphens fix | developer | 2 | 069 | Upgrades/prestige as tools; **closes 080** |
+| 088 | Edge states for the world | developer | 3 | 085 | Empty/loading/offline degrade gracefully; **absorbs/closes 075** |
+| 076 | Milestone playtest-critique gate | tester | 2 | 083,084,085,086,087,088 | Signed tycoon-feel critique (ADR 013 flywheel intake) |
+
+**Dispositions of the held/stranded work:** 073 → folded into 083 (blocked, closed by 083's
+tester). 070 → folded into 084. 080 → folded into 087. 075 → superseded (mobile half cancelled
+by ADR 012 ruling 3; states half absorbed into 088). 069 → sequenced as 087's precondition, not
+folded. 076 → re-pointed off the obsolete 072/073/074/075 chain onto the world-pass chain.
+
+**Guardrail carried unchanged:** every world-pass slice is presentation-only —
+`store.js` / `economy.js` / engine / `theme.js` / `goals.js` untouched, no idle income (typing
+stays the only faucet), zero new `:root` tokens, `npm test` green (currently 230/230). The
+save-compat guarantee (§2) holds: no persisted field changes, no migration.
+
+**Ids:** 082 (cut record) + 083–088 (six slices) used; **089–090 returned unused**. Full
+sequencing rationale, file surfaces, and parallelism notes live in
+`company/assignments/082-worldpass-build-cut.md`.

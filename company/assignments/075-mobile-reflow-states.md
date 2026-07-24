@@ -4,9 +4,17 @@ title: Factory + typing view — mobile reflow and state screens
 owner: developer
 status: blocked
 priority: 3
-blocked_by: [073, 074]
+blocked_by: [088]
 opened_by: product-owner
 ---
+
+> **World-pass cut (082, 2026-07-24): superseded, value fully absorbed.** ADR 012 ruling 3
+> cancelled this assignment's **mobile half** — game surfaces have no mobile target, so that
+> work will never be built. 079 carried its surviving **edge-states half**
+> (empty / loading / offline / long-text) into design §W5, and slice **088 (world edge
+> states)** builds it. Re-pointed `blocked_by` from the obsolete `[073, 074]` chain to
+> `[088]`; there is no independent 075 work left. 088's tester, on verifying the edge states,
+> flips this → `done` as delivered-via-088.
 
 ## Goal
 

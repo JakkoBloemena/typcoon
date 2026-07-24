@@ -2,11 +2,17 @@
 id: 080
 title: "objectives-row upgrade names break mid-word (\"Precisiegereedschap\" -> \"Precisiegereed\" / \"schap\") from overflow-wrap:anywhere"
 owner: developer
-status: open
+status: blocked
 priority: 4
-blocked_by: []
+blocked_by: [087]
 opened_by: tester (proposed)
 ---
+
+> **World-pass cut (082, 2026-07-24):** folded into slice **087 (werkbank + hyphens fix)**.
+> W2f replaces `.obj-name`'s `overflow-wrap: anywhere` with `hyphens: auto` on the werkbank
+> tile. Set `blocked` on 087; no separate developer work. 087 is itself `blocked_by` 069
+> (hyphenation needs a locale-accurate `<html lang>`). 087's tester independently confirms
+> the rendered `Precisiegereedschap` break and flips this → `done`.
 
 ## Goal
 

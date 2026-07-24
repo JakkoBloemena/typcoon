@@ -2,11 +2,16 @@
 id: 070
 title: Factory page shows no coin/star balance anywhere (only item costs)
 owner: developer
-status: open
+status: blocked
 priority: 3
-blocked_by: []
+blocked_by: [084]
 opened_by: tester (proposed)
 ---
+
+> **World-pass cut (082, 2026-07-24):** folded into slice **084 (factory ledger)**. W2d's
+> ledger surfaces `fmt(state.tycoon.coins)` directly — the exact spendable-balance number
+> AC1 is missing. Set `blocked` on 084; no separate developer work. 084's tester
+> independently re-checks this defect's AC1 on the built tree and flips this → `done`.
 
 ## Goal
 
