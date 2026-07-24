@@ -220,6 +220,12 @@ const STRINGS = {
   // dat er al is. Deze regel vervangt goal.togoLine in dat geval — puur goed nieuws,
   // geen inspannings-schatting (die is dan zinloos: 0 opdrachten).
   'goal.readyLine': 'Je hebt genoeg munten — bouw maar!',
+  // 110: als het doel premium-locked ÉN al betaalbaar is (goalLocked && remaining
+  // === 0), is goal.readyLine's "bouw maar!" een directe tegenspraak met de
+  // 🔒 Ontgrendel-knop ernaast — het kind kan niet zelf bouwen, alleen een
+  // volwassene kan ontgrendelen. Deze regel vervangt goal.readyLine in dat geval
+  // en routeert naar de ouder-gate in plaats van 'm tegen te spreken (guardrail 3).
+  'goal.lockedReadyLine': 'Je hebt genoeg munten — vraag een volwassene om te ontgrendelen',
   'factory.planTitle': 'Het Bouwplan',
   'factory.builtTag': '{built} van {total} machines gebouwd',
   'factory.currentBadge': 'NU BOUWEN',
@@ -229,6 +235,11 @@ const STRINGS = {
   // volle `goal.togoLine` met de inspannings-schatting, die staat al op het kaartje).
   'factory.ticketLabel': 'BOUWBON',
   'factory.plotRemaining': 'nog {n} munten',
+  // 110: als het huidige bouwterrein al betaalbaar is (remaining === 0), is "nog 0
+  // munten" een gek soort niet-goed-nieuws voor een kind dat er al staat — zelfde
+  // familie als 104's goal.readyLine, maar korter (dit regeltje had nooit een
+  // inspannings-clausule om te verbergen).
+  'factory.plotReady': 'genoeg munten!',
   'factory.prestigeMeta': '+{bonus}% ⭐ · nog {n}',
   'factory.prestigeReady': 'Klaar om te verkopen!',
   'factory.contextLine': '{coins} ooit verdiend · ⭐ {stars}',
@@ -559,12 +570,14 @@ const STRINGS_EN = {
   'goal.togoLine': '{n} coins to go — about {effort} away',
   'goal.effort': '± {n} tasks',
   'goal.readyLine': 'You have enough coins — go ahead and build!',
+  'goal.lockedReadyLine': 'You have enough coins — ask a grown-up to unlock',
   'factory.planTitle': 'The Build Plan',
   'factory.builtTag': '{built} of {total} machines built',
   'factory.currentBadge': 'BUILDING NOW',
   'factory.toBuild': 'to build',
   'factory.ticketLabel': 'BUILD TICKET',
   'factory.plotRemaining': '{n} coins to go',
+  'factory.plotReady': 'enough coins!',
   'factory.prestigeMeta': '+{bonus}% ⭐ · {n} to go',
   'factory.prestigeReady': 'Ready to sell!',
   'factory.contextLine': '{coins} ever earned · ⭐ {stars}',

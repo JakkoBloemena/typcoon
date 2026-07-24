@@ -287,7 +287,15 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
                     (niet-lege fabriek) blijft de kostenregel gewoon staan. */}
                 {!isEmpty && (
                   <div className="pnote">
-                    {isCurrentBuild ? gt('factory.plotRemaining', { n: fmt(goal.remaining) }) : gt('factory.toBuild')}
+                    {/* 110: bij isCurrentBuild && goal.remaining === 0 (al betaalbaar)
+                        is "nog 0 munten" een gek soort niet-goed-nieuws — swap naar
+                        een korte goed-nieuws-regel, zelfde familie als 104's
+                        goal.readyLine maar zonder inspannings-clausule om te verbergen. */}
+                    {isCurrentBuild
+                      ? (goal.remaining === 0
+                        ? gt('factory.plotReady')
+                        : gt('factory.plotRemaining', { n: fmt(goal.remaining) }))
+                      : gt('factory.toBuild')}
                   </div>
                 )}
               </div>
@@ -338,9 +346,12 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
           <div className="ticket-togo">
             {/* 104: bij goal.remaining === 0 (al betaalbaar) is "nog 0 munten — dat
                 haal je in ± 0 opdrachten" verwarrend goed nieuws — swap naar een
-                losse, positieve regel in plaats van de togo/effort-combinatie. */}
+                losse, positieve regel in plaats van de togo/effort-combinatie.
+                110: als het doel daarbovenop ook nog premium-locked is, spreekt
+                goal.readyLine's "bouw maar!" de 🔒 Ontgrendel-knop ernaast tegen —
+                route dan naar de ouder-gate in plaats van naar "bouw". */}
             {goal.remaining === 0
-              ? gt('goal.readyLine')
+              ? (goalLocked ? gt('goal.lockedReadyLine') : gt('goal.readyLine'))
               : gt('goal.togoLine', { n: fmt(goal.remaining), effort: goal.effort })}
           </div>
         </div>
