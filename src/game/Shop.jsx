@@ -14,6 +14,10 @@
 // op-slot machines platte lijn-tekeningen zijn richting de horizon. `.goalspot`
 // werd het BOUWBON-werkbon-kaartje. Nog altijd puur presentatie: dezelfde
 // handlers, dezelfde `nextGoal`, dezelfde precedentie hieronder.
+// 086 (world-pass slice 4, design/DESIGN-FACTORY.md PART II W3): de vloer krijgt
+// ambient leven + het aankomst-/bouwmoment. `--rise-i` (de positie-index) en de
+// kind-bewuste React-key hieronder zijn de enige toevoegingen aan dit bestand —
+// de animaties zelf leven in game.css (`idleBob`/`plotGlow`/`riseIn`).
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { activeLetters } from '../engine/curriculumCore.js';
 import {
@@ -177,12 +181,22 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
       <div className="hal">
         <div className="floor" aria-hidden="true" />
         <div className="horizon" aria-hidden="true" />
-        {diorama.map((item) => {
-          const style = { left: `${item.x}%`, top: `${item.y}%` };
+        {diorama.map((item, i) => {
+          // 086 (W3 aankomstmoment): --rise-i is de positie-index van dit station op
+          // de vloer — game.css leest 'm om riseIn ~60ms per index te spreiden. Een
+          // REGEL (de indexteller), geen handmatige per-machine vertraging.
+          const style = { left: `${item.x}%`, top: `${item.y}%`, '--rise-i': i };
+          // De sleutel bevat item.kind: zodra een station van plot/ghost naar built
+          // kipt (een echte aankoop) mount React een NIEUW knooppunt op dezelfde
+          // plek, dus riseIn speelt opnieuw af — precies eenmalig, voor dat ene
+          // station (het bouwmoment). Blijft kind gelijk (elke andere re-render,
+          // bijv. het muntsaldo dat elders verandert), dan blijft de sleutel gelijk
+          // en her-triggert niets.
+          const key = `${item.b.id}:${item.kind}`;
           if (item.kind === 'built') {
             const { b, level, isCurrentLevelup, nextMs, established } = item;
             return (
-              <div className={'mch' + (established ? ' established' : '')} style={style} key={b.id}>
+              <div className={'mch' + (established ? ' established' : '')} style={style} key={key}>
                 {isCurrentLevelup
                   ? <span className="badge cur">{gt('factory.currentBadge')}</span>
                   : nextMs && <span className="badge">{gt('play.nextMilestone', { n: nextMs })}</span>}
@@ -201,7 +215,7 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
           if (item.kind === 'plot') {
             const { b, isCurrentBuild } = item;
             return (
-              <div className="plot" style={style} key={b.id}>
+              <div className="plot" style={style} key={key}>
                 {isCurrentBuild && <span className="flag">🦾 {gt('factory.currentBadge')}</span>}
                 <div className="pad"><Machine id={b.id} className="plot-ico" /></div>
                 <div className="pname">{gt('building.' + b.id)}</div>
@@ -214,7 +228,7 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
           if (item.kind === 'ghost-premium') {
             const { b } = item;
             return (
-              <div className="ghost premium" style={style} key={b.id} onClick={() => onUnlockOffer('plain')}>
+              <div className="ghost premium" style={style} key={key} onClick={() => onUnlockOffer('plain')}>
                 <div className="draw clickable"><Machine id={b.id} className="ghost-ico" /></div>
                 <div className="gname">🔒 {gt('building.' + b.id)}</div>
                 <div className="glock">{gt('premium.inFull')}</div>
@@ -223,7 +237,7 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
           }
           const { b, remaining } = item; // ghost-letters
           return (
-            <div className="ghost" style={style} key={b.id}>
+            <div className="ghost" style={style} key={key}>
               <div className="draw"><Machine id={b.id} className="ghost-ico" /></div>
               <div className="gname">{gt('building.' + b.id)}</div>
               <div className="glock">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</div>

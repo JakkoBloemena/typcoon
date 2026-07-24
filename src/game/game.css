@@ -646,8 +646,13 @@ button { font-family: inherit; }
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--brass) 12%, transparent), transparent),
     repeating-linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--brass) 16%, transparent) 15px 16px);
+  /* de 22%-tint hieronder is met opzet de MIDDELSTE waarde tussen plotGlow's 16%/34%
+     hieronder: zonder een forwards-fill-mode valt de animatie hierop terug zodra ze
+     stopt (reduced-motion knijpt haar duur naar 0.01ms), dus "rustend op de mid-gloed"
+     (086 AC) is een gevolg van déze regel, geen aparte reduced-motion-override. */
   box-shadow: inset 0 0 30px color-mix(in srgb, var(--brass) 22%, transparent);
   display: grid; place-items: center;
+  animation: plotGlow 3.4s ease-in-out infinite;
 }
 .plot .plot-ico { width: 58px; height: 50px; opacity: 0.85; }
 .plot .flag {
@@ -677,6 +682,49 @@ button { font-family: inherit; }
 .ghost .gname { margin-top: 6px; font-weight: 800; font-size: 0.8rem; color: var(--ink-dim); }
 .ghost .glock { font-family: var(--data); font-size: 0.66rem; color: var(--ink-dim); font-weight: 700; }
 .ghost.premium .draw { border-color: color-mix(in srgb, var(--brass) 60%, var(--line)); }
+
+/* ==================================================================================
+   ATMOSFEER & BEWEGING (assignment 086, design/DESIGN-FACTORY.md PART II W3). De
+   fabriekspagina is de ENE plek waar ambient beweging mag (ADR 011 houdt de
+   typweergave stil); "restraint is the tell" — traag, laag, gespreid, nooit in
+   lockstep. Geen enkele regel hieronder gebruikt `forwards`: reduced-motion (global
+   @media hierboven, regel 163-165) knijpt animation-duration naar 0.01ms en
+   iteration-count naar 1, dus elk element valt na dat ~0ms-tikje terug op zijn
+   EIGEN niet-geanimeerde CSS-waarde — de rustende eindstaat die de AC eist, geen
+   losse reduced-motion-override nodig. Geen enkele regel raakt .coin, een muntental
+   of coinsPerSecond aan: alleen opacity/transform/box-shadow op machine/plot/vloer.
+   ================================================================================== */
+
+/* ambient machineleven: een trage, lage, GESPREIDE bob op het icoon van elk gebouwd
+   station — nooit in lockstep. De stagger komt uit een REGEL (positie modulo 3
+   binnen de vloer, dezelfde nth-child-truc als de mock), geen handmatige
+   per-machine-constante: welke building op welke DOM-positie staat verandert
+   (letters/aankopen), maar de regel blijft correct zonder aanpassing. */
+@keyframes idleBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.mch .mch-ico { animation: idleBob 5.8s ease-in-out infinite; }
+.mch:nth-child(3n + 1) .mch-ico { animation-duration: 5.3s; animation-delay: 0.2s; }
+.mch:nth-child(3n + 2) .mch-ico { animation-duration: 6.4s; animation-delay: 0.5s; }
+
+/* aankomst- en bouwmoment: bij het binnenlopen van de fabriekspagina (Shop.jsx mount
+   — FactoryPage.jsx rendert `<Shop>` alleen als view==='factory', dus elke navigatie
+   ernaartoe is een verse mount) rijzen alle stations op, gespreid ~60ms per
+   positie-index. Shop.jsx zet `--rise-i` (de index in de vloer-array) als inline
+   custom property per station — dat IS de regel, geen hardgecodeerde per-machine
+   vertraging. Eén --pop-veer over 380ms (--dur-arrive's spec-waarde; niet als token
+   toegevoegd, zelfde precedent als 083's dropIn 0.6s hierboven — zie 086's
+   oplevernotities), dan stil: animation-iteration-count is hier de CSS-default 1,
+   nooit infinite. Bouwmoment: koopt een kind een station, dan wisselt Shop.jsx de
+   React-key van dat station (plot/ghost -> built) zodat de browser een vers
+   knooppunt ziet en dezelfde riseIn opnieuw, eenmalig, alleen voor DAT station
+   afspeelt — de rest van de vloer blijft stil staan. */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(26px) scale(0.9); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+.hal .mch, .hal .plot, .hal .ghost {
+  animation: riseIn 380ms var(--pop) backwards;
+  animation-delay: calc(var(--rise-i, 0) * 60ms);
+}
 
 /* het BOUWBON-werkbon-kaartje: nextGoal (071) vergroot, nu de ÉNE plek waar het
    volgende doel leeft (083 haalde de doel-sliver al van de typweergave — W2e).
