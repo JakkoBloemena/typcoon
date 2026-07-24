@@ -2,7 +2,7 @@
 id: 077
 title: Typing-card recolor ("done=dim / upcoming=calm-ink") is specified but no assignment builds it
 owner: product-owner
-status: needs_verification
+status: done
 priority: 4
 opened_by: tester (proposed)
 blocked_by: []
@@ -122,3 +122,55 @@ Why cut, on the merits (not to save work — the merits point the same way):
 promise. The contradiction is resolved by making the docs agree with 073, not the reverse — so
 the live 073 lane's work stays valid with no edit to its file. No `--calm-ink` is added to
 `:root`; no `.tchar` rule changes.
+
+### Verification (tester, tick #28)
+
+All five checks pass. Independent re-derivation, not a re-read of the developer's claims.
+
+1. **`design/DESIGN-FACTORY.md` internally consistent.** Front matter (line 25):
+   `--calm-ink: "#c7d2f2"  # CUT — PO 077 (2026-07-24): unused; typing char-states reuse
+   existing tokens (see §5a/§7). Hardcoded hex — would break the §8 theme-cascade invariant.`
+   — no longer promised as live, explicitly marked cut in place (matches the AC's wording
+   "marked cut", not "removed"). §5a (lines 222-227) states char states are "**existing char
+   states reused verbatim** (done = mint, current = paper + brass underline, upcoming =
+   ink-dim)" with an inline adjudication note pointing to §7. §7 (lines 284-291) is
+   authoritative: "the `.tchar` char-state colours (done = mint, current = paper + brass,
+   upcoming = ink-dim) are reused **verbatim**; the front matter's `--calm-ink` token and the
+   §5a … draft are **cut**." Grepped the whole file for `calm-ink` (3 hits: front matter,
+   §5a, §7 — all cut-annotations, no promise) and for `dim` (5 hits: `--ink-dim` reused-token
+   declaration + the 4 cut-annotation occurrences above — no stray "done=dim" survives).
+   `#c7d2f2` appears once, in the cut front-matter line. §8 rule 1 quoted claim verified
+   verbatim at line 322: "**No new hardcoded colour.** Every colour on both surfaces is a
+   `var(--token)`."
+
+2. **`research/milestone-factory.md` §1a consistent.** Lines 42-47: "existing char-state
+   colours reused verbatim (done = mint, current = paper + brass underline, upcoming =
+   ink-dim — the `.tchar` rules in `game.css`, unchanged)" with the same cut annotation.
+   Whole-file grep for `calm-ink`: 2 hits, both in this same cut-annotation sentence. No
+   surviving promise.
+
+3. **Code matches docs, exactly.** `src/game/game.css` lines 421-423:
+   `.tchar { color: var(--ink-dim); ... }`, `.tchar.done { color: var(--mint); ... }`,
+   `.tchar.current { color: var(--paper); ...; border-bottom: 4px solid var(--brass); ... }`
+   — matches the "reused verbatim" description exactly. Repo-wide grep (case-insensitive) for
+   `calm-ink|#c7d2f2`: zero hits under `src/`; the only 11 files with hits company-wide are
+   `research/milestone-factory.md`, `design/DESIGN-FACTORY.md`, design mock HTML/CSS
+   explorations (`design/factory-mocks/*`, pre-existing, not part of the doc under
+   verification), `company/ticks.md`, and assignment files 067/068/077 — all historical
+   record or the cut-annotation itself, none a live promise.
+
+4. **073 unaffected, verified via git log, not assumption.**
+   `git log --oneline -- company/assignments/073-calm-typing-view.md` shows only its own
+   creation commit (`bb6844d`) and the tick-open commit (`164fb58`) — 077's commit
+   (`e412360`) touched only `company/assignments/077-*.md`, `design/DESIGN-FACTORY.md`,
+   `research/milestone-factory.md` (`git show e412360 --stat`), never 073's file. 073's AC
+   text ("typing card unchanged") needed no edit and got none — confirmed.
+
+5. **Adjudication's cited claims are real, spot-checked.** §7 lists TypingSurface char-state
+   styling as reused-as-is (quoted above, line 284-286) — matches claim 1 of the
+   Adjudication. §8 rule 1 forbids hardcoded colour (quoted above, line 322) — matches claim
+   2. Both citations check out against the actual doc text, not just the adjudication's
+   paraphrase.
+
+No defects found in scope. Nothing filed as 081 — this assignment's deliverable (decision +
+doc agreement) is fully met with no loose thread. Status: `needs_verification` → `done`.
