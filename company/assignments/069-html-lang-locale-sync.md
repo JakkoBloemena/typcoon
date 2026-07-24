@@ -2,7 +2,7 @@
 id: 069
 title: "<html lang> never syncs to the active UI locale (breaks lang-dependent CSS/a11y for English sessions)"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: []
 opened_by: tester
@@ -73,3 +73,78 @@ first `gt()` call, per the comment in `App.jsx` about avoiding a Dutch-then-Engl
 Not blocking 079 — 079's own mocks correctly declare `lang="nl"` and were verified to hyphenate
 correctly under that locale. This is a pre-existing gap in the live app's locale-switching code,
 surfaced because 079's spec depends on `<html lang>` being locale-accurate going forward.
+
+## Delivery notes (developer, dev/069, 2026-07-24)
+
+**What changed** — `src/game/App.jsx` only:
+- Imported `getLocale` alongside the existing `gt`/`setLocale` from `./strings.js`.
+- Immediately after the existing `setLocale(game?.profile?.uiTaal ?? loadGame()?.profile?.uiTaal
+  ?? detectLocale())` call — the exact seam the assignment named, already commented as
+  "bewust vóór de render gezet, geen effect, anders flitst het eerste scherm even Nederlands" —
+  added: `if (typeof document !== 'undefined') document.documentElement.lang = getLocale();`.
+  Read via `getLocale()` (not the raw candidate value) so `<html lang>` gets the *normalized*
+  locale — matches `setLocale`'s own unknown-locale-falls-back-to-nl behaviour, never `'xx'`.
+  Guard mirrors `theme.js`'s `applyTheme` (`typeof document === 'undefined'` check) so nothing
+  throws server-side/in tests. Ran it in the same synchronous pre-render block as `setLocale`/
+  `applyTheme`, not a `useEffect`, so there's no post-paint flash — same rationale as both
+  neighbouring lines.
+- Did not touch `index.html` (root marketing landing) or `speel/index.html` (game shell) —
+  neither needed editing: both statically declare `lang="nl"` as the pre-hydration fallback
+  (same as `speel/index.html` already ships with no `data-theme` attribute pre-hydration), and
+  the runtime fix in `App.jsx` is what devtools/`document.documentElement.lang` reflects once
+  React mounts, which is what the acceptance criteria check.
+- Added `test/htmllang.test.js` (new file, per the brief — did not touch `test/locale.test.js`,
+  which a sibling lane owns this tick). This repo has no DOM/React test runner under
+  `node --test` (no jsdom/testing-library anywhere in `test/*.test.js`), so — following the same
+  static-source-check pattern `theme.test.js` already uses for the theme.js/economy.js
+  decoupling guarantee — the test reads `App.jsx`'s source and asserts: `getLocale` is imported
+  from `strings.js`; a `document.documentElement.lang = getLocale()` assignment exists after the
+  `setLocale(...)` call; it's guarded the same way `theme.js`'s `applyTheme` is; and it runs
+  before the `applyTheme(theme)` call (same pre-render block, not a later effect). A second test
+  confirms `getLocale()`/`setLocale()`'s own contract (en/nl/unknown-falls-back-to-nl), the
+  primitive the wiring depends on.
+- Added `qa-scripts/069-verify.mjs`, following `qa-scripts/078-verify.mjs`'s convention
+  (playwright-core, manual run against `vite preview`, not part of `npm test`). Drives four real
+  sessions against a live preview server and reads `document.documentElement.lang`: fresh nl
+  (no `?lang`, no save), fresh en (`?lang=en`), a returning session with a saved
+  `uiTaal: 'en'` profile revisited with **no** `?lang` param (profile must win, per App.jsx's own
+  comment that an existing profile is leading), and the nl equivalent of that returning-session
+  check.
+
+**Verification**
+- `npm install` (node_modules gitignored, clean install in the worktree).
+- `npm test` → 232/232 unit tests pass (230 baseline + the 2 new `htmllang.test.js` tests),
+  `vite build` succeeds, `check-no-dutch-en` PASS (5 built en files, 59-word lexicon, zero hits).
+  Ran `npm test` twice across this session (once before the QA build/preview cycle, once after);
+  both green. `git checkout -- public/` run after every `npm test`/`vite build` invocation to
+  revert the `gen-content`/`sitemap.xml` churn before committing — confirmed via `git status
+  --porcelain` that only `src/game/App.jsx` (modified) and the two new files remain staged for
+  commit.
+- Live verification: `npx vite build`, `git checkout -- public/`, `npx vite preview --port 4236`
+  (only port used, killed afterward via `taskkill` on the listening PID — confirmed
+  `netstat -ano | grep 4236` empty post-kill), `npm install playwright-core --no-save` (Chromium
+  resolved from the system-wide cache at `C:\Users\Jakko\AppData\Local\ms-playwright`, no
+  `executablePath` override needed), then `node qa-scripts/069-verify.mjs`. Output:
+  ```
+  nl session -> document.documentElement.lang = "nl"
+  en (?lang=en) session -> document.documentElement.lang = "en"
+  saved profile uiTaal after starting an en session = "en"
+  returning session, saved uiTaal=en, no ?lang param -> document.documentElement.lang = "en"
+  returning nl session -> document.documentElement.lang = "nl"
+  PASS — document.documentElement.lang tracks the active UI locale (nl and en, fresh and saved-profile sessions).
+  ```
+  All four cases match the "What would satisfy this" bar, including the profile-over-`?lang`
+  precedence the existing code comment specifies.
+
+**What didn't need touching / didn't work**: nothing failed. `index.html`/`speel/index.html`
+turned out not to need edits (see above) even though they were an allowed file surface — the
+runtime `document.documentElement.lang` assignment is sufficient and is what the acceptance
+criteria actually check. The pre-existing `/api/track` 404 under `vite preview` was observed in
+the preview server log, as flagged in the brief as not-mine.
+
+**089**: no distinct new problem was found worth filing; 089 lapses.
+
+**Commit**: `dev/069` branch, files touched: `src/game/App.jsx`, `test/htmllang.test.js` (new),
+`qa-scripts/069-verify.mjs` (new). `test/locale.test.js`, `src/game/GameScreen.jsx`,
+`src/game/game.css`, `src/game/strings.js` — all untouched, confirmed via `git status
+--porcelain` immediately before commit.

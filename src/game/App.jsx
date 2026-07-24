@@ -19,7 +19,7 @@ import { saveProgress } from '../net/account.js';
 import { trackPageview, trackGameStart, trackParentOptIn, markSession } from '../net/track.js';
 import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
-import { gt, setLocale } from './strings.js';
+import { gt, setLocale, getLocale } from './strings.js';
 import GameScreen from './GameScreen.jsx';
 import FactoryPage from './FactoryPage.jsx';
 import Onboarding from './Onboarding.jsx';
@@ -74,6 +74,11 @@ export default function App() {
   // instelling (gt() leest 'm), bewust vóór elke gt()-aanroep in deze render gezet
   // — geen effect, anders flitst het eerste scherm even Nederlands.
   setLocale(game?.profile?.uiTaal ?? loadGame()?.profile?.uiTaal ?? detectLocale());
+  // <html lang> synchroniseren (assignment 069): zelfde reden als setLocale hierboven
+  // — bewust vóór de render gezet, geen effect. Nodig voor CSS-hyphenatie (hyphens:
+  // auto pakt z'n woordenboek uit lang), typografische aanhalingstekens en a11y
+  // (screenreader-uitspraak). Zelfde patroon als theme.js's applyTheme/data-theme.
+  if (typeof document !== 'undefined') document.documentElement.lang = getLocale();
   // thema toepassen (assignment 051): zelfde reden als setLocale hierboven — bewust
   // vóór de render gezet, geen effect, anders flitst het eerste scherm even het
   // standaard-thema voordat het gekozen thema aanslaat.
