@@ -2,7 +2,7 @@
 id: 120
 title: "Diorama .mch cards overlap by ~1.6px at the exact 1024px desktop floor (5 built machines)"
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (found incidentally while re-verifying assignment 106/ADR 015 for
@@ -219,3 +219,122 @@ its own filing.)
 
 **Dev server:** `npx vite --port 4305` stopped (process killed) before returning; nothing
 listening on 4305, confirmed via `netstat`.
+
+## Verification (tester v120, tick 2026-07-25)
+
+**Verdict: PASS on 120's own written acceptance criteria — `status: done`.** Verified
+independently against `npx vite --port 4306` in the tester worktree
+(`C:\companies\typcoon-lanes\v120`, branch `verify/120`), with my own probe scripts
+(`qa-scripts/120-tester-probe.mjs`, `120-tester-diag.mjs`), not by reading the diff or
+re-running only the dev's own `120-*.mjs` scripts. Also found and filed a new, distinct,
+more severe defect in the same code region — see the "New defect found" section below;
+it does **not** fail any of 120's own criteria and does not block this `done` verdict.
+
+**AC1 (genuine vs. artifact) — re-derived independently, CONFIRMED genuine.** Own probe
+(`120-tester-probe.mjs`), fresh save fixture (different from the dev's — `typewriter:6`
+not `8` — to control for fixture-dependence), 900ms wait past `riseIn`'s settle window:
+- Headless @1024px, 5-built worst case: `.hal`'s **true CSS padding-box** (content +
+  padding, i.e. border-box minus the 3px+3px `.hal` border — my first pass at this script
+  forgot to subtract the border and got 884px; corrected to 878px, see below) = **878px**,
+  exact match to the dev's claimed 878px.
+- Headed (real, non-headless Chromium, 900px-tall window) @1024px: `.hal` padding-box =
+  **863px**, exact match to the dev's claimed 863px. Confirmed a genuine ~15px OS
+  scrollbar is present and load-bearing:
+  `window.innerWidth (1024) - document.documentElement.clientWidth (1009) = 15`, and
+  `document.documentElement.scrollHeight (1365) > innerHeight (900)`, so the page
+  genuinely overflows and a real vertical scrollbar is not hypothetical.
+- Pre-fix arithmetic sanity check: using today's measured 878px headless padding-box,
+  `148 - 878/6 = 1.667px` — matches the originally filed `1.671875px` almost exactly (the
+  ~0.005px residual is float/subpixel noise). Using the 863px headed padding-box,
+  `148 - 863/6 = 4.167px` — matches the dev's claimed "~4.17px" headed number exactly.
+  **Independently re-derives the dev's root-cause arithmetic to within noise.**
+- **Self-correction worth recording:** my own first probe pass computed `.hal`'s
+  padding-box as `border-box-width - padding-left - padding-right` only (forgetting
+  `.hal`'s 3px+3px border, since CSS padding-box excludes border but
+  `getBoundingClientRect()` returns the border-box). That gave 884px/869px (headless/
+  headed) and made the arithmetic look ~6px off from the dev's numbers on my first run —
+  which would have looked like a discrepancy in the dev's claim. Fixing the probe (also
+  subtracting `border-left-width`/`border-right-width`) resolved it exactly. Flagging this
+  because it's a real trap in this exact class of measurement (the dev's own script
+  presumably got this right, since their numbers matched mine once I fixed my bug) — a
+  future prober measuring `.hal`'s "padding-box" should subtract border, not just padding.
+
+**AC2 (fix + re-measure) — CONFIRMED holds, own probe.** `120-tester-probe.mjs` measured
+zero `.mch`/`.mch` overlap post-fix at 1024, 1025, 1028, 1032, 1040px headless (a sweep the
+dev's own delivery notes didn't include — AC6 "other widths near the floor" instruction),
+and at 1024px in a real headed window (900px-tall, real 15px scrollbar confirmed present as
+above). All 14/14 own-probe checks passed. Screenshots:
+`company/assignments/120-screenshots-verify/A-1024-headless-hal.png`,
+`B-1024-headed-hal.png`, `B-1024-headed-full.png` — visually clean, no overlap.
+
+**AC3:** N/A (determined genuine, not an artifact).
+
+**AC4 (npm test + scripts stay green):**
+- `PROBE_BASE=http://localhost:4306 node qa-scripts/106-tester-verify.mjs`: **25/25
+  passed**, file confirmed unmodified (`git status --short` showed no changes to it before
+  or after the run). Matches the dev's claimed 25/25 (up from 24/25 pre-fix).
+- `PROBE_BASE=http://localhost:4306 node qa-scripts/091-tester-verify.mjs`: **34/34
+  passed.** Matches the dev's claim.
+- `npm test`: **266/266 green**, `vite build` succeeded, `check-no-dutch-en`: PASS (5 built
+  en files, zero unallowlisted Dutch-lexicon hits). Matches the dev's claim exactly.
+- Both scripts regenerated their own tracked screenshot directories
+  (`106-screenshots-verify/`, `091-screenshots-verify/`) as a side effect of running; both
+  reverted via `git checkout --` before committing, per the write-surface limit.
+
+**Judgment call verdicts (as asked):**
+
+1. **Card-sizing vs. floor-bump.** The dev's reasoning (avoiding an edit to
+   `106-tester-verify.mjs`'s hardcoded boundary literals, which the write-surface
+   instruction restricted to "tolerance route only") is sound as a *process* argument given
+   the constraint as stated, and I would not have overridden it unilaterally either.
+   **However**, the new defect found below (`.plot` cards, 156px, untouched by this fix,
+   overlapping worse than `.mch` did at the same 1024px floor) is evidence that the
+   card-sizing route's narrower scope has a real cost: it patches one front-lane card
+   class's width without addressing the shared root constraint (`.hal`'s padding-box being
+   too narrow for ANY of its fixed-width front-lane children at exactly 1024px). A
+   floor-bump would very likely have fixed both defects in one motion, since it attacks the
+   constraint both card classes are tripping over, not one card's width. I'm not retroactively
+   failing 120 for this — the dev flagged the alternative honestly and measured it, and
+   120's own reproduction/scope never mentioned `.plot` cards, so the dev had no way to know
+   this at the time. But I'm recording this as a data point for the next assignment (125,
+   filed below) rather than treating 120's choice as cost-free in hindsight.
+2. **140px vs. a different trim.** Agree with the dev — no numeric spec exists, "ample
+   margin" is qualitative, and 140px's measured ~3.5-6.3px margin across headless/headed
+   conditions is a reasonable, comfortable choice. No objection.
+3. **Stale-106-screenshots, flag-not-file.** Agree this was documentation drift on a
+   `done` assignment, not a new reproduced product defect — correct call not to file it
+   separately.
+
+**New defect found (outside 120's scope) — filed as assignment 125.**
+`layoutDiorama`'s front lane (`Shop.jsx`) is not exclusively `.mch` cards — it can also
+contain `.plot` "build site" cards (156px wide, `game.css`, untouched by this fix; any
+number of letters-unlocked-but-not-yet-built machines each contribute one). At the same
+1024px floor, a front lane containing several `.plot` cards overlaps by up to **~9.67px**
+(worse than 120's fixed ~1.67-4.17px `.mch` overlap, and — per screenshot — clearly
+*visible* by eye, unlike 120's own "too subtle to see" defect). Reproduced in two fixtures:
+0-built/all-letters-unlocked (the literal fresh-factory onboarding state, "BOUW HIER" /
+"Je fabriek staat klaar om te groeien") and a more mainstream 1-built + several-plots
+mid-game state (letters unlock thresholds are far lower than the exponentially-growing
+coin costs, so out-letters-pacing-affordability is a normal early/mid-game trajectory, not
+a contrived edge case). Confirmed absent at 1360px (floor-specific, same signature as
+120's own defect). Not caused by 120 — `git show f783213 -- src/game/game.css` touches
+only the `.mch` rule; `.plot`'s width and `layoutDiorama`/`place()`'s math are both
+untouched. Full write-up, reproduction, and screenshots:
+`company/assignments/125-diorama-plot-cards-overlap-at-1024-floor.md`,
+`company/assignments/120-screenshots-verify/PLOT-1024-hal.png`,
+`PLOT-MIXED-1024-hal.png`.
+
+**Tester's own file surface (write-surface-compliant):** this file (Verification section +
+frontmatter status only), `qa-scripts/120-tester-probe.mjs`, `120-tester-diag.mjs`,
+`120-tester-plot-probe.mjs` (new, untracked qa-only scripts), screenshots in
+`company/assignments/120-screenshots-verify/`, and the new
+`company/assignments/125-diorama-plot-cards-overlap-at-1024-floor.md`. No `src/**` file
+touched (confirmed via `git status --short` before every commit); `qa-scripts/106-tester-verify.mjs`
+and `091-tester-verify.mjs` untouched (zero edits); their regenerated screenshot dirs
+reverted via `git checkout --` before committing.
+
+**Dev server:** `npx vite --port 4306` stopped before returning; confirmed nothing listens
+on 4306.
+
+Commit(s) under test: `f783213` (dev/120). Tester worktree:
+`C:\companies\typcoon-lanes\v120` (branch `verify/120`).
