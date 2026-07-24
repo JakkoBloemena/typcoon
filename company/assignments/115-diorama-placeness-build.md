@@ -2,7 +2,7 @@
 id: 115
 title: "Build the diorama place-ness backdrop/depth/scale per the 114 spec (closes the \"blueprint, not place\" gap)"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: [114]
 opened_by: product-owner
@@ -407,3 +407,112 @@ nachtploeg,snoepfabriek,diepzee}-theme.png`, `diorama-reduced-motion.png`. Probe
 script: `qa-scripts/115-tester-verify.mjs` (28/29 automated checks pass; the 1 failure
 is the `.warmth` background-resolves-to-a-gradient check, matching the manual findings
 above exactly).
+
+## Fix notes (developer d115fix, tick #41)
+
+**Root cause confirmed and fixed exactly as the tester diagnosed: `game.css`'s `.warmth`
+rule (W10c) had two `color-mix()` stops with out-of-range percentages, the first (130%)
+outside CSS Color 4's `<percentage [0,100]>` type, which invalidates the whole
+`background` declaration at parse time.** Swept the entire file for the same class of
+bug before touching anything (`grep -nE '\b1[0-9][0-9]%'` restricted to lines containing
+`color-mix`, plus a manual read of every `color-mix()` call in the `.warmth`/`.desk`/
+`.scaletag`/`.ruler`/`.pencil`/`warmBreath` family and every other rule touched by
+519caff): **the 130%/60% pair on `.warmth` (game.css:640-641) was the only out-of-range
+occurrence in the whole file** — no second instance, in that family or elsewhere.
+
+**Value changed (game.css, `.warmth`'s `background`, was line ~640, now ~646 after the
+added explanatory comment):**
+```diff
+- color-mix(in srgb, var(--bg-wash) 130%, transparent) 0,
+- color-mix(in srgb, var(--bg-wash) 60%, transparent) 38%,
++ color-mix(in srgb, var(--bg-wash) 100%, transparent) 0,
++ color-mix(in srgb, var(--bg-wash) 55%, transparent) 38%,
+```
+(third stop, `transparent 66%`, untouched — always valid, not part of the bug.)
+
+**Why these values preserve W10c's intent:** `color-mix(in srgb, X 100%, transparent)`
+mixes 100% of `--bg-wash` with 0% of the second colour — i.e. it resolves to
+`--bg-wash` itself, unmodified. That's the strongest valid value the idiom can express
+without inventing a new token, and it's exactly what "hotter center" should mean here:
+the token's own colour at the pool's core, not an artificially oversaturated one (130%
+doesn't clamp to "150% strength," it's simply invalid CSS — there was never a real
+"extra warm" effect being shipped, just a silent `background: none`). The outer stop
+moved from 60% to 55%, one notch below its old value, to keep the same
+hotter-center/fading-edge falloff shape one increment cooler than the (also arbitrary)
+original 60% — both numbers are the tester's own suggested fix from the bounce, adopted
+verbatim since their reasoning ("preserves the shape without the invalid percentage")
+checks out and re-deriving different numbers would be a second, unreviewed guess against
+the same visual target. Zero new `:root` tokens; still `color-mix(in srgb, var(--token)
+N%, transparent)`, the same idiom used everywhere else in this file; nothing else in
+`.warmth`, `.desk`, `.scaletag`, `.ruler`, `.pencil`, or `warmBreath` changed.
+
+**Live verification, worktree `C:\companies\typcoon-lanes\d115fix`, port 4300 (fresh
+`npm install` + `npm install playwright-core@1.61.1 --no-save`, matching the version
+already used by prior tester probes elsewhere in this repo; not added to
+`package.json`/`package-lock.json`, so it doesn't appear in the diff):**
+- `npm test` (unit tests + `vite build` + `check-no-dutch-en`): **266/266 passing**,
+  build clean, `check-no-dutch-en` → PASS (5 built en files, zero unallowlisted hits).
+- Seeded a save the same way prior 115 testers did (real onboarding→factory nav,
+  `typcoon:save`/`typcoon:onboarded`/`typcoon:unlocked` localStorage, `curriculumIndex:
+  12` so a live `.plot` exists for the `plotGlow` probe), headless Chromium
+  (`chrome-win64/chrome.exe`, same binary the tester used).
+- `CSS.supports('background', <the exact shipped .warmth gradient string>)` → **`true`**
+  (re-checked the OLD 130% string too — still **`false`**, confirming this was in fact
+  the bug and the fix actually crosses the validity line).
+- `getComputedStyle(document.querySelector('.warmth')).backgroundImage` → a real
+  gradient: `radial-gradient(78% 100% at 42% 118%, color(srgb 1 0.72549 0.0823529 /
+  0.0509804) 0px, color(srgb 1 0.72549 0.0823529 / 0.0280392) 38%, rgba(...) 66%)` —
+  **not `"none"`** (Chromium reports the resolved `color-mix()` as a `color(srgb ...)`
+  function, same non-`rgba()` reporting quirk the tester already documented for
+  `plotGlow`'s `oklab()`).
+- **Re-ran the tester's own `qa-scripts/115-tester-verify.mjs` unmodified**
+  (`PROBE_BASE=http://localhost:4300`) against this fix: **29/29 PASS**, including the
+  one check that failed before (`.warmth background resolved to a real gradient`) —
+  `bg=radial-gradient(78% 100% at 42% 118%, color(srgb 1 0.72549 0.0823529 /
+  0.0509804) 0px, ...`. All structural/z-order/token/guardrail/motion/reduced-motion
+  checks that already passed at 28/29 still pass. (This run overwrote and then was
+  reverted via `git checkout` on `company/assignments/115-screenshots-verify/*.png` —
+  left the tester's original FAIL-run screenshots untouched on disk/in the diff, since
+  those illustrate the bug this fix closes and shouldn't be silently replaced.)
+- **A/B pixel check** (temp local script, not committed): screenshotted the same point
+  inside `.warmth`'s painted area with the fixed background vs. with `.warmth`'s
+  `background` forced to `none` — the two clips are **not byte-identical**, confirming
+  the wash now paints real, different pixels, not just a passing `getComputedStyle`
+  string with no visual effect.
+- `warmBreath` still animates the now-visible wash smoothly: sampled `opacity` 11×
+  over 10s, range **0.720–0.994** (spec: ~.72→1.0), max inter-sample jump **0.104**
+  (no strobe/step), matching the tester's own W13 numbers for this animation almost
+  exactly.
+- Reduced motion (`reducedMotion:'reduce'` context): `.warmth` opacity rests at
+  **exactly 0.72**, sampled twice 1s apart, identical — same resting-state guarantee
+  the tester already verified, now backed by a wash that's actually visible at that
+  opacity.
+- Screenshots at 1360×1000, `company/assignments/115-screenshots/` (fix-* prefix, kept
+  separate from the tester's `-verify` evidence): `fix-diorama-default-theme.png`
+  (Muntpers), `fix-diorama-nachtploeg-theme.png` (`data-theme` swap), `fix-diorama-
+  reduced-motion.png`. The wash reads as a faint warm pool low-front-center, consistent
+  with the tester's own note that `--bg-wash` is only 5–7% alpha by design (W3
+  restraint) — "whisper-subtle but present," not a bright glow, which is the intended
+  read, not a regression toward under-tuning.
+
+**Scope discipline:** touched only `.warmth`'s `background` value in `game.css` — no
+other rule, no `Shop.jsx`, no `store.js`/`economy.js`/`src/engine/`/`theme.js`/
+`goals.js`. `git diff --stat` confirms `src/game/game.css` is the only source file
+changed.
+
+**118 not consumed** — the sweep for other out-of-range `color-mix()` percentages
+across the whole file (not just the `.warmth` family) found none; this remains a
+single-value fix, as the tester predicted.
+
+**116 opened** (`company/assignments/116-designfactory-w10c-invalid-colormix-spec.md`,
+`status: open`, `priority: 4`, `owner: designer`) proposing the same clamp for
+`design/DESIGN-FACTORY.md` W10c's own code block and
+`design/factory-mocks/world-C-maquette-place.html` line 84, so the spec/mock can't
+reintroduce the invalid value — not edited directly, per instructions (those files are
+designer-owned, outside this developer assignment's scope).
+
+Setting `status: needs_verification` — a developer's terminal state, never `done`; the
+next tester should re-run `qa-scripts/115-tester-verify.mjs` independently and confirm
+the wash reads as intended against the four `world-place-winner-*.png` renders before
+flipping the three still-open AC checkboxes above (W10c, "critique's gap," and the W13
+motion-probe row) and this assignment to `done`.
