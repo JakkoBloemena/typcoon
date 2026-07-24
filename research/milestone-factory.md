@@ -438,3 +438,36 @@ well within the €50/mo ceiling. Guardrails intact: no idle income (ambient lif
 never spouts coins), breadth-not-power (premium still routes to the parent gate — the
 locked-goal fix *reinforces* this), no pressure/dark patterns, free tier complete,
 privacy/SEO untouched.
+
+### 10f. 114 verdict + 115 firming (product-owner po114, tick #40)
+
+**114 PASS → `done`.** The design pass met every AC and every hard scope cap; caps were
+spot-checked in the winner mock's own CSS + the four theme renders, not trusted from the
+ticked boxes (ADR 013). Winner: **direction B — "De Werktafel"** (the Maquette as a scale
+model on a lit maker's drafting desk), selected pairwise/ranked-not-scored (1) B 2) C 3) A)
+with the critic's fix (drop the literal lamp fixture → soft `.warmth` wash) taken. PART III
+(W9–W15) appended; PART II untouched; `--sky` backdrop-free (grep-verified); zero new tokens
+(no `:root` in the mock); no `@media`/reflow. Full review in `company/assignments/114-*.md`.
+
+**115 firmed: FIRM — buildable as ONE developer assignment, NOT sliced.** Plan shape is
+**unchanged** (114 done → 115 → 091; 110/106 parallel). Against the §8 world-pass precedent
+(build lanes cut only after the designer pass landed), this pass is deliberately *not* cut:
+the §W15 delta is smaller than a single world-pass slice — one element (`.hal`) wrapped in a
+`.desk`, its background restyled, four decorative child layers added, all CSS on existing
+tokens with one new keyframe (`warmBreath`). 115's direction-specific ACs were made concrete
+against W10a–e + W13, with `world-C-maquette-place.html` and the four `world-place-winner-*.png`
+renders as the tester's comparison target. The dispatcher may dispatch d115 this tick.
+
+**Belt boundary confirmed:** `beltDrift` build + re-time (W12) stays **091** (`blocked_by:[115]`),
+not folded into 115 — keeps the two `game.css`/`Shop.jsx` lanes from colliding.
+
+**Kick-copy adjudication:** the designer's optional `Jouw fabriek → Jouw maquette` header
+tweak (strings.js) is **DECLINED** — "fabriek" is the product's load-bearing noun (charter
+unlock/SEO); the desk + `1:50` tag already carry the scale-model read visually; a header
+rename is a whole-vocabulary call above a CSS place-pass's weight, revisable in one line if a
+future playtest asks. The shipped app keeps "JOUW FABRIEK" though the winner mock renders
+"JOUW MAQUETTE" — the tester compares backdrop, not that kicker.
+
+**Ids this firming pass:** 016 (ADR) **LAPSED** — routine PO scoping + a minor reversible copy
+call, recorded in the assignment + here per the §8 precedent (which used no ADR), not worth an
+ADR. 120 (proposal) **LAPSED** — kick-copy declined, no proposal filed. No other ids used.
