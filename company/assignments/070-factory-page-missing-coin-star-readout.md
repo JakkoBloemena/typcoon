@@ -52,3 +52,58 @@ include this, it may be reasonable to fold this into 074 instead of a standalone
 product-owner's call. Priority 3 (moderate): nothing is broken or blocked (buy/upgrade/
 rebirth all still work via the disabled/enabled button state as an implicit affordability
 signal), but it's a real UX gap on a page whose whole job is "manage your factory."
+
+## Adjudication (tester, tick #28, against 074's merged delivery)
+
+Checked all four ACs independently against the rendered factory page (074's build,
+`vite preview --port 4231`, fixture `coins:500, totalCoins:650 (post-purchase),
+rebirths:1, lifetimeCoins:18400`; separately re-checked with `rebirths:0` to confirm the
+star readout isn't conditionally hidden at zero). Full `.plan` text dump captured in
+`qa-scripts/074-tester.mjs`'s "mid-game" scenario output.
+
+- **AC1 ("current coin balance … as a number, visible without navigating back") — NOT
+  satisfied.** The rendered page shows two coin-shaped numbers, neither of which is the
+  balance: (1) `.plan-context`'s `{lifetimeCoins} ooit verdiend` — **lifetime/cumulative**
+  coins ever earned (`tycoon.lifetimeCoins`), not the spendable balance, and provably
+  different once any coin has ever been spent (in the fixture: lifetime 18.400 vs. actual
+  balance 500 — off by more than 36×); (2) the spotlight's `nog {remaining} munten` /
+  `{cost}`-on-the-buy-button — both are **goal-relative** (`goal.cost - tycoon.coins` and
+  `goal.cost`), not the balance itself. A player can back-compute the balance only by
+  subtracting `remaining` from `cost` in their head (`600 - 100 = 500`) — that is not "a
+  number, visible," it's an inference a kid isn't going to make. Grepped the full rendered
+  `.plan` innerText for the fixture's literal balance (`500`) at every checkpoint (initial
+  500, then 650 after a `localStorage` bump): the literal current-balance digits never
+  appear anywhere on the page, confirmed programmatically (`qa-scripts/074-tester.mjs`,
+  the "070-AC1 probe" check, which is written to intentionally fail/flag if the raw
+  balance is absent — it is).
+- **AC2 (star/rebirth count, when `rebirths > 0`) — satisfied.** `.plan-context` renders
+  `⭐ {tycoon.rebirths}` unconditionally (even shows `⭐ 0` at zero, which meets-or-exceeds
+  the AC's "when rebirths > 0" floor — nothing is hidden). Confirmed live update: 1 → 2
+  after triggering a real prestige via the objectives-row star tile.
+- **AC3 (no regression to buy/buyUpg/doRebirth or gating) — satisfied.** Exercised all
+  three via the real handlers on the rendered page (spotlit-goal buy, an objectives-row
+  upgrade buy, a full prestige with confirm dialog): all worked, buy-button
+  disabled/enabled gating behaved correctly on coin thresholds, `store.js`/`economy.js`
+  are byte-identical vs. `main` (`git diff --stat` empty).
+- **AC4 (`npm test` green) — satisfied.** 229/229, confirmed by a clean install + fresh
+  run in this verification pass, not taken on faith from either delivery's notes.
+
+**Net: 2 of 4 ACs pass; AC1 is still open.** 074's delivery notes are right that the page
+is far less bare than before (070's original complaint — zero coin/star signal
+anywhere — is no longer true), and AC2 is fully resolved. But AC1 as literally written
+("shows the player's current coin balance") is not met by either the lifetime-earned
+figure or the goal-relative cost/remaining figures — both are real numbers on the page,
+just not *that* number.
+
+**What's missing, precisely, for a developer to fix cheaply:** one more visible number —
+the raw `tycoon.coins` (or `state.tycoon.coins`) value — rendered anywhere on
+`FactoryPage.jsx`/`Shop.jsx`'s output. Cheapest path, unchanged from this assignment's
+own Notes: reuse the existing `.coin-pill` markup/class (already in `game.css`, already
+used in `GameScreen.jsx`'s `.game-bar` and `App.jsx`'s `.home-stats` — no new CSS needed)
+in the `.planhead` or `.plan-context` line, e.g. alongside or in place of the lifetime
+figure: `{fmt(state.tycoon.coins)}` in a `.coin-pill`. Does not require touching
+`buy`/`buyUpg`/`doRebirth` or any gating logic (display-only, per this assignment's own
+AC3) — should be a small, isolated addition to `Shop.jsx`'s returned JSX plus one new
+`strings.js` key if a label is wanted (or bare, matching how `.coin-pill` is used
+elsewhere with just an icon + number, no label). `status` left `open`; not resolved by
+074.
