@@ -2,7 +2,7 @@
 id: 074
 title: Factory page "Het Bouwplan" — roadmap, spotlit goal, objectives row
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: [071, 072]
 opened_by: product-owner
@@ -236,3 +236,92 @@ untouched (072 already wired the `factory` route/nav; 074 needed no App.jsx chan
 `qa-scripts/074-verify.mjs`. `gen-content`'s `public/**`/`sitemap.xml` churn from
 running `npm test` was reverted with `git checkout -- public/` before committing (byte-
 identical diff, confirmed each time).
+
+### Verification (tester, tick #28)
+
+Verified independently in worktree `C:\companies\typcoon-lanes\v074`, branch
+`verify/074`. Did not re-run the developer's `qa-scripts/074-verify.mjs` as a
+substitute for verification — read it for context, then wrote my own
+`qa-scripts/074-tester.mjs` from scratch (real engine functions, five separate
+fixtures) and drove it with `playwright-core` against `vite preview --port 4231`
+(the only port used). **47 of my own assertions pass, 0 fail** (the 2 script lines
+that print `FAIL` are expected/documented, not defects — see 070 adjudication below
+and the pre-existing `/api/track` 404 note).
+
+**Repro commands:** `npm install` (clean, no `node_modules` in worktree) →
+`npm test` → **229/229 pass**, unchanged count from 071/072 merged tip. `npx vite
+build` → 101 modules, succeeds. `check-no-dutch-en` (part of `npm test`) → PASS, 0
+unallowlisted hits. `npm install --no-save playwright-core`, then `npx vite preview
+--port 4231` + `node qa-scripts/074-tester.mjs` (`PROBE_BASE=http://localhost:4231`).
+
+**AC-by-AC:**
+- **Roadmap per-machine state + `N van 5 gebouwd` tag — PASS.** Confirmed against
+  five separate fixtures built with the real engine (`newProfile`/`newState`, same
+  shape `store.js` writes): (a) a mid-game save (`typewriter:12, printer:8`, 2 of 5
+  built, tag "2 van 5" correct, `robotarm` is the single `.station.cur`); (b) a
+  **fresh save** (`buildings:{}`, `curriculumIndex:1`) — roadmap renders sanely, tag
+  "0 van 5", typewriter alone is spotlit/current, all 5 station names render, no
+  crash on the zero-progress edge; (c) a **fast-letter-learner**
+  (`curriculumIndex:12` → 23 letters, both `robotarm` and `assembly` letter-unlocked
+  but unbuilt) — reproduced the documented 4th "te bouwen" state exactly as the
+  delivery notes describe: `robotarm` (cheaper) is `.cur`, `assembly` renders as a
+  plain unbadged "te bouwen" node, not a bug.
+- **Spotlit goal panel matches `nextGoal` — PASS.** Name, reward, fraction ring
+  (`--p:83` for 500/600), "nog 100 munten", "± 6 opdrachten" all matched the fixture
+  exactly; no timer/countdown string anywhere.
+- **Purchases update roadmap/tag/spotlight together — PASS.** Bought the spotlit
+  goal (robotarm): built count 2→3, tag "2 van 5"→"3 van 5", spotlight moved off
+  Robotarm, all from one click on the real `BuyButton`/`buy` handler. Bought an
+  upgrade via the real `buyUpg` handler: owned-tag count increased. Triggered
+  prestige via the real `doRebirth` handler (confirm dialog, real button): stars
+  1→2 in `plan-context`, built tag reset to "0 van 5" (confirms the roadmap reads
+  live `tycoon` state, not cached).
+- **Locked/premium routes to `Unlock.jsx`, never a bare purchase — PASS,** and
+  tested harder than the delivery notes: (d) a fixture with **no**
+  `typcoon:unlocked` and plenty of letters+coins to make robotarm/assembly/megafab
+  all letter-unlocked and affordable — all 3 still render `.station.locked`, zero
+  bare `button.buy`/`.btn.buy` inside any locked station, clicking one opens
+  `.unlock-card`; the spotlight's own buy control also correctly shows a 🔒 CTA
+  (not a coin-cost button) and routes to the same overlay when `nextGoal`'s pick is
+  itself premium-locked. (e) the inverse **paying-family** fixture
+  (`typcoon:unlocked=1`, same letters/coins) — 0 stations show as locked, no 🔒
+  anywhere, spotlight shows a real coin `button.buy` — confirms the 071
+  `locked ∧ isUnlocked()` combination rule (`machineLocked` overriding
+  `goal.locked`) actually works both directions, not just the direction the
+  delivery notes exercised.
+- **`--sky` only on prestige — PASS.** Computed-style scan (`getComputedStyle`
+  equality against `--sky`'s resolved value, not a source grep) across every
+  element inside `.plan`: zero hits outside `.obj-star`/`.obj-pct`/`.rebirth-btn`/
+  `.goalspot-locked-pct`. Note for the record: `game.css`'s diff against `main` for
+  `--sky`/`--sky-deep` lines is empty — pre-existing sky usage elsewhere in the app
+  (`.star-pill` in the game bar, the global `:focus-visible` ring) is untouched by
+  074 and outside `.plan`, so it's not in scope for this AC either way.
+- **Save-compat — PASS.** `git diff --stat main -- src/game/store.js
+  src/game/economy.js src/game/theme.js src/engine/` is empty. Mid-game fixture's
+  built machines/levels/coins/stars all render correctly on the roadmap. The 071
+  goal-selection test suite (`test/goals.test.js`, 10/10) is part of the 229 and
+  passes.
+- **`npm test` green — PASS,** 229/229, confirmed by a clean install + fresh run,
+  not taken from the delivery notes.
+
+**Extra adversarial checks beyond the AC list (all pass, no new defects):**
+en-locale factory page (`uiTaal:'en'` fixture) — confirmed the **only** Dutch text
+anywhere on the rendered `.plan` is the already-filed 078 leak (`± 6 opdrachten`);
+every other string (`YOUR FACTORY`, `The Build Plan`, `BUILDING NOW`, `ever
+earned`, `to go`, etc.) is correctly English. 375px viewport re-checked on a
+densely-populated state (0 upgrades owned → full 5-tile `.objrow`, worst case for
+the `minmax(260px,1fr)` fix): no `scrollWidth`/`clientWidth` overflow. Console/page
+errors across all 7 fixtures: only the documented pre-existing `/api/track` 404
+under plain `vite preview` (confirmed via a response listener it's exactly and
+only that URL, reproduces on an unmodified checkout) — zero errors from the app's
+own code in any scenario. Killed the port-4231 preview server before finishing
+(confirmed no `LISTENING` socket afterward).
+
+**070 adjudication:** see `company/assignments/070-factory-page-missing-coin-star-
+readout.md` — left `open`. 074's own delivery notes correctly claimed the star
+count (AC2) is now shown, but AC1 ("current coin balance … visible as a number")
+is not actually satisfied by what's rendered; full rationale and repro in 070's
+file, not duplicated here.
+
+**Verdict: all seven of 074's own acceptance criteria pass independently
+reproduced. Status set to `done`.**
