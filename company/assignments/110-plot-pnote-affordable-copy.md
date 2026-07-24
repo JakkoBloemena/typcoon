@@ -2,7 +2,7 @@
 id: 110
 title: "Affordable-state copy coherence: fix the \".pnote nog 0 munten\" plot line AND the locked-goal \"bouw maar!\" contradiction (both same family as 104)"
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tester (t104, verifying assignment 104); re-scoped by product-owner (tick #39 intake) to also carry v104's locked-goal-contradiction finding

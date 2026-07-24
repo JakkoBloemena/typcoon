@@ -2,7 +2,7 @@
 id: 114
 title: "Designer: \"From blueprint to place\" — atmosphere/place-ness design pass for the Maquette diorama (076 critique intake)"
 owner: designer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: product-owner

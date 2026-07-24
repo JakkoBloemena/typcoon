@@ -2,7 +2,7 @@
 id: 106
 title: "Narrow-desktop-window degradation on the game surfaces — add a width floor to the touchOnly() gate (mobile/touch is out of target per ADR 012 and already gated)"
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 089); re-scoped by product-owner (ADR 015, tick #39 intake)
