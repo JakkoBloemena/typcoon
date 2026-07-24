@@ -741,7 +741,24 @@ button { font-family: inherit; }
    091 (W10e-ladder): z-index 2 -> 3, zelfde reden als .mch hierboven — de band
    (W12) wordt NOOIT naar een bouwterrein getekend, maar het bouwterrein zelf blijft
    een leesbaar station en moet dus boven de atmosfeer-laag blijven staan. */
-.plot { position: absolute; transform: translateX(-50%); width: 156px; text-align: center; z-index: 3; }
+/* 125 (genuine-defect fix, company/assignments/125-*.md): was 156px. Same root cause
+   as 120's .mch fix directly above — `layoutDiorama`'s `place()` (Shop.jsx,
+   unchanged) spaces the front lane's N members at `.hal`'s padding-box width /
+   (N+1), and `.plot` ("build site" for a letters-unlocked-not-yet-built machine)
+   shares the front lane with `.mch` under the identical math, but was never touched
+   by 120's fix. At the worst case (N=5, e.g. a fresh save with zero machines built —
+   the literal onboarding state) two adjacent 156px `.plot` cards overlapped by
+   ~9.67px headless / ~12.17px in a real headed window (measured `qa-scripts/
+   125-diagnose.mjs`, same hal-padding-box figures 120 measured: 878px headless,
+   863px headed, unchanged since 115's `.desk` wrapper — confirms this is the SAME
+   shared-root-constraint family, not a new regression). 140px — matching `.mch`'s
+   post-120 width exactly, not a new independent magic number — restores the same
+   ~3.5-6.3px margin 120 already validated as comfortable at this floor, AND means
+   every current front-lane card kind now shares one width ceiling: as long as no
+   future front-lane card class exceeds 140px, this class of bug cannot recur without
+   a fresh CSS change (weighed against a `DESKTOP_MIN_WIDTH` floor bump in 125's
+   delivery notes — not implemented, see there for why). */
+.plot { position: absolute; transform: translateX(-50%); width: 140px; text-align: center; z-index: 3; }
 .plot .pad {
   position: relative; height: 92px; border-radius: 16px; border: 3px dashed var(--brass);
   background:

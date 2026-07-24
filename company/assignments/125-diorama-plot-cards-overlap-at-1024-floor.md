@@ -2,7 +2,7 @@
 id: 125
 title: "Diorama .plot (build-site) cards overlap by up to ~9.7px at the exact 1024px desktop floor — worse than and untouched by assignment 120's .mch fix"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 120, tick 2026-07-25,
@@ -105,3 +105,117 @@ Screenshots: `company/assignments/120-screenshots-verify/PLOT-1024-hal.png` (0-b
 fixture), both taken from the tester's v120 worktree while independently verifying 120 (not
 this assignment's own tracked evidence dir — a `company/assignments/125-screenshots-*/`
 dir should be created by whoever picks this up, per repo convention).
+
+## Delivery notes (developer d125, tick 2026-07-25 #2)
+
+**Determination: GENUINE, same root-cause family as 120, confirmed and re-measured
+independently — fixed within the write surface.** `qa-scripts/125-diagnose.mjs` (new,
+reuses 120-sweep's headed/headless methodology and the tester's v120 plot fixtures)
+measured, past `riseIn`'s 900ms settle window, at the exact 1024px floor:
+
+- `.hal`'s true padding-box (border-box rect minus its 3px+3px border) is **878px
+  headless / 863px headed** — byte-identical to 120's own measured figures, confirming
+  this is the *same* shared `.hal`-width constraint 120 root-caused (115's `.desk`
+  wrapper), not a new or different regression.
+- **5-built (120's case):** 0 overlap pre- and post- this fix (untouched, `.mch` stays
+  140px from 120) — confirmed still fixed.
+- **0-built / 5-`.plot` (fixture 1, the literal fresh-factory onboarding state):**
+  pre-fix, 4 pairwise `.plot`/`.plot` overlaps of **9.656-9.672px headless** and
+  **12.156-12.172px headed** (worse than the filing's own headless-only ~9.67px number —
+  confirms AC1's instruction that headed is the worse case, same lesson 120 recorded).
+  Arithmetic: `156 - 878/6 = 9.667` (headless), `156 - 863/6 = 12.167` (headed) — matches
+  measured numbers to float noise.
+- **1-built + 4-`.plot` (fixture 2, mixed mid-game):** pre-fix, `.mch`/`.plot` overlap
+  1.672px headless / 4.172px headed, `.plot`/`.plot` overlaps same as fixture 1 (9.656-
+  9.672 headless / 12.156-12.172 headed).
+
+**AC2 — weighing floor bump vs. per-class width patch (documented as required).**
+Considered three routes:
+1. **Floor bump** (`DESKTOP_MIN_WIDTH` upward). Not implemented — **explicitly
+   out-of-surface per the dispatcher's constraint** ("the 1024px floor stays absent
+   escalation... a floor change would invalidate `qa-scripts/106-tester-verify.mjs`'s
+   boundary literals"). I did not re-measure a `.plot`-specific zero-crossing width
+   (120's own delivery notes already measured `.mch`'s: 1040px headless / 1056px headed;
+   `.plot` being wider needs more headroom still) because doing so would only matter if
+   the floor-bump route were viable, and it isn't within this assignment's surface. If
+   the dispatcher's read of the constraint differs, that re-measurement is a quick re-run
+   of `120-sweep.mjs` with `.plot` fixtures swapped in — not done here since it wasn't
+   actionable.
+2. **Per-class width patch** (shrink `.plot` alone, e.g. to some value ≤143px, distinct
+   from `.mch`'s 140px). Rejected in favor of option 3 below — same category of "another
+   magic constant" the assignment's own AC2 flags as leaving latent risk for a future
+   third front-lane card class.
+3. **Chosen: shrink `.plot`'s width to 140px — exactly matching `.mch`'s post-120
+   width**, rather than an independent value. This is the "sizing front-lane cards so
+   they can never exceed their slot width" route AC2 explicitly flags as worth weighing,
+   applied by *unifying* the two current front-lane card widths rather than inventing a
+   third value or a per-card-count formula. Reasoning: (a) it reuses a width 120 already
+   validated as comfortable (~3.5-6.3px margin across headed/headless) at this exact
+   floor, so no new sweep/judgment call on "how much margin is enough" was needed; (b) it
+   means every *currently existing* front-lane card kind shares one width ceiling — the
+   overlap arithmetic (`place()`'s `(i+1)/(N+1)` slot math) only cares about the two
+   largest adjacent card widths, so as long as no front-lane card exceeds 140px, no
+   combination of `.mch`/`.plot` counts (0-5 of either) can overlap at this floor, closing
+   the "third element reproduces this bug" risk *for the cards that exist today* without
+   inventing a shared CSS variable/token (110's own precedent notes this file "sticks to
+   its ad-hoc-px rhythm," no `--` spacing token exists for this); (c) it's the smallest
+   defensible visual change satisfying AC1 — no separate sweep was needed since 140px is
+   already a known-good value, not a fresh guess.
+   **Residual risk flagged for the tester/next assignment:** this does NOT close the
+   root cause the way a floor bump would — it is still a per-class-width fix (now just
+   two classes converging on one number, not truly "one rule"). A genuinely new front-lane
+   card class introduced later, wider than 140px, would reproduce this bug again and need
+   its own fix or a bump to `DESKTOP_MIN_WIDTH`. I judged this an acceptable trade given
+   the floor bump is explicitly out-of-surface for this assignment.
+
+**Re-measurement, post-fix (`qa-scripts/125-verify.mjs`, own AC evidence).** 1024px, past
+900ms settle, headless AND headed, all three fixtures: **6/6 passed, zero overlap in every
+case** (5-built, 0-built/5-plot, 1-built+4-plot). Screenshots:
+`company/assignments/125-screenshots/headless-*-1024-hal.png`,
+`headed-*-1024-hal.png` (6 files, all clean), plus
+`0-before-fix-headed-0-built-5-plot-1024-hal.png` (pre-fix headed screenshot, taken via a
+temporary `git stash`/`git stash pop` round-trip around the CSS edit, `qa-scripts/
+125-before-shot.mjs` — visibly overlapping dashed `.plot` borders, confirms the defect was
+real and visible by eye as filed, not just a sub-pixel measurement).
+
+**Regression duties.**
+- `npm test`: **266/266 green**, `vite build` succeeds, `check-no-dutch-en`: PASS (5 built
+  en files, zero unallowlisted Dutch-lexicon hits).
+- `qa-scripts/106-tester-verify.mjs` (unmodified, `git status --short` confirmed zero diff
+  before/after): **25/25 passed**, including "1024px fine-pointer: no .mch/.mch overlap".
+- `qa-scripts/091-tester-verify.mjs` (unmodified): **34/34 passed** — belt math reads
+  `item.x` (unchanged by `.plot`'s CSS width), unaffected.
+- Both scripts regenerated their own tracked screenshot dirs (`106-screenshots-verify/`,
+  `091-screenshots-verify/`) as a side effect; reverted via `git checkout --` before every
+  commit, per the write-surface limit.
+
+**File surface actually touched:** `src/game/game.css` (one rule + one comment block,
+`.plot` width 156px→140px), this assignment file (Delivery notes + frontmatter status),
+plus new untracked qa evidence: `qa-scripts/125-diagnose.mjs`, `125-verify.mjs`,
+`125-before-shot.mjs`, `company/assignments/125-screenshots/*`. `Shop.jsx` **not**
+touched — the CSS-only route fully satisfied AC1, no `layoutDiorama`/`place()` change was
+needed. `App.jsx`, `qa-scripts/106-tester-verify.mjs`, `qa-scripts/091-tester-verify.mjs`,
+`store.js`, `economy.js`, `src/engine/` all untouched.
+
+**Judgment calls flagged for the tester:**
+1. **140px (matching `.mch`) vs. a `.plot`-specific value.** Documented above (AC2) — I
+   chose to converge `.plot` onto `.mch`'s existing 140px rather than picking a fresh
+   `.plot`-only number (e.g. 142-143px, which would preserve more of the original 156px
+   sizing with a thinner but still-positive margin). A reviewer who weighs "closer to
+   original design size" higher than "one shared ceiling, reuse known-good number" might
+   prefer a distinct, larger `.plot` value with a thinner margin — I judged the shared
+   ceiling worth the extra ~2-3px of visual shrink, given AC2's own text flags "latent
+   third-element risk" as a real concern.
+2. **Floor-bump route not re-measured for `.plot` specifically.** As explained in AC2
+   above — the dispatcher's constraint made this explicitly out-of-surface, so I did not
+   spend probe time re-deriving a `.plot`-specific zero-crossing viewport width the way
+   120 did for `.mch` (1040px headless / 1056px headed). If a future call decides the
+   floor bump is worth an escalation despite the ADR 012/114/015 precedent, that
+   measurement is a quick re-run of `120-sweep.mjs` with a `.plot` fixture, not done here.
+3. **126 not consumed.** No distinct, reproduced defect outside 125's own scope was found
+   during this investigation — the only anomaly noticed (headed overlap being worse than
+   headless, ~12.17px vs ~9.67px) is the exact behavior 125's own AC1 asked to check for,
+   not a separate bug. Reserved id 126 is left unused/lapsed.
+
+**Dev server:** `npx vite --port 4307` stopped before returning; confirmed nothing listens
+on 4307.
