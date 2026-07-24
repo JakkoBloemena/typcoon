@@ -335,7 +335,14 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
             {goalDesc && <>{goalDesc} · </>}
             <b className="ticket-reward">{goal.reward}</b>
           </div>
-          <div className="ticket-togo">{gt('goal.togoLine', { n: fmt(goal.remaining), effort: goal.effort })}</div>
+          <div className="ticket-togo">
+            {/* 104: bij goal.remaining === 0 (al betaalbaar) is "nog 0 munten — dat
+                haal je in ± 0 opdrachten" verwarrend goed nieuws — swap naar een
+                losse, positieve regel in plaats van de togo/effort-combinatie. */}
+            {goal.remaining === 0
+              ? gt('goal.readyLine')
+              : gt('goal.togoLine', { n: fmt(goal.remaining), effort: goal.effort })}
+          </div>
         </div>
         {goal.kind === 'prestige' ? (
           rbReady
