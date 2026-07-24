@@ -2,7 +2,7 @@
 id: 074
 title: Factory page "Het Bouwplan" — roadmap, spotlit goal, objectives row
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: [071, 072]
 opened_by: product-owner
