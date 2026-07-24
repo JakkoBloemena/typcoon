@@ -2,7 +2,7 @@
 id: 067
 title: Design direction — factory page + calm typing view (first designer dispatch)
 owner: designer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: ceo
@@ -25,16 +25,16 @@ theme system (051/052) — directions must state how themes layer on.
 
 ## Acceptance criteria
 
-- [ ] 2–3 competing directions documented with honest tradeoffs; selection made by
+- [x] 2–3 competing directions documented with honest tradeoffs; selection made by
       stated pairwise criteria, not taste alone.
-- [ ] Chosen direction delivers: token set, both-surface layout specs, and the
+- [x] Chosen direction delivers: token set, both-surface layout specs, and the
       goal/progress model made visually concrete (what a kid sees as "my next
       goal" and "how far I've come").
-- [ ] Charter guardrails respected in the design: no pressure mechanics, no
+- [x] Charter guardrails respected in the design: no pressure mechanics, no
       dark patterns, breadth-not-power monetization surfaces unchanged in intent.
-- [ ] Explicitly states what of the current UI survives (reuse over rebuild where
+- [x] Explicitly states what of the current UI survives (reuse over rebuild where
       honest) and what is replaced.
-- [ ] Written to design/ (DESIGN-FACTORY.md + assets), referenced from the
+- [x] Written to design/ (DESIGN-FACTORY.md + assets), referenced from the
       existing DESIGN.md.
 
 ## Notes
@@ -83,3 +83,69 @@ real 8–12 kid.
 
 Scratch tooling committed alongside (repo convention): `qa-scripts/design-067-before.mjs`,
 `design-067-shoot.mjs`, `design-067-shoot-winner.mjs`.
+
+## Verification (tester, 2026-07-24)
+
+Independently verified in worktree `v067` (branch `verify/067`), all 5 acceptance
+criteria against the actual artifacts — not the delivery notes' word.
+
+**AC1 (2–3 competing directions, pairwise selection).** Read `design/DESIGN-FACTORY.md`
+§2–3 in full. Rendered all three source mocks (`dir-A-tworooms.html`,
+`dir-B-ledger.html`, `dir-C-blueprint.html`) at desktop + mobile with a fresh
+Playwright/Chromium pass (`qa-scripts/tester-067-shoot.mjs`, served on port 4222,
+screenshots in `qa-out/` — not committed, scratch only). Confirmed the three are
+genuinely different concepts (hard tab-switch dashboard / ambient rail + drawer /
+blueprint roadmap), not skins of one idea, and each has a stated `+`/`–` tradeoff.
+Pairwise verdicts (A vs B → B, A vs C → C, B vs C → C) are recorded with reasoning
+tied to named criteria (kid appeal, legible growth, feasibility), not bare taste. PASS.
+
+**AC2 (token set, both-surface layouts, goal/progress model).** Front matter
+(`new_tokens`) plus §4 spell out spacing scale, the new `--data` type role, and the
+`--goal`/`--reward` semantic aliases. §5a/5b give concrete layout structure for both
+the typing view and factory page. Rendered `dir-C-blueprint.html` and
+`dir-C-states.html` — the goal sliver, spotlit goal panel, roadmap with built/current/
+ghost station states, and "3 van 5 gebouwd" progress tag all render exactly as
+specified, at desktop and mobile, including the empty/long-text/loading/offline states
+in §9. PASS.
+
+**AC3 (charter guardrails).** §10 explicitly maps guardrails 2/3 to design decisions
+(no timers/countdowns, effort estimate is encouragement not pressure, locked stations
+route to the existing parent-gated unlock and gate breadth not power). Spot-checked
+the parent math-gate claim against `src/game/Unlock.jsx` (`step === 'gate'` /
+`gate-q` flow) — exists as described. No dark pattern or pressure mechanic found in
+any of the three rendered directions. PASS.
+
+**AC4 (reuse vs replace).** §7's claims checked against `src/` directly, not taken on
+faith: `FactoryFloor.jsx` exists and is rendered unconditionally in `GameScreen.jsx`
+(confirms it is a real removal candidate, not a strawman); `ui/TypingSurface.jsx`
+exists; `economy.js` exports `BUILDINGS`/`UPGRADES`/`buyBuilding`/`buyUpgrade`, and
+`GameScreen.jsx` wraps them in local `buy`/`buyUpg`/`doRebirth`/`BuyButton` exactly as
+named in the doc; `.meters` exists in `game.css`; `theme.js`/`ThemePicker.jsx` exist;
+`test/theme.test.js` exists (the claimed economy-parity guard). The CEO-escalation
+note on `FactoryFloor` removal is present and appropriately framed as a scope
+question for 068, not a quiet decision. PASS.
+
+**AC5 (written to design/, referenced from DESIGN.md).** `design/DESIGN-FACTORY.md`
+and `design/factory-mocks/` (14 files: 3 source HTML directions + states HTML + 9
+PNG renders + `_base.css`) exist and are committed. `DESIGN.md` lines 129–139 add a
+new section linking both, placed before "Wat bewust NIET" as claimed. PASS.
+
+**Beyond the criteria.** Rendered `before-play-{desktop,mobile}.png` (real screenshots
+of the live product, not mocks) and confirmed they substantiate the doc's framing of
+today's problem — mobile genuinely scrolls past wallet, animated floor, and two meter
+cards before the typing sentence. Computed WCAG contrast for the one genuinely new
+(non-aliased) color, `--calm-ink` (#c7d2f2) against `--panel`/`--night`: 9.68:1 and
+11.26:1, both comfortably over AA — no accessibility gap despite 052's contrast
+discipline not being re-run for this one new token. Found no functional defects, no
+guardrail violations in any corner case checked (empty state, long-Dutch-text
+overflow, offline banner tone, mobile reflow); filed no 069/070 assignments.
+
+**For the PO scoping 068:** the FactoryFloor-removal escalation in §7/§11 is real and
+correctly flagged, not a triviality — `FactoryFloor.jsx` is currently the only
+per-second animated feedback while typing, and removing it is a legitimate "is this a
+beloved feature" product call, not something the design doc should have silently
+decided. Adjudicate it explicitly in 068 rather than letting the build order (§11
+step 2) default to removal. Everything else in the design direction is safe to scope
+against as-is.
+
+**Verdict: all 5 acceptance criteria PASS. Status set to `done`.**
