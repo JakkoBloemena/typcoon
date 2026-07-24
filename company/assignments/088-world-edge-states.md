@@ -2,7 +2,7 @@
 id: 088
 title: Edge states for the world — empty / loading / offline (world-pass slice 6)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: [085]
 opened_by: product-owner
@@ -418,3 +418,104 @@ speculative "audit all centred elements" assignment was opened.
    not as a substitute for independent tester re-verification. The entry-test bar for this lane
    was explicitly the tester's own unmodified script, which is what actually moved from 35/36 to
    36/36.
+
+## Re-verification (tester, v088-r2, 2026-07-24)
+
+**Verdict: PASS — AC4 clipping now holds at both named width floors, plus a wider spot-check
+range. All other ACs re-confirmed. 075 flipped to done as delivered-via-088.**
+
+Worktree `C:\companies\typcoon-lanes\v088r2`, branch `verify/088-r2`, main HEAD `90db6b9`
+(fix commit `597c7dd` already merged). Setup: `npm ci` (node_modules missing) → `npm test`
+(**266/266 green, `check-no-dutch-en: PASS`**, independently re-run, not re-read from delivery
+notes) → `git checkout -- public/` → `npm install playwright-core --no-save`
+(`package.json`/`package-lock.json` confirmed diff-clean) → `npx vite build` →
+`npx vite preview --port 4268 --strictPort`.
+
+**Diff-scope check (judgment call 1 from the fix delivery): CONFIRMED.** `git show 597c7dd --
+src/game/game.css` shows the fix commit touches only the existing `.emptyline` rule — one
+property added (`width: max-content`) plus its explanatory comment, `+9/-1`, nothing else in
+the file. (A separate `git diff 597c7dd..HEAD` includes unrelated `.streak-pill`/`.boost-chip`/
+`.ghost-ico` changes — those belong to sibling assignments 090/092 landed in the same tick,
+not to 088's fix; confirmed by reading `597c7dd`'s own commit diff in isolation, not the
+range.) The fix is exactly what it claims: pure CSS sizing, zero layout/font/JS changes.
+
+**AC1 (empty/fresh save): PASS, re-confirmed.** Re-ran the tester's kept
+`qa-scripts/088-tester.mjs` unmodified against the fresh build/serve — **36/36**, matching the
+dev's claimed jump from 35/36. Independently re-drove the real new-player flow myself in a new
+script (`qa-scripts/088r2-tester-fresh-probe.mjs`, written fresh for this lane, not copied from
+either prior script): cleared `localStorage`, real name entry, real `Start je fabriek` click,
+real navigation to Fabriek — one `.plot`, `"🔨 BOUW HIER"` flag, `.emptyline` verbatim text,
+`.pnote` absent. No regression.
+
+**AC2 (loading skeleton) / AC3 (offline banner): PASS, re-confirmed.** Re-ran
+`qa-scripts/088-tester.mjs` (unmodified, includes both) and `qa-scripts/088-verify.mjs`
+(unmodified) — both fully green, all shimmer/reduced-motion/theme/offline-flap checks hold.
+Visually reviewed `088-fix-loading-1024.png` and `088-fix-offline-1024.png`: skeleton blocks
+render as placeholder plinths with the floor grid, offline banner reads "Geen verbinding" /
+"Je fabriek is lokaal opgeslagen — je raakt niets kwijt." with a **mint-green** left accent —
+never red, never sky-blue. No regression from the CSS fix (fix touched only `.emptyline`, a
+different rule than either of these).
+
+**AC4 (no horizontal scroll or clipping, 1360px + 1024px floor, all three states): PASS,
+independently re-verified with my own bounding-box probe + screenshot, per
+`retro/2026-07-24-tick36-scrollwidth-is-not-clipping.md`.** Ran the tester's kept
+`qa-scripts/088-tester.mjs` (**36/36**, the AC4 check now reads `overlap px=0` at the 1024px
+floor) and the fix dev's `qa-scripts/088-fix-verify.mjs` (**14/14**, 0px overlap both widths,
+all pairs). Then wrote and ran my own fresh, independent script
+(`qa-scripts/088r2-tester-fresh-probe.mjs`) that drives the real new-player UI flow at
+1024×800 from a cold `localStorage` and reads `getBoundingClientRect()` on `.emptyline` vs
+`.plot .pname` and `.plot` directly (not reusing either prior script's helper functions
+verbatim) — **9/9 passed**: `.emptyline` vs `.pname` overlap = **0px**, `.emptyline` vs `.plot`
+overlap = **0px**, `.emptyline` renders on exactly **one line** at 1024px (checked via
+`Range.getClientRects()` line-box counting, not a lineHeight-division heuristic), no
+horizontal overflow, pill text fully visible. Screenshot:
+`company/assignments/088-screenshots-verify/088r2-fresh-probe-1024.png` — visually confirmed
+"Typemachine" fully legible with clear vertical clearance above a single-line pill, directly
+comparable against the original bounce screenshot
+`088-tester-empty-state-1024-overlap.png` (where "Typemachine" is visibly obscured behind the
+two-line pill) and the fix dev's own `088-fix-empty-hal-1024.png` (same clean layout my probe
+reproduced independently).
+
+Went past the named floors: wrote `qa-scripts/088r2-tester-exploratory.mjs` and spot-checked
+widths **900, 1000, 1080, 1150, 1250px** (only 1080/1150/1250 gate the verdict — 900/1000 are
+below the AC's stated 1024px floor, informational only) — **zero overlap and zero horizontal
+overflow at every width tested**, confirming the fix addresses the actual root cause
+(shrink-to-fit sizing) rather than being tuned to the two named pixel values. Also checked
+combinations the AC set doesn't name: offline banner + empty state simultaneously at 1024px
+(both render, no new overlap, banner and `.pname` stay disjoint), and a live in-place resize
+from 1360px down to 1024px without a reload (no overlap after resize — confirms the CSS fix
+isn't relying on a reflow-on-load side effect). All exploratory checks passed; no defect
+found — reported as coverage, not filed, since nothing broke.
+
+**AC5 (token discipline): PASS, re-confirmed.** Re-ran both `qa-scripts/088-tester.mjs` and
+`qa-scripts/088-verify.mjs` token scans (unmodified) — zero hex, zero raw rgba/rgb, zero new
+`:root` tokens. The fix itself adds no new colour at all (`width`/`max-width` sizing only,
+confirmed by reading the `597c7dd` diff directly) — nothing for a token scan to even catch.
+
+**AC6 (save-compat): PASS, re-confirmed.** `git diff --stat -- store.js economy.js
+src/engine/ theme.js goals.js` on this worktree at `90db6b9`: empty, zero touches. `npm test`:
+**266/266**, `check-no-dutch-en: PASS`, both freshly re-run by this tester (not re-read from
+the delivery notes). `public/**` build churn reverted with `git checkout -- public/` before
+commit; confirmed no `public/` diff in the final tree.
+
+**Judgment call 2 (fix dev's `088-fix-verify.mjs` treated as the dev's evidence, not a
+substitute for independent verification): HONOURED.** I ran it (14/14, consistent with the
+dev's own numbers) but formed the AC4 verdict primarily from the tester's own kept
+`088-tester.mjs` (the pre-existing independent script, now 36/36) plus my own freshly written
+`088r2-tester-fresh-probe.mjs` and `088r2-tester-exploratory.mjs` — three independently
+authored sources agreeing, not one script re-run twice.
+
+**Cleanup note:** re-running `qa-scripts/088-fix-verify.mjs` and `qa-scripts/088-tester.mjs`
+regenerated 6 pre-existing screenshot files with the same filenames (non-deterministic
+shimmer-frame/coin-tick pixels, same pattern the fix dev flagged for the bounce-evidence
+screenshots) — restored via `git checkout --` before commit so the historical record
+(including the original bounce screenshot) is untouched; only my two new scripts and one new
+screenshot (`088r2-fresh-probe-1024.png`) are new files in this commit.
+
+**094 (new-assignment budget): lapsed, not consumed.** No new defect surfaced in this
+re-verification pass, including the exploratory probes beyond the named ACs (intermediate
+widths, combined offline+empty state, live resize). Nothing to file.
+
+**075 status: flipped to `done`** — per this assignment's own notes ("this slice's tester, on
+verifying these states, flips 075 → done as delivered-via-088") and 088 now passing in full.
+See `company/assignments/075-mobile-reflow-states.md`.
