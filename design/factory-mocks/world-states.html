@@ -1,0 +1,102 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wereld-pass — Randtoestanden (leeg / laden / offline / lange tekst)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* ============================================================================
+   WORLD-PASS EDGE STATES (075 survivors, re-homed to the world layout).
+   Desktop/keyboard only — no mobile. Every colour a var()/color-mix() of a token.
+   ============================================================================ */
+.stage{max-width:1360px;margin:0 auto;padding:var(--s5)}
+.mocklabel{margin-top:var(--s6)}
+.hal{position:relative;height:300px;border:3px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 10px 0 var(--sink);
+  background:radial-gradient(120% 80% at 50% -10%, var(--bg-wash), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb,var(--night) 78%, black), var(--night) 40%, var(--panel-2))}
+.floor{position:absolute;left:-20%;right:-20%;bottom:-30px;height:230px;transform:perspective(520px) rotateX(56deg);
+  transform-origin:bottom center;
+  background:repeating-linear-gradient(90deg,transparent 0 39px,var(--bg-grid) 39px 40px),
+    repeating-linear-gradient(0deg,transparent 0 39px,var(--bg-grid) 39px 40px);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,black 45%);mask-image:linear-gradient(180deg,transparent 0,black 45%)}
+
+/* ---- EMPTY (fresh save): whole plan drawn, first plot lit, one friendly line ---- */
+.plot{position:absolute;transform:translateX(-50%);width:150px;text-align:center;z-index:2}
+.plot .pad{height:88px;border-radius:16px;border:3px dashed var(--brass);display:grid;place-items:center;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--brass) 12%, transparent),transparent);
+  box-shadow:inset 0 0 30px color-mix(in srgb,var(--brass) 22%, transparent)}
+.plot .pad .gi{font-size:2.4rem;opacity:.6}
+.plot .flag{display:inline-block;margin-top:-16px;position:relative;z-index:3;font-family:var(--data);font-weight:800;font-size:.64rem;
+  background:var(--brass);color:var(--on-accent);border-radius:999px;padding:4px 12px;box-shadow:0 4px 0 var(--brass-deep)}
+.plot .pname{margin-top:8px;font-weight:800;color:var(--paper)}
+.ghost{position:absolute;transform:translateX(-50%);width:112px;text-align:center;opacity:.65}
+.ghost .draw{height:64px;border:2px dashed var(--line);border-radius:14px;display:grid;place-items:center;
+  background:repeating-linear-gradient(135deg,transparent 0 7px,color-mix(in srgb,var(--line) 22%,transparent) 7px 8px)}
+.ghost .gi{font-size:1.7rem;filter:grayscale(1);opacity:.5}
+.ghost .gname{margin-top:5px;font-weight:800;font-size:.78rem;color:var(--ink-dim)}
+.ghost .glock{font-family:var(--data);font-size:.66rem;color:var(--ink-dim);font-weight:700}
+.emptyline{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);white-space:nowrap;text-align:center;
+  font-weight:800;color:var(--paper);background:color-mix(in srgb,var(--night) 80%, transparent);border-radius:999px;padding:8px 18px}
+.emptyline small{display:block;color:var(--ink-dim);font-weight:700;font-size:.8rem}
+
+/* ---- LOADING (save hydration): blueprint skeleton, gentle shimmer ---- */
+.sk{position:absolute;transform:translateX(-50%);width:130px}
+.sk .b{border-radius:14px;background:linear-gradient(90deg,var(--panel-2),color-mix(in srgb,var(--panel) 70%,var(--line)),var(--panel-2));
+  background-size:200% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.sk .node{height:66px;margin-bottom:8px}
+.sk .line{height:12px;margin:0 auto 6px;width:70%}
+.sk .line.s{width:45%}
+
+/* ---- OFFLINE / ERROR: calm, reassuring — NOT --sky (prestige-only), NOT --flame ---- */
+.offline{display:flex;align-items:center;gap:var(--s4);max-width:640px;margin:var(--s4) 0;
+  background:var(--panel);border:2px solid var(--line);border-left:6px solid var(--mint-deep);border-radius:var(--r-md);
+  padding:var(--s4);box-shadow:0 6px 0 var(--sink)}
+.offline .oico{font-size:1.8rem;flex:none}
+.offline .otxt{font-weight:800;color:var(--paper)}
+.offline .otxt small{display:block;color:var(--ink-dim);font-weight:700;font-size:.85rem;margin-top:2px}
+
+/* ---- LONG-TEXT overflow: long Dutch sentence wraps in the typing card ---- */
+.playcard{max-width:760px;padding:var(--s6) var(--s5);text-align:center;
+  background:var(--panel);border:3px solid var(--line);border-radius:var(--r-lg);box-shadow:0 8px 0 var(--sink)}
+.playcard .type-text{font-size:clamp(1.25rem,4.4vw,2.1rem)}
+/* machine/upgrade name wrap (080): hyphens, not mid-syllable break */
+.namecard{max-width:280px;background:var(--night);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin-top:var(--s3)}
+.namecard .tn{font-weight:800;font-size:.9rem;color:var(--paper);hyphens:auto;-webkit-hyphens:auto}
+</style></head>
+<body><div class="stage">
+
+<div class="mocklabel">① Leeg — verse save (de plek staat klaar, niet dood)</div>
+<div class="hal">
+  <div class="floor"></div>
+  <div class="plot" style="left:24%;top:52%">
+    <div class="pad"><span class="gi">⌨️</span></div><span class="flag">🔨 BOUW HIER</span>
+    <div class="pname">Typemachine</div>
+  </div>
+  <div class="ghost" style="left:50%;top:30%"><div class="draw"><span class="gi">🖨️</span></div><div class="gname">Drukpers</div><div class="glock">nog 5 letters</div></div>
+  <div class="ghost" style="left:72%;top:22%"><div class="draw"><span class="gi">🦾</span></div><div class="gname">Robotarm</div><div class="glock">nog 10 letters</div></div>
+  <div class="emptyline">Je fabriek staat klaar om te groeien<small>Typ je eerste opdracht — dan verrijst je eerste machine</small></div>
+</div>
+
+<div class="mocklabel">② Laden — save wordt opgehaald (blauwdruk-skelet)</div>
+<div class="hal">
+  <div class="floor"></div>
+  <div class="sk" style="left:22%;top:56%"><div class="b node"></div><div class="b line"></div><div class="b line s"></div></div>
+  <div class="sk" style="left:46%;top:56%"><div class="b node"></div><div class="b line"></div><div class="b line s"></div></div>
+  <div class="sk" style="left:70%;top:40%"><div class="b node"></div><div class="b line"></div><div class="b line s"></div></div>
+</div>
+
+<div class="mocklabel">③ Offline / fout — kalm en geruststellend (geen alarm, geen --sky, geen rood)</div>
+<div class="offline">
+  <span class="oico">💾</span>
+  <div class="otxt">Geen verbinding<small>Je fabriek is lokaal opgeslagen — je raakt niets kwijt.</small></div>
+</div>
+
+<div class="mocklabel">④ Lange tekst — Nederlands loopt langer; alles breekt netjes af</div>
+<div class="playcard">
+  <div class="type-text">
+    <span class="cur">e</span><span class="up">en</span><span class="sp up">·</span><span class="up">ingewikkelde</span><span class="sp up">·</span><span class="up">achtbaanconstructie</span><span class="sp up">·</span><span class="up">wordt</span><span class="sp up">·</span><span class="up">nauwkeurig</span><span class="sp up">·</span><span class="up">samengesteld</span>
+  </div>
+  <div class="namecard"><div class="tn">Precisiegereedschap</div></div>
+</div>
+
+</div></body></html>

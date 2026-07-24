@@ -1,0 +1,59 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wereld-pass A — De Werkvloer (isometrische hal)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* ============================================================================
+   WORLD-PASS DIRECTION A — "DE WERKVLOER" (competitor / not chosen)
+   Concept: an isometric factory HALL you look down into, RollerCoaster-Tycoon /
+   SimCity style. Machines are iso blocks on an iso-tiled floor; conveyors link
+   them. Max immersion — but it ABANDONS the confirmed "Bouwplan/blueprint"
+   metaphor (ADR 012 ruling 2 says grow it, not replace it), needs true iso art
+   the front-on Machine SVGs don't provide, and faked-iso in CSS reads brittle.
+   Shown here at representative fidelity to justify the pairwise loss honestly.
+   ============================================================================ */
+.stage{max-width:1360px;margin:0 auto;padding:var(--s5)}
+h1{color:var(--paper);font-size:2rem;margin:0 0 var(--s4)}
+.hall{position:relative;height:520px;border:3px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--night) 70%,black),var(--night) 45%,var(--panel-2));box-shadow:0 10px 0 var(--sink)}
+/* iso tiled floor */
+.isofloor{position:absolute;left:50%;top:52%;width:900px;height:520px;transform:translate(-50%,-50%) rotateX(58deg) rotateZ(45deg);
+  transform-origin:center;
+  background:repeating-linear-gradient(0deg,transparent 0 59px,var(--bg-grid) 59px 60px),
+    repeating-linear-gradient(90deg,transparent 0 59px,var(--bg-grid) 59px 60px);
+  border:2px solid color-mix(in srgb,var(--line) 60%,transparent)}
+/* iso machine block: a cube faked with three faces */
+.cube{position:absolute;width:120px;height:120px;transform-style:preserve-3d}
+.cube .top{position:absolute;inset:0;transform:rotateX(58deg) rotateZ(45deg);
+  background:linear-gradient(135deg,var(--panel),var(--panel-2));border:2px solid var(--mint-deep);display:grid;place-items:center;font-size:2.2rem}
+.cube .side{position:absolute;left:20px;top:60px;width:80px;height:40px;background:var(--sink);transform:skewY(20deg)}
+.mlabel{position:absolute;font-family:var(--data);font-weight:800;font-size:.78rem;color:var(--paper);white-space:nowrap}
+.mlabel .r{color:var(--mint)}
+.conveyor{position:absolute;height:16px;background:repeating-linear-gradient(90deg,var(--mint-deep) 0 10px,var(--night) 10px 20px);
+  border-radius:6px;transform:rotate(26deg)}
+.ghosttile{position:absolute;width:110px;height:110px;transform:rotateX(58deg) rotateZ(45deg);
+  border:2px dashed var(--line);background:repeating-linear-gradient(135deg,transparent 0 7px,color-mix(in srgb,var(--line) 22%,transparent) 7px 8px)}
+.plotiso{position:absolute;width:110px;height:110px;transform:rotateX(58deg) rotateZ(45deg);border:3px dashed var(--brass);
+  box-shadow:inset 0 0 30px color-mix(in srgb,var(--brass) 30%,transparent)}
+.note{margin-top:var(--s4);color:var(--ink-dim);font-size:.85rem;line-height:1.6;max-width:760px}
+.note b{color:var(--paper)}
+</style></head>
+<body><div class="stage">
+<h1>A · De Werkvloer <span style="color:var(--ink-dim);font-size:1rem">— isometrische hal</span></h1>
+<div class="hall">
+  <div class="isofloor"></div>
+  <div class="cube" style="left:300px;top:250px"><div class="side"></div><div class="top">⌨️</div></div>
+  <div class="mlabel" style="left:300px;top:380px">Typemachine <span class="r">+12/s</span></div>
+  <div class="conveyor" style="left:400px;top:300px;width:120px"></div>
+  <div class="cube" style="left:470px;top:210px"><div class="side"></div><div class="top">🖨️</div></div>
+  <div class="mlabel" style="left:470px;top:340px">Drukpers <span class="r">+48/s</span></div>
+  <div class="plotiso" style="left:600px;top:250px"></div>
+  <div class="mlabel" style="left:600px;top:250px;color:var(--brass)">🦾 Nu bouwen</div>
+  <div class="ghosttile" style="left:520px;top:130px"></div>
+  <div class="ghosttile" style="left:660px;top:140px"></div>
+</div>
+<div class="note"><b>Waarom niet gekozen:</b> sterkste "tycoon"-onderdompeling, maar het
+gooit de bevestigde blauwdruk/Bouwplan-metafoor weg (ADR 012 ruling 2 zegt: laten
+gróeien, niet vervangen), vraagt echte isometrische machine-art die de bestaande
+front-on SVG's niet leveren, en nagemaakte iso in CSS oogt bros. Hoge kosten, hoog risico.</div>
+</div></body></html>

@@ -1,0 +1,274 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wereld-pass C — De Maquette (Het Bouwplan als plek)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* ============================================================================
+   WORLD-PASS DIRECTION C — "DE MAQUETTE" (winner)
+   The confirmed "Het Bouwplan" metaphor (ADR 012 ruling 2) grown from a flat
+   chip-row into a PLACE: the blueprint is now the FLOOR of a diorama you look
+   across. Built machines stand up off the plan as running, dimensional models
+   near the front; the next machine is a glowing brass FOUNDATION PLOT you build
+   on; not-yet-reachable machines are flat blue-line ghost drawings receding
+   toward a horizon. Depth = a tilted blueprint floor + near/big vs far/flat.
+   Kid reference: a model-railway baseplate / a LEGO city on a table, not a form.
+   TOKEN DISCIPLINE: every colour is a var(--token) or a color-mix() OF a token,
+   so the 052 themes still recolour the whole world. No raw hex. No --sky except
+   the prestige tile. Desktop/keyboard only (ADR 012 ruling 3): designed 1360px,
+   supported >=1024px; no mobile reflow.
+   ============================================================================ */
+
+body{overflow-x:hidden}
+.stage{max-width:1360px;margin:0 auto;padding:var(--s5) var(--s5) var(--s6)}
+
+/* ---- top chrome: title + the physical control-desk LEDGER (fixes defect 070) ---- */
+.stagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s5);margin-bottom:var(--s4);flex-wrap:wrap}
+.stagehead .titles .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.18em;font-size:.72rem;color:var(--ink-dim)}
+.stagehead .titles h1{font-size:2.4rem;color:var(--paper);margin:2px 0 0;line-height:1}
+.stagehead .titles h1 b{color:var(--brass)}
+.built-tag{display:inline-block;margin-top:8px;font-family:var(--data);font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--mint);background:var(--night);border:2px solid var(--mint-deep);border-radius:999px;padding:5px 13px;font-size:.82rem}
+
+/* the ledger = a small control desk bolted to the corner of the plan. This is the
+   tycoon's money, always on the world (070). --reward coin, mint rate, prestige star. */
+.ledger{display:flex;gap:var(--s3);align-items:center;background:var(--panel);border:3px solid var(--line);
+  border-radius:var(--r-lg);padding:10px 14px;box-shadow:0 6px 0 var(--sink)}
+.ledger .cell{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05;padding:0 8px}
+.ledger .cell+.cell{border-left:2px solid var(--line)}
+.ledger .lab{font-family:var(--data);text-transform:uppercase;letter-spacing:.1em;font-size:.6rem;color:var(--ink-dim);font-weight:800}
+.ledger .val{font-family:var(--data);font-variant-numeric:tabular-nums;font-weight:800;font-size:1.25rem}
+.ledger .val.money{color:var(--reward);display:inline-flex;align-items:center;gap:7px}
+.ledger .val.money .coin{width:18px;height:18px}
+.ledger .val.rate{color:var(--mint)}
+.ledger .val.star{color:var(--sky)}   /* the one legit --sky: prestige/star context */
+
+/* ============================================================================
+   THE DIORAMA FLOOR — a receding blueprint floor you look across.
+   The floor grid is a SEPARATE tilted layer (rotateX); machines sit FLAT on top
+   so no text is ever distorted. This is the whole "place" read.
+   ============================================================================ */
+.hal{position:relative;height:460px;margin-top:var(--s3);
+  border:3px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 10px 0 var(--sink), inset 0 40px 90px color-mix(in srgb, var(--night) 82%, black);
+  background:
+    /* warm ceiling glow at the top, fading down = a lit hall */
+    radial-gradient(120% 80% at 50% -10%, var(--bg-wash), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb,var(--night) 78%, black) 0%, var(--night) 38%, var(--panel-2) 100%);
+}
+/* the receding grid: a tilted plane pinned to the lower ~70% of the hall */
+.floor{position:absolute;left:-20%;right:-20%;bottom:-40px;height:340px;
+  transform:perspective(560px) rotateX(56deg);transform-origin:bottom center;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 39px, var(--bg-grid) 39px 40px),
+    repeating-linear-gradient(0deg,  transparent 0 39px, var(--bg-grid) 39px 40px);
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, black 45%);
+  mask-image:linear-gradient(180deg, transparent 0, black 45%);}
+/* a soft horizon line where floor meets "back wall" */
+.horizon{position:absolute;left:0;right:0;top:34%;height:2px;background:color-mix(in srgb, var(--line) 70%, transparent);
+  box-shadow:0 0 30px 6px color-mix(in srgb, var(--bg-grid) 60%, transparent)}
+
+/* --- a machine standing on the floor. Placed with left/top %, scaled by "distance". --- */
+.mch{position:absolute;transform:translateX(-50%);text-align:center;width:150px}
+.mch .plinth{position:relative;width:118px;margin:0 auto;border-radius:18px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));border:2px solid var(--mint-deep);
+  box-shadow:0 8px 0 var(--sink), 0 14px 20px color-mix(in srgb, black 45%, transparent);
+  padding:14px 8px 10px}
+.mch .glass{position:absolute;inset:6px 6px auto 6px;height:34px;border-radius:12px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--paper) 12%, transparent), transparent);pointer-events:none}
+.mch .ico{font-size:2.9rem;line-height:1;display:block;filter:drop-shadow(0 4px 6px color-mix(in srgb,black 55%,transparent))}
+.mch .status{position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--mint);
+  box-shadow:0 0 10px 2px color-mix(in srgb,var(--mint) 70%, transparent)}
+.mch .plate{margin-top:9px;font-weight:800;font-size:.95rem;color:var(--paper)}
+.mch .lv{font-family:var(--data);font-weight:800;font-size:.74rem;color:var(--brass)}
+.mch .rate{font-family:var(--data);font-weight:700;font-size:.74rem;color:var(--mint);font-variant-numeric:tabular-nums}
+/* the shadow the model casts on the floor */
+.mch .cast{position:absolute;left:50%;bottom:-14px;width:120px;height:26px;transform:translateX(-50%);
+  background:radial-gradient(ellipse at center, color-mix(in srgb,black 55%,transparent), transparent 70%);z-index:-1}
+.mch .badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:3;
+  font-family:var(--data);font-weight:800;font-size:.6rem;background:var(--mint);color:var(--sink);border-radius:999px;padding:3px 9px}
+
+/* ambient life: a slow, low, STAGGERED bob — the factory alive at rest (never in
+   lockstep = considered, not machine-made). Allowed here (factory world), banned
+   on the typing view. Reduced-motion kills it (global rule) and the resting state
+   is the finished machine, so no information is motion-only. */
+@keyframes idleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.mch .ico{animation:idleBob 5.5s ease-in-out infinite}
+.mch:nth-child(odd) .ico{animation-duration:6.4s;animation-delay:-1.8s}
+
+/* the conveyor belt linking built machines: a drifting striped rail on the floor */
+.belt{position:absolute;height:14px;border-radius:8px;transform:translateY(-50%);z-index:0;
+  background:repeating-linear-gradient(90deg, var(--mint-deep) 0 10px, color-mix(in srgb,var(--mint-deep) 40%, var(--night)) 10px 20px);
+  border:1px solid var(--mint-deep);box-shadow:0 3px 0 var(--sink);
+  animation:beltDrift 1.1s linear infinite}
+@keyframes beltDrift{to{background-position:20px 0}}
+
+/* THE NEXT MACHINE = a glowing foundation plot you build on. Brass, drafting ticks. */
+.plot{position:absolute;transform:translateX(-50%);width:158px;text-align:center;z-index:2}
+.plot .pad{position:relative;height:96px;border-radius:16px;border:3px dashed var(--brass);
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--brass) 12%, transparent), transparent),
+    repeating-linear-gradient(90deg, transparent 0 15px, color-mix(in srgb,var(--brass) 16%, transparent) 15px 16px);
+  box-shadow:inset 0 0 30px color-mix(in srgb,var(--brass) 22%, transparent);
+  display:grid;place-items:center;animation:plotGlow 3.4s ease-in-out infinite}
+@keyframes plotGlow{0%,100%{box-shadow:inset 0 0 26px color-mix(in srgb,var(--brass) 16%, transparent)}
+  50%{box-shadow:inset 0 0 40px color-mix(in srgb,var(--brass) 34%, transparent)}}
+.plot .ghosticon{font-size:2.6rem;opacity:.55;filter:grayscale(.3)}
+.plot .flag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--data);font-weight:800;font-size:.66rem;background:var(--brass);color:var(--on-accent);
+  border-radius:999px;padding:4px 12px;box-shadow:0 4px 0 var(--brass-deep)}
+.plot .pname{margin-top:9px;font-weight:800;color:var(--paper)}
+.plot .pnote{font-family:var(--data);font-size:.72rem;color:var(--brass);font-weight:700}
+
+/* locked = flat blue-line ghost drawing on the plan, receding (smaller = further off) */
+.ghost{position:absolute;transform:translateX(-50%);width:120px;text-align:center;opacity:.7}
+.ghost .draw{height:70px;border:2px dashed var(--line);border-radius:14px;display:grid;place-items:center;
+  background:repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb,var(--line) 22%, transparent) 7px 8px)}
+.ghost .draw .gi{font-size:2rem;filter:grayscale(1);opacity:.5}
+.ghost .gname{margin-top:6px;font-weight:800;font-size:.82rem;color:var(--ink-dim)}
+.ghost .glock{font-family:var(--data);font-size:.68rem;color:var(--ink-dim);font-weight:700}
+.ghost.premium .draw{border-color:color-mix(in srgb,var(--brass) 60%, var(--line))}
+
+/* arrival: when you walk into the factory the models rise onto the table, staggered.
+   One spring each, then still (no looping). Reduced-motion -> already-risen. */
+@keyframes riseIn{from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.9)}
+  to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+.hal .mch,.hal .plot,.hal .ghost{animation-name:riseIn;animation-duration:var(--dur-arrive);animation-timing-function:var(--pop);animation-fill-mode:backwards}
+.hal .mch:nth-of-type(2){animation-delay:.06s}
+.hal .mch:nth-of-type(3){animation-delay:.12s}
+.hal .plot{animation-delay:.20s}
+.hal .ghost:nth-of-type(1){animation-delay:.28s}
+.hal .ghost:last-of-type{animation-delay:.34s}
+/* NB idleBob on .ico is a child of .mch so it is not overwritten by riseIn on .mch */
+
+/* ============================================================================
+   CONTROLS UNDER THE FLOOR — the work order (spotlit goal) + the werkbank.
+   The goal is now the PRIMARY goal surface (the typing view drops its sliver).
+   ============================================================================ */
+.controls{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:var(--s4);margin-top:var(--s5)}
+
+/* the build ticket: a pinned work-order card = nextGoal enlarged (071 fields) */
+.ticket{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--s5);align-items:center;
+  padding:var(--s5);background:linear-gradient(135deg,var(--panel),var(--night));
+  border:2px solid var(--brass-deep);border-radius:var(--r-md);box-shadow:0 8px 0 var(--sink)}
+.ticket::before{content:'BOUWBON';position:absolute;top:-11px;left:20px;font-family:var(--data);font-weight:800;
+  font-size:.62rem;letter-spacing:.14em;color:var(--on-accent);background:var(--brass);border-radius:999px;padding:3px 10px}
+.ringwrap{position:relative;width:88px;height:88px;flex:none;display:grid;place-items:center}
+.ring{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(var(--goal) calc(var(--p,0)*1%), var(--panel-2) 0);
+  -webkit-mask:radial-gradient(circle 31px at center, transparent 98%, #000 100%);
+  mask:radial-gradient(circle 31px at center, transparent 98%, #000 100%)}
+.ringwrap .ri{position:relative;font-size:1.9rem}
+.ticket .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.68rem;color:var(--brass)}
+.ticket h3{font-size:1.55rem;margin:2px 0 4px;color:var(--paper)}
+.ticket .sub{color:var(--ink-dim);font-weight:700}
+.ticket .sub b{color:var(--mint);font-variant-numeric:tabular-nums}
+.ticket .togo{font-family:var(--data);font-weight:800;color:var(--paper);margin-top:8px;font-variant-numeric:tabular-nums}
+.ticket .togo b{color:var(--brass)}
+.buybig{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);
+  color:var(--on-accent);border:none;border-radius:var(--r-lg);padding:16px 30px;font-family:var(--data);font-weight:800;
+  font-size:1.3rem;box-shadow:0 6px 0 var(--brass-deep);cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+.coin{width:22px;height:22px}
+
+/* the werkbank: upgrades + prestige as physical tools on a shelf.
+   080 FIX: hyphens:auto (lang-aware) + a comfortable tile width so
+   "Precisiegereedschap" breaks at a real point, never mid-syllable. */
+.werkbank{background:var(--panel-2);border:2px solid var(--line);border-radius:var(--r-md);padding:var(--s4);box-shadow:0 8px 0 var(--sink)}
+.werkbank .wlab{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.66rem;color:var(--ink-dim);font-weight:800;margin-bottom:var(--s3)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.tool{display:flex;gap:var(--s2);align-items:center;background:var(--night);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 10px}
+.tool .tc{flex:none;width:36px;height:36px;border-radius:10px;background:var(--panel);display:grid;place-items:center;font-size:1.15rem}
+.tool .ti{min-width:0;flex:1}
+.tool .tn{font-weight:800;font-size:.86rem;color:var(--paper);hyphens:auto;-webkit-hyphens:auto}
+.tool .tm{font-family:var(--data);font-size:.68rem;color:var(--ink-dim);font-weight:700}
+.tool .tbuy{flex:none;font-family:var(--data);font-weight:800;font-size:.78rem;color:var(--on-accent);
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);border:none;border-radius:var(--r-sm);
+  padding:6px 10px;box-shadow:0 3px 0 var(--brass-deep);cursor:pointer;font-variant-numeric:tabular-nums}
+.tool .tdone{flex:none;color:var(--mint);font-weight:800;font-size:1.05rem}
+.tool.owned{border-color:var(--mint-deep)}
+/* prestige tool: the ONLY --sky surface (guardrail kept) */
+.tool.star{grid-column:1/-1;border-color:var(--sky-deep)}
+.tool.star .tpct{flex:none;font-family:var(--data);font-weight:800;color:var(--sky);font-variant-numeric:tabular-nums}
+
+.backbtn{margin-top:var(--s4);background:var(--panel-2);border:2px solid var(--line);color:var(--ink-dim);
+  font-weight:800;padding:9px 18px;border-radius:var(--r-sm);box-shadow:0 4px 0 var(--sink);cursor:pointer;font-family:inherit}
+</style></head>
+<body><div class="stage">
+
+  <div class="stagehead">
+    <div class="titles">
+      <div class="kick">Jouw fabriek</div>
+      <h1>Het <b>Bouwplan</b></h1>
+      <span class="built-tag">2 van 5 machines gebouwd</span>
+    </div>
+    <div class="ledger">
+      <div class="cell"><span class="lab">Munten</span><span class="val money"><span class="coin"></span>4.820</span></div>
+      <div class="cell"><span class="lab">Per seconde</span><span class="val rate">+66/s</span></div>
+      <div class="cell"><span class="lab">Sterren</span><span class="val star">⭐ 1</span></div>
+    </div>
+  </div>
+
+  <!-- THE DIORAMA: a factory floor you look across ------------------------------- -->
+  <div class="hal">
+    <div class="floor"></div>
+    <div class="horizon"></div>
+
+    <!-- built machines: near the front, big, running (belt between them) -->
+    <div class="belt" style="left:16%;width:24%;top:76%"></div>
+    <div class="mch" style="left:20%;top:60%">
+      <div class="plinth"><span class="status"></span><div class="glass"></div><span class="ico">⌨️</span></div>
+      <div class="cast"></div>
+      <div class="plate">Typemachine</div><div class="lv">Lv 12</div><div class="rate">+12/s</div>
+    </div>
+    <div class="mch" style="left:44%;top:60%">
+      <span class="badge">Lv10 → tempo ×2</span>
+      <div class="plinth"><span class="status"></span><div class="glass"></div><span class="ico">🖨️</span></div>
+      <div class="cast"></div>
+      <div class="plate">Drukpers</div><div class="lv">Lv 8</div><div class="rate">+48/s</div>
+    </div>
+
+    <!-- the next machine: a glowing foundation plot -->
+    <div class="plot" style="left:70%;top:52%">
+      <span class="flag">🦾 NU BOUWEN</span>
+      <div class="pad"><span class="ghosticon">🦾</span></div>
+      <div class="pname">Robotarm</div><div class="pnote">nog 229 munten</div>
+    </div>
+
+    <!-- locked machines: flat blue-line ghosts receding toward the horizon -->
+    <div class="ghost" style="left:52%;top:22%">
+      <div class="draw"><span class="gi">🏗️</span></div>
+      <div class="gname">Lopende band</div><div class="glock">nog 3 letters</div>
+    </div>
+    <div class="ghost premium" style="left:78%;top:20%">
+      <div class="draw"><span class="gi">🏭</span></div>
+      <div class="gname">🔒 Mega-fabriek</div><div class="glock">volledige fabriek</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS: the build ticket (primary goal) + the werkbank ------------------- -->
+  <div class="controls">
+    <div class="ticket">
+      <div class="ringwrap" style="--p:78"><div class="ring"></div><span class="ri">🦾</span></div>
+      <div>
+        <div class="kick">Nu bouwen</div>
+        <h3>Robotarm</h3>
+        <div class="sub">Werkt onvermoeibaar door · <b>+28/s</b> erbij</div>
+        <div class="togo">nog <b>229</b> munten — dat haal je in ± 2 opdrachten</div>
+      </div>
+      <button class="buybig"><span class="coin"></span> 1.049</button>
+    </div>
+
+    <div class="werkbank">
+      <div class="wlab">Werkbank — verbeteringen</div>
+      <div class="tools">
+        <div class="tool owned"><span class="tc">🛢️</span><div class="ti"><div class="tn">Smeerolie</div><div class="tm">machines ×1,5</div></div><span class="tdone">✓</span></div>
+        <div class="tool"><span class="tc">🔧</span><div class="ti"><div class="tn">Precisiegereedschap</div><div class="tm">munten ×2</div></div><button class="tbuy">400</button></div>
+        <div class="tool"><span class="tc">🚀</span><div class="ti"><div class="tn">Turbomotor</div><div class="tm">machines ×2</div></div><button class="tbuy">1.500</button></div>
+        <div class="tool"><span class="tc">✨</span><div class="ti"><div class="tn">Gouden toetsen</div><div class="tm">munten ×2</div></div><button class="tbuy">2.500</button></div>
+        <div class="tool star"><span class="tc">🌟</span><div class="ti"><div class="tn">Fabriek verkopen</div><div class="tm">+25% sneller · nog 6.600</div></div><span class="tpct">74%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="backbtn">← Terug naar typen</button>
+
+</div></body></html>
