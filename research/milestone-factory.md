@@ -323,3 +323,20 @@ save-compat guarantee (§2) holds: no persisted field changes, no migration.
 **Ids:** 082 (cut record) + 083–088 (six slices) used; **089–090 returned unused**. Full
 sequencing rationale, file surfaces, and parallelism notes live in
 `company/assignments/082-worldpass-build-cut.md`.
+
+---
+
+## 9. Typing-strip pill fidelity vs ADR 012 ruling 1 (product-owner, 2026-07-24, assignment 105)
+
+Tester 076 flagged that 083's earnings-first strip still carries `⭐ rebirths` and
+`🔥 streak` pills that the 083 comment never re-justified against ADR 012 ruling 1's
+"nothing else from the factory world." Adjudicated: **the `⭐ rebirths` star moves
+factory-only** (it is a factory-world prestige trophy; it already lives on 084's ledger;
+§3d already routes "how far I've come" to the factory page), and **the `🔥 streak` stays
+on the typing view** (a daily-return/typing-habit stat that gates the warm-up
+earnings boost — native to the typing loop, not the factory world). The ruling and its
+reasoning are the deliverable and are recorded in full in
+**`company/decisions/014-typing-view-star-pill-factory-only.md`** (my reserved decision
+id, used — this refines an ADR reading and is where a future tester checking code
+against ADR 012 will look). 105 is re-scoped in place into the developer implementation
+(remove the star pill only; presentation-only; save/economy untouched).
