@@ -2,7 +2,7 @@
 id: 081
 title: "test/htmllang.test.js's static source-check does not distinguish live code from a comment (would pass even if the fix were commented out)"
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: tester
@@ -103,3 +103,64 @@ Repro evidence (worktree `C:\companies\typcoon-lanes\d081`, branch `dev/081`):
   assignment file changed.
 
 No new distinct problem found while doing this work — 094 lapses.
+
+## Verification (tester, tick #31)
+
+Independently re-ran every repro in worktree `C:\companies\typcoon-lanes\v081` (branch
+`verify/081`, based on main @ 7489c60), restoring `src/game/App.jsx` with `git checkout --`
+between each mutation.
+
+1. **Baseline** (untouched tree): `node --test test/htmllang.test.js` → `ok 1`, `ok 2`, 2/2 pass.
+2. **`//`-comment-out** the fix line (`// if (typeof document !== 'undefined')
+   document.documentElement.lang = getLocale();`): test 1 **fails** —
+   `not ok 1`, `error: 'no live (non-comment) document.documentElement.lang assignment found
+   after setLocale()'`. Test 2 unaffected (`ok 2`). Restored via `git checkout --
+   src/game/App.jsx`; confirmed back to `ok 1`, `ok 2`.
+3. **`/* ... */`-wrap** the same line: test 1 **fails**, identical assertion/shape. Restored,
+   confirmed green again.
+4. **Full deletion** of the line (no comment, just gone): test 1 **fails** as before — this
+   pre-existing behaviour is undisturbed. Restored, confirmed green.
+5. Restore confirmed clean each time (`git status --porcelain` empty after each
+   `git checkout --`).
+6. Adversarial probes of `stripComments` itself:
+   - (a) Current `App.jsx` contains **no** string/template literal with a `//` or `/*`
+     sequence (grepped for URL-like patterns and any `RegExp`/`.test(`/`.match(`/`.replace(`
+     usage — none found; the file has zero regex literals). So there is no live corruption
+     risk today. I additionally unit-tested the helper standalone against synthetic inputs
+     (URL in a single-quoted string, URL in a template literal, an escaped-quote-then-`//`
+     string, a Dutch apostrophe inside a `//` comment) — all passed through/stripped
+     correctly, no corruption. One theoretical residual gap found and worth recording
+     honestly: the helper has no concept of regex literals, so a regex character class
+     containing an *unescaped* `/*` sequence (e.g. `/[/*]/`, valid JS — `/` need not be
+     escaped inside `[...]`) would be misread as the start of a block comment and could eat
+     real code up to the next literal `*/` anywhere later in the file. This does not
+     manifest anywhere in the current codebase (confirmed no regex literals in App.jsx) and
+     is consistent with the assignment's own "small helper, not a full JS parser" allowance,
+     so I'm not filing a new assignment for it — recording it here only as a documented,
+     currently-inert limitation for future reference.
+   - (b) `if (false) { if (typeof document !== 'undefined') document.documentElement.lang =
+     getLocale(); }`: test 1 still **passes** (`ok 1`, `ok 2`) — this neutering method is
+     genuinely NOT caught by the strengthened test. Per the assignment's own scope note this
+     is explicitly not a bounce condition (only comment-blindness was in scope), and it was
+     already named as a known limitation in the original finding's reproduction section, so
+     it isn't a new distinct gap — recorded here for completeness, not filed separately.
+7. **Full `npm test`**: after `npm install` (this tester worktree had no `node_modules`),
+   ran the complete script (`node --test test/*.test.js && node scripts/gen-content.mjs &&
+   vite build && node scripts/check-no-dutch-en.mjs`) end to end: **232/232** unit tests
+   pass (no count change from before this assignment — the two existing tests were
+   strengthened in place), plus the content-gen, Vite build, and Dutch/English lexicon check
+   all passed clean.
+8. **Scope check**: `git diff --stat` of commit `15449ea` (081's dev commit) touches only
+   `test/htmllang.test.js` and this assignment file — confirmed via `git log`/`git diff
+   15449ea~1 15449ea`.
+9. `public/**` build churn from the `npm test` build step was reverted with `git checkout --
+   public/` before committing; `git status --porcelain` was clean before the verification
+   commit (`src/game/App.jsx` restored byte-identical to base, only this assignment file's
+   frontmatter/body changed).
+
+**Verdict: satisfied.** All five repro variants (comment-out, block-comment, deletion,
+full-suite, scope) behave exactly as the assignment demands. Status → `done`.
+
+091 lapses — no new distinct defect found; the one residual gap discovered (regex-literal
+blindness in `stripComments`) is currently inert (no regex literals anywhere in `App.jsx`)
+and judged not worth a standalone assignment at this time.
