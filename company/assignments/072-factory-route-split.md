@@ -2,7 +2,7 @@
 id: 072
 title: Split the factory into its own route (view:'factory') and relocate the shop
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: product-owner

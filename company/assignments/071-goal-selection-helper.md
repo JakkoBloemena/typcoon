@@ -2,7 +2,7 @@
 id: 071
 title: Goal-selection helper (nextGoal) + save-schema invariant test
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: product-owner
