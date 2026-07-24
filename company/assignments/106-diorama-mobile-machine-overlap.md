@@ -2,7 +2,7 @@
 id: 106
 title: "Narrow-desktop-window degradation on the game surfaces — add a width floor to the touchOnly() gate (mobile/touch is out of target per ADR 012 and already gated)"
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 089); re-scoped by product-owner (ADR 015, tick #39 intake)
@@ -246,3 +246,91 @@ makes machine identity and progress genuinely unreadable (not just visually roug
 the parent who checks the dashboard) plausibly plays or checks in on a phone or tablet —
 but it stops short of priority 1 because the core typing/earning loop itself (the
 `/speel/` exercise screen) was not observed to be affected, only the factory/shop view.
+
+## Verification (tester v106, tick #40)
+
+**Verdict: PASS — `status: done`.** Verified independently against every acceptance
+criterion in the ADR 015 re-scope block (the revised, current ACs), running the actual
+app end-to-end with Playwright/Chromium against `npx vite --port 4292` — not by reading
+the diff. Script: `qa-scripts/106-tester-verify.mjs` (independent of the dev's
+`qa-scripts/106-mobile-repro.mjs`; own save fixture built from the real `BUILDINGS` ids
+in `src/game/economy.js`, own overlap-detection math, own boundary/reactivity/state-safety
+probes). 24/25 automated checks pass (the one "failure" is the reactive-resize state-loss
+finding below, filed separately — it is not a violation of any written AC). Screenshots in
+`company/assignments/106-screenshots-verify/` (13 files).
+
+- **Fine-pointer narrow window → calm width-hint, not the diorama/ticket.** Verified nl at
+  375px and 390px (`2-fine-375-nl-hint.png`, `1-fine-390-nl-hint.png`): `.home-tagline` /
+  `.home-how` read exactly "Maak je venster wat breder!" / "Typcoon is ontworpen voor een
+  breed scherm. Maak je venster wat breder om te spelen. Tot zo!" — matches
+  `strings.js`'s `desktop.widthTitle`/`widthBody`. Verified en at 390px
+  (`3-fine-390-en-hint.png`): "Make your window a little wider!" / "Typcoon is designed
+  for a wide screen...". PASS.
+- **Touch-only regression check.** A coarse-pointer-only context (`hasTouch: true,
+  isMobile: true`, confirmed via `matchMedia('(pointer: coarse)').matches === true &&
+  '(pointer: fine)' === false` before asserting) at 390px shows the **original, unchanged**
+  touch-hint copy "Pak een toetsenbord erbij!" — not the new width-hint copy
+  (`5-coarse-390-touch-hint.png`). The two hints are copy-distinct and this test asserts on
+  the distinguishing string, so a regression that silently swapped one for the other would
+  have been caught. PASS, no regression.
+- **≥1024px full game, no diorama overlap at worst case.** Built an independent save with
+  all 5 `BUILDINGS` (`typewriter, printer, robotarm, assembly, megafab`) at 1024px (exact
+  floor) and 1360px, navigated to the factory screen for real (seeded localStorage → click
+  "Verder bouwen" → dismiss onboarding overlays → click "Fabriek"), then computed pairwise
+  bounding-box overlap for all 5 `.mch` cards via `getBoundingClientRect()` directly (not
+  reusing the dev's numbers). Zero overlaps at both widths, all 5 cards present and legible
+  (`4-fine-1024-hal.png`, `4-fine-1360-hal.png`). PASS — matches the dev's measured
+  zero-overlap extrapolation.
+- **Exact boundary.** 1023px → width-hint (`6-boundary-1023.png`); 1024px → normal home
+  screen, `.home-name` input present, no hint (`7-boundary-1024.png`). Screenshots attached
+  and visually confirmed by eye, not just by locator assertion. PASS.
+- **Copy + build health.** `desktop.widthTitle`/`widthBody` present in both nl and en
+  blocks of `strings.js`. `npm test`: 266/266 green. `vite build`: succeeds. `check-no-dutch-en`:
+  PASS, 5 built en files, zero unallowlisted Dutch-lexicon hits. PASS.
+- **File surface.** `git show --stat e89dc1c` confirms only `src/game/App.jsx` (+53) and
+  `src/game/strings.js` (+12) touched in the delivery commit (plus the assignment file and
+  dev screenshots) — `store.js`, `economy.js`, `src/engine/`, `theme.js`, `goals.js`, and
+  `layoutDiorama`/`.mch`/`.hal` math are untouched, confirmed directly (not taking the
+  delivery notes' word for it). PASS.
+
+**Ruling on the reactive-matchMedia judgment call (as asked):** the dev is right that a
+static, load-time-only gate (matching `touchOnly()`'s idiom) would be wrong here — window
+width genuinely changes mid-session in normal desktop use, unlike pointer type — so making
+it reactive via `matchMedia('change')` is the correct call, not the deviation to push back
+on. Verified directly: resizing 1360→700→1360 both on the pre-game home screen and mid-
+factory-view flips the gate live in both directions with **no crash**, confirmed further
+under adversarial rapid oscillation across the boundary 12 times in ~1s (1360/900/1360/900/
+1024/1023/1024/1023/700/1360/500/1360) — zero uncaught `pageerror`s, app settles correctly
+on the final width. The `narrowWindow`/`view`/`game` App-level state is untouched by the
+gate (it's a pure conditional early-return, not a state reset), confirmed empirically: text
+typed into the name field before a forced narrow round-trip is still present after
+(`before=TesterKind after=TesterKind`), and the factory view (not home) correctly re-renders
+after a mid-factory-view narrow/wide round trip.
+
+**However — "no lost session state" does NOT fully hold**, and this is worth flagging even
+though it does not fail any written AC (the ACs are silent on resize-during-play). Because
+the width gate's early return sits in `App.jsx` **above** the `view === 'play'` branch,
+narrowing below 1024px while a player is *actively mid-exercise* unmounts `GameScreen` (and
+its child `TypingSurface`, which owns its own `pos`/`errorAt` local state — `src/ui/
+TypingSurface.jsx` lines 11-12) entirely, not just re-skins it. Concretely reproduced: typed
+2 correct characters into a live exercise ("ng" of "ng fi fc fg ff tde", confirmed via
+`.tchar.done`, screenshot `11-mid-word-before-resize.png`), resized 1360→700→1360, and the
+app returned to a **different, freshly-generated exercise** ("et fs fu fr ff ter") with typed
+progress at zero (`12-mid-word-after-roundtrip.png`) — visually confirmed by eye, not just
+asserted. The current exercise's combo/live-accuracy/exam-in-progress state (all local to
+`GameScreen`, e.g. `examMode` with its `startedAt`) would be lost the same way. To be fair
+to the design: no *persisted* progress is lost (coins/buildings/profile are only committed
+to `game`/localStorage at exercise-completion boundaries, untouched here), and this is the
+same class of loss a page reload mid-exercise already causes today — but a reload is a
+deliberate act, whereas a window narrowing below 1024px (e.g. an OS snap-to-half-screen,
+or a monitor/multi-window drag) is easy to trigger by accident while still holding intent to
+keep playing. **Net ruling: state-safe in the sense that matters most (no crash, no save
+corruption, no leaked intervals — `GameScreen`'s production-tick `setInterval` cleans up
+correctly on unmount) but not fully state-safe in the session-continuity sense the question
+asked about.** This is a real, narrow-scope, low-probability UX rough edge, not a blocker —
+filed separately as assignment 117 rather than bouncing 106, since it is a newly-surfaced
+consequence of a design choice, not a violation of any of 106's own written acceptance
+criteria.
+
+Commit under test: `e89dc1c` (dev/106, tick #39). Tester worktree: `C:\companies\typcoon-lanes\v106`
+(branch `verify/106`).
