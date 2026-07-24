@@ -208,16 +208,11 @@ const STRINGS = {
   'factory.navButton': '🏭 Fabriek',
   'factory.backButton': '← Typen',
 
-  // doel-sliver (assignment 073): het ÉNE zichtbare doel op de rustige typweergave,
-  // gevoed door nextGoal (071) — zie design/DESIGN-FACTORY.md §5a/§6. Letterlijke
-  // tekst uit de spec, ongeacht het soort doel (machine/mijlpaal/upgrade/ster).
-  'goal.sliverLabel': 'JE VOLGENDE MACHINE',
-  'goal.remaining': 'nog {n}',
-
   // fabriekspagina "Het Bouwplan" (assignment 074): roadmap + spotlit doel +
   // objectieven-rij — zie design/DESIGN-FACTORY.md §5b/§6. `goal.spotKicker`/
-  // `goal.togoLine` gelden voor élk doel-soort (build/levelup/upgrade/prestige),
-  // niet alleen machines — vandaar generieker dan `goal.sliverLabel`.
+  // `goal.togoLine` gelden voor élk doel-soort (build/levelup/upgrade/prestige).
+  // (083: de typweergave's eigen doel-sliver, met `goal.sliverLabel`/`goal.remaining`,
+  // is verwijderd — het doel leeft nu alleen hier, op de fabriekspagina.)
   'goal.spotKicker': 'JE VOLGENDE DOEL',
   'goal.togoLine': 'nog {n} munten — dat haal je in {effort}',
   'goal.effort': '± {n} opdrachten',
@@ -536,9 +531,6 @@ const STRINGS_EN = {
   'factory.title': 'Your factory',
   'factory.navButton': '🏭 Factory',
   'factory.backButton': '← Typing',
-
-  'goal.sliverLabel': 'YOUR NEXT MACHINE',
-  'goal.remaining': '{n} to go',
 
   'goal.spotKicker': 'YOUR NEXT GOAL',
   'goal.togoLine': '{n} coins to go — about {effort} away',
