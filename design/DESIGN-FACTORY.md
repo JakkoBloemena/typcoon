@@ -64,6 +64,30 @@ world_pass:
     states: design/factory-mocks/world-states.html          # empty/loading/offline/long-text
     competitors: [design/factory-mocks/world-A-werkvloer.html, design/factory-mocks/world-B-skyline.html]
     renders: design/factory-mocks/world-*.png
+
+# --- PLACE PASS (assignment 114, ADR 013 flywheel intake 076). Turns the verified
+# world-C Maquette from a "blueprint SCHEMATIC" into a PLACE. Body: see "PART III —
+# PLACE PASS". Adds ZERO new :root tokens; every atmosphere element is a var(--token)
+# or color-mix() OF a token, so a [data-theme] swap re-tints the whole desk for free
+# (verified in all 4 themes). Supersedes only the world-C .hal BACKGROUND + the belt
+# TIMING; every world-C surface (machines/ledger/ticket/werkbank/floor/horizon) is
+# unchanged. Gates the 115 build; reconciles the 091 belt. ---
+place_pass:
+  authority: [decisions/012, decisions/013, decisions/015]
+  intake: company/research/076-playtest-critique.md   # "clean blueprint, not a place"
+  theme: "from blueprint to place"
+  selected_direction: "De Werktafel — the Maquette as a scale model on a lit maker's drafting desk"
+  ranked_not_scored: "1) B De Werktafel  2) C De Modelstad  3) A Onder de Kap (pairwise, independent critic — see PART III W9)"
+  concept_ref: "an architect's scale model on a lit drafting table — a LEGO/model-railway baseplate a kid leans over (grows W2's own stated reference into the backdrop itself)"
+  adds_no_root_tokens: true
+  supersedes: "world-C .hal BACKGROUND only + belt TIMING (1.1s -> 5.5s); all other world-C surfaces unchanged"
+  belt_091: "laid on the warm-lit FRONT lane between adjacent BUILT machines; beltDrift re-timed to 5.5s (barely-there); carries NO coins (guardrail 2)"
+  mocks:
+    winner: design/factory-mocks/world-C-maquette-place.html   # De Werktafel, all 4 themes via ?theme=
+    competitors: [design/factory-mocks/place-A-onderdekap.html, design/factory-mocks/place-C-modelstad.html]
+    renders: design/factory-mocks/world-place-winner-*.png     # muntpers/nachtploeg/snoepfabriek/diepzee
+    direction_renders: design/factory-mocks/dir-place-*-muntpers.png
+  shoot_harness: qa-scripts/114-shoot.mjs                       # static serve :4289 + playwright, ?theme= sweep
 ---
 
 # Typcoon — de fabriekspagina + de rustige typweergave
@@ -712,3 +736,290 @@ presentation-only slices; slices 1–2 are small and close two open defects on t
   re-decided.
 - **Free tier complete.** The default Muntpers world + the free machines render fully; the
   plan shows what more exists as ghosts (invitation, not a wall).
+
+---
+---
+
+# PART III — PLACE PASS (assignment 114 · authority ADR 012 + ADR 013 + ADR 015)
+
+**History note.** PART II shipped the Maquette diorama (079/085–088, verified by 076). The
+076 playtest confirmed it *lands the direction* but named the ADR-013 "ultimate experience"
+gap it does not yet clear: *"the diorama is a clean, legible blueprint schematic — grid
+background, one horizon line, no sky, weather, parallax, or background dressing… a good UI
+for 'growing,' but it doesn't yet read as a place."* PART III closes that specific gap. It is
+**additive**: it changes only the `.hal` **background** and the belt **timing**; every world-C
+surface (machines, ledger, build ticket, werkbank, tilted floor, horizon, all handlers/state
+logic) is **unchanged**. Where PART III and PART II conflict on the `.hal` backdrop, PART III
+wins. The base token system — colour, type, the 051/052 theme cascade — is **unchanged**, and
+this pass adds **ZERO new `:root` tokens** (the hard cap from milestone-factory §10 / ADR 015).
+
+## W9. Three place directions, chosen by pairwise comparison
+
+The honest axis this pass frees is *"what PLACE is this diorama sitting in?"* — the palette is
+pinned, depth/near-far is already solved by world-C, so the freedom is the **backdrop
+concept**. Three genuinely distinct places were built as real, font-loaded HTML on the shipped
+`_base.css` token layer, each embedding the four `[data-theme]` blocks and rendered at desktop
+scale (1360px). All keep the machines/ledger/ticket/werkbank **identical**; they differ only
+in the backdrop.
+
+- **A — "Onder de Kap"** (`place-A-onderdekap.html`): you did not open a diagram, you **walked
+  into a lit factory hall** — a back wall with a big daylight window, a ceiling beam, and two
+  work-lamps hanging on cords whose warm pools light the machines. Scale from architecture.
+- **B — "De Werktafel"** (`place-B-werktafel.html`) · **WINNER**: the diorama is a **scale
+  model on a lit maker's drafting desk** — a physical table surround frames the baseplate, a
+  `MAQUETTE 1:50` tag is pinned to the corner, a ruled front lip and a pencil lie at model
+  scale, and a soft warm workshop wash lights the front. Scale from the props; the kid is the
+  **maker**. This grows W2's own stated reference ("an architect's scale model on a drafting
+  table, a LEGO/model-railway baseplate a kid leans over") from a private note into the
+  rendered backdrop.
+- **C — "De Modelstad"** (`place-C-modelstad.html`): the factory is a **district in a model
+  city** under a dusk sky (built entirely from `--night`/`--panel-2`/`--bg-wash`/`--bg-grid`,
+  **never `--sky`**), with a blue-line silhouette skyline receding into an atmospheric haze
+  band. Depth from atmospheric perspective; scale from the skyline. Cleverly extends the
+  confirmed "blue-line = not-yet-built" grammar to a whole future skyline.
+
+**Selection — pairwise, ranked not scored (PROTOCOL §3).** An independent critic compared
+head-to-head with both renders and source, no numeric scores:
+- **A vs B → B.** Both say "these are miniatures you built," but B's cues actually *render* (the
+  framed desk, the `1:50` tag, the ruler, the pencil are unmistakable) while A's headline cues
+  don't (the "big window" is masked to near-invisibility; the beam is a hairline) — A ends up
+  the *least-transformed* of the three, closest to the bare schematic. Worse, a full walk-in
+  hall (human scale) **contradicts** the miniature read the plinths, tilted grid, and blue-line
+  ghosts all assert; B's frame *reinforces* it.
+- **A vs C → C, not close.** C actually delivers the brief's stated goal — backdrop, scale,
+  depth — and honours the `--sky` cap; A spends the most chrome for the least "place."
+- **B vs C → B.** The decisive pairing, decided on the anti-default test. C is the textbook
+  generic answer to "add atmosphere to a diorama" — a dusk gradient + haze + silhouette skyline
+  — the thing *any* model produces. B is the decision only *this* product's own confirmed
+  reference could yield. B is also the **more restrained** backdrop ("restraint is the tell,"
+  W3): a frame + three props + one wash, versus C's twelve lit skyline buildings competing for
+  attention behind the machines (C is the closest of the three to screensaver territory). B
+  solves *scale* structurally (the frame bounds the diorama as a physical object) rather than by
+  piling on backdrop.
+
+**Ranking: 1) B — De Werktafel  2) C — De Modelstad  3) A — Onder de Kap. Winner: B.**
+The losing costs, paid honestly: **C** is real and clever (the blue-line skyline is genuinely
+on-grammar) but is fundamentally the default move and the busiest backdrop; **A** delivers the
+least transformation *and* fights the established miniature grammar. The critic's one required
+change for the winner — the drafting-lamp fixture read as an ambiguous streak and its pool blew
+a hotspot onto one machine — was **taken**: the literal fixture is **dropped**, replaced by a
+broad, low, soft warm wash with no hotspot (W10 `.warmth`). The frame + `1:50` tag + ruler +
+pencil carry the concept without it. (Flattery is a defect, ADR 013: A and C are named for
+what they are; the winner shipped its critique fix rather than defending the render.)
+
+## W10. Winner spec — "De Werktafel" backdrop layers (exact recipes for 115)
+
+Reference to hold in your head (specific, not a generic adjective): **a kid's LEGO/model-
+railway baseplate sitting on a maker's drafting desk under a warm work-light** — the machines
+are miniatures you placed and switched on; the desk around them is where you, the builder, lean
+in. Winner mock: `design/factory-mocks/world-C-maquette-place.html` (the load-bearing scope
+reference — build to it). Everything below is **CSS only, on existing tokens**.
+
+**The build is: wrap the existing `.hal` in a `.desk`, restyle the `.hal` background, and add
+four child layers (`.scaletag`, `.warmth`, `.ruler`, `.pencil`).** Nothing else moves.
+
+### W10a. `.desk` — the physical tabletop surround (NEW wrapper around `.hal`)
+```css
+.desk{position:relative;margin-top:var(--s3);padding:22px 26px 26px;border-radius:calc(var(--r-lg) + 8px);
+  border:3px solid var(--sink);
+  background:
+    /* faint diagonal grain = a physical tabletop, not a UI panel */
+    repeating-linear-gradient(46deg, transparent 0 22px, color-mix(in srgb,var(--sink) 40%, transparent) 22px 23px),
+    linear-gradient(180deg, color-mix(in srgb,var(--panel-2) 82%, black), color-mix(in srgb,var(--sink) 70%, var(--panel-2)));
+  box-shadow:0 12px 0 var(--sink), inset 0 2px 0 color-mix(in srgb,var(--paper) 8%, transparent)}
+```
+The existing `.hal` is nested inside `.desk` and keeps its own border/radius (it becomes the
+baseplate resting on the table). `.hal` loses world-C's radial ceiling-glow background and
+takes a plainer desk-context gradient (still 100% token-derived):
+```css
+.hal{ /* geometry/box-shadow unchanged from world-C */
+  background:linear-gradient(180deg, color-mix(in srgb,var(--night) 86%, black) 0%, var(--night) 45%, var(--panel-2) 100%);}
+```
+
+### W10b. `.scaletag` — the pinned "MAQUETTE 1:50" corner tag (the scale cue, data face)
+```css
+.scaletag{position:absolute;top:12px;left:24px;z-index:6;font-family:var(--data);font-weight:800;letter-spacing:.12em;
+  font-size:.6rem;color:var(--ink-dim);background:var(--night);border:1px solid var(--line);border-radius:6px;
+  padding:4px 9px;box-shadow:0 3px 0 var(--sink)}
+.scaletag b{color:var(--brass)}   /* the "1:50" */
+```
+Pin it to the top-left of `.desk` (over the baseplate corner). Copy: `MAQUETTE <b>1:50</b>`.
+
+### W10c. `.warmth` — the soft workshop wash (the "lit & alive at rest" atmosphere)
+A broad, low, soft pool of warm light across the FRONT of the baseplate. **No hotspot on any
+one machine** — this is the fix for the critic's blown-out-Drukpers note. It sits **above the
+grid, below the machines** (`z-index:1`, DOM-ordered right after `.floor`) so it can never wash
+out a machine's own contrast.
+```css
+.warmth{position:absolute;left:0;right:0;bottom:-30px;height:62%;z-index:1;pointer-events:none;
+  background:radial-gradient(78% 100% at 42% 118%,
+    color-mix(in srgb,var(--bg-wash) 130%, transparent) 0,
+    color-mix(in srgb,var(--bg-wash) 60%, transparent) 38%,
+    transparent 66%);
+  animation:warmBreath 8s ease-in-out infinite}
+@keyframes warmBreath{0%,100%{opacity:.72}50%{opacity:1}}
+```
+Because `--bg-wash` is a theme hook (052), the wash is candy-pink in Snoepfabriek, coral in
+Diepzee, violet in Nachtploeg — for free. It is deliberately whisper-subtle (restraint, W3):
+the desk frame + props carry the transformation; the wash only *warms* it.
+
+### W10d. `.ruler` + `.pencil` — the model-scale props (deliver "scale" concretely)
+```css
+.ruler{position:absolute;left:5%;right:5%;bottom:12px;height:16px;z-index:4;border-radius:3px;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb,var(--paper) 42%, transparent) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg, color-mix(in srgb,var(--panel) 92%, var(--paper)), var(--panel-2));
+  border:1px solid var(--line);box-shadow:0 2px 0 var(--sink)}
+.ruler::after{content:'';position:absolute;left:0;right:0;top:4px;height:6px;
+  background:repeating-linear-gradient(90deg, color-mix(in srgb,var(--paper) 55%, transparent) 0 1px, transparent 1px 12px)}
+.pencil{position:absolute;left:15%;bottom:40px;width:112px;height:9px;z-index:4;transform:rotate(-7deg);border-radius:3px 2px 2px 3px;
+  background:linear-gradient(90deg,var(--brass) 0 78%, color-mix(in srgb,var(--paper) 70%,var(--brass)) 78% 90%, var(--sink) 90%);
+  box-shadow:0 3px 5px color-mix(in srgb,black 50%,transparent)}
+.pencil::before{content:'';position:absolute;left:-11px;top:-3px;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-right:12px solid color-mix(in srgb,var(--paper) 78%,var(--brass))}  /* wood tip */
+.pencil::after{content:'';position:absolute;left:-4px;top:-1px;width:0;height:0;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:5px solid var(--sink)}  /* graphite point */
+```
+The ruler is the near lip of the baseplate; the pencil lies on the desk at model scale next to
+the machines — a pencil beside a machine reads instantly as "this machine is a miniature." Both
+are decorative (no text, no interaction) and both re-tint per theme (all values are tokens).
+
+### W10e. Layer order (z-index — so the atmosphere never fights the play surface)
+`floor 1` · `warmth 1` (DOM after floor) · `horizon 1` · `belt 2` · `ghost 2` · `mch`/`plot 3`
+· `ruler`/`pencil 4` · `scaletag 6`. Rule for 115: **anything readable or interactive stays at
+z ≥ 3; all atmosphere is z ≤ 2 except the two flat props (z 4) and the tag (z 6), which carry
+no machine text.** This is what guarantees the AA note in W13 by construction.
+
+## W11. How depth & scale are conveyed (the two cues the critique named as missing)
+
+- **Scale — solved by the frame + props, not by shrinking the machines.** The `.desk` surround
+  *bounds* the diorama as a physical object you lean over; the `MAQUETTE 1:50` tag names it a
+  model; the ruler and pencil sit at model scale beside the machines. A kid reads "these are
+  miniatures I built and can pick up" — the "sense of scale" ADR 012 asked for, with the least
+  ink (restraint).
+- **Depth — inherited from world-C, now grounded.** The near/far depth (front = big/built/warm,
+  horizon = small/flat/blue-line) is **unchanged** (W2a/W2c). What the place pass adds is a
+  *reason* for the depth: the warm wash lights the FRONT (where the live edge of your factory
+  is) and falls off toward the back, so near/far now reads as lit-foreground vs cool-distance,
+  not just big vs small. The tilted `.floor` grid and `.horizon` are untouched.
+
+## W12. Ambient dressing inventory (what exists, where) + the belt reconciliation (091)
+
+Everything ambient on the place-pass factory, and nowhere else:
+| Element | Where | Purpose | Motion |
+|---|---|---|---|
+| `.warmth` wash | front of baseplate, `z1` | "workshop is lit & alive at rest" | `warmBreath` 8s |
+| `.ruler` | front lip of baseplate, `z4` | scale prop (near edge) | none (static) |
+| `.pencil` | on the desk beside machines, `z4` | scale prop ("these are models") | none (static) |
+| `.scaletag` | desk top-left corner, `z6` | scale cue ("1:50") | none (static) |
+| `.belt` (091) | front lane between built machines, `z2` | model conveyor, decorative | `beltDrift` 5.5s |
+| `.mch .ico` | on each built plinth, `z3` | machines warm-alive | `idleBob` 5.5/6.4s staggered |
+| `.plot .pad` | the NU BOUWEN plot, `z3` | "build here" invitation | `plotGlow` 3.4s |
+
+**The belt (assignment 091) is designed here, not improvised.** In the winner it is a **model
+conveyor laid flat on the baseplate in the warm-lit FRONT lane, connecting adjacent BUILT
+machines** (`z-index:2` — above the floor/warmth, below the machines). Placement rule for 091
+(so it survives level/build changes, per W2c): the belt spans the horizontal gap between each
+pair of consecutive **built** machines in the front lane; it appears only where there are ≥2
+built machines adjacent; it is **never** drawn to a ghost or the plot. Recipe (re-timed from
+world-C's `beltDrift 1.1s`, which was too fast and drew the eye):
+```css
+.belt{position:absolute;height:14px;border-radius:8px;transform:translateY(-50%);z-index:2;
+  background:repeating-linear-gradient(90deg, var(--mint-deep) 0 11px, color-mix(in srgb,var(--mint-deep) 38%, var(--night)) 11px 22px);
+  border:1px solid var(--mint-deep);box-shadow:0 3px 0 var(--sink);animation:beltDrift 5.5s linear infinite}
+@keyframes beltDrift{to{background-position:22px 0}}   /* 22px / 5.5s ≈ 4px/s — barely-there */
+```
+**Guardrail 2 (no idle income) is visible in the belt's motion:** it drifts but carries **no
+coins, sparks, or parcels** — nothing spouts or is transported. It is decoration on a factory
+*at rest*; typing stays the only faucet. The belt colour is `--mint-deep` (production/good), so
+it re-tints per theme with everything else.
+
+## W13. Live-verifiable motion checklist (the deliverable the 076 stills could not judge)
+
+Each ambient motion, its intended *felt* read, and a concrete criterion the 115/next-playtest
+tester can **probe in the running app** (not guess from a screenshot). All are **factory-page
+only**; the typing view's zero-ambient-motion calm (ADR 011) is untouched.
+
+| # | Element / keyframe | Period | Intended FELT read | Live probe (pass criterion) |
+|---|---|---|---|---|
+| 1 | `.mch .ico` `idleBob` | 5.5s (odd machines 6.4s, delay −1.8s) | machines breathe, **warm-alive at rest**; never in lockstep (lockstep = machine-made) | Watch two built machines ~10s: their bobs must be **visibly out of phase**, slow (~5–6s cycle), tiny (~4px). If they peak together or bounce fast → fail. |
+| 2 | `.warmth` `warmBreath` | 8s | the workshop light **gently breathes**; you notice it only if you look | The front warmth slowly brightens/dims over ~8s. Must **not** flash, strobe, or pull the eye. If it reads as a pulsing glow → fail. |
+| 3 | `.plot .pad` `plotGlow` | 3.4s | "**build here**" invitation, a soft glow, **not** a notification pulse-shout | The NU BOUWEN plot glows in/out softly. Clearly calmer than an alert pulse. |
+| 4 | `.belt` `beltDrift` (091) | 5.5s linear | **barely-there** conveyor drift, alive-at-rest, **never draws the eye**, **carries no coins** | Stripes crawl ~4px/s. If it looks like a running treadmill → too fast. Confirm **nothing** rides the belt (guardrail 2). |
+| 5 | `.mch`/`.plot`/`.ghost` `riseIn` | 380ms (`--dur-arrive`), one `--pop` spring, staggered ~60ms, **loops NEVER** | "**walking into your factory**" — models rise onto the baseplate once on arrival, then still | Navigate typing → factory: models rise once (staggered), then **hold still**. They must **not** loop or re-trigger while you sit on the page. |
+
+**Reduced-motion resting state (required — every animation's still state is the FINISHED
+surface).** `game.css`'s global `@media (prefers-reduced-motion: reduce)` zeroes animation
+duration+iteration; the design rule that makes that correct here:
+| Element | Frozen (reduced-motion) state | Is the surface complete? |
+|---|---|---|
+| `.mch .ico` (idleBob) | `translateY(0)` — machine standing | ✔ machine fully present |
+| `.warmth` (warmBreath) | `opacity:.72` — wash visible | ✔ workspace still lit |
+| `.plot .pad` (plotGlow) | mid glow (~26px inset) — plot glowing | ✔ "build here" still legible |
+| `.belt` (beltDrift) | `background-position:0` — static stripes | ✔ belt fully drawn |
+| `.mch/.plot/.ghost` (riseIn, `fill-mode:backwards`) | final placed state | ✔ everything already risen/inked |
+
+A reduced-motion kid sees the **complete, warm, lit factory instantly** — no state, affordance,
+or scale cue is conveyed by motion alone; they lose only the flourish. Tester: confirm with OS
+reduced-motion ON that nothing is missing and nothing is stuck mid-animation.
+
+## W14. Token discipline, 4-theme + AA evidence, scope caps (the invariants recorded IN the spec)
+
+- **Zero new `:root` tokens.** Verified: `qa-scripts/114-shoot.mjs` token-hygiene grep on the
+  winner shows **no raw `rgba()` in any style rule** (the only `rgba()` is in the three
+  `[data-theme]` token *definitions*, verbatim from `game.css`), **no hex in styling** except
+  the inherited `#000` in the build-ticket ring **alpha-mask** (not a rendered colour), and
+  **`var(--sky)` only** in the ledger star context (the documented W6 exception) and the
+  prestige `.tool.star` tile — **never in the backdrop.**
+- **Tints/glows are `color-mix(in srgb, var(--token) N%, transparent)` (or a token mixed toward
+  `black`/`white` for a shade)** — never raw rgba. So a `[data-theme]` swap re-tints the desk,
+  wash, ruler, pencil, tag, and belt for free.
+- **4-theme verification evidence (rendered, not intent).** The winner was screenshotted in all
+  four themes: `design/factory-mocks/world-place-winner-{muntpers,nachtploeg,snoepfabriek,
+  diepzee}.png`. Every atmosphere element re-tints correctly (Muntpers brass, Nachtploeg violet,
+  Snoepfabriek hot-pink, Diepzee coral) with no per-theme work.
+- **AA contrast preserved — by construction, and checked rendered.** The place pass adds **no
+  new text over the raw backdrop**: every string still sits on a world-C panel (plinth, ticket,
+  werkbank, ledger) whose colours are unchanged and already AA-verified (089/092). The one new
+  overlay, `.warmth`, sits **behind** the machine layer (`z1` < `z3`), so it cannot lower any
+  label's contrast; confirmed legible in all four renders. New atmosphere elements
+  (`.desk`/`.ruler`/`.pencil`/`.scaletag`/`.belt`) are decorative — the only text among them is
+  the `1:50` tag (`--brass`/`--ink-dim` on `--night`, the same pairing the ledger already uses
+  and contrast-checks in `qa-scripts/contrast-052.mjs`).
+- **Scope caps (recorded so the build cannot over-reach — milestone-factory §10 / ADR 015):**
+  no new `:root` tokens · no weather/day-night/time engine · no crowd simulation · no runtime
+  system / asset pipeline / spend (this is pure CSS on the pinned token layer) · `--sky` stays
+  prestige-only · desktop/keyboard only, **no mobile/narrow reflow** (narrow desktop windows are
+  106's width-hint gate, not this pass) · the **typing view is untouched**.
+
+## W15. Reuse vs replace — the build delta vs the world-C Maquette (for 115)
+
+**Reused verbatim (no change):** the entire token layer + themes; `economy.js`/`goals.js` and
+all buy/upgrade/rebirth handlers; the per-machine state logic (built/plot/ghost); the machine
+plinths, cast shadows, status lights, badges; the ledger (070), the BOUWBON build ticket
+(W2e), the werkbank (W2f, incl. the 080 `hyphens:auto` fix); the tilted `.floor` grid + `.horizon`;
+`idleBob`/`plotGlow`/`riseIn` and their staggers.
+
+**Added (atmosphere only, presentation — all CSS on existing tokens):**
+1. Wrap the existing `.hal` in a `.desk` surround (W10a) + restyle the `.hal` background.
+2. `.scaletag` corner tag (W10b).
+3. `.warmth` front wash layer (W10c).
+4. `.ruler` + `.pencil` scale props (W10d).
+
+**Changed (not added):** the `.belt` `beltDrift` period **1.1s → 5.5s** and its placement rule
+(W12, closes 091 coherently on the finished backdrop).
+
+**Optional (defer to PO, NOT required for the CSS build):** the stagehead kick copy
+`Jouw fabriek → Jouw maquette` reinforces the model frame but is a `strings.js` change, not
+CSS; the desk visuals carry the maquette read without it. Keep `Jouw fabriek` unless the PO
+wants the meta-frame.
+
+**Buildable slices (de-risked order) for 115:**
+- **Slice 1 — the desk.** Wrap `.hal` in `.desk` + `.scaletag` + the `.hal` background swap.
+  This alone flips "schematic" → "model on a desk."
+- **Slice 2 — the warm wash** (`.warmth`) + confirm it sits `z1` behind machines.
+- **Slice 3 — the scale props** (`.ruler` + `.pencil`).
+- **Slice 4 — belt re-time + placement** (091 lands here, `blocked_by:[115]`).
+- **Slice 5 — verify:** the W13 motion checklist live, reduced-motion resting states, all four
+  themes, and re-run the token-hygiene grep (no raw hex/rgba in styling, no backdrop `--sky`).
+No economy, engine, `store.js`, or `theme.js` change; `npm test` stays green (presentation
+only). Hold the build against `design/factory-mocks/world-C-maquette-place.html` and the four
+`world-place-winner-*.png` renders.

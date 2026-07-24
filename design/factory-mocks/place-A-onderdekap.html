@@ -1,0 +1,284 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Place-pass A — Onder de Kap (de fabriekshal om je heen)</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* ============================================================================
+   PLACE-PASS DIRECTION A — "ONDER DE KAP" (inside a lit factory hall)
+   Atmosphere concept: you did not open a diagram, you WALKED INTO a building.
+   The diorama floor is kept verbatim (085/089); around it we build the HALL:
+   a back wall with a big daylight window, roof trusses overhead, and hanging
+   work-lamps whose warm pools are where the machines stand. Scale comes from the
+   architecture dwarfing the machine models. Depth = near floor -> lit window at
+   the back. Every colour is a var(--token) or color-mix() OF a token (W6); no raw
+   hex, no --sky. Desktop/keyboard only (ADR 012/015): designed 1360px, >=1024px.
+   ============================================================================ */
+[data-theme='nachtploeg']{--night:#170a34;--panel:#271552;--panel-2:#1e0f42;--line:#5233a0;--brass:#b491ff;--brass-hi:#d3beff;--brass-deep:#6a3fce;--mint:#3ee8ad;--mint-deep:#159f74;--flame:#ff6f8a;--sky:#63d6ff;--sky-deep:#2f9cc4;--paper:#f3efff;--ink-dim:#b8a6ec;--on-accent:#1c0a3e;--sink:#0b0522;--bg-wash:rgba(180,145,255,0.07);--bg-grid:rgba(150,110,255,0.09)}
+[data-theme='snoepfabriek']{--night:#2c1030;--panel:#42184a;--panel-2:#371441;--line:#7a3576;--brass:#ff5ea8;--brass-hi:#ff9ecb;--brass-deep:#c23a7a;--mint:#4ce0a6;--mint-deep:#1f9f6f;--flame:#ff5c5c;--sky:#8bb6ff;--sky-deep:#4f74c8;--paper:#fff1f8;--ink-dim:#e2a3cd;--on-accent:#4a0a2a;--sink:#1c0820;--bg-wash:rgba(255,94,168,0.07);--bg-grid:rgba(255,140,190,0.08)}
+[data-theme='diepzee']{--night:#06201f;--panel:#0e3733;--panel-2:#0a2b28;--line:#1f645b;--brass:#ff8a6b;--brass-hi:#ffb59c;--brass-deep:#c2502f;--mint:#37e6b6;--mint-deep:#159f7e;--flame:#ff6f6f;--sky:#4fd4ff;--sky-deep:#2f9cc4;--paper:#e9fffb;--ink-dim:#7fcabb;--on-accent:#3d1105;--sink:#041413;--bg-wash:rgba(255,138,107,0.06);--bg-grid:rgba(79,212,255,0.08)}
+
+body{overflow-x:hidden}
+.stage{max-width:1360px;margin:0 auto;padding:var(--s5) var(--s5) var(--s6)}
+
+/* ---- top chrome: title + control-desk LEDGER (070) — unchanged from world-C ---- */
+.stagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s5);margin-bottom:var(--s4);flex-wrap:wrap}
+.stagehead .titles .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.18em;font-size:.72rem;color:var(--ink-dim)}
+.stagehead .titles h1{font-size:2.4rem;color:var(--paper);margin:2px 0 0;line-height:1}
+.stagehead .titles h1 b{color:var(--brass)}
+.built-tag{display:inline-block;margin-top:8px;font-family:var(--data);font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--mint);background:var(--night);border:2px solid var(--mint-deep);border-radius:999px;padding:5px 13px;font-size:.82rem}
+.ledger{display:flex;gap:var(--s3);align-items:center;background:var(--panel);border:3px solid var(--line);
+  border-radius:var(--r-lg);padding:10px 14px;box-shadow:0 6px 0 var(--sink)}
+.ledger .cell{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05;padding:0 8px}
+.ledger .cell+.cell{border-left:2px solid var(--line)}
+.ledger .lab{font-family:var(--data);text-transform:uppercase;letter-spacing:.1em;font-size:.6rem;color:var(--ink-dim);font-weight:800}
+.ledger .val{font-family:var(--data);font-variant-numeric:tabular-nums;font-weight:800;font-size:1.25rem}
+.ledger .val.money{color:var(--reward);display:inline-flex;align-items:center;gap:7px}
+.ledger .val.money .coin{width:18px;height:18px}
+.ledger .val.rate{color:var(--mint)}
+.ledger .val.star{color:var(--sky)}
+
+/* ============================================================================
+   THE HALL — the factory as a building you stand inside.
+   ============================================================================ */
+.hal{position:relative;height:500px;margin-top:var(--s3);
+  border:3px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 10px 0 var(--sink), inset 0 40px 90px color-mix(in srgb, var(--night) 82%, black);
+  background:
+    radial-gradient(120% 80% at 50% -6%, var(--bg-wash), transparent 52%),
+    linear-gradient(180deg, color-mix(in srgb,var(--night) 72%, black) 0%, var(--night) 40%, var(--panel-2) 100%);}
+
+/* --- ceiling beam: one low header across the top = you are UNDER a roof (restraint:
+       a single beam, not a truss field, keeps the hall calm not busy) --- */
+.beam{position:absolute;left:0;right:0;top:0;height:26px;z-index:1;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--sink) 70%, transparent), transparent);
+  border-bottom:2px solid color-mix(in srgb,var(--line) 45%, transparent)}
+
+/* --- back wall: a big lit factory window (mullion grid + warm daylight glow) --- */
+.window{position:absolute;left:16%;right:16%;top:12%;height:30%;z-index:1;border-radius:6px;
+  border:3px solid color-mix(in srgb,var(--line) 85%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--bg-wash) 130%, transparent), color-mix(in srgb,var(--panel) 70%, transparent) 75%),
+    repeating-linear-gradient(90deg, transparent 0 56px, color-mix(in srgb,var(--line) 80%, transparent) 56px 60px),
+    repeating-linear-gradient(0deg, transparent 0 44px, color-mix(in srgb,var(--line) 65%, transparent) 44px 47px);
+  box-shadow:0 0 90px color-mix(in srgb,var(--bg-wash) 130%, transparent), inset 0 0 40px color-mix(in srgb,var(--bg-wash) 90%, transparent);
+  -webkit-mask-image:linear-gradient(180deg,black 70%,transparent);mask-image:linear-gradient(180deg,black 70%,transparent)}
+.window::after{content:'';position:absolute;left:-4px;right:-4px;bottom:-6px;height:4px;border-radius:2px;
+  background:color-mix(in srgb,var(--line) 90%, transparent)}
+
+/* the receding grid floor — verbatim from world-C (085/089) */
+.floor{position:absolute;left:-20%;right:-20%;bottom:-40px;height:340px;z-index:1;
+  transform:perspective(560px) rotateX(56deg);transform-origin:bottom center;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 39px, var(--bg-grid) 39px 40px),
+    repeating-linear-gradient(0deg,  transparent 0 39px, var(--bg-grid) 39px 40px);
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, black 45%);
+  mask-image:linear-gradient(180deg, transparent 0, black 45%);}
+.horizon{position:absolute;left:0;right:0;top:40%;height:2px;z-index:1;background:color-mix(in srgb, var(--line) 70%, transparent);
+  box-shadow:0 0 30px 6px color-mix(in srgb, var(--bg-grid) 60%, transparent)}
+
+/* --- hanging work-lamps: a drop line + a lamphead + a warm floor POOL where the
+       machines stand. The pool breathes very slowly = the hall is warm and alive. --- */
+.lamp{position:absolute;top:26px;width:2px;height:120px;z-index:2;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--line) 80%, transparent),color-mix(in srgb,var(--line) 35%, transparent))}
+.lamp .head{position:absolute;bottom:-14px;left:-19px;width:40px;height:20px;border-radius:5px 5px 22px 22px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--line) 60%, black),var(--sink));
+  border-bottom:3px solid var(--brass)}
+.lamp .head::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:22px;height:7px;border-radius:50%;
+  background:var(--brass-hi);box-shadow:0 0 16px 4px color-mix(in srgb,var(--brass) 70%, transparent)}
+.lamp .pool{position:absolute;top:120px;left:50%;transform:translateX(-50%);width:300px;height:190px;z-index:0;
+  background:radial-gradient(ellipse 50% 55% at center top, color-mix(in srgb,var(--bg-wash) 120%, transparent), transparent 70%);
+  animation:lampGlow 7.5s ease-in-out infinite}
+.lamp:nth-of-type(odd) .pool{animation-duration:8.6s;animation-delay:-2.4s}
+@keyframes lampGlow{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* ---- machine models on the floor — verbatim from world-C ---- */
+.mch{position:absolute;transform:translateX(-50%);text-align:center;width:150px;z-index:3}
+.mch .plinth{position:relative;width:118px;margin:0 auto;border-radius:18px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));border:2px solid var(--mint-deep);
+  box-shadow:0 8px 0 var(--sink), 0 14px 20px color-mix(in srgb, black 45%, transparent);padding:14px 8px 10px}
+.mch .glass{position:absolute;inset:6px 6px auto 6px;height:34px;border-radius:12px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--paper) 12%, transparent), transparent);pointer-events:none}
+.mch .ico{font-size:2.9rem;line-height:1;display:block;filter:drop-shadow(0 4px 6px color-mix(in srgb,black 55%,transparent));animation:idleBob 5.5s ease-in-out infinite}
+.mch:nth-child(odd) .ico{animation-duration:6.4s;animation-delay:-1.8s}
+.mch .status{position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--mint);
+  box-shadow:0 0 10px 2px color-mix(in srgb,var(--mint) 70%, transparent)}
+.mch .plate{margin-top:9px;font-weight:800;font-size:.95rem;color:var(--paper)}
+.mch .lv{font-family:var(--data);font-weight:800;font-size:.74rem;color:var(--brass)}
+.mch .rate{font-family:var(--data);font-weight:700;font-size:.74rem;color:var(--mint);font-variant-numeric:tabular-nums}
+.mch .cast{position:absolute;left:50%;bottom:-14px;width:120px;height:26px;transform:translateX(-50%);
+  background:radial-gradient(ellipse at center, color-mix(in srgb,black 55%,transparent), transparent 70%);z-index:-1}
+.mch .badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:3;
+  font-family:var(--data);font-weight:800;font-size:.6rem;background:var(--mint);color:var(--sink);border-radius:999px;padding:3px 9px}
+@keyframes idleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* the belt — a slow decorative rail linking built machines (091). Barely-there drift. */
+.belt{position:absolute;height:14px;border-radius:8px;transform:translateY(-50%);z-index:2;
+  background:repeating-linear-gradient(90deg, var(--mint-deep) 0 11px, color-mix(in srgb,var(--mint-deep) 38%, var(--night)) 11px 22px);
+  border:1px solid var(--mint-deep);box-shadow:0 3px 0 var(--sink);animation:beltDrift 5.5s linear infinite}
+@keyframes beltDrift{to{background-position:22px 0}}
+
+/* the next machine = a glowing brass foundation plot — verbatim from world-C */
+.plot{position:absolute;transform:translateX(-50%);width:158px;text-align:center;z-index:3}
+.plot .pad{position:relative;height:96px;border-radius:16px;border:3px dashed var(--brass);
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--brass) 12%, transparent), transparent),
+    repeating-linear-gradient(90deg, transparent 0 15px, color-mix(in srgb,var(--brass) 16%, transparent) 15px 16px);
+  box-shadow:inset 0 0 30px color-mix(in srgb,var(--brass) 22%, transparent);
+  display:grid;place-items:center;animation:plotGlow 3.4s ease-in-out infinite}
+@keyframes plotGlow{0%,100%{box-shadow:inset 0 0 26px color-mix(in srgb,var(--brass) 16%, transparent)}
+  50%{box-shadow:inset 0 0 40px color-mix(in srgb,var(--brass) 34%, transparent)}}
+.plot .ghosticon{font-size:2.6rem;opacity:.55;filter:grayscale(.3)}
+.plot .flag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--data);font-weight:800;font-size:.66rem;background:var(--brass);color:var(--on-accent);
+  border-radius:999px;padding:4px 12px;box-shadow:0 4px 0 var(--brass-deep)}
+.plot .pname{margin-top:9px;font-weight:800;color:var(--paper)}
+.plot .pnote{font-family:var(--data);font-size:.72rem;color:var(--brass);font-weight:700}
+
+/* locked = flat blue-line ghost drawing receding toward the window — verbatim */
+.ghost{position:absolute;transform:translateX(-50%);width:120px;text-align:center;opacity:.7;z-index:2}
+.ghost .draw{height:70px;border:2px dashed var(--line);border-radius:14px;display:grid;place-items:center;
+  background:repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb,var(--line) 22%, transparent) 7px 8px)}
+.ghost .draw .gi{font-size:2rem;filter:grayscale(1);opacity:.5}
+.ghost .gname{margin-top:6px;font-weight:800;font-size:.82rem;color:var(--ink-dim)}
+.ghost .glock{font-family:var(--data);font-size:.68rem;color:var(--ink-dim);font-weight:700}
+.ghost.premium .draw{border-color:color-mix(in srgb,var(--brass) 60%, var(--line))}
+
+/* arrival: models rise onto the floor, staggered — verbatim from world-C */
+@keyframes riseIn{from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.9)}
+  to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+.hal .mch,.hal .plot,.hal .ghost{animation-name:riseIn;animation-duration:var(--dur-arrive);animation-timing-function:var(--pop);animation-fill-mode:backwards}
+.hal .mch:nth-of-type(2){animation-delay:.06s}
+.hal .mch:nth-of-type(3){animation-delay:.12s}
+.hal .plot{animation-delay:.20s}
+.hal .ghost:nth-of-type(1){animation-delay:.28s}
+.hal .ghost:last-of-type{animation-delay:.34s}
+
+/* controls under the floor — verbatim from world-C */
+.controls{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:var(--s4);margin-top:var(--s5)}
+.ticket{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--s5);align-items:center;
+  padding:var(--s5);background:linear-gradient(135deg,var(--panel),var(--night));
+  border:2px solid var(--brass-deep);border-radius:var(--r-md);box-shadow:0 8px 0 var(--sink)}
+.ticket::before{content:'BOUWBON';position:absolute;top:-11px;left:20px;font-family:var(--data);font-weight:800;
+  font-size:.62rem;letter-spacing:.14em;color:var(--on-accent);background:var(--brass);border-radius:999px;padding:3px 10px}
+.ringwrap{position:relative;width:88px;height:88px;flex:none;display:grid;place-items:center}
+.ring{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(var(--goal) calc(var(--p,0)*1%), var(--panel-2) 0);
+  -webkit-mask:radial-gradient(circle 31px at center, transparent 98%, #000 100%);
+  mask:radial-gradient(circle 31px at center, transparent 98%, #000 100%)}
+.ringwrap .ri{position:relative;font-size:1.9rem}
+.ticket .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.68rem;color:var(--brass)}
+.ticket h3{font-size:1.55rem;margin:2px 0 4px;color:var(--paper)}
+.ticket .sub{color:var(--ink-dim);font-weight:700}
+.ticket .sub b{color:var(--mint);font-variant-numeric:tabular-nums}
+.ticket .togo{font-family:var(--data);font-weight:800;color:var(--paper);margin-top:8px;font-variant-numeric:tabular-nums}
+.ticket .togo b{color:var(--brass)}
+.buybig{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);
+  color:var(--on-accent);border:none;border-radius:var(--r-lg);padding:16px 30px;font-family:var(--data);font-weight:800;
+  font-size:1.3rem;box-shadow:0 6px 0 var(--brass-deep);cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+.coin{width:22px;height:22px}
+.werkbank{background:var(--panel-2);border:2px solid var(--line);border-radius:var(--r-md);padding:var(--s4);box-shadow:0 8px 0 var(--sink)}
+.werkbank .wlab{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.66rem;color:var(--ink-dim);font-weight:800;margin-bottom:var(--s3)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.tool{display:flex;gap:var(--s2);align-items:center;background:var(--night);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 10px}
+.tool .tc{flex:none;width:36px;height:36px;border-radius:10px;background:var(--panel);display:grid;place-items:center;font-size:1.15rem}
+.tool .ti{min-width:0;flex:1}
+.tool .tn{font-weight:800;font-size:.86rem;color:var(--paper);hyphens:auto;-webkit-hyphens:auto}
+.tool .tm{font-family:var(--data);font-size:.68rem;color:var(--ink-dim);font-weight:700}
+.tool .tbuy{flex:none;font-family:var(--data);font-weight:800;font-size:.78rem;color:var(--on-accent);
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);border:none;border-radius:var(--r-sm);
+  padding:6px 10px;box-shadow:0 3px 0 var(--brass-deep);cursor:pointer;font-variant-numeric:tabular-nums}
+.tool .tdone{flex:none;color:var(--mint);font-weight:800;font-size:1.05rem}
+.tool.owned{border-color:var(--mint-deep)}
+.tool.star{grid-column:1/-1;border-color:var(--sky-deep)}
+.tool.star .tpct{flex:none;font-family:var(--data);font-weight:800;color:var(--sky);font-variant-numeric:tabular-nums}
+.backbtn{margin-top:var(--s4);background:var(--panel-2);border:2px solid var(--line);color:var(--ink-dim);
+  font-weight:800;padding:9px 18px;border-radius:var(--r-sm);box-shadow:0 4px 0 var(--sink);cursor:pointer;font-family:inherit}
+</style></head>
+<body><div class="stage">
+
+  <div class="stagehead">
+    <div class="titles">
+      <div class="kick">Jouw fabriek</div>
+      <h1>Het <b>Bouwplan</b></h1>
+      <span class="built-tag">2 van 5 machines gebouwd</span>
+    </div>
+    <div class="ledger">
+      <div class="cell"><span class="lab">Munten</span><span class="val money"><span class="coin"></span>4.820</span></div>
+      <div class="cell"><span class="lab">Per seconde</span><span class="val rate">+66/s</span></div>
+      <div class="cell"><span class="lab">Sterren</span><span class="val star">⭐ 1</span></div>
+    </div>
+  </div>
+
+  <!-- THE HALL: a factory building you stand inside -->
+  <div class="hal">
+    <div class="beam"></div>
+    <div class="window"></div>
+    <div class="floor"></div>
+    <div class="horizon"></div>
+
+    <!-- hanging lamps whose pools light where the machines stand -->
+    <div class="lamp" style="left:20%"><span class="head"></span><span class="pool"></span></div>
+    <div class="lamp" style="left:44%"><span class="head"></span><span class="pool"></span></div>
+
+    <!-- built machines: near the front, big, running (belt between them) -->
+    <div class="belt" style="left:16%;width:24%;top:78%"></div>
+    <div class="mch" style="left:20%;top:62%">
+      <div class="plinth"><span class="status"></span><div class="glass"></div><span class="ico">⌨️</span></div>
+      <div class="cast"></div>
+      <div class="plate">Typemachine</div><div class="lv">Lv 12</div><div class="rate">+12/s</div>
+    </div>
+    <div class="mch" style="left:44%;top:62%">
+      <span class="badge">Lv10 → tempo ×2</span>
+      <div class="plinth"><span class="status"></span><div class="glass"></div><span class="ico">🖨️</span></div>
+      <div class="cast"></div>
+      <div class="plate">Drukpers</div><div class="lv">Lv 8</div><div class="rate">+48/s</div>
+    </div>
+
+    <!-- the next machine: a glowing foundation plot -->
+    <div class="plot" style="left:70%;top:54%">
+      <span class="flag">🦾 NU BOUWEN</span>
+      <div class="pad"><span class="ghosticon">🦾</span></div>
+      <div class="pname">Robotarm</div><div class="pnote">nog 229 munten</div>
+    </div>
+
+    <!-- locked machines: flat blue-line ghosts receding toward the window -->
+    <div class="ghost" style="left:52%;top:26%">
+      <div class="draw"><span class="gi">🏗️</span></div>
+      <div class="gname">Lopende band</div><div class="glock">nog 3 letters</div>
+    </div>
+    <div class="ghost premium" style="left:78%;top:24%">
+      <div class="draw"><span class="gi">🏭</span></div>
+      <div class="gname">🔒 Mega-fabriek</div><div class="glock">volledige fabriek</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS: the build ticket (primary goal) + the werkbank -->
+  <div class="controls">
+    <div class="ticket">
+      <div class="ringwrap" style="--p:78"><div class="ring"></div><span class="ri">🦾</span></div>
+      <div>
+        <div class="kick">Nu bouwen</div>
+        <h3>Robotarm</h3>
+        <div class="sub">Werkt onvermoeibaar door · <b>+28/s</b> erbij</div>
+        <div class="togo">nog <b>229</b> munten — dat haal je in ± 2 opdrachten</div>
+      </div>
+      <button class="buybig"><span class="coin"></span> 1.049</button>
+    </div>
+    <div class="werkbank">
+      <div class="wlab">Werkbank — verbeteringen</div>
+      <div class="tools">
+        <div class="tool owned"><span class="tc">🛢️</span><div class="ti"><div class="tn">Smeerolie</div><div class="tm">machines ×1,5</div></div><span class="tdone">✓</span></div>
+        <div class="tool"><span class="tc">🔧</span><div class="ti"><div class="tn">Precisiegereedschap</div><div class="tm">munten ×2</div></div><button class="tbuy">400</button></div>
+        <div class="tool"><span class="tc">🚀</span><div class="ti"><div class="tn">Turbomotor</div><div class="tm">machines ×2</div></div><button class="tbuy">1.500</button></div>
+        <div class="tool"><span class="tc">✨</span><div class="ti"><div class="tn">Gouden toetsen</div><div class="tm">munten ×2</div></div><button class="tbuy">2.500</button></div>
+        <div class="tool star"><span class="tc">🌟</span><div class="ti"><div class="tn">Fabriek verkopen</div><div class="tm">+25% sneller · nog 6.600</div></div><span class="tpct">74%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="backbtn">← Terug naar typen</button>
+
+</div>
+<script>{const t=new URLSearchParams(location.search).get('theme');if(t&&t!=='muntpers')document.documentElement.setAttribute('data-theme',t);}</script>
+</body></html>
