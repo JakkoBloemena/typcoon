@@ -2,7 +2,7 @@
 id: 115
 title: "Build the diorama place-ness backdrop/depth/scale per the 114 spec (closes the \"blueprint, not place\" gap)"
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: [114]
 opened_by: product-owner
@@ -47,7 +47,7 @@ ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
 - [x] **The `MAQUETTE 1:50` scale tag (W10b).** A `.scaletag` pinned to the desk's top-left
       corner (`--data` face, `--ink-dim` on `--night`, the `1:50` in `--brass`), matching the
       mock. This is the primary "these are miniatures" scale cue.
-- [ ] **The warm workshop wash (W10c).** A `.warmth` radial pool of `color-mix` over
+- [x] **The warm workshop wash (W10c).** A `.warmth` radial pool of `color-mix` over
       `--bg-wash` across the FRONT of the baseplate, **`z-index:1`, DOM-ordered right after
       `.floor` so it sits behind the machine layer (`z3`)** and cannot lower any label's
       contrast. **No hotspot on any single machine** (the fix for the critic's blown-out note).
@@ -60,7 +60,7 @@ ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
       `ghost 2` · `mch`/`plot 3` · `ruler`/`pencil 4` · `scaletag 6`. **Anything readable or
       interactive stays at `z ≥ 3`; all atmosphere is `z ≤ 2` except the two flat props (z4)
       and the tag (z6), which carry no machine text.** This is what preserves AA by construction.
-- [ ] **The critique's named gap is visibly closed:** the floor is no longer bare
+- [x] **The critique's named gap is visibly closed:** the floor is no longer bare
       grid + one horizon line — the desk frame + `1:50` tag + ruler + pencil + warm front wash
       give a legible sense of a **place a kid leans into**, with scale and lit-foreground depth
       beyond the machine icons themselves. A tester compares the running app at ~1360px to the
@@ -71,7 +71,7 @@ ticket, werkbank, tilted floor, horizon, all handlers/state logic) is untouched.
       W13's resting-state table: `warmth` at `opacity:.72` (workspace still lit), machines
       standing, plot glowing at mid, props/tag static. No element conveys state or affordance
       by motion alone, no stuck mid-animation artifact (the reduced-motion idiom 086/W3).
-- [ ] **The tester verifies felt motion quality live in the running app against W13's 5-row
+- [x] **The tester verifies felt motion quality live in the running app against W13's 5-row
       probe table** — not from stills (the 076 critique explicitly could not judge motion from
       screenshots; this closes that gap). The **new** motion this assignment adds is
       `warmBreath` (8s — the front wash gently breathes, must not flash/strobe/pull the eye);
@@ -516,3 +516,154 @@ next tester should re-run `qa-scripts/115-tester-verify.mjs` independently and c
 the wash reads as intended against the four `world-place-winner-*.png` renders before
 flipping the three still-open AC checkboxes above (W10c, "critique's gap," and the W13
 motion-probe row) and this assignment to `done`.
+
+## Verification (tester v115-r2, tick #42)
+
+**Verdict: PASS.** Second, independent verification pass after the d115fix bounce-fix
+(`f7b3cb5`), in worktree `C:\companies\typcoon-lanes\v115r2` (branch `verify/115-r2`,
+port 4301), against the same `main` history the fix landed on. Fresh checkout, fresh
+`npm ci`, own save fixture, own probe scripts — nothing copied from prior testers' or
+the dev's scripts beyond the general save-injection idiom already established in
+106/109/115.
+
+### Baseline (unchanged from prior passes, re-confirmed independently)
+
+- `npm ci`: clean. `npm test`: **266/266 passing**. `vite build`: clean (101 modules,
+  built in <1s). `check-no-dutch-en`: **PASS** — 5 built en files, zero unallowlisted
+  hits.
+- Dev server on `PORT 4301` (`npx vite --port 4301`), seeded a save via real
+  onboarding→factory nav (`typcoon:onboarded`/`typcoon:save`/`typcoon:unlocked`
+  localStorage, `curriculumIndex: 12` so a live `.plot` exists), headless Chromium
+  (`chrome-win64/chrome.exe`, `HeadlessChrome/149.0.0.0`) via `playwright-core@1.61.1`
+  (`npm install --no-save`, not added to `package.json`/`package-lock.json` — diff
+  confirms).
+- **Re-ran the existing `qa-scripts/115-tester-verify.mjs` completely UNMODIFIED**
+  (only `PROBE_BASE=http://localhost:4301` env var set, source file byte-identical to
+  what's in the repo): **29/29 PASS**, including the check that failed pre-fix
+  (`.warmth background resolved to a real gradient`, now
+  `bg=radial-gradient(78% 100% at 42% 118%, color(srgb 1 0.72549 0.0823529 /
+  0.0509804) 0px, ...)` — not `"none"`).
+
+### Independent deeper check — painted effect, not just an animated property
+
+This is the exact distinction that caught the original bug (opacity animated
+correctly on an invisible layer), so it was re-verified from scratch rather than
+trusted from the probe's single assertion. New script,
+`qa-scripts/115-tester-verify-r2.mjs` (not a copy of the tick #41 tester's or the
+dev's scripts — independently written), **12/12 PASS**:
+
+1. `CSS.supports('background', <exact shipped .warmth gradient string>)` → **`true`**.
+2. **Discovered and documented a real browser behaviour along the way:**
+   `CSS.supports()` **defers validity checking for any value containing `var()`** — a
+   custom-property reference is syntactically valid at parse time regardless of what
+   it later resolves to. Direct experiment: `CSS.supports('background', 'color-mix(in
+   srgb, var(--bg-wash) 130%, transparent)')` → `true` (same as the fixed 100%/55%
+   string), while the LITERAL-colour equivalent (`'color-mix(in srgb, red 130%,
+   transparent)'`, no `var()`) correctly → `false`. This means "`CSS.supports()` on
+   the exact shipped gradient string" is necessary but **not sufficient** to
+   distinguish the fixed value from the old broken one when `var()` is involved — it
+   would have reported `true` for the *broken* 130%/60% string too, had it still been
+   var()-based. Compensated with two further checks that DO discriminate:
+   - `CSS.supports()` literal-colour sweep confirms the underlying rule (130% out of
+     range → false, 100% in range → true) independently of the `var()` masking.
+   - Painted the OLD 130%/60% gradient string on a **real DOM element carrying the
+     app's own live `--bg-wash` value** (sampled from `getComputedStyle` on the actual
+     page, `rgba(255, 185, 21, 0.05)` in Muntpers) and confirmed it resolves to
+     `backgroundImage: "none"` — reproducing the original bounce bug live, on demand,
+     against this exact app's tokens, not a synthetic string.
+3. `getComputedStyle(document.querySelector('.warmth')).backgroundImage` on the LIVE
+   `.warmth` element → a real `radial-gradient(...)`, confirmed **not** `"none"`.
+   Cross-checked against the actual live stylesheet rule text (via
+   `document.styleSheets` / `CSSStyleRule`, not a hand-typed string) — contains `100%`
+   and `55%`, does **not** contain `130%` or `60%,`.
+4. **Pixel-level A/B**: screenshotted the same 60×60 clip low-front-center inside
+   `.warmth`'s painted region (a) with the shipped background and (b) with `.warmth`'s
+   `background`/`animation` forced to `none` via an injected `!important` override
+   stylesheet (page then reloaded to clear it). The two PNG buffers are **not
+   byte-identical** (1745 vs 1675 bytes on this run) — confirms the wash paints real,
+   different pixels, not just a passing `getComputedStyle` string with no visual
+   effect. Clips saved:
+   `company/assignments/115-screenshots-verify2/ab-shipped-clip.png` /
+   `ab-forced-none-clip.png` (visually near-identical to the human eye at this crop
+   size — expected, since `--bg-wash` alpha is only ~5% by design/W3 restraint — which
+   is exactly why the byte-diff, not eyeballing, is the check that matters here).
+5. Reduced motion (`reducedMotion:'reduce'` context): `.warmth`'s computed `opacity`
+   is the **exact string `"0.72"`**, sampled twice 1.2s apart, identical — and the
+   layer it freezes onto still resolves to a real gradient (not `"none"`), so the
+   resting state is a genuinely lit, complete surface, not a correct-looking freeze on
+   an invisible element (the exact failure mode of the pre-fix build, where the
+   freeze mechanism was already correct but the layer beneath it was blank).
+
+### The three previously open AC boxes — now checked
+
+- **W10c warm wash — PASS.** Present, painted (proven above, not just animated),
+  `z-index:1`, DOM-ordered right after `.floor` (re-confirmed via the unmodified
+  probe's DOM-order check), no hotspot on either built machine (visual check on
+  `company/assignments/115-screenshots-verify2/crop-hal-full.png` — both machines
+  evenly lit, no blown-out patch on either), carries `warmBreath` 8s (opacity traced
+  0.720–0.994 over 10s in the unmodified probe's re-run, smooth, no strobe).
+- **Critique's named gap visibly closed — PASS.** Ran the app at 1360×1000 in all
+  FOUR themes and compared side-by-side against
+  `design/factory-mocks/world-place-winner-{muntpers,nachtploeg,snoepfabriek,
+  diepzee}.png`. In every theme: desk surround (border/grain/lip) present and reading
+  as a physical tabletop, `MAQUETTE 1:50` tag pinned top-left with `1:50` in the
+  themed brass/accent colour, ruler (ticked lip) along the near edge of the baseplate,
+  pencil lying at model scale beside the built machines (confirmed via a dedicated
+  crop — `crop-hal-full.png` — since it's a subtle element easy to miss at full-page
+  scale), warm front wash present (confirmed painted per above, whisper-subtle exactly
+  as W3/the renders themselves intend — the renders also don't show a bold wash).
+  Every element re-tints correctly with zero per-theme code (Nachtploeg violet,
+  Snoepfabriek hot-pink, Diepzee coral, Muntpers brass — matches W14's claim exactly).
+  Per the po114 ruling recorded in this file's Notes, compared the backdrop/diorama
+  only — the mock's "JOUW MAQUETTE" vs. the shipped "JOUW FABRIEK" header is the
+  documented, intentional, out-of-scope difference, not a defect.
+  Screenshots: `company/assignments/115-screenshots-verify2/diorama-{muntpers,
+  nachtploeg,snoepfabriek,diepzee}-theme.png`.
+- **W13 live motion probe, live not stills — PASS.** Re-ran the unmodified probe's
+  10-sample-over-9s live motion capture: `warmBreath` — opacity 0.720→0.994, smooth,
+  max inter-sample jump 0.106 (no strobe/step), and — the part that specifically
+  failed before — this opacity now modulates a **visibly painted** layer, confirmed by
+  the pixel A/B above, not an invisible one. `idleBob` — two built machines'
+  `.mch-ico` transforms stayed visibly out of phase across all 11 samples (never
+  identical). `plotGlow` — `.plot .pad`'s inset shadow alpha oscillated smoothly
+  between ~0.16 and ~0.34 on a live plot (robotarm, unlocked but not built at
+  `curriculumIndex:12`). `riseIn` — settled/stable in the late samples, no
+  re-trigger observed. Reduced-motion: `.warmth` rests at exactly `opacity:0.72` on a
+  layer that still paints a real gradient (own r2 script check above), `idleBob`
+  frozen to a standing machine, no stuck mid-animation artifact anywhere (screenshot:
+  `diorama-reduced-motion.png`).
+
+### Sanity spot-checks that the one-line fix didn't regress the already-ticked ACs
+
+- `git diff 519caff..f7b3cb5 -- src/game/game.css src/game/Shop.jsx`: the **entire**
+  `src/` diff between the pre-fix and post-fix commits is 9 insertions / 2 deletions
+  in `src/game/game.css`, scoped exactly to `.warmth`'s two `color-mix()` percentage
+  stops (130%→100%, 60%→55%) plus an explanatory comment; `Shop.jsx` has **zero**
+  diff. (Note: a bare `git diff 519caff..f7b3cb5` over the whole repo also shows
+  unrelated files because other lanes — 106, 109, 110, etc. — landed commits between
+  these two on the shared `main` history; scoping to `src/game/game.css`/`Shop.jsx`
+  is what isolates the actual fix delta, and confirms it's exactly what the dev's Fix
+  notes claim.)
+- `git diff 519caff..f7b3cb5 --stat -- src/game/store.js src/game/economy.js
+  src/engine/ src/game/theme.js src/game/goals.js`: **empty** — none of these touched,
+  confirming save-compat / presentation-only holds across the fix.
+- Swept the whole current `src/game/game.css` for any other out-of-range `color-mix()`
+  percentage (`grep -nE "color-mix\([^)]*\b1[3-9][0-9]%|...[2-9][0-9][0-9]%"`): **zero
+  hits** — the `.warmth` 130%/60% pair was and remains the only instance of this bug
+  class in the file, matching both the tick #41 tester's and d115fix's own sweeps.
+  Token discipline still holds: the fixed rule is still `color-mix(in srgb,
+  var(--token) N%, transparent)`, no new `:root` tokens, no raw `rgba()`/hex
+  introduced.
+
+### 118 not consumed
+
+No new, independent defect was found. Everything checked — structure, z-order, token
+hygiene, guardrail 2, all five W13 motions including the previously-broken
+`warmBreath`+paint pairing, reduced-motion resting states, save-compat — is solid.
+This closes the bounce cleanly: **status set to `done`.**
+
+Evidence: `company/assignments/115-screenshots-verify2/` (diorama-{muntpers,
+nachtploeg,snoepfabriek,diepzee}-theme.png, diorama-reduced-motion.png,
+crop-hal-full.png, ab-shipped-clip.png, ab-forced-none-clip.png). Probe scripts:
+`qa-scripts/115-tester-verify.mjs` (re-run unmodified, 29/29) and
+`qa-scripts/115-tester-verify-r2.mjs` (new, this tester's own, 12/12).
