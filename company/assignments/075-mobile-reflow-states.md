@@ -2,11 +2,13 @@
 id: 075
 title: Factory + typing view — mobile reflow and state screens
 owner: developer
-status: blocked
+status: done
 priority: 3
 blocked_by: [088]
 opened_by: product-owner
 ---
+
+> **delivered-via-088, verified by v088-r2.**
 
 > **World-pass cut (082, 2026-07-24): superseded, value fully absorbed.** ADR 012 ruling 3
 > cancelled this assignment's **mobile half** — game surfaces have no mobile target, so that
