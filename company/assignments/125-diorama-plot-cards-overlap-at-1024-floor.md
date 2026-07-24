@@ -2,7 +2,7 @@
 id: 125
 title: "Diorama .plot (build-site) cards overlap by up to ~9.7px at the exact 1024px desktop floor — worse than and untouched by assignment 120's .mch fix"
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 120, tick 2026-07-25,
