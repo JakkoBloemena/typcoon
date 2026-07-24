@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-24 #26 — OPEN
+- opened: 2026-07-24 11:45 (system clock; tick #25 closed minutes ago by commit order — its 11:52 close stamp vs. this 11:45 open is the known few-minute stamp skew, trusting commit order per tick #2/#9 retro. Tree clean, no OPEN entry → proceed.)
+- claimed: 067 (verification pass — status stays needs_verification, this entry is the claim; tick #13 precedent. Status re-read from disk immediately before this commit: needs_verification. Verifier: tester — a role that did not write the work; the designer never signs off its own direction.) 068 ineligible at claim time (blocked_by 067, satisfied by done only) — **pre-declared: if the tester flips 067 → done this tick, 068 (product-owner) dispatches in the same tick per saturation step 6**; different assignment, so the dev/test-sequential rule does not bind. Monitor stage duty deliberately skipped: tick #25's pass closed within this same scheduler heartbeat (~25 min ago, healthy 27/27, T1–T6 none fired) — one pass per heartbeat, re-running measures nothing (tick #13/#15 recency precedent).
+- worktrees: 067 → C:\companies\typcoon-lanes\v067 (verify/067 off main, port 4222 if it serves the app); 068 (if unblocked) → C:\companies\typcoon-lanes\po068 (po/068); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
+- ids allocated: 069–070 reserved for defects the tester may file (lane may create files with these ids in its worktree; it never computes ids); 071–085 reserved for the PO's milestone assignments should 068 dispatch; next free after reservation: 086; next decision id: 012
+
 ## Tick 2026-07-24 #25 — CLOSED
 - opened: 2026-07-24 11:19 (system clock; tick #24 closed 10:24 — ~55 min, one scheduler heartbeat). Board changed between ticks: ADR 011 (commit 77abab1, 10:54, /ceo channel — Shareholder authority cited verbatim in the decision file) lifted ADR 010's build-hold, opened 067 (designer) + 068 (PO, blocked_by 067). Committed with a clean tree and no OPEN ledger entry → not a live dispatcher; proceed.
 - claimed: 067 (designer — first-ever designer dispatch; status re-read from disk immediately before this commit: open). 068 ineligible (blocked_by 067, satisfied by done only). Monitor stage duty also runs: last pass tick #24 ~10:24, one heartbeat ago; ADR 011 §Consequences keeps the health-pass cadence on hold-free ticks, T1–T6 stay armed.
