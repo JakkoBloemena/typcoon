@@ -53,6 +53,10 @@
      knop toevallig is'. var() van een thema-token, dus elk [data-theme] kleurt 'm
      gratis mee (design/DESIGN-FACTORY.md §4/§8). */
   --reward: var(--brass);
+  /* --goal (074): de andere semantische alias uit design/DESIGN-FACTORY.md §4 —
+     voortgang NAAR een doel (de spotlit-ring op de fabriekspagina) leest als
+     "productie/goed", dus mint, niet messing. Ook een var() van een thema-token. */
+  --goal: var(--mint);
 }
 
 /* ==================================================================================
@@ -478,17 +482,14 @@ button { font-family: inherit; }
 .coin-flash.gold .flash-coin { width: 42px; height: 42px; }
 @keyframes coinrise { 0% { opacity: 0; transform: translate(-50%, 14px) scale(0.6); } 18% { opacity: 1; transform: translate(-50%, -4px) scale(1.15); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -58px) scale(1); } }
 
-/* ---------- Fabriekspagina (072): plain container om de winkel, roadmap-vormgeving
-   volgt in 074. .home-card's breedte hergebruikt zodat het paneel niet edge-to-edge
-   uitrekt op een brede pagina. ---------- */
-.factory-body { width: 100%; max-width: 480px; }
-
-/* ---------- Winkel: het bedieningspaneel ---------- */
-.shop {
-  display: flex; flex-direction: column; gap: 10px; background: var(--panel);
-  border: 3px solid var(--line); border-radius: var(--r-lg); padding: 16px; box-shadow: 0 8px 0 var(--sink);
-}
-.shop h2 { margin: 6px 0 2px; font-size: 1.15rem; color: var(--paper); letter-spacing: 0.5px; }
+/* ---------- shop-list/-item/-info/-name/-meta/owned-tag (assignment 051): gedeeld
+   idioom — geboren in de oude winkelrij (072-en-eerder), sinds 074's roadmap-herbouw
+   nog maar door ÉÉN plek gebruikt: ThemePicker.jsx's thema-lijst. Niet dood: verwijder
+   deze niet zonder ThemePicker.jsx eerst te controleren. `.rebirth-btn` hieronder blijft
+   om dezelfde reden (074's objectieven-rij + spotlit-doel hergebruiken 'm voor de
+   ster-koop-knop). Shop.jsx-exclusieve varianten (het `.shop`-aside zelf, `.shop-thumb`,
+   `.ms-teaser`, `.rebirth-box`/`.rebirth-progress`/`.rebirth-bar`, `.factory-body`) zijn
+   ná de roadmap-herbouw nergens meer gebruikt en dus verwijderd (dode-code-hygiëne). */
 .shop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
 .shop-item {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -496,28 +497,132 @@ button { font-family: inherit; }
   transition: border-color 0.2s ease;
 }
 .shop-item.owned { border-color: var(--mint-deep); }
-.shop-item.locked { opacity: 0.45; }
-.shop-thumb { width: 46px; height: 40px; flex: none; }
 .shop-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .shop-name { font-weight: 900; font-size: 0.95rem; color: var(--paper); }
-.shop-name b { color: var(--brass); margin-left: 4px; font-variant-numeric: tabular-nums; }
 .shop-meta { color: var(--ink-dim); font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ms-teaser { color: var(--brass); font-style: normal; font-weight: 800; }
 .btn.buy { padding: 9px 13px; font-size: 0.88rem; border-radius: var(--r-sm); box-shadow: 0 4px 0 var(--brass-deep); font-variant-numeric: tabular-nums; }
 .btn.buy:active { transform: translateY(4px); box-shadow: 0 0 0 var(--brass-deep); }
 .owned-tag { color: var(--mint); font-weight: 900; font-size: 1.25rem; }
-
-/* ---------- Rebirth ---------- */
-.rebirth-box { margin-top: 8px; display: flex; flex-direction: column; gap: 7px; }
 .rebirth-btn { --edge: var(--sky-deep); background: linear-gradient(180deg, #9cc6ff, var(--sky) 55%); color: #0d1836; box-shadow: 0 6px 0 var(--edge); }
-.rebirth-progress { display: flex; flex-direction: column; gap: 6px; }
-.rebirth-bar { height: 14px; border-radius: 999px; background: var(--panel-2); border: 2px solid var(--line); overflow: hidden; }
-.rebirth-bar span {
-  display: block; height: 100%; border-radius: 999px; transition: width 0.4s ease;
-  background: linear-gradient(90deg, var(--sky-deep), var(--sky));
-  background-size: 200% 100%; animation: shimmer 2.4s linear infinite;
+
+/* ==================================================================================
+   Fabriekspagina — "Het Bouwplan" (assignment 074): het blueprint-rasterpaneel dat
+   072's kale `<Shop>`-container vervangt (design/DESIGN-FACTORY.md §5b/§6). Elke
+   kleur is een var(--token) (§8 regel 1) — de rasterlijnen hergebruiken --bg-grid
+   (§8 regel 2, dichter geweven dan de pagina-achtergrond, 32px i.p.v. 48px, zodat het
+   als tekenpapier leest). Geen nieuwe --sN-afstandstokens: 072/073 hielden zich al aan
+   het bestaande ad-hoc-px-ritme van dit bestand, dus 074 volgt datzelfde precedent
+   i.p.v. losstaand van de buren een nieuwe schaal te introduceren.
+   ================================================================================== */
+.plan {
+  width: 100%; max-width: 880px; padding: 20px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, var(--bg-grid) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, var(--bg-grid) 31px 32px),
+    var(--night);
+  border: 3px solid var(--line); border-radius: var(--r-lg); box-shadow: 0 8px 0 var(--sink);
 }
-@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
+/* flex-wrap (niet media-query-gated): op smal mobiel past de titel + de "N van 5"-tag
+   niet op één regel; zonder wrap dwingt de rij haar min-content-breedte af en scrollt
+   de hele pagina horizontaal (zelfde 375px-bug-klasse als 055's game-bar-fix) — de
+   échte verticale mobiele hertekening is 075's werk, dit voorkomt alleen de regressie. */
+.planhead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 14px; margin-bottom: 18px; }
+/* --ink-dim, NIET --sky: de mock's eigen CSS kleurde deze kicker sky-blue, maar
+   DESIGN.md's regel (herhaald in deze assignment se AC) is dat --sky UITSLUITEND op
+   prestige/rebirth verschijnt — dit is alleen een klein label boven de titel, geen
+   ster-context. Zelfde ink-dim-idioom als andere kicker/eyebrow-labels elders
+   (.cert-kicker, .dash-label). */
+.plan-kick { font-family: var(--data); text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.7rem; color: var(--ink-dim); }
+.plan-h2 { margin: 2px 0 0; font-size: 1.5rem; color: var(--paper); }
+.progresstag {
+  font-family: var(--data); font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap;
+  color: var(--mint); background: var(--night); border: 2px solid var(--mint-deep); border-radius: 999px; padding: 7px 14px;
+}
+
+/* de weg: één station per machine, links-naar-rechts, verbonden door een lijn.
+   overflow-x:auto is een BEWUSTE binnen-het-paneel-scroll (nooit een pagina-brede
+   scroll): op smal mobiel schuift alleen deze rij, niet het document — 075 doet de
+   echte verticale-slang-hertekening, dit voorkomt alleen de 375px-regressie totdat. */
+.road { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+.station { flex: 1; min-width: 148px; position: relative; padding: 16px 10px 0; text-align: center; }
+.station::before { content: ''; position: absolute; top: 52px; left: -50%; right: 50%; height: 4px; background: var(--mint-deep); z-index: 0; }
+.station:first-child::before { display: none; }
+.station.locked::before { background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 14px); }
+.station-node {
+  position: relative; z-index: 1; width: 76px; height: 76px; margin: 0 auto 10px; border-radius: var(--r-md);
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 2px solid var(--mint-deep); box-shadow: 0 5px 0 var(--sink);
+}
+.station-icon { width: 46px; height: 40px; }
+.station.cur .station-node {
+  border-color: var(--brass); box-shadow: 0 0 0 4px rgba(255, 185, 21, 0.22), 0 5px 0 var(--sink);
+  background: linear-gradient(180deg, var(--panel), var(--night));
+}
+.station.locked .station-node { border: 2px dashed var(--line); background: transparent; box-shadow: none; }
+.station.locked .station-icon { filter: grayscale(1); opacity: 0.55; }
+.station-name { font-weight: 800; font-size: 0.95rem; color: var(--paper); }
+.station.locked .station-name { color: var(--ink-dim); }
+.station-lv { font-family: var(--data); color: var(--brass); font-weight: 800; font-size: 0.8rem; }
+.station-rate { font-family: var(--data); color: var(--mint); font-size: 0.78rem; font-weight: 700; }
+.station-rate.station-rate-brass { color: var(--brass); }
+.station-rate.station-rate-dim { color: var(--ink-dim); }
+.station .badge {
+  position: absolute; top: 4px; right: 10px; z-index: 2; font-family: var(--data); font-weight: 800;
+  font-size: 0.62rem; white-space: nowrap; background: var(--mint); color: var(--sink); border-radius: 999px; padding: 3px 8px;
+}
+.station.cur .badge { background: var(--brass); color: var(--on-accent); }
+.station-node.clickable { cursor: pointer; }
+
+/* het uitgelichte volgende doel onder de weg: exact nextGoal (071)'s velden vergroot. */
+.goalspot {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin-top: 18px;
+  padding: 18px; background: linear-gradient(135deg, var(--panel), var(--night)); border: 1px solid var(--brass-deep); border-radius: var(--r-md);
+  overflow: hidden;
+}
+/* de ring is een pure achtergrond-truc (conic-gradient + mask maakt er een donut van);
+   het icoon zit NIET in de gemaskeerde box (een mask knipt z'n hele subtree mee, dus
+   het icoon zou onzichtbaar zijn in het uitgeknipte midden) — het is een ABSOLUTE
+   sibling binnen `.goalspot-ringwrap`, exact zoals de winnende mock (_base.css .rc)
+   het al deed. */
+.goalspot-ringwrap { position: relative; width: 84px; height: 84px; flex: none; display: grid; place-items: center; }
+.goalspot-ring {
+  --p: 0; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--goal) calc(var(--p) * 1%), var(--panel-2) 0);
+  mask: radial-gradient(circle 30px at center, transparent 98%, #000 100%);
+  transition: background 0.4s ease;
+}
+.goalspot-ringicon { position: relative; font-size: 1.7rem; }
+.goalspot-kick { font-family: var(--data); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.68rem; color: var(--brass); }
+.goalspot-name { font-size: 1.4rem; margin: 2px 0 4px; color: var(--paper); }
+.goalspot-sub { color: var(--ink-dim); font-weight: 700; }
+.goalspot-reward { color: var(--mint); font-variant-numeric: tabular-nums; }
+.goalspot-togo { font-family: var(--data); font-weight: 800; color: var(--paper); margin-top: 8px; font-variant-numeric: tabular-nums; }
+.goalspot-locked-pct { font-family: var(--data); font-weight: 800; color: var(--sky); font-size: 1.2rem; }
+
+/* onderaan: upgrades + fabriek-verkopen als objectieven op het bouwplan. */
+/* 260px-ondergrens (niet de mock's 200px): bij vijf tegels (vier upgrades + de
+   ster, méér dan de mock ooit toonde) laat 200px te weinig ruimte over voor
+   chip+tekst+knop naast elkaar — de tekst kneep dicht tot een paar pixels breed.
+   260px geeft elke tegel genoeg lucht; bij 880px (--plan's max-breedte) past dat
+   nog altijd 3 per rij. */
+.objrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 14px; }
+.obj { padding: 14px; background: var(--night); border: 1px solid var(--line); border-radius: var(--r-md); display: flex; gap: 10px; align-items: center; }
+.obj-chip { flex: none; width: 42px; height: 42px; border-radius: var(--r-sm); background: var(--panel); display: grid; place-items: center; font-size: 1.3rem; }
+.obj-info { flex: 1; min-width: 0; }
+/* overflow-wrap: sommige upgradenamen zijn één lang woord zonder spatie
+   ("Precisiegereedschap") — zonder dit breekt de browser nooit binnen het woord en
+   loopt de tekst onder de koopknop door i.p.v. netjes af te breken. */
+.obj-name { font-weight: 800; font-size: 0.92rem; color: var(--paper); overflow-wrap: anywhere; }
+.obj-meta { color: var(--ink-dim); font-family: var(--data); font-size: 0.76rem; font-weight: 700; }
+.obj-done { color: var(--mint); font-weight: 800; font-size: 1.15rem; }
+.obj-pct { font-family: var(--data); font-weight: 800; color: var(--sky); font-size: 0.95rem; }
+.obj-star { border-color: var(--sky-deep); }
+.obj-star .btn { padding: 7px 12px; font-size: 0.85rem; }
+.plan-context {
+  margin-top: 12px; color: var(--ink-dim); font-family: var(--data); font-size: 0.78rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; text-align: right;
+}
 
 /* ---------- Overlays / vier-momenten ---------- */
 .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(6, 10, 28, 0.72); z-index: 60; }
