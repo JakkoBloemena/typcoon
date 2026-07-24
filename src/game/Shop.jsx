@@ -204,10 +204,12 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
         )}
       </div>
 
-      {/* objectieven-rij: upgrades + fabriek-verkopen (prestige) als tegels, plus
-          levenslange munten + sterren als context (design §5b/§6, geen aparte
-          statistiekenpagina — research/milestone-factory.md §3d). */}
-      <div className="objrow">
+      {/* de werkbank: upgrades + fabriek-verkopen (prestige) als gereedschap-tegels,
+          plus levenslange munten + sterren als context (design/DESIGN-FACTORY.md
+          §W2f/W7 item 4 — ".objrow" hernoemd tot de werkbank-rail; zelfde tegels/
+          data/handlers als 074, alleen breder gestyled, geen aparte statistieken-
+          pagina — research/milestone-factory.md §3d). */}
+      <div className="werkbank">
         {UPGRADES.map((u) => {
           const owned = state.tycoon.upgrades.includes(u.id);
           const can = coins >= u.cost;

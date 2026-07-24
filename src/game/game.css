@@ -612,20 +612,27 @@ button { font-family: inherit; }
 .goalspot-togo { font-family: var(--data); font-weight: 800; color: var(--paper); margin-top: 8px; font-variant-numeric: tabular-nums; }
 .goalspot-locked-pct { font-family: var(--data); font-weight: 800; color: var(--sky); font-size: 1.2rem; }
 
-/* onderaan: upgrades + fabriek-verkopen als objectieven op het bouwplan. */
-/* 260px-ondergrens (niet de mock's 200px): bij vijf tegels (vier upgrades + de
-   ster, méér dan de mock ooit toonde) laat 200px te weinig ruimte over voor
-   chip+tekst+knop naast elkaar — de tekst kneep dicht tot een paar pixels breed.
-   260px geeft elke tegel genoeg lucht; bij 880px (--plan's max-breedte) past dat
-   nog altijd 3 per rij. */
-.objrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 14px; }
+/* de werkbank: upgrades + fabriek-verkopen als tegels/gereedschap op het bouwplan
+   (design/DESIGN-FACTORY.md §W2f/W7 item 4: ".objrow -> werkbank rail" — dezelfde
+   tegels als 074, alleen breder en herbenoemd; buy/upgrade/rebirth-handlers in
+   Shop.jsx blijven ongewijzigd). 300px-ondergrens (was 260px, opgehoogd door
+   assignment 087/defect 080): bij vijf tegels (vier upgrades + de ster) valt de
+   auto-fit-rij daarmee terug van 3 naar 2 kolommen op --plan's 880px-breedte, dus
+   elke tegel krijgt merkbaar meer lucht — precies de "comfortably-wide tile" die
+   080's hyphens:auto-vervanging (hieronder) nodig heeft om
+   "Precisiegereedschap" bij een echt lettergreep-punt te laten afbreken. */
+.werkbank { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; margin-top: 14px; }
 .obj { padding: 14px; background: var(--night); border: 1px solid var(--line); border-radius: var(--r-md); display: flex; gap: 10px; align-items: center; }
 .obj-chip { flex: none; width: 42px; height: 42px; border-radius: var(--r-sm); background: var(--panel); display: grid; place-items: center; font-size: 1.3rem; }
 .obj-info { flex: 1; min-width: 0; }
-/* overflow-wrap: sommige upgradenamen zijn één lang woord zonder spatie
-   ("Precisiegereedschap") — zonder dit breekt de browser nooit binnen het woord en
-   loopt de tekst onder de koopknop door i.p.v. netjes af te breken. */
-.obj-name { font-weight: 800; font-size: 0.92rem; color: var(--paper); overflow-wrap: anywhere; }
+/* 080-fix (was overflow-wrap: anywhere): dat brak "Precisiegereedschap" op een
+   willekeurige letterpositie ("Precisiegereed" / "schap") in plaats van op een
+   lettergreep. hyphens:auto kiest z'n woordenboek via de dichtstbijzijnde lang-
+   voorouder — dat is <html lang>, dat sinds assignment 069 de actieve UI-locale
+   volgt (nl/en), dus dit werkt correct voor beide talen zonder verdere opmaak
+   hier. Geverifieerd in echte Chromium-render (zie 087's delivery notes) — geen
+   overflow-wrap-fallback nodig, hyphenation past daadwerkelijk toe. */
+.obj-name { font-weight: 800; font-size: 0.92rem; color: var(--paper); hyphens: auto; -webkit-hyphens: auto; }
 .obj-meta { color: var(--ink-dim); font-family: var(--data); font-size: 0.76rem; font-weight: 700; }
 .obj-done { color: var(--mint); font-weight: 800; font-size: 1.15rem; }
 .obj-pct { font-family: var(--data); font-weight: 800; color: var(--sky); font-size: 0.95rem; }
