@@ -2570,3 +2570,199 @@ confirmed no quota-relevant credential is present; endpoint checks show no pause
 symptoms on any DB-backed route. Assignment 096 (relay rewire ask) still open, no
 relay-delivered ops summary observed this tick — expected, not a finding. No
 incident to open this tick — **assignment 119 lapses**.**
+
+## 2026-07-24 22:10 UTC — tick #43 (stage-duty health pass + bundle re-baseline for tick #42's belt deploy)
+
+Twentieth monitor pass, first since tick #41 (tick #42 skipped it per one-pass-per-heartbeat;
+its close explicitly deferred re-baselining the bundle it produced to this pass, same pattern
+as #40→#41). Working from `HEAD` = `16e4662` (this tick's own open commit), on top of tick
+#42's close `febf950` (timestamp-correction) / `e98aa66` (the substantive close: 115+117
+verified done, 091 belt landed needs_verification). `GET /` returned `Last-Modified: Fri, 24
+Jul 2026 22:03:36 GMT`, `X-Vercel-Cache: HIT` — fresh, concurrent with tick #42's push.
+**Cross-checked against the actual Vercel build log this tick (see capability note below):
+`vercel inspect typcoon.com --logs` shows the live deployment cloned `Commit: febf950` and
+built `dist/assets/speel-6AzGaq-6.js` / `dist/assets/speel-CYWeJ5KN.css` at 2026-07-24
+21:57:09 UTC** — direct confirmation of the live deploy commit, not inferred from git log
+alone.
+
+**Bundle re-baseline: new pair confirmed live, old pair (tick #41's baseline) cleanly
+retired.** `/speel/` now references **`speel-6AzGaq-6.js` / `speel-CYWeJ5KN.css`** — both
+fetched directly (not just referenced) and both 200:
+
+- JS `speel-6AzGaq-6.js` (294116 bytes): sha256
+  `3c9c40a9a56efccdaf4578326c8d1f3c23e4753b00422f4a2195541687bbf570`
+- CSS `speel-CYWeJ5KN.css` (42177 bytes): sha256
+  `b6f12378dc2964b6fd21280490ad62a46806dec62dd6c816e92e4f5a40f72bfa`
+
+**Old baseline (tick #41's `speel-Bu5ref-P.js` / `speel-IpG916SB.css`) confirmed 404 on both
+files** — clean full replacement, matching this tick's brief exactly (both filenames named in
+the brief). The deployed HTML at `/speel/` references the new pair directly (`<script
+type="module" crossorigin src="/assets/speel-6AzGaq-6.js">`, `<link rel="stylesheet"
+crossorigin href="/assets/speel-CYWeJ5KN.css">`) — read from the served markup, not assumed
+from the asset probe alone. **Recording this new pair as the bundle-identity baseline going
+forward, superseding tick #41's.**
+
+**Guardrail check ("ALLEEN VANDAAG" fake-urgency string):** fetched the new JS and CSS bytes
+directly and grepped both, case-sensitive and case-insensitive — **0** matches in both files
+either way. Still absent from the live production bundle, consistent with tick #39/#41's
+finding (102's removal), not reintroduced by 115/117/091's builds.
+
+**091 belt-deploy confirmation (beltDrift): present and correct in the live bundle**, not
+just claimed by the commit message. `beltDrift` appears in the CSS (`@keyframes beltDrift`,
+`animation:beltDrift 5.5s linear infinite` on `.belt`) and the supporting markup/CSS
+(`beltClip`, `beltRun`, `.belt{...}`, `building.assembly":"Conveyor belt"`) appears in the JS
+— six case-insensitive "belt" occurrences across the two files, all load-bearing (clip-path
+id, animation name, CSS class, i18n string, key template), none decorative noise. This is
+direct evidence 091's actual work (not just 115/117's) shipped in this bundle, matching the
+brief's ask to sanity-grep for it.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash/method redirects on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, `Last-Modified: Fri, 24 Jul 2026 22:03:36 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle **`speel-6AzGaq-6.js` / `speel-CYWeJ5KN.css`** — new baseline, see above |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** (`<url>`/`<loc>`/`</url>` counts all agree) — matches tick #12–#41, no change |
+| Static assets: `/assets/speel-6AzGaq-6.js`, `/assets/speel-CYWeJ5KN.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `POST /api/admin/notify` (no auth) | **401** `{"error":"unauthorized"}` |
+| `POST /api/admin/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `POST /api/admin/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+**30/30 checks pass** (13 page/resource checks incl. sitemap count, 5 static asset checks, 9
+auth-boundary checks — all three credential shapes on all three admin-facing endpoints,
+matching tick #41's coverage exactly — 2 `/api/track` checks, 1 `/api/school/redeem` check).
+No 4xx/5xx surprises outside documented/expected behavior, no auth boundary breach on any
+admin-facing endpoint under any tested credential shape, no data leak in any 401 body, no
+broken asset despite the bundle changing underneath this pass, old bundle filenames cleanly
+404.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged — but this tick
+substantially sharpens *why*, rather than repeating "no credentials."** This session's `vercel`
+CLI is authenticated (`vercel whoami` → `jjebloemena-9994`) and *does* see the real `typcoon`
+project (`vercel project ls` lists it under `jb1337s-projects`, latest production URL
+`typcoon.com`) — a materially different starting point than tick #7–#41, which found no
+Vercel credential at all. Explored what this actually unlocks, read-only, within this
+session's permission boundaries:
+
+- `vercel inspect typcoon.com --logs` — **works**, gives real build logs (used above to
+  cross-confirm the live commit/bundle). `vercel logs typcoon.com` — **works**, gives a
+  short real-time tail of recent function invocations (confirmed this tick: the 13 entries
+  returned were all this pass's own probe requests — 3× `/api/admin/notify`, 3×
+  `/api/cron/notify`, 3× `/api/admin/funnel`, plus `/api/track`/`/api/school/redeem` — no
+  externally-triggered traffic in that window). Useful for confirming a deploy landed or
+  catching a live 5xx storm; **not** a historical/quota view (short rolling window only, no
+  time-range query available on this plan).
+- `vercel metrics <metric> ...` (the actual usage/observability query surface — function
+  invocation counts, bandwidth, etc.) — **blocked by the plan itself**: `Error: Observability
+  Plus is required to run this query for team jb1337s-projects.` This is a real, explicit
+  denial from Vercel's API, not a missing-credential gap — the free/hobby tier this company
+  runs on does not expose usage totals via API at all, dashboard-only (Shareholder ask 4,
+  ADR 008/010, remains the only path).
+- `vercel api /v1/billing/charges` and `vercel env ls` (which could reveal whether
+  `CRON_SECRET`/`OPS_NOTIFY_TOKEN` are set, without reading their values) — both **denied by
+  this session's own permission classifier** before this monitor could attempt them; not
+  pursued further, per instructions not to work around a permission denial. `vercel link`
+  was also denied the same way (would have written a `.vercel/` project link outside
+  `company/metrics/**`, correctly out of scope for this worktree anyway).
+- Supabase side: `supabase projects list` / `supabase orgs list` **also authenticate**
+  (three orgs: JB1337, Bloemena-website, ShadowFist), but list only four projects
+  (`typie-fun`, `pim`, `bloemena-site`, `shadowfist`) — **`typcoon` is not among them.**
+  Typcoon's Supabase project is evidently provisioned under an account/org this session's
+  Supabase CLI token does not cover, so no DB row-count/pause-risk read was possible this
+  way either.
+
+**Net effect: the ADR 008 gap stands — no row counts, no bandwidth/invocation totals, no
+direct pause-risk signal this tick — but the reason has changed from "no access at all" to
+"access exists for build/deploy confirmation and live request tailing on Vercel, and for
+listing on Supabase, but the specific quota-total and typcoon-project surfaces are both
+gated off (paid add-on; classifier; wrong account scope) rather than simply absent."**
+Recommend the CEO note `vercel logs`/`vercel inspect` as a now-available (if narrow) tool for
+future monitor passes — it will not resolve the quota question but can catch a live deploy
+or error-storm without dashboard access. Endpoint checks above found no 5xx/pause symptoms on
+any DB-backed route probed (funnel/cron/notify/track/redeem all responded correctly, none
+returned a Supabase-down error shape).
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7 — confirmed via
+git history this tick, not just re-read.** `git log --oneline -- company/metrics/spend.md`
+still shows only the two pre-monitor commits (`aa85ab4`, `c68f46a`) — no commit has touched
+the file since. Four lines unchanged: domain (Shareholder-owned auto-renew, immaterial,
+untracked per decisions/003), Vercel/Supabase/Resend all €0 free tier (escalate to CEO before
+any paid-plan upgrade). Checked `company/decisions/` explicitly — directory still tops out at
+`015-desktop-only-gated-not-reflowed.md` (unchanged since tick #41, no new decision this
+tick's worth of dev work). No new recurring commitment found. No line in spend.md carries a
+Shareholder "approved one-time, cancel before renewal" condition to watch — nothing to
+escalate pre-renewal this tick. Budget ceiling €50/month (decisions/003) — current recorded
+recurring spend: **€0 actuals against the €50/mo ceiling.** No upcoming renewal to flag.
+
+**Relay-delivered ops summary (assignment 096 observable): absence still expected, not a
+finding — same conclusion as tick #34–#41, reached with a slightly better instrument this
+time.** 096 (owner: ceo) remains `status: open`, no AC checked off — read the file directly
+this tick, unchanged since tick #41. The `vercel logs typcoon.com` tail (see quota section
+above) is a genuinely new observation channel for this specific question — a
+scheduler-triggered relay POST to `/api/admin/notify` would show up there if this pass
+happened to run in the same short window as one — but this tick's tail contained only this
+monitor's own probe traffic, no externally-sourced hit. No `OPS_NOTIFY_TOKEN`/`CRON_SECRET`
+in this environment to inspect a rate-limit counter or invoke the endpoint authentically; no
+repo artifact, no Telegram-forwarded content, and no change to 096's own file indicates a
+relay-delivered summary has arrived yet. The framework-side rewire remains CEO/framework work
+this monitor cannot do (no company agent may touch `C:\cc`, per PROTOCOL) — noting for the
+record that `C:\cc`'s own commit history (visible in this session's git status banner, not
+fetched by this monitor) shows recent scheduler-side fixes in progress, consistent with "in
+progress," not "done." AC2 (a real relay-delivered summary observed) is not yet satisfied.
+
+**ADR 010 revisit-trigger evaluation (T1–T6) — still armed per ADR 011/013:**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` unchanged since its creation commit `be2a450` (`git log` confirms) — baseline still dated 2026-07-23; today is 2026-07-24/25, ~1-2 days of possible data. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (`git log -- company/metrics/funnel.md` shows only its creation commit `c7f29a6`); no `FUNNEL_READ_TOKEN` in this environment; no Shareholder digest paste has landed since tick #41. |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no repo artifact records one — checked explicitly this tick, none found. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** ~26 days out. |
+| T6 | Any production incident or new defect | **NOT FIRED.** 30/30 endpoint checks pass, auth boundaries intact on all three admin-facing endpoints under every tested credential shape, no data leak, spend clean, bundle cleanly replaced (old baseline 404s confirmed), fake-urgency guardrail still clean, 091's belt code confirmed present. |
+
+**No trigger fired this tick.** Nothing reopens or blocks dispatchable work.
+**Assignment 123 (pre-allocated for this pass) lapses** — no incident found this tick.
+
+**Verdict: HEALTHY. All 30 checks pass against the documented live domain `typcoon.com`.
+Live deploy commit confirmed as `febf950`/`e98aa66` (tick #42's close, incl. 115/117
+verified-done and 091's belt build) — cross-checked directly against Vercel's own build log,
+not inferred from git history alone. `/speel/` bundle re-baselined to `speel-6AzGaq-6.js`
+(sha256 `3c9c40a9…687bbf570`) / `speel-CYWeJ5KN.css` (sha256 `b6f12378…5a40f72bfa`),
+superseding tick #41's `speel-Bu5ref-P.js`/`speel-IpG916SB.css` pair (both old filenames now
+404, confirming clean replacement). 091's `beltDrift` animation and supporting belt markup
+confirmed present in the new bundle by direct grep, not assumed from the commit message. The
+"ALLEEN VANDAAG" fake-urgency guardrail remains absent. Auth boundaries on
+`/api/admin/funnel`, `/api/cron/notify`, and `/api/admin/notify` all hold under every tested
+credential shape; no data leak. Sitemap steady at 22 URLs, spend ledger clean and unchanged
+(€0 actuals against the €50/mo ceiling; decisions/ scanned through 015, no spend language, no
+new recurring commitment), no upcoming renewal to flag. All six ADR 010 revisit triggers
+evaluated explicitly; none fired. Quota consumption remains unmeasured (ADR 008 gap) but this
+tick meaningfully narrowed the reason — Vercel/Supabase CLI auth is now present in this
+session and unlocks build-log/live-log confirmation, but the actual usage-total surface is
+gated by a paid add-on (Vercel) and by account scope (Supabase's visible projects exclude
+typcoon) rather than by a bare missing-credential gap; recommending the CEO carry this
+forward as a capability note, not a new escalation. Assignment 096 (relay rewire ask) still
+open, no relay-delivered ops summary observed this tick — expected, not a finding, checked
+with a new (if narrow) instrument. No incident to open this tick — **assignment 123
+lapses**.**
