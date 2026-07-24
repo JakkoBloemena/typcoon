@@ -2,7 +2,7 @@
 id: 091
 title: Decorative belt (beltDrift) named in W3 and the world-C mock was never built — zero .belt markup anywhere
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: [115]
 opened_by: tester (proposed); re-sequenced by product-owner (tick #39 intake)
@@ -187,3 +187,89 @@ reproduced defect found outside 091's scope during this build.
 Status set to `needs_verification` (developer terminal state, never `done`) — a tester
 should independently re-derive the fixtures and confirm the judgment call above before
 flipping to `done`.
+
+## Verification (tester v091, tick 2026-07-25 #1)
+
+Independent re-verification, own fixtures, own probes (`qa-scripts/091-tester-verify.mjs`,
+34/34 PASS) — the dev's own `qa-scripts/091-dev-verify.mjs` was also re-run as one input
+(20/20 PASS, unchanged) but the verdict below rests on my own derivation, not that script.
+Diff scope re-confirmed via `git diff a518130 HEAD --stat -- src/game/store.js
+src/game/economy.js src/engine/ src/game/theme.js src/game/goals.js` = empty (save-compat
+files genuinely untouched).
+
+- **AC1 (rule-based placement).** Own 3-built fixture (`typewriter/printer/robotarm`
+  built, `curriculumIndex: 12` — a different subset and letter-state than the dev's
+  all-5-built fixture, deliberately exercising a live `.ghost` element too). 2 `.belt`
+  segments for 3 built machines; each segment's left/right edge cross-checked against its
+  two flanking `.mch .plinth` bounding-box centers (own fixture, own math) — spans
+  confirmed, none touch the `.plot` or `.ghost` boxes (different vertical row, back
+  lane). Also independently probed the 2-built boundary (exactly 1 segment) and
+  re-derived `layoutDiorama`/`beltSegments` verbatim from the shipped source into a
+  standalone pure-JS harness to exercise the **FRONT_LANE_CAP overflow** path (currently
+  unreachable live — `BUILDINGS.length === FRONT_LANE_CAP === 5`, confirmed by reading
+  `economy.js`'s `BUILDINGS` array and `Shop.jsx`'s `FRONT_LANE_CAP`): synthetic 6-built
+  front lane correctly demotes the oldest (m1) to the back lane, and `beltSegments`
+  correctly excludes it from every segment (4 segments among the remaining 5, none
+  referencing m1). **Judgment call (a) confirmed correct**: 0-built and 1-built fixtures
+  (own save shapes, different from the dev's) both render exactly 0 `.belt` elements.
+  Back-lane built-machine exclusion (the FRONT_LANE_CAP overflow guardrail) verified by
+  code-level re-derivation since it is structurally unreachable with the current
+  5-building roster — ruling stands, no live contradiction possible today.
+- **AC2 (beltDrift, painted not just animated).** `getComputedStyle(.belt).backgroundImage`
+  is a real `repeating-linear-gradient(...)` (not `"none"`), `animation-name==='beltDrift'`,
+  `animation-duration==='5.5s'`. **A/B pixel check** (the 115 lesson, done independently of
+  the dev's approach): screenshotted the live `.belt` element, then cloned it in-page with
+  `background:none; animation:none` and screenshotted the clone — the two PNG byte buffers
+  differ, proving the real element is actually painting a gradient rather than resolving to
+  an invisible/absent background that merely happens to sit under an animated property.
+  Own motion-rate sample (6 points, 1s apart, independent timing window from the dev's
+  1.4s/8-sample window): forward per-sample step ≈4.03-4.06px, consistent with 22px/5.5s≈
+  4px/s and nowhere near the old 1.1s (~18px/s) rate. Reduced-motion resting position is
+  the CSS default `0% 0%`, matching W13's documented finished state exactly.
+- **AC3 (guardrail 2).** Zero coin/coin-ish elements and zero text content inside `.belt`
+  in every fixture tested. Read the live `@keyframes beltDrift` rule off the actual
+  stylesheet (`CSSKeyframesRule`): property list is only `background-position-x`/`-y`
+  (Chromium's internal longhand split of the shorthand) — no opacity/transform/other
+  property smuggled in.
+- **AC4 (reduced-motion).** `reducedMotion:'reduce'` context: `background-position`
+  byte-identical across a 1.5s window, background-image still a real painted gradient (not
+  frozen-invisible) — a fully-drawn static rail, no mid-drift artifact.
+- **AC5 (token discipline).** Confirmed zero new `:root` tokens added by the 704a084 diff
+  (only `.belt`/`.mch`/`.plot`/`.ghost` selector/property changes, no new custom property
+  declarations). `--mint-deep`/`--night`/`--sink` (the three tokens `.belt` uses) all
+  pre-exist in `:root` and in all four theme blocks (`nachtploeg`/`snoepfabriek`/`diepzee`),
+  confirmed by grep. **Literal-value substitution color-mix sweep** (per the 115 defect
+  class — `CSS.supports()` defers validity on `var()`-containing values): extracted the
+  `.belt` rule's one `color-mix(in srgb, var(--mint-deep) 38%, var(--night))` call with a
+  balanced-paren parser (not a naive regex, which truncates at `var()`'s own closing
+  paren), substituted the resolved literal hex values, and confirmed `CSS.supports('color',
+  literal)` is true — 38% is in-range, no 115-class out-of-range percentage. **Theme
+  sweep, all 4 themes** (default/nachtploeg/snoepfabriek/diepzee, not just nachtploeg):
+  `.belt` renders a real gradient and a distinct border-color in every theme (4/4 distinct
+  values), confirming free re-tint with zero per-theme belt code.
+- **AC6 (save-compat).** `store.js`/`economy.js`/`src/engine/`/`theme.js`/`goals.js` diff
+  vs. pre-091 is empty (git-diff-confirmed above). `npm test`: **266/266**, `vite build`
+  clean, `check-no-dutch-en`: PASS.
+- **Judgment call (b), W10e z-ladder.** Own fixture with a live `.ghost` (letter-locked
+  back-lane building) confirms: `.belt`=2, `.ghost`=2, `.mch`=3, `.plot`=3, `.floor`/
+  `.horizon`=`auto` — exact match to W10e's `floor 1 · warmth 1 · horizon 1 · belt 2 ·
+  ghost 2 · mch/plot 3` ladder (the `auto` floor/horizon paint below all explicit
+  z1+ layers, functionally equivalent to z≈0). Visual sweep across default + nachtploeg
+  screenshots: no stacking regression — belt paints under machines, ghosts read correctly
+  behind the readable mch/plot layer, floor grid stays furthest back in every theme.
+- **Placement idiom.** Shipped `.belt`/`@keyframes beltDrift` CSS is byte-identical to
+  `design/factory-mocks/world-C-maquette-place.html`'s reconciled recipe (z2, 5.5s,
+  22px) — the 114-reconciled fallback idiom named in the PO re-scope note, not the
+  original world-C 1.1s mock. Confirmed by direct grep/diff of both files.
+- **Went past the ACs:** checked the mobile viewport (390×844) — the whole game (not just
+  the factory/belt) gates behind an existing pre-091 "maak je venster wat breder" min-width
+  screen (`src/game/strings.js`), unrelated to this assignment and not a regression; no
+  belt-specific mobile issue exists because the belt never renders on that gate at all.
+  No defect found outside 091's scope.
+
+**Verdict: PASS on every acceptance criterion, independently re-derived.** Both judgment
+calls ((a) 0/1-built suppression, (b) W10e z-ladder) are correct. Screenshots under
+`company/assignments/091-screenshots-verify/`. Flipping status to `done`.
+
+**Not consumed:** id 122 (defect-filing id allocated to this lane) — no distinct
+reproduced defect found outside 091's scope during verification.
