@@ -2,7 +2,7 @@
 id: 105
 title: Remove the ⭐ rebirths pill from the typing view (ADR 012 ruling 1); keep 🔥 streak
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)
@@ -149,3 +149,71 @@ to file. 114 lapses.
 
 **Status set to `needs_verification`** (never `done` — that flip belongs to the
 tester per PROTOCOL.md).
+
+## Verification (tester, verify/105 worktree, 2026-07-24, commit cdcd9a6)
+
+All six acceptance criteria independently re-verified live, not from the diff or the
+developer's report. Setup: `npm install` (fresh `node_modules`, none existed), `npm
+install playwright-core --no-save` (confirmed `package.json`/`package-lock.json`
+diff-clean before and after), `npx vite build`, `npx vite preview --port 4285
+--strictPort` (own port, per instructions). Wrote an independent script,
+`qa-scripts/105-tester.mjs` (does not reuse the developer's `105-verify.mjs`),
+covering both `rebirths: 1` (matching the developer's case) and `rebirths: 2` (the
+dev's script only ever constructed `rebirths: 1` — this closes that gap) plus the
+home-screen big star-pill.
+
+**AC1 (no ⭐ on typing view, rebirths>0):** PASS for both rebirths=1 and rebirths=2.
+`.wallet .star-pill` count is 0 in both cases; wallet-bar text contains no ⭐ glyph.
+Screenshots `105-screenshots/tester-rebirths-1-typing-view.png` and
+`tester-rebirths-2-typing-view.png` — bar shows only 🔥, ⚙️, coins, ×mult, acc% .
+
+**AC2 (🔥 streak pill still renders):** PASS. `.wallet .streak-pill` renders in both
+cases, text matches `🔥 N` with N>0. Note (matches the dev's own note, independently
+reproduced): the persisted `streak` value (4 and 3 respectively) rolls to `🔥 1` on
+load because `checkDailyReturn` advances a `lastDay: null` save to "day 1 of a new
+streak" — this is pre-existing daily-return behavior unrelated to assignment 105, not
+a regression.
+
+**AC3 (factory ledger STERREN cell, single-surfaced):** PASS for both. `.ledger .val.star`
+present, reads `⭐ 1` / `⭐ 2` respectively, `Sterren` label present. Screenshot
+`tester-rebirths-2-factory-ledger.png`.
+
+**AC4 (083 comment documents the removal + streak exception, cites ADR 014 / ADR 012
+ruling 1):** Read directly at `src/game/GameScreen.jsx` lines 312–321. Confirmed
+present: cites ADR 014, ADR 012 ruling 1, explains the star's move to the STERREN
+ledger cell and the streak's retention as a typing-loop daily-return exception.
+
+**AC5 (orphan sweep):** Own `grep -n "prestige" src/game/GameScreen.jsx` (case
+insensitive) returns **zero hits** — fully clean, not even in prose. `git diff
+8783cfa..cdcd9a6 --stat -- src/game/FactoryPage.jsx src/game/game.css
+src/game/economy.js src/game/store.js src/game/theme.js src/engine/` shows **no
+diff** in any of those files — confirmed untouched independent of the dev's claim.
+`economy.js`'s `prestigeMultiplier` export still exists and is still called (line
+157/169 internally, and from `App.jsx` line 249 for the home-screen big star pill).
+`game.css`'s `.star-pill` rule (lines 208/250/254) is untouched. `App.jsx` (~248–250)
+still renders `<span className="star-pill big">` for `rebirths > 0` — verified live:
+home screen shows `⭐ 1` and `⭐ 2` for the respective saves (screenshot
+`tester-home-screen-rebirths2.png`).
+
+**AC6 (save-compat / no engine or store changes / npm test green):** `git diff
+cdcd9a6^ cdcd9a6 --stat` shows exactly one source file changed
+(`src/game/GameScreen.jsx`, +8/−7), plus the assignment doc, the dev's qa-script, and
+screenshots — no `store.js`, `economy.js`, `theme.js`, or `src/engine/` changes.
+`npm test` run independently: **266/266 passing**, `check-no-dutch-en: PASS`,
+matching the stated baseline exactly. Unrelated `public/**` gen-content build churn
+from the test run was reverted with `git checkout -- public/` before this commit.
+
+**Judgment calls:** reused the repo's existing constructed-save idiom
+(`newProfile`/`newState` + hand-set `tycoon`) rather than sourcing a literal
+pre-change save file (none exists in `testdata/`); this is consistent with how 076,
+084, and the developer's own 105 verification did it, and directly exercises the
+unchanged save shape. Did not chase the `checkDailyReturn` streak-rolling behavior as
+a new defect — it is pre-existing, unrelated to this presentation-only change, and
+already flagged as such in the developer's delivery notes; independently confirmed
+not a regression (it appears identically on both rebirths=1 and rebirths=2 saves,
+i.e. driven by `lastDay: null`, not by anything this diff touched). Id 111 (reserved
+for a new defect found during this verification): **not used, lapses** — nothing
+found here exceeds an already-known, out-of-scope, pre-existing quirk.
+
+**Verdict: all 6 acceptance criteria PASS on independent live verification. Status
+flipped to `done`.**
