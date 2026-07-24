@@ -2,7 +2,7 @@
 id: 086
 title: Atmosphere & motion — ambient life, arrival, build moments (world-pass slice 4)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: [085]
 opened_by: product-owner
@@ -440,3 +440,91 @@ afterward (only expected `TIME_WAIT` remnants); `git checkout -- public/` before
 Working tree confirmed to touch only `src/game/game.css`/`src/game/Shop.jsx` plus new
 `qa-scripts/086-fix-*.mjs` and `company/assignments/086-screenshots/086-fix-*.png` before
 commit.
+
+## Re-verification (tester, v086-r2, 2026-07-24)
+
+Independent re-verification of the bounce fix (dev/086, commit `94ad5f5`, merged `6e5049e`),
+worktree `C:\companies\typcoon-lanes\v086` (branch `verify/086-r2`), port 4254. Per the retro
+rule (`company/retro/2026-07-24-tick33-declaration-vs-effect-verification.md`), every check
+below samples the rendered EFFECT — `getComputedStyle` over time, resolved `CSSKeyframesRule`
+read off the live stylesheet, PNG screenshot bytes — not declaration text.
+
+**AC1 (idleBob, staggered, never lockstep) — FIX HOLDS.** Own fresh script
+(`qa-scripts/086-tester-r2.mjs`) asserted PAIRWISE-distinct `(animationDuration,
+animationDelay)` tuples for every pair of built machines, across **four** state shapes: (a)
+my own original bounce repro (`buildings:{typewriter:2,assembly:4}`, `curriculumIndex:25`,
+which still has `.floor`/`.horizon`/a back-lane letter-ghost interleaved), (b) a shape the
+dev's own fix-verify pass did not test — 3 built machines skipping two building ids
+(`typewriter:3,robotarm:2,megafab:1`, `curriculumIndex:26`, all-front-lane, 2 un-built
+machines rendered as `.plot` not ghosts), (c) another shape the dev did not test —
+`unlocked:false` so 3 machine ids render as `.ghost.premium` interleaved with 2 built
+machines, (d) all 5 built (roster-full). Every shape: 100% pairwise-distinct tuples, 0
+collisions, all durations inside 5–6.5s (observed: 5s/5.3s/5.6s/5.9s/6.2s for `--bob-i`
+0–4). Root-cause confirmation: `--bob-i` is now a counter incremented only inside the
+`item.kind === 'built'` branch in `Shop.jsx` (verified by reading the source), decoupling
+the bucket entirely from DOM-wide sibling position — the exact mechanism the bounce
+exploited is structurally gone, not merely untriggered. Also re-ran the tester's own kept
+`qa-scripts/086-tester.mjs` unmodified: **22/23**, matching the dev's claim exactly — T12
+(which encodes the old lockstep mechanism: same `mod3` bucket → identical duration) now
+correctly fails to reproduce (`mod3` still equal by coincidence, but durations `5s` vs
+`5.3s` — distinct), which is the expected, desired flip, not a regression. Screenshot with
+on-page readout: `company/assignments/086-screenshots-verify/086-r2-idlebob-5built-pairwise.png`.
+
+**AC2 (plotGlow ~3.4s brass breathing glow) — FIX HOLDS.** `@keyframes plotGlow` confirmed
+to exist as a **resolved `CSSKeyframesRule`** read directly off the live stylesheet (not
+grepped from source), for the name `plotGlow`. `getComputedStyle(pad).boxShadow` sampled 6×
+across a full 3.4s window: 6 distinct alpha values, cycling ~0.16→~0.33→~0.16 as expected.
+Two screenshots of `.plot .pad` taken 1.7s apart (max-expected-difference point) are **not**
+byte-identical (`md5` `3c91d431...` vs `569bef67...`) — where the pre-fix build had produced
+byte-identical screenshots at the same offsets. Screenshots:
+`company/assignments/086-screenshots-verify/086-r2-plotglow-t0.png`,
+`086-r2-plotglow-t1700ms.png`.
+
+**AC3–AC7 spot-check (fixed tree, not regressed) — HOLD.** `riseIn` `animation-iteration-
+count` still reads `1` on every floor station, never `infinite`, on a fresh factory arrival.
+`.coin`/`.ledger-coin`/`.ledger .val`/`.btn-coin` carry zero animations (behavioural: 4s
+idle wait on the factory page, ledger coin text byte-identical before/after, matching the
+prior pass). Reduced-motion: `.mch-ico` rests at `transform: none`; `.plot .pad`
+`box-shadow` alpha resolves to `0.22` — exactly the static mid-glow value between
+`plotGlow`'s 16%/34% extremes, confirming the reduced-motion rest state is still correct.
+Token discipline: fresh `git diff 94ad5f5^ 94ad5f5 -- src/game/game.css src/game/Shop.jsx`
+greps clean of any added `#hex`/`rgba(`/`--token:` declaration. Save-compat: fresh `git diff
+--stat 94ad5f5^ 94ad5f5 -- src/store.js src/game/store.js src/game/economy.js src/engine
+src/game/theme.js src/game/goals.js src/game/FactoryPage.jsx src/game/assets.jsx` — empty
+output, confirming those files (plus `FactoryPage.jsx`/`assets.jsx`) are untouched by the fix
+commit. Fresh `npm install` + `npm test` in this worktree: **253/253** green. `npx vite
+build` succeeds. `check-no-dutch-en`: PASS (5 built files, 59-word lexicon, zero hits).
+`public/**` build churn reverted with `git checkout -- public/` before every commit in this
+pass.
+
+**Judgment-call verdicts (re-verified independently, not just re-read):**
+1. **`var(--bob-i, 0)` fallback unreachable — CONFIRMED.** Own check
+   (`qa-scripts/086-tester-r2.mjs`, "Judgment-call-a") read `el.style.getPropertyValue
+   ('--bob-i')` on every rendered `.mch` station across a built-heavy fixture: every one
+   carries an explicit inline `--bob-i` value (`["0","1","2"]`), confirming `Shop.jsx` sets
+   it unconditionally for every built station and the `5s`-fallback branch is genuinely
+   dead code, not a reachable defect. Upheld.
+2. **`playwright-core` installed `--no-save`, package.json diff-clean — CONFIRMED.** Fresh
+   `git status --short package.json package-lock.json` and `git diff --stat -- package.json
+   package-lock.json`: both empty after `npm install playwright-core --no-save` in this
+   worktree. Upheld.
+
+**094: lapsed.** No new defect or gap found during this re-verification pass beyond what was
+already tracked (091, belt — untouched by this fix, out of scope). The AC1/AC2 fix is
+structurally sound (counter-based, not DOM-position-based) and held across every
+counterexample state I could construct, including two shapes (premium-locked mix,
+all-front-lane skip-mix) the dev's own fix-verify pass did not cover.
+
+### Verdict
+
+**Status → `done`.** AC1 and AC2 (the two bounced defects) are fixed and hold under
+independent counterexample search across four state shapes, two of which the dev never
+tested. AC3–AC7 re-derived as passing, no regression. Both flagged judgment calls upheld
+with fresh independent verification, not taken on the dev's word. New files:
+`qa-scripts/086-tester-r2.mjs`, `qa-scripts/086-r2-regression-check.mjs`. Evidence
+screenshots in `company/assignments/086-screenshots-verify/`. No new assignment filed — 094
+lapses.
+
+Port 4254 confirmed released (`netstat` shows nothing `LISTENING` after `taskkill`, only
+expected `TIME_WAIT` remnants); `public/**` reverted before every commit; working tree left
+clean of unintended changes before commit.
