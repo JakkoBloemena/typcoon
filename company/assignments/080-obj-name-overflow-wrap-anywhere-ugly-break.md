@@ -2,7 +2,7 @@
 id: 080
 title: "objectives-row upgrade names break mid-word (\"Precisiegereedschap\" -> \"Precisiegereed\" / \"schap\") from overflow-wrap:anywhere"
 owner: developer
-status: blocked
+status: done
 priority: 4
 blocked_by: [087]
 opened_by: tester (proposed)
@@ -71,3 +71,29 @@ spec — hyphenation support/dictionary availability varies). If that doesn't pr
 acceptable break, consider trimming `.obj-name`'s font-size slightly for long single-word
 names, or increasing `.objrow`'s `minmax()` floor a bit further (currently 260px, raised
 from 200px by 074) — low priority (4), purely cosmetic, does not block any flow.
+
+### Adjudication (tester, v087, 2026-07-24)
+
+087 (the werkbank + hyphens slice this defect was folded into) verified `done` — all 7 of
+087's ACs passed independently, including the two that carry this defect's fix. Confirming
+each of 080's own ACs directly, in the same worktree/browser session used for 087:
+
+- **AC1 (no arbitrary-character break; real point or fits on one line): PASS.** At normal
+  desktop widths (900px/1360px) "Precisiegereedschap" **fits on one line**
+  (`clientHeight: 20`, single line at both widths) — independently measured, not taken on
+  faith. At a forced 375px width (narrower than 080 itself required, done to prove the
+  mechanism), a tight screenshot crop directly on the element
+  (`company/assignments/087-screenshots-verify/ac2-nl-hyphen-crop.png`) shows the real
+  rendered break **"Precisiegereed-" / "schap"** with a genuine hyphen glyph at the
+  `ge-reed-schap` syllable boundary — a real linguistic point, not the defect's raw
+  character truncation (which showed no hyphen at all).
+- **AC2 (no overflow regression, 375px included): PASS.** No individual tile and no page
+  overflowed at 375px, 900px, or 1360px (`scrollWidth <= clientWidth + 1` held everywhere,
+  independently checked).
+- **AC3 (other 3 upgrade names + `Verkoop je fabriek` still wrap acceptably): PASS.**
+  Smeerolie / Turbomotor / Gouden toetsen / "⭐ Verkoop je fabriek" all render without
+  overflow and without any new mid-word break at 375px (the narrowest, most wrap-prone
+  width tested).
+- **AC4 (`npm test` stays green): PASS.** 232/232 in this worktree.
+
+All 4 of 080's own ACs hold on independent inspection. **Status → done.**
