@@ -17,7 +17,6 @@ import {
   accuracyMultiplier, comboMultiplier, prestigeMultiplier,
   earnFromExercise, tick, applyTypcoonExamResult,
 } from './economy.js';
-import { nextGoal } from './goals.js';
 import { pendingAchievements, achievementDef } from './achievements.js';
 import { getPack } from '../data/packs.js';
 import { getLayout } from '../layouts/index.js';
@@ -81,11 +80,6 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
 
   const unlockedKeys = activeKeys(state.curriculum, state.profile.curriculumIndex);
   const lettersLearned = activeLetters(state.curriculum, state.profile.curriculumIndex).length;
-  // doel-sliver (assignment 073): het ÉNE eerstvolgende doel, puur en deterministisch
-  // uit tycoon + geleerde letters (071's nextGoal) — herberekend bij elke render, dus
-  // hij loopt vanzelf mee zodra munten/levels/letters veranderen (research/
-  // milestone-factory.md §3b). Geen bewaard "huidig doel" om uit sync te raken.
-  const goal = nextGoal(state.tycoon, lettersLearned);
   // toets/diploma (assignment 049): optioneel aanbod, nooit gating — de engine bepaalt
   // zelf wanneer een toets "klaar" is (confidence-poort + niet frustrated).
   const availableExam = nextAvailableExam(state);
@@ -130,7 +124,7 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
 
   // productie-tick: machines produceren alleen vlak na een aanslag (geen idle winst).
   // Dit is de fabriek-kant van de bewaarde-waarde-clausule (073): zolang er getypt
-  // wordt lopen de munten door, dus de doel-sliver hierboven schuift live mee —
+  // wordt loopt de munten-teller in de verdiensten-cluster hieronder live mee —
   // zonder enige ambient/idle animatie (geen losse UI-state meer voor een fabrieksvloer).
   useEffect(() => {
     const id = setInterval(() => {
@@ -319,30 +313,21 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
           {state.tycoon.rebirths > 0 && (
             <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
           )}
-          {/* 073: ×multiplier + nauwkeurigheid% verhuisden hierheen uit het aparte
-              .meters-blok (dat mét de fabrieksvloer verdween) — één rustige regel. */}
-          <span className="mult-pill" title={gt('play.accuracyLever', { pct: accPct })}>×{liveMult.toFixed(1)}</span>
-          <span className="acc-pill">{accPct}% {gt('play.flashNeat')}</span>
-          <span className="coin-pill" key={coinPop} title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>
-          <span className="cps-pill" title={gt('play.perSec')}>⚙️ {fmt(cps)}/s</span>
+          {/* 083 (design/DESIGN-FACTORY.md §W4, ADR 012 ruling 1): the earnings
+              cluster — earn rate + earned total — is the PRIMARY readout on the typing
+              view; the old goal sliver is gone (the goal now lives on the factory
+              page's build ticket, 074). ×mult/acc% stay as smaller, quieter secondary
+              "lever" feedback (accuracy IS the earn multiplier). */}
+          <span className="earn-cluster">
+            <span className="cps-pill" title={gt('play.perSec')}>⚙️ {fmt(cps)}/s</span>
+            <span className="coin-pill" key={coinPop} title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>
+          </span>
+          <span className="lever">
+            <span className="mult-pill" title={gt('play.accuracyLever', { pct: accPct })}>×{liveMult.toFixed(1)}</span>
+            <span className="acc-pill">{accPct}% {gt('play.flashNeat')}</span>
+          </span>
         </div>
       </header>
-
-      {/* doel-sliver (073): het ÉNE zichtbare doel — vervangt de altijd-animerende
-          fabrieksvloer (verwijderd, design/DESIGN-FACTORY.md §7/§11). De vulling gebruikt
-          --reward (design §5a); dit is de enige "beweging" op de rustige typweergave, en
-          alleen omdat de staat (munten) echt verandert — geen ambient/idle motion. */}
-      <div className="goalsliver">
-        <span className="goalsliver-icon" aria-hidden="true">{goal.icon}</span>
-        <div className="goalsliver-info">
-          <span className="goalsliver-name">{goal.name}</span>
-          <span className="goalsliver-kicker">{gt('goal.sliverLabel')}</span>
-        </div>
-        <div className="goalsliver-bar" aria-hidden="true">
-          <span className="goalsliver-fill" style={{ width: (goal.fraction * 100) + '%' }} />
-        </div>
-        <span className="goalsliver-remaining">{gt('goal.remaining', { n: fmt(goal.remaining) })}</span>
-      </div>
 
       <div className="game-main">
         <section className="type-pane">

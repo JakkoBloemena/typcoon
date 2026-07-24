@@ -2,7 +2,7 @@
 id: 083
 title: Typing strip — earnings-first, remove goal sliver, one-shot chips (world-pass slice 1)
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 2
 blocked_by: []
 opened_by: product-owner
@@ -71,3 +71,125 @@ in default / boost / golden states — repro is in `qa-scripts/073-tester.mjs`) 
 typing→factory thread feels severed, the cheapest re-add (a single "🏭 Fabriek → [name] bijna
 klaar" line on the factory button, W4) is a future PO call, not this slice. Terminal state
 `needs_verification`.
+
+### Delivery notes (developer, dev/083, 2026-07-24)
+
+**What changed, per AC**, all in `src/game/GameScreen.jsx` + `src/game/game.css` +
+`src/game/strings.js`/`test/locale.test.js` (for the two orphaned keys) — `store.js`,
+`economy.js`, `theme.js`, `goals.js`, `src/engine/`, `App.jsx`, `Shop.jsx`,
+`FactoryPage.jsx`, `index.html` all untouched (confirmed, see save-compat evidence below):
+
+- **AC1 (goal sliver gone).** Removed the whole `.goalsliver` JSX block, the `nextGoal`
+  import, and the `goal` computation from `GameScreen.jsx` (no `goal` consumer left in
+  this file) plus all `.goalsliver*` rules from `game.css`. `goal.sliverLabel`/
+  `goal.remaining` were only ever consumed by this block (confirmed via grep — `Shop.jsx`
+  uses the *object field* `goal.remaining`, a different thing from the *string key*
+  `'goal.remaining'`, and its own `goal.togoLine`/`goal.spotKicker`/`goal.effort` keys,
+  none of which I touched) — removed both keys from both locale maps in `strings.js` and
+  from `STATIC_FLOW_KEYS` in `test/locale.test.js` per the assignment's own instruction.
+- **AC2 (earnings cluster, primary vs subordinate).** Kept the existing `.cps-pill`
+  (earn rate, `⚙️ +N/s`) and `.coin-pill` (earned total) — they already *were* the
+  earnings readout, just visually equal-weight with `×mult`/`acc%`. Wrapped them in a new
+  `.earn-cluster` span (leads the wallet, right after the contextual streak/star badges)
+  and wrapped `.mult-pill`/`.acc-pill` in a new `.lever` span (trails). Made the
+  hierarchy real, not just DOM order: scoped `.game-bar .wallet .cps-pill { font-size:
+  1.05rem }` (matching `.coin-pill`'s pre-existing 1.15rem — both now visibly bigger),
+  and shrank `.mult-pill, .acc-pill` to `font-size: 0.8rem` + tighter padding. Verified
+  via computed style: rate=16.8px vs mult=12.8px, total=18.4px vs acc=12.8px (16px root).
+- **AC3 (no more infinite chip animation) + AC4 (zero ambient motion).** Changed
+  `.golden-banner`, `.boost-chip`, `.type-hint` from `animation: goldpulse/hintPulse …
+  infinite` to `animation: dropIn 0.6s var(--pop)` — the *existing* `dropIn` keyframe
+  (defined once, already used by the home-screen entrance) rather than a near-duplicate,
+  per W3's "reuse the same idiom" instruction. Default animation-iteration-count is 1
+  (one-shot), so these play their entrance once on mount and rest still — confirmed none
+  of these three elements get remounted on re-render (no `key` prop, same JSX position
+  across keystroke-driven re-renders), so there's no replay-on-every-render bug. Deleted
+  the now-dead `goldpulse`/`hintPulse` `@keyframes` (confirmed zero remaining references).
+- **AC5 (preserved live earn signal).** Untouched mechanism (`tick()` production interval
+  + `earnFromExercise` payout) — verified the coin-pill text changes after a real
+  exercise completion (500 → 551 in the driven run below), not a decorative loop.
+- **AC6 (long-sentence wrap).** Did not touch `.typing-surface`/`.typing-text` sizing
+  (still the pre-existing `clamp`-free `2.1rem` + `word-break: break-word`, unchanged) —
+  verified with an injected long Dutch sentence that neither the typing card nor the
+  page scrolls horizontally at 1280px.
+- **AC7 (token discipline).** See the grep evidence below — zero new `:root` tokens,
+  every new/changed declaration is `var(--token)`.
+- **AC8 (save-compat).** `git diff --stat -- src/game/store.js src/game/economy.js
+  src/game/theme.js src/engine/ src/game/App.jsx src/game/Shop.jsx
+  src/game/FactoryPage.jsx src/game/goals.js index.html` is empty.
+- **AC9 (tests green).** See below.
+
+**Token-discipline self-check (grep the diff, not the whole file — per the dispatcher's
+instruction).** `git diff -- src/game/game.css | grep -E '^[+-]' | grep -E
+'#[0-9a-fA-F]{3,6}|rgba?\('` returns exactly one hit: the pre-existing
+`text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);` line on `.type-hint`, unchanged in value —
+it only shows up because it shares a source line with the `animation:` declaration I
+changed on that same line, so a line-based diff re-emits it as removed+added text.
+Flagging honestly since AC7's literal text only carves out "`#000` inside a `mask:`
+stencil": this is a **black** (not brand) text-shadow, an established pre-existing
+codebase idiom for ink-on-color legibility (three more identical `rgba(0,0,0,…)`
+text-shadows already exist elsewhere in `game.css`, e.g. `.home-title`, all predating
+this assignment) — not a themable brand colour, and not introduced or altered by me. No
+new hex/rgba was added anywhere; `.boost-chip`'s pre-existing raw hex
+(`#5a2a00`/`#ffd0a0`/`#ff9f43`/`#b5651d`/`rgba(255,159,67,…)`) does **not** appear in the
+diff at all (only its `animation:` line was touched, on its own line) — I deliberately
+left that debt untouched rather than expand scope; filed as 090 (see below).
+`--reward` (the token the removed `.goalsliver-fill` used) is now unconsumed anywhere in
+`game.css` — left it defined in `:root`, untouched: it's pre-existing infrastructure
+(not new), explicitly documented in the design doc as the alias for "earned munten" that
+the factory-page build ticket (074, and 084/085's ledger/diorama slices) are expected to
+keep using, so removing it wasn't this slice's call to make.
+
+**How I verified it end-to-end.** `npm install` (22 packages, clean), `npm test`:
+**230/230 green** (same count as before — removing two now-unused locale keys doesn't
+change the flow-key test's assertion count, it iterates the same array), `vite build`
+succeeds (101 modules), `check-no-dutch-en` PASS (5 built en files, 0 unallowlisted
+Dutch hits). `gen-content` churned `public/**`/`sitemap.xml` as its known side effect
+both times I ran the full pipeline; reverted with `git checkout -- public/` before
+committing (confirmed clean via `git status --porcelain`).
+
+Then built and served with `vite preview --port 4237` (only port used, per instruction),
+installed `playwright-core --no-save` (Chromium 1228 already cached system-wide at
+`C:/Users/Jakko/AppData/Local/ms-playwright/chromium-1228`), and drove the real app with
+a new script, `qa-scripts/083-verify.mjs` (modelled on the tester's `073-tester.mjs`
+forcing techniques, since that bounce was specifically caused by a verify script that
+never drove the first-run/boost/golden states). **24/24 checks passed**, covering:
+- **The three-chip animation audit, all three states** (the actual verification bar this
+  assignment exists to clear): first-run pre-keystroke (`.type-hint`,
+  `animationIterationCount` = `"1"`), an active daily-warmup boost forced via a fixture
+  with `boostLeft: 3` + `lastDay` set to today's `dayKey()` (so `checkDailyReturn`'s
+  `last === today` branch is a no-op and `boostLeft` survives untouched into render —
+  `.boost-chip` renders, iter=`"1"`), and a forced-golden exercise via
+  `Math.random = () => 0` in an `addInitScript` (`.golden-banner` renders, iter=`"1"`).
+  A full-page `.game *` animation sweep (same technique as `073-tester.mjs`) found zero
+  `animationIterationCount === "infinite"` offenders in any of the four driven states
+  (default, first-run, boost, golden) — only the pre-existing caret blink (explicitly
+  allowlisted by class, matching the AC's own carve-out) was excluded from the sweep.
+- Earnings-cluster hierarchy: computed `font-size` of `.cps-pill`/`.coin-pill` (16.8px /
+  18.4px) vs `.mult-pill`/`.acc-pill` (12.8px each) — primary readouts are visibly bigger.
+- Goal-sliver absence: `.goalsliver` count 0, no "JE VOLGENDE MACHINE"/"YOUR NEXT
+  MACHINE" text anywhere on `.game`, in both nl and en locale saves.
+- Live earn signal: coin-pill text `500` → `551` after a real driven exercise (same
+  interaction as before — no decorative loop touched).
+- Long-sentence wrap: injected a long Dutch sentence into `.typing-text` at 1280px width
+  — no `.typing-surface` overflow, no page-level horizontal scroll.
+- Both locales checked for the strings this assignment touches — no leftover goal-sliver
+  text, earnings pills render correctly in the en-locale save.
+- Console/page errors: only the pre-existing, documented `/api/track` 404 (analytics
+  beacon `vite preview` doesn't serve — not this assignment's concern, per instruction).
+- Killed the port-4237 server afterward (`Get-NetTCPConnection -LocalPort 4237 -State
+  Listen` empty; only a residual `TimeWait` socket, which is not a listener).
+
+**What I did NOT verify** (honest gaps, not claimed): mobile/narrow-viewport reflow of
+the new `.earn-cluster`/`.lever` wallet groups (075's mobile-reflow scope, not this
+slice's AC — the existing `@media (max-width: 767px)` wrap rule on `.wallet` is
+untouched and still applies to the new wrapper spans the same way it did to the old flat
+pill list, but I didn't screenshot it); the `prefers-reduced-motion` fallback for the new
+`dropIn` usages specifically (the global `@media (prefers-reduced-motion: reduce)` rule
+in `game.css` is untouched and unconditionally zeroes all animation durations/iterations,
+so it mechanically still applies — I didn't additionally screenshot it for this slice).
+
+**090 filed.** `company/assignments/090-boost-streak-pill-hardcoded-hex.md` — the
+pre-existing `.boost-chip`/`.streak-pill` raw hex colours (not tokens) that predate this
+assignment, discovered while fixing `.boost-chip`'s animation. `status: open, priority:
+4`, noted as developer-proposed. Left untouched here to stay in scope.

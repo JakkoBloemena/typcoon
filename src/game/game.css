@@ -213,6 +213,10 @@ button { font-family: inherit; }
    (design/DESIGN-FACTORY.md §5a) — bewust scoped tot .game-bar, zodat het startscherm
    z'n .coin-pill.big/.cps-pill.big ongewijzigd in de Nunito-lopende-tekst blijven. */
 .game-bar .wallet .coin-pill, .game-bar .wallet .cps-pill { font-family: var(--data); }
+/* 083 (design/DESIGN-FACTORY.md §W4): earn rate is PRIMARY alongside earned-total
+   (.coin-pill, already 1.15rem) — scoped to the wallet like the --data rule above, so
+   the home-screen's .cps-pill.big (App.jsx) stays untouched. */
+.game-bar .wallet .cps-pill { font-size: 1.05rem; }
 @keyframes coinBump { 0% { transform: scale(1); } 35% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
 /* combo-mijlpaal: korte burst die vrij midden op het scherm zweeft (raakt de
@@ -249,13 +253,14 @@ button { font-family: inherit; }
 }
 .star-pill.big { font-size: 1.2rem; }
 
-/* 073: ×multiplier + nauwkeurigheid% — het oude .meters-blok gevouwen in de ene
-   rustige regel (design/DESIGN-FACTORY.md §5a); zelfde pil-idioom als .cps-pill
-   hierboven, cijfers in de --data-instrumentenlezing i.p.v. de lopende-tekst-font. */
+/* 083 (design/DESIGN-FACTORY.md §W4, ADR 012 ruling 1): ×multiplier + nauwkeurigheid%
+   are the SECONDARY teaching-lever readouts — accuracy IS the earn multiplier, so they
+   stay, but visibly smaller/quieter than the earnings cluster (.cps-pill/.coin-pill)
+   they sit beside in .wallet. Same pill idiom as .cps-pill, smaller face + padding. */
 .mult-pill, .acc-pill {
   font-family: var(--data); font-variant-numeric: tabular-nums; white-space: nowrap;
-  font-weight: 800; color: var(--mint); background: var(--panel-2);
-  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--line); box-shadow: 0 4px 0 var(--sink);
+  font-weight: 800; font-size: 0.8rem; color: var(--mint); background: var(--panel-2);
+  padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); box-shadow: 0 4px 0 var(--sink);
 }
 
 /* ---------- Startscherm ---------- */
@@ -309,6 +314,10 @@ button { font-family: inherit; }
 .bar-left { display: flex; gap: 8px; align-items: center; }
 .icon-btn { padding: 8px 12px; font-size: 1.1rem; line-height: 1; }
 .wallet { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* 083: earnings cluster (rate+total) leads, secondary levers (×mult/acc%) trail —
+   design/DESIGN-FACTORY.md §W4. Plain flex groups, no new spacing token. */
+.earn-cluster { display: flex; gap: 10px; align-items: center; }
+.lever { display: flex; gap: 6px; align-items: center; }
 /* 072: de winkel (machines/upgrades/rebirth) verhuisde naar de fabriekspagina
    (FactoryPage.jsx) — .game-main draagt nu alleen nog .type-pane, dus één kolom. */
 .game-main { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
@@ -326,38 +335,19 @@ button { font-family: inherit; }
   .wallet { flex: 1 1 100%; justify-content: flex-end; }
 }
 
-/* ---------- Doel-sliver (073): het ÉNE zichtbare doel op de rustige typweergave —
-   vervangt de altijd-animerende fabrieksvloer (design/DESIGN-FACTORY.md §5a/§7/§11).
-   Gevuld door nextGoal (071); de balk gebruikt --reward (verdiende munten = de ene
-   luide stem). Geen eigen animatie behalve de width-transitie wanneer de staat zelf
-   verandert (bewaarde-waarde-clausule, 073) — geen ambient/idle motion. */
-.goalsliver {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
-  background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 12px 18px; box-shadow: 0 6px 0 var(--sink);
-  width: 100%; max-width: 760px; align-self: center;
-}
-.goalsliver-icon { font-size: 1.9rem; line-height: 1; flex: none; }
-.goalsliver-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 120px; }
-.goalsliver-name { font-family: 'Lilita One', sans-serif; font-size: 1.05rem; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.goalsliver-kicker { color: var(--ink-dim); font-weight: 800; font-size: 0.66rem; letter-spacing: 1.2px; text-transform: uppercase; }
-.goalsliver-bar { flex: 2 1 100px; min-width: 60px; height: 14px; border-radius: 999px; background: var(--panel-2); border: 2px solid var(--line); overflow: hidden; }
-.goalsliver-fill { display: block; height: 100%; border-radius: 999px; background: var(--reward); transition: width 0.4s ease; }
-.goalsliver-remaining {
-  font-family: var(--data); font-variant-numeric: tabular-nums; font-weight: 800;
-  color: var(--brass); white-space: nowrap; flex: none;
-}
-
 /* ---------- Typ-zone: de pers ---------- */
 .type-pane { display: flex; flex-direction: column; gap: 14px; align-items: center; position: relative; }
 
+/* 083 (design/DESIGN-FACTORY.md §W3, closes 073 AC2): one-shot entrance only — the
+   old goldpulse kept this pulsing forever, the exact ambient-motion offender the 073
+   bounce named. Reuses the existing dropIn idiom (defined once, above) instead of a
+   near-duplicate keyframe. */
 .golden-banner {
   font-family: 'Lilita One', sans-serif; font-size: 1.05rem; letter-spacing: 0.5px; color: var(--on-accent);
   background: linear-gradient(180deg, var(--brass-hi), var(--brass)); border-radius: 999px;
   padding: 10px 26px; box-shadow: 0 5px 0 var(--brass-deep), 0 0 30px rgba(255, 185, 21, 0.45);
-  animation: goldpulse 1.1s ease-in-out infinite; position: relative;
+  animation: dropIn 0.6s var(--pop); position: relative;
 }
-@keyframes goldpulse { 0%, 100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.05) rotate(1deg); } }
 .gold-run .typing-surface { border-color: var(--brass); box-shadow: 0 8px 0 #6b4d00, 0 0 34px rgba(255, 185, 21, 0.25); }
 
 /* ---------- Toets/diploma (assignment 049) — mintkleur, zelfde chip-idioom als
@@ -402,12 +392,12 @@ button { font-family: inherit; }
   }
 }
 
-/* eerste-keer hint: verdwijnt zodra het kind de eerste toets aanslaat */
+/* eerste-keer hint: verdwijnt zodra het kind de eerste toets aanslaat. 083 (closes 073
+   AC2): one-shot dropIn entrance, no more infinite hintPulse. */
 .type-hint {
   font-family: 'Lilita One', sans-serif; font-size: 1.15rem; color: var(--brass);
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); animation: hintPulse 1.3s ease-in-out infinite;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); animation: dropIn 0.6s var(--pop);
 }
-@keyframes hintPulse { 0%, 100% { transform: translateY(0); opacity: 0.85; } 50% { transform: translateY(3px); opacity: 1; } }
 
 /* ---------- Typvlak ---------- */
 .typing-surface {
@@ -732,11 +722,12 @@ button { font-family: inherit; }
   color: #5a2a00; background: linear-gradient(180deg, #ffd0a0, #ff9f43);
   padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 0 #b5651d;
 }
+/* 083 (closes 073 AC2): one-shot dropIn entrance, no more infinite goldpulse. */
 .boost-chip {
   font-family: 'Lilita One', sans-serif; font-size: 0.95rem; color: #5a2a00;
   background: linear-gradient(180deg, #ffd0a0, #ff9f43); border-radius: 999px;
   padding: 7px 18px; box-shadow: 0 4px 0 #b5651d, 0 0 20px rgba(255, 159, 67, 0.4);
-  animation: goldpulse 1.4s ease-in-out infinite;
+  animation: dropIn 0.6s var(--pop);
 }
 .welcome-card .welcome-flame { font-size: 3.6rem; animation: cardPop 0.6s var(--pop) 0.05s backwards; }
 .welcome-card h3 { color: var(--warm); }
