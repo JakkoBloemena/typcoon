@@ -2,7 +2,7 @@
 id: 103
 title: Built-station "+N/s" rate on the diorama omits the level multiplier — understates production for any machine above Lv1
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)
@@ -143,3 +143,85 @@ this work warranted a new assignment — the bug was exactly as scoped, the fix 
 single line, and no adjacent issue surfaced. 111 lapses.
 
 **Status set to `needs_verification`** (never `done` — that's the tester's call).
+
+## Verification (tester, worktree v103, 2026-07-24)
+
+Verified independently against commit `9d4a417` (tick #38, `git show 9d4a417 --stat`
+confirms the only code file touched is `src/game/Shop.jsx`, one line: `git diff
+9d4a417^..9d4a417 -- src/game/economy.js src/game/store.js src/engine/ src/game/theme.js
+src/game/goals.js` is empty). Built (`npm install`, `npm install playwright-core
+--no-save`, `npx vite build`) and served (`npx vite preview --port 4283 --strictPort`,
+tester's own port). Wrote `qa-scripts/103-tester.mjs` (own save, own idiom, following
+`qa-scripts/103-screenshot.mjs`) plus two supporting probes,
+`qa-scripts/103-tester-idle.mjs` / `qa-scripts/103-tester-idle2.mjs` (see AC3 note
+below), all left in place per the assignment's write surface.
+
+**AC1 (code) — held.** `git show 9d4a417 -- src/game/Shop.jsx` is exactly the one-line
+diff claimed:
+`-<div className="rate">+{fmt(b.rate * milestoneMultiplier(level))}/s</div>` →
+`+<div className="rate">+{fmt(level * b.rate * milestoneMultiplier(level))}/s</div>`,
+matching `economy.js`'s `coinsPerSecond()` term exactly.
+
+**AC2 (live, own save, milestone boundaries + non-1 aggregate multipliers) — held.**
+Built my own save, deliberately different from the dev's (typewriter Lv12/printer
+Lv3/robotarm Lv1) and deliberately hitting all three `MILESTONE_LEVELS` boundaries
+exactly, plus two upgrades and 2 rebirths so `prodMultiplier`/`prestigeMultiplier` ≠ 1
+(the dev's save had both == 1, so it never exercised this half of AC2):
+
+`buildings: { typewriter: 25, printer: 10, robotarm: 1, assembly: 50 }`,
+`upgrades: ['oil','turbo']` (prodMultiplier = 1.5×2 = 3), `rebirths: 2`
+(prestigeMultiplier = 1 + 2×0.25 = 1.5).
+
+Loaded live (home → play → factory nav path, same as the dev), read via Playwright:
+
+| Station | Level | baseRate | milestoneMultiplier(level) | Expected level×baseRate×mult | Displayed `.rate` |
+|---|---|---|---|---|---|
+| Typemachine (typewriter) | 25 (exact Lv≥25 boundary) | 1 | 4 (both 10 and 25 milestones ≤25) | 25×1×4=100 | **+100/s** ✓ |
+| Drukpers (printer) | 10 (exact Lv≥10 boundary) | 6 | 2 (10 only) | 10×6×2=120 | **+120/s** ✓ |
+| Robotarm | 1 (control) | 28 | 1 | 1×28×1=28 | **+28/s** ✓ (unchanged) |
+| Lopende band (assembly) | 50 (exact Lv≥50 boundary, all 3 milestones) | 130 | 8 | 50×130×8=52000 | **+52.000/s** ✓ |
+
+Raw sum = 100+120+28+52000 = 52248. Ledger check: 52248 × prodMultiplier(3) ×
+prestigeMultiplier(1.5) = 52248 × 4.5 = **235116**. The page's "PER SECONDE" ledger
+read **+235.116/s** — exact match, with prod/prestige multipliers ≠ 1 this time (the
+case the dev's save couldn't exercise). Screenshot:
+`company/assignments/103-screenshots/tester-factory.png`.
+
+**Lv1 control — held, no regression.** Robotarm at Lv1 displays `+28/s` in both my
+save and the dev's before/after pair — level factor is 1 so the fix is a no-op at Lv1,
+as the assignment's own diagnosis said.
+
+**AC3 (presentation-only, no economy/store/engine change) — held, diff-confirmed, but
+surfaced an UNRELATED pre-existing bug while probing.** The diff check above is
+conclusive: zero bytes changed outside `src/game/Shop.jsx`, and within that file only
+the one `.rate` div line differs — the buy/upgrade/rebirth handlers this assignment's
+delivery notes describe as "untouched" are, byte-for-byte, untouched. While probing
+"actual coin accrual per second unchanged for a given save" live (not just by diff), I
+found that `GameScreen.jsx` grants a real, uncommanded burst of coins on session start
+even with **zero keystrokes** — `qa-scripts/103-tester-idle.mjs`/`-idle2.mjs` show
+coins jumping from 1000 to ~234,870–237,362 within the first ~3s of loading the play
+view, purely idle, then flattening (no further growth over 6s of continued idle). This
+is `src/game/GameScreen.jsx`'s pre-existing `lastKeyRef = useRef(0)` (line 68): the
+production-tick interval's gate `now - lastKeyRef.current < ACTIVE_WINDOW_MS` (line
+131) is spuriously true for up to 3.5s after the page loads, before any real keystroke,
+because `performance.now()` is measured from navigation start, not from a real
+"last key" timestamp. This file is untouched by commit `9d4a417` (confirmed by the
+same `git diff 9d4a417^..9d4a417` above), so it is **not a 103 regression** — it
+pre-dates this fix and is out of this assignment's scope. Filed separately as id 109
+per protocol (`owner: developer`, `status: open`, `opened_by: tester`).
+
+**AC4 (`npm test` green) — held.** `npm test`: **266/266 passing** (same count reported
+by the dev), plus the production build and `check-no-dutch-en` gate both green.
+`public/**` regen churn from the test run was reverted (`git checkout -- public/`)
+before this commit, per protocol.
+
+**Verdict: all four acceptance criteria hold. Status → `done`.**
+
+Evidence: `company/assignments/103-screenshots/tester-00-home.png`,
+`tester-factory.png` (this tester's own save/boundaries);
+`qa-scripts/103-tester.mjs`, `qa-scripts/103-tester-idle.mjs`,
+`qa-scripts/103-tester-idle2.mjs`.
+
+Assignment id 109 (reserved by dispatcher instruction for this tick's new-defect slot):
+**consumed** — `company/assignments/109-idle-income-on-session-start.md`, the idle-tick
+leak found above.
