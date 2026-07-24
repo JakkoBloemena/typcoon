@@ -22,6 +22,13 @@ export const FREE_MACHINES = ['typewriter', 'printer'];
 // blijft alleen intern staan als de beoogde toekomstige reguliere prijs; het
 // mag pas weer als anker getoond worden als €29,99 ooit 30+ dagen echt is
 // gerekend en we daarna terugzakken naar €19,99.
+//
+// PRICE.offer (het instap-tarief op het hoofdstuk-1-paywallscherm) mag ZELF
+// blijven — het "alleen vandaag"-badge erbij is verwijderd (assignment 102):
+// zolang completePurchase() hieronder een lokale vlag-flip is (geen echte
+// betaling bestaat), kan geen enkele tijdsgebonden claim waargemaakt worden.
+// ADR 002 §3 staat zo'n claim pas toe als hij ook echt afloopt, ten vroegste
+// ~30 dagen na een echte betaal-launch.
 export const PRICE = { now: '19,99', anchor: '29,99', offer: '14,99' };
 
 export function isUnlocked() {
