@@ -2,7 +2,7 @@
 id: 078
 title: "goal.effort ('± N opdrachten') is hardcoded Dutch regardless of active locale"
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (proposed)
@@ -96,6 +96,54 @@ pattern exactly, no new mechanism, no locale parameter threaded through `nextGoa
 - Port 4233 server killed after verification; `public/**`/`sitemap.xml` gen-content
   churn reverted via `git checkout -- public/` before committing; `save-compat` files
   (`store.js`/`economy.js`/engine/`theme.js`) untouched.
+
+## Verification (tester, tick #29)
+
+Independently verified in worktree `C:\companies\typcoon-lanes\v078` (branch `verify/078`,
+port 4235). Did not just re-run the dev's `qa-scripts/078-verify.mjs` — read the seam
+directly, wrote a fresh Playwright script driving both locales, and deliberately broke
+the `en` string locally to prove the new tests actually trip.
+
+- **AC1 (locale seam, real translations) — PASS.** `src/game/goals.js:38-44`
+  `effortLabel()` is now `return gt('goal.effort', { n });` with no template string left.
+  `src/game/strings.js:223` nl = `'± {n} opdrachten'`, line 545 en = `'± {n} tasks'` — a
+  real translation, not a copy-paste of the Dutch value.
+- **AC2 (per-locale test, not unconditional Dutch regex) — PASS.**
+  `test/goals.test.js`'s descriptor-contract test (line 99) now only asserts the nl
+  pattern, and a new test (lines 105-113) calls `setLocale('en')`, asserts
+  `/^± \d+ tasks$/`, and resets to `'nl'`. I deliberately reverted the en string in
+  `strings.js` to `'± {n} opdrachten'` and reran `node --test test/goals.test.js`: the new
+  test failed exactly as expected (`actual: '± 1 opdrachten'`, expected en pattern) while
+  the other 10 tests in the file stayed green. Restored the string afterward
+  (`git diff --stat src/game/strings.js` showed no diff after restore) — this is a test
+  that guards the regression, not just one that exists.
+- **AC3 (locale.test.js coverage) — PASS.** `goal.effort` is in `STATIC_FLOW_KEYS`
+  (`test/locale.test.js:64`), and the full-map parity/no-raw-key/no-Dutch-fallback tests
+  (lines 113-145) iterate `localeKeys('nl')` dynamically so they pick it up without a
+  named-key change. Confirmed by driving the same deliberate-break above through
+  `node --test test/locale.test.js`: the "every key in the map resolves to real English"
+  test failed independently, reporting `stillDutch: ['goal.effort']` — a second,
+  independent tripwire beyond the goals.test.js one.
+- **AC4 (en factory page, no Dutch) — PASS.** Wrote a fresh Playwright script (not the
+  dev's), ran it against `vite preview --port 4235` for both an `en` and default `nl`
+  session (`localStorage['typcoon:onboarded']='1'`, start factory, dismiss the daily
+  overlay — nl overlay button is `'Aan de slag!'`, not `"Let's go!"`, which I confirmed by
+  reading `strings.js:178` after the dev's exact en-only selector didn't generalize).
+  Rendered `.goalspot-togo` text:
+  - en: `"15 coins to go — about ± 2 tasks away"` — zero Dutch words, matches the expected
+    shape exactly.
+  - nl (sanity check): `"nog 15 munten — dat haal je in ± 2 opdrachten"` — unaffected,
+    still Dutch as intended.
+- **AC5 (npm test green) — PASS.** `npm test`: **230/230 unit tests pass**, `vite build`
+  succeeded, `check-no-dutch-en: PASS — 5 built en file(s) checked against 59 Dutch
+  lexicon words, zero unallowlisted hits.` `public/**`/`sitemap.xml` gen-content churn
+  reverted via `git checkout -- public/` before committing.
+
+**Verdict: all 5 ACs hold, independently confirmed. Status -> done.**
+
+No distinct defect found beyond 078's scope during this pass (the render call site
+`Shop.jsx:191` composes `goal.togoLine`/`goal.effort` cleanly, no double-localization or
+leftover raw-key risk) — assignment 081 lapses, not filed.
 
 ## Notes
 
