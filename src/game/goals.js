@@ -37,7 +37,10 @@ function estimatePerExercise(tycoon) {
 
 function effortLabel(remaining, tycoon) {
   const n = Math.ceil(remaining / estimatePerExercise(tycoon));
-  return `± ${n} opdrachten`;
+  // gt() leest de actieve locale uit strings.js' eigen module-state (via setLocale,
+  // door App.jsx gezet vóór elke render) — zelfde patroon als de andere gt()-aanroepen
+  // hieronder (building./upgrade./rebirth.button); geen locale-parameter nodig hier.
+  return gt('goal.effort', { n });
 }
 
 // Bouwt de gemeenschappelijke voortgangsvelden (have/fraction/remaining/effort) — elke

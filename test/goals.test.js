@@ -6,7 +6,7 @@ import { nextGoal } from '../src/game/goals.js';
 import {
   newTycoon, buildingCost, rebirthCost, REBIRTH_BASE_COST,
 } from '../src/game/economy.js';
-import { gt } from '../src/game/strings.js';
+import { gt, setLocale } from '../src/game/strings.js';
 
 // --- ladder (a)-(d): research/milestone-factory.md §3e ---
 
@@ -96,7 +96,20 @@ test('descriptor draagt precies de AC-velden en NOOIT een timer/countdown', () =
     Object.keys(g).sort(),
     ['cost', 'effort', 'fraction', 'have', 'icon', 'id', 'kind', 'locked', 'name', 'remaining', 'reward'].sort(),
   );
-  assert.match(g.effort, /^± \d+ opdrachten$/, 'vriendelijke schatting, geen aftellende klok');
+  assert.match(g.effort, /^± \d+ opdrachten$/, 'nl (default): vriendelijke schatting, geen aftellende klok');
+});
+
+// assignment 078: effort was hardcoded Dutch (`± N opdrachten`) regardless of the
+// active locale — now routed through gt('goal.effort', ...), so it must follow
+// setLocale() per-locale, same as every other rendered field in a descriptor.
+test('effort renders via gt() in the active locale — Dutch by default, real English under en', () => {
+  const gNl = nextGoal({ ...newTycoon(), coins: 6 }, 0);
+  assert.match(gNl.effort, /^± \d+ opdrachten$/, 'nl: Dutch pattern');
+
+  setLocale('en');
+  const gEn = nextGoal({ ...newTycoon(), coins: 6 }, 0);
+  assert.match(gEn.effort, /^± \d+ tasks$/, 'en: English pattern, no leaked Dutch word');
+  setLocale('nl'); // reset for other test files
 });
 
 test('fraction is geklemd tussen 0 en 1, ook als er (hypothetisch) meer munten zijn dan de kost', () => {

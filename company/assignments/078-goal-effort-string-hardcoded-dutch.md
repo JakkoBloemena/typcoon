@@ -2,7 +2,7 @@
 id: 078
 title: "goal.effort ('± N opdrachten') is hardcoded Dutch regardless of active locale"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: []
 opened_by: developer (proposed)
@@ -33,19 +33,69 @@ a real, scoped fix, not a one-line tweak inside a presentation-only assignment.
 
 ## Acceptance criteria
 
-- [ ] `effortLabel()` (or `nextGoal`'s construction of the `effort` field) renders
+- [x] `effortLabel()` (or `nextGoal`'s construction of the `effort` field) renders
       correctly in the active locale — e.g. via a new `strings.js` key
       (`goal.effort` or similar) with real nl/en translations, not a hardcoded template
       string.
-- [ ] `test/goals.test.js`'s effort-format assertion is updated to check the *pattern*
+- [x] `test/goals.test.js`'s effort-format assertion is updated to check the *pattern*
       per active locale (or is re-scoped to only assert the Dutch/default locale,
       with a new explicit en-locale test added) — not a Dutch-only regex applied
       unconditionally.
-- [ ] `test/locale.test.js`'s full-map parity + no-raw-key/no-Dutch-fallback checks
+- [x] `test/locale.test.js`'s full-map parity + no-raw-key/no-Dutch-fallback checks
       cover the new key.
-- [ ] Manually confirm (or script) that an `en` session's factory page
+- [x] Manually confirm (or script) that an `en` session's factory page
       (`goal.togoLine`, assignment 074) shows no Dutch word.
-- [ ] `npm test` stays green.
+- [x] `npm test` stays green.
+
+## Delivery notes (developer, 2026-07-24)
+
+**Locale-seam decision:** `goals.js` already imports and calls `gt()` for every other
+descriptor field (`gt('building.' + id)`, `gt('upgrade.prod', {x})`, `gt('rebirth.button')`,
+etc.) with no locale argument — it relies on `gt()`'s own module-level `activeLocale`,
+set once per render by `App.jsx`'s `setLocale(profile.uiTaal ...)` before any child
+(`GameScreen`/`Shop`/`nextGoal`) runs. `effortLabel()` was the one outlier building raw
+text instead of going through that existing seam. Fix: added a `goal.effort` key to
+`strings.js` (nl: `'± {n} opdrachten'`, en: `'± {n} tasks'`) and changed
+`effortLabel()` to `return gt('goal.effort', { n });` — matching the file's own established
+pattern exactly, no new mechanism, no locale parameter threaded through `nextGoal`.
+
+**Changes:**
+- `src/game/goals.js`: `effortLabel()` now calls `gt('goal.effort', { n })` instead of
+  building `` `± ${n} opdrachten` `` directly.
+- `src/game/strings.js`: added `'goal.effort': '± {n} opdrachten'` (nl) /
+  `'goal.effort': '± {n} tasks'` (en), placed next to `goal.togoLine` in both maps.
+- `test/goals.test.js`: split the old single Dutch-only regex assertion — kept it as the
+  nl-default check on the existing descriptor-contract test, and added a new test
+  (`effort renders via gt() in the active locale ...`) that additionally calls
+  `setLocale('en')`, asserts `/^± \d+ tasks$/`, then resets to `'nl'` for the rest of the
+  suite.
+- `test/locale.test.js`: added `'goal.effort'` to `STATIC_FLOW_KEYS` (same list
+  `goal.togoLine`/`goal.spotKicker` are already in), so it's covered by the
+  home→onboarding→gameplay no-raw-key check; the full-map parity and
+  no-raw-key/no-Dutch-fallback tests already iterate every key in `STRINGS`
+  dynamically and pick it up automatically.
+- `qa-scripts/078-verify.mjs` (new): Playwright-driven check — loads `/speel/?lang=en`,
+  marks the device onboarded (`localStorage['typcoon:onboarded']='1'`, same flag the app
+  itself sets after a real playthrough) to skip the typed-drill gate, starts a factory,
+  dismisses the daily "Welcome back!" moment overlay, opens the Factory page, and asserts
+  `.goalspot-togo`'s rendered text matches `/coins to go — about ± \d+ tasks away$/` with
+  no Dutch tell words. Not wired into `npm test` — a one-off manual QA script per the
+  assignment brief, run with a `vite preview --port 4233` server up.
+
+**Verification:**
+- `npm test` (unit tests + `gen-content` + `vite build` + `check-no-dutch-en`):
+  **230/230 pass** (baseline 229 + 1 new test), `vite build` succeeded,
+  `check-no-dutch-en: PASS — 5 built en file(s) checked against 59 Dutch lexicon words,
+  zero unallowlisted hits.`
+- `qa-scripts/078-verify.mjs` against `vite preview --port 4233` (Playwright via
+  `playwright-core`, cached Chromium): printed
+  `goal.togoLine rendered text: "15 coins to go — about ± 2 tasks away"` and
+  `PASS — en factory page spotlight shows zero Dutch (goal.effort now localizes).`
+  This was the sole known Dutch leak on the en factory page per the 074 tester's note;
+  after this fix it's gone.
+- Port 4233 server killed after verification; `public/**`/`sitemap.xml` gen-content
+  churn reverted via `git checkout -- public/` before committing; `save-compat` files
+  (`store.js`/`economy.js`/engine/`theme.js`) untouched.
 
 ## Notes
 

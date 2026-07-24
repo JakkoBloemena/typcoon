@@ -220,6 +220,7 @@ const STRINGS = {
   // niet alleen machines — vandaar generieker dan `goal.sliverLabel`.
   'goal.spotKicker': 'JE VOLGENDE DOEL',
   'goal.togoLine': 'nog {n} munten — dat haal je in {effort}',
+  'goal.effort': '± {n} opdrachten',
   'factory.planTitle': 'Het Bouwplan',
   'factory.builtTag': '{built} van {total} machines gebouwd',
   'factory.currentBadge': 'NU BOUWEN',
@@ -541,6 +542,7 @@ const STRINGS_EN = {
 
   'goal.spotKicker': 'YOUR NEXT GOAL',
   'goal.togoLine': '{n} coins to go — about {effort} away',
+  'goal.effort': '± {n} tasks',
   'factory.planTitle': 'The Build Plan',
   'factory.builtTag': '{built} of {total} machines built',
   'factory.currentBadge': 'BUILDING NOW',
