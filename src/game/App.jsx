@@ -42,6 +42,24 @@ function touchOnly() {
     && !window.matchMedia?.('(pointer: fine)').matches;
 }
 
+// Desktop-ontwerpvloer (assignment 106, ADR 015 decision 2): de diorama (.hal/.mch,
+// layoutDiorama in Shop.jsx) en het BOUWBON-kaartje (.ticket) zijn nooit getekend
+// voor een reflow — ze zijn gebouwd voor ≥1024px (ADR 012's ontwerpdoel). Gemeten
+// deze tick (zie company/assignments/106-*.md Delivery notes voor de volledige
+// meting): bij 5 gebouwde machines krimpt de overlap van de vloer lineair met de
+// venster­breedte (700px→31px overlap, 767px→20px, 860px→4,5px, richting nul rond
+// ~880-900px) — 1024px laat ruim marge over voor zowel de diorama als het BOUWBON-
+// kaartje (dat eerder knijpt dan de diorama overlapt). Onder de vloer krijgt een
+// toetsenbord-gebruiker (pointer: fine) met een te smal venster dezelfde kalme hint
+// als touchOnly() hierboven — nooit een gereflowde/mobiele laag (dat verbiedt ADR
+// 015 expliciet).
+const DESKTOP_MIN_WIDTH = 1024;
+
+function tooNarrow() {
+  return typeof window !== 'undefined'
+    && window.matchMedia?.(`(max-width: ${DESKTOP_MIN_WIDTH - 1}px)`).matches;
+}
+
 // Locale-signaal voor een NIEUWE speler (§3.7): de en-landing hangt ?lang=en aan
 // de "Speel gratis"-link. /speel/ blijft één build — dit is een runtime-keuze,
 // geen aparte bundel. Een bestaand profiel (uit de save) is altijd leidend; dit
@@ -68,6 +86,7 @@ export default function App() {
   const [session, setSession] = useState(() => getSession()); // ouder-account + token, of null
   const [showAccount, setShowAccount] = useState(false); // "voortgang per e-mail"
   const [showLogin, setShowLogin] = useState(false); // ander apparaat
+  const [narrowWindow, setNarrowWindow] = useState(tooNarrow); // breedte-vloer (assignment 106)
 
   // UI-taal (§3.7): een bestaand profiel is leidend; zonder profiel (nog geen
   // save) telt het ?lang=en-signaal van de en-landing. Dit is een module-brede
@@ -86,6 +105,24 @@ export default function App() {
 
   // meting (assignment 006): bezoek + "betrokken" (≥2 sessies) — één keer bij het openen.
   useEffect(() => { trackPageview('/speel/'); markSession(); }, []);
+
+  // breedte-vloer REACTIEF houden (assignment 106): in tegenstelling tot touchOnly()
+  // hierboven (pointer-type verandert praktisch nooit binnen een sessie, dus die leest
+  // alleen bij een toch-al-geplande render) verandert een venster wél vaak tijdens het
+  // spelen — een speler die het venster verbreedt moet het spel direct terugkrijgen,
+  // niet pas na een toevallige her-render. matchMedia's eigen 'change'-event is hier
+  // de juiste haak (geen losse generieke resize-listener/debounce nodig).
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia(`(max-width: ${DESKTOP_MIN_WIDTH - 1}px)`);
+    const onChange = () => setNarrowWindow(mq.matches);
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else mq.addListener(onChange); // oudere Safari
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      else mq.removeListener(onChange);
+    };
+  }, []);
 
   // bestaande save laden
   useEffect(() => {
@@ -177,6 +214,22 @@ export default function App() {
           <h1 className="home-title">{gt('brand.name')}</h1>
           <p className="home-tagline">{gt('desktop.title')}</p>
           <p className="home-how">{gt('desktop.body')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // breedte-vloer (assignment 106, ADR 015 decision 2): een toetsenbord-gebruiker
+  // met een te smal venster krijgt dezelfde kalme hint-opzet als touchOnly()
+  // hierboven — nooit de diorama of het BOUWBON-kaartje in gereflowde vorm.
+  if (narrowWindow) {
+    return (
+      <div className="home">
+        <div className="home-hero">
+          <Mascot pose={0} className="home-logo" />
+          <h1 className="home-title">{gt('brand.name')}</h1>
+          <p className="home-tagline">{gt('desktop.widthTitle')}</p>
+          <p className="home-how">{gt('desktop.widthBody')}</p>
         </div>
       </div>
     );
