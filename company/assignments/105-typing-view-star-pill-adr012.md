@@ -2,7 +2,7 @@
 id: 105
 title: Typing-view star (⭐ rebirths) pill is factory-world info beyond "earnings only" — ADR 012 ruling 1 fidelity gap
 owner: product-owner
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)

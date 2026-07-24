@@ -2,7 +2,7 @@
 id: 103
 title: Built-station "+N/s" rate on the diorama omits the level multiplier — understates production for any machine above Lv1
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)

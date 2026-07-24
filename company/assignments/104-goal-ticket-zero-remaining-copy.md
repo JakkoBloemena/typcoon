@@ -2,7 +2,7 @@
 id: 104
 title: "BOUWBON ticket reads \"nog 0 munten — dat haal je in ± 0 opdrachten\" once the goal is already affordable — confusing copy, not wrong math"
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)

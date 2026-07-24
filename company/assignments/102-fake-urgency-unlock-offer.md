@@ -2,7 +2,7 @@
 id: 102
 title: "\"ALLEEN VANDAAG\" (today only) badge on the €14,99 unlock offer never expires — live, unconditional false urgency, contradicting ADR 002 §3"
 owner: developer
-status: open
+status: in_progress
 priority: 1
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)
