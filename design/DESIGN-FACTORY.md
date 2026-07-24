@@ -497,6 +497,19 @@ blueprint is the tabletop; the machines are models you place on it and switch on
   gated `Unlock.jsx` (breadth, not power — guardrail kept). Premium ghost gets a faint brass
   border tint so "buyable breadth" reads differently from "keep learning".
 
+  > **Addendum (designer, des092, 2026-07-24, assignment 092).** "**Greyed icon**" means a
+  > *legible faint silhouette*, **not an invisible one**. The mock draws the ghost icon as a
+  > desaturated emoji (a light shape on the dark floor); the shipped app reuses the dark idle
+  > `Machine` SVG (navy shapes at baked `opacity:0.42`), where `grayscale(1)` leaves it dark
+  > and it vanishes on the diorama floor. The corrected treatment is a one-line CSS filter on
+  > `.ghost .ghost-ico` — `filter: brightness(0) invert(1)` — which recolours the SVG to a
+  > soft light-grey silhouette (the SVG's own 42% opacity keeps it faint). It is a
+  > theme-neutral tracing (no hardcoded token; legible on all four themed floors — verified,
+  > `company/assignments/092-screenshots/`). **Do NOT add a third per-machine SVG "ghost"
+  > variant** — a filter restores the intended read at ~zero asset cost. A future
+  > per-theme-*tinted* ghost (currentColor/stroke SVG) is the only reason to revisit this,
+  > and only if the neutral tracing is later judged insufficient.
+
 ### W2c. The placement rule (so a dev never hand-tunes magic percentages)
 The mock hand-places five machines by percentage; **that is a mock convenience, not the
 spec.** The economy roster is fixed at **5 machines** (`BUILDINGS`), but placement must be a
