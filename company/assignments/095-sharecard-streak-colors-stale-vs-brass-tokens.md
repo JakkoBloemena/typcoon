@@ -2,7 +2,7 @@
 id: 095
 title: shareCard.js's STREAK_* hex constants no longer match the live .streak-pill (post-090)
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 090)
@@ -254,3 +254,104 @@ regenerated `public/**` (blog/sitemap pages, unrelated to this change) — rever
 (frontmatter + delivery notes).
 
 Terminal status: **needs_verification**.
+
+## Verification (tester, tick #39, 2026-07-24)
+
+**Verdict: PASS — all three ACs hold. Status flipped to `done`.**
+
+Verified independently in worktree `C:\companies\typcoon-lanes\v095` (branch
+`verify/095`), without reusing the developer's screenshots, MD5s, or scripts as
+evidence — new probes written from scratch (`qa-scripts/095-tester.mjs`,
+`qa-scripts/095-tester-diff.mjs`, `qa-scripts/095-tester-livepill.mjs`), own save data
+(`naam: 'TesterKind'`, different coin/building counts than the dev's `Sanne` fixture),
+own port (4281, per instructions).
+
+**AC1 (product-owner/designer call, not a dev's).** Read des095's ruling in this file
+(commit `4e2f610`) end to end. It is a real ruling with reasoning grounded in reading
+`shareCard.js` (correctly observes zero theme-branching anywhere in the file — spot
+checked myself: no `loadTheme`/`[data-theme]` reference in `src/game/shareCard.js`),
+citing the post-090 `game.css` values, the 024 image-download-only precedent, and the
+W6 anti-hardcode principle from `DESIGN-FACTORY.md` context — with a clear, unambiguous
+recipe attached, and a `DESIGN.md` addendum ("Share-card thema-beleid") recording the
+policy so the question doesn't reopen. Satisfied — this was a designer call, not the
+developer inventing scope.
+
+**Diff conformance.** `git show afaf5ae -- src/game/shareCard.js` matches the recipe
+exactly: the four `STREAK_TEXT`/`STREAK_HI`/`STREAK_LO`/`STREAK_SHADOW` constants are
+deleted, the `streak > 0` block's `pill(...)` call and `ctx.fillStyle` now reference
+`BRASS_HI`/`BRASS`/`BRASS_DEEP`/`INK_ON_BRASS` verbatim, no other line in that block
+changed, and the header comment was reworded per the recipe. No other source file was
+touched by the fix commit (only evidence: screenshots, `qa-scripts/095-*.mjs`, this
+assignment file). Confirmed the working tree's `src/game/shareCard.js` is byte-identical
+to the `afaf5ae` commit content (`git diff --no-index -b` against `git show afaf5ae:...`
+— zero diff once CRLF noise from `git show`'s LF output is ignored).
+
+**Token spot-check.** `src/game/game.css` `:root`: `--brass: #ffb915`,
+`--brass-hi: #ffd25e`, `--brass-deep: #c67f00`, `--on-accent: #3d2c00` (lines 22-24, 37).
+`shareCard.js`'s `BRASS`/`BRASS_HI`/`BRASS_DEEP`/`INK_ON_BRASS` equal these exactly
+(lines 27-32). `.streak-pill` (game.css lines 988-992, post-090) reads
+`color: var(--on-accent); background: linear-gradient(180deg, var(--brass-hi),
+var(--brass) 55%); box-shadow: 0 4px 0 var(--brass-deep);` — the identical quartet.
+
+**AC2 (no visual regression / no unintended delta).** Built the app twice from the same
+worktree: once with the pre-`afaf5ae` `shareCard.js` (extracted via
+`git show afaf5ae^:src/game/shareCard.js`) as "before", once with the current (fixed)
+file as "after" — `npx vite build` + `vite preview --port 4281 --strictPort` each time,
+own Playwright probe driving `localhost:4281/speel/`, warming a real save via the
+engine, clicking "📸 Deel je fabriek", and capturing both the rendered
+`canvas.share-canvas` screenshot AND the canvas's native `toDataURL()` buffer (1000×620,
+no browser DPR/CSS scaling) for `streak: 5` and `streak: 0`.
+  - `streak: 0` — `095-tester-before-streak0-native.png` and
+    `095-tester-after-streak0-native.png` are **byte-identical**
+    (MD5 `05e5b1646c82c0c7bcbbd7f0f7394c46` both), independently reproducing the dev's
+    byte-identity claim with my own harness and fixture data.
+  - `streak: 5` — independent pixel diff (`qa-scripts/095-tester-diff.mjs`) of the
+    native 1000×620 buffers found the change confined to bounding box
+    `{minX:399, minY:165, maxX:514, maxY:224}` (115×59px), matching the streak pill's
+    known geometry (`pillY=165`, third pill in the row) — nothing else on the card
+    moved. Sampled colors at the bottom of the pill (near the shadow band): before
+    `rgb(181,101,29)` = exactly `#b5651d` (`STREAK_SHADOW`), after `rgb(198,127,0)` =
+    exactly `#c67f00` (`BRASS_DEEP`) — an exact literal swap, not an approximation.
+    Visual side-by-side (`095-tester-before-streak5-native.png` vs
+    `095-tester-after-streak5-native.png`, viewed directly): the streak pill goes from
+    warm orange to the same brass-gold as the coin pill immediately to its left, title,
+    cps pill, machine tile and footer all identical. Screenshots saved under
+    `company/assignments/`.
+
+**AC3 (`.streak-pill`'s post-090 live look).** Screenshotted the actual live DOM
+`.streak-pill` in `GameScreen.jsx` (not the share card) with the same warm save
+(`095-tester-live-streak-pill.png`) — renders brass-gold with dark ink text, consistent
+with the "after" share-card pill and with the token spot-check above. Combined with the
+exact hex-level match already established, this closes the loop: card pill ≡ token
+values ≡ live pill.
+
+**AC4 (`npm test` green).** Fresh `npm install` (worktree had no `node_modules`) +
+`npm test` → **266/266 pass**, `check-no-dutch-en: PASS`. `test/shareCard.test.js`
+untouched (confirmed via `git log`/`git show --stat` on `afaf5ae`) and green, as
+expected since it only covers `buildShareData`. `npm test`'s internal `vite build`
+regenerated `public/**` build artifacts (unrelated blog/sitemap output) — reverted with
+`git checkout -- public/`, no residue committed.
+
+**Judgment calls.**
+- Weighed whether "fixed-brass" was implemented faithfully to the ruling: yes — the
+  ruling's own logic (rest of the card is already theme-fixed; the streak pill was the
+  sole outlier) holds up on inspection, the recipe was followed to the letter with zero
+  scope creep, and the `DESIGN.md` addendum correctly states the maintenance rule for
+  future `--brass*`/`--on-accent` changes.
+- Did not treat the developer's MD5s/bounding-box numbers as evidence on their own —
+  rebuilt both states independently, used different save-data fixtures, a different
+  probe script, and additionally checked the native canvas buffer (bypassing browser
+  CSS/DPR scaling that the dev evidence used) as well as the live DOM `.streak-pill`,
+  which the developer's evidence did not include. All independently reproduced the same
+  conclusion.
+- No new defects found (id 107 was reserved for this tick's wave; not consumed —
+  lapses, same as the developer's own 108/109 findings: nothing outside 095's
+  documented scope was found broken).
+
+**Commit:** tester evidence and status flip committed as `<see accompanying commit>`
+in branch `verify/095` — this assignment file (status + this section) and
+`qa-scripts/095-tester.mjs`, `qa-scripts/095-tester-diff.mjs`,
+`qa-scripts/095-tester-livepill.mjs`, and the `company/assignments/095-tester-*.png`
+evidence screenshots.
+
+Terminal status: **done**.
