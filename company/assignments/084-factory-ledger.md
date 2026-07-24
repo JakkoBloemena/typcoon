@@ -2,7 +2,7 @@
 id: 084
 title: Factory ledger — show coin / per-second / star readout (world-pass slice 2)
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: product-owner
@@ -138,3 +138,99 @@ rule, not a token change. Flagging for the tester/PO in case 085's diorama work 
 different split.
 
 **093:** not needed — no distinct new problem found while working this assignment. 093 lapses.
+
+## Verification (tester, tick #31)
+
+Independently re-derived every claim; did not take the delivery notes on faith. Worked in
+`C:\companies\typcoon-lanes\v084` (branch `verify/084`), never touched the main checkout or
+another worktree. Wrote an **independent** script, `qa-scripts/084-tester.mjs` (own fixtures,
+own assertions — read `qa-scripts/084-verify.mjs` only for orientation on real-nav path/class
+names, did not import or re-run it).
+
+**Setup:** `npm install` (this worktree had no `node_modules`), `npm install playwright-core
+--no-save` (not a project dependency; installed locally without touching `package.json`/
+`package-lock.json` — verified `git status` on both was empty after). `npx vite build` →
+`git status --porcelain` showed no `public/**` churn (this repo's `build` only touches
+`public/`/`sitemap.xml` via the `predev`/`prebuild` npm-script hooks, which `npx vite build`
+alone doesn't trigger) → `npx vite preview --port 4242`. Chromium at
+`C:\Users\Jakko\AppData\Local\ms-playwright\chromium-1228\chrome-win64\chrome.exe`.
+
+**Per-AC verdict:**
+
+1. **AC1 (raw spendable balance, closes 070 AC1) — PASS.** Fixture `coins:500,
+   totalCoins:650, lifetimeCoins:18400` (all three deliberately different): ledger text
+   contains `500`, and neither `18.400`/`18400` nor `650` appear anywhere in `.ledger`'s
+   innerText. Then a **real** buy (spotlit-goal button, `500 → 15 cost → 485`): ledger
+   balance dropped by exactly the item cost. `qa-scripts/084-tester.mjs` checks 1–6.
+2. **AC2 (coins-per-second, live) — PASS.** Started at `+0/s` with zero built machines.
+   Sat on the factory page **2.5s doing nothing** (no buy, no typing): both the money and
+   rate cells were byte-identical before/after — proves the factory page has **no tick loop
+   of its own** (guardrail 2, no idle income). Then a real buy: rate cell moved `+0/s →
+   +1/s` with no reload. Checks 7–11.
+3. **AC3 (star readout, `>0` only) — PASS.** Absent at `rebirths:0`. Present and correct
+   (`⭐ 3`) at `rebirths:3`. Drove a **real** 0→1 prestige through the actual confirm
+   dialog (`.rebirth-btn` → confirm card → `Verkopen`/`Sell`): star cell appeared reading
+   `⭐ 1`, matching. Checks 12–17.
+4. **AC4 (no regression to buy/buyUpg/doRebirth/gating) — PASS.** Beyond the developer's own
+   building-buy + prestige coverage, I additionally exercised the **upgrade** path
+   (`buyUpg`, untested by the developer's own script): an affordable upgrade purchased
+   correctly and dropped the ledger by its cost; a second, unaffordable objectives-row
+   button was confirmed natively `disabled` (real HTML disabled attribute — React's
+   `onClick` does not fire on a disabled `<button>`, confirmed by clicking it with
+   `force:true` and observing the balance unchanged). Checks 18–21.
+5. **AC5 (`--sky` only on the star cell) — PASS.** `git show 3fc9cf5 -- src/game/game.css`:
+   the only new `--sky` reference in the whole diff is `.ledger .val.star { color:
+   var(--sky); }`; `.val.money` is `var(--reward)`, `.val.rate` is `var(--mint)`.
+6. **AC6 (token discipline) — PASS.** `git show 3fc9cf5 -- src/game/FactoryPage.jsx
+   src/game/game.css | grep -nE '#[0-9a-fA-F]{3,8}|rgba?\('` → zero hits in either file's
+   diff. No new `:root` declarations added (confirmed by reading the full diff hunk — only
+   existing tokens `--panel`, `--line`, `--sink`, `--r-lg`, `--data`, `--ink-dim`,
+   `--reward`, `--mint`, `--sky` are referenced).
+7. **AC7 (save-compat) — PASS.** `git show 3fc9cf5 --stat` and the merge commit `9c2f7d5
+   --stat` both show exactly the same 7 paths (`FactoryPage.jsx`, `game.css`, `strings.js`,
+   `test/locale.test.js`, the assignment file, the screenshot, the qa-script) — `store.js`,
+   `economy.js`, `src/engine/`, `theme.js`, `goals.js`, `App.jsx`, `GameScreen.jsx` are
+   absent from this slice's own diff (untouched). No dedicated pre-existing-save fixture
+   file exists in the repo, so save-compat rendering was verified across every scenario in
+   `084-tester.mjs` using saves built via the actual `newProfile`/`newState` engine
+   functions (the real save schema) — all render correctly, including a fresh/first-run
+   save (see below) and one with `coins:999999999, rebirths:9999` (ad hoc,
+   `qa-scripts/_tester-084-extra.mjs`) — no NaN/undefined, no crash. No-idle-income
+   independently reconfirmed in AC2 above.
+8. **AC8 (tests/build) — PASS.** Ran `npm test` myself (not taken on faith): **232/232**,
+   `vite build` green, `check-no-dutch-en`: PASS (5 built en files, 0 unallowlisted Dutch
+   hits). Both locales' ledger labels confirmed rendering: nl → `Munten / Per seconde /
+   Sterren`, en → `Coins / Per second / Stars` (checks 22–23). `git checkout -- public/`
+   left `git status --porcelain` clean before commit.
+
+**Extra states/edge cases exercised beyond the 8 ACs (all clean, no new defects):**
+- First-run / fresh save (`coins:0`, zero machines, zero upgrades): `.ledger` renders, money
+  cell shows `0` (not blank/NaN/undefined), rate cell shows `+0/s`, star cell correctly
+  absent. Check 24–27.
+- No horizontal overflow at 1360px desktop and at a narrower 900px desktop width with the
+  ledger present (checks 28–29); additionally spot-checked 375px mobile and a
+  `coins:999999999`/`rebirths:9999` huge-number fixture ad hoc
+  (`qa-scripts/_tester-084-extra.mjs`, screenshots
+  `company/assignments/084-tester-375-mobile.png` and
+  `company/assignments/084-tester-huge-numbers.png`) — both wrap/format cleanly, no
+  clipping, no overflow. (375px mobile redesign is explicitly 075's job, not this slice's;
+  noting it only because nothing broke.)
+- Animation sweep (ADR 012 calm-world): computed `animation-name`/`animation-iteration-
+  count` on `.ledger`, all its children, `.planhead-right` and its children — zero infinite
+  animations found (check 30). Matches the developer's claim of zero new `@keyframes`.
+- **Judgment call reviewed** (`.planhead-right` wrapping `.progresstag` + `.ledger`): W2d
+  only specifies the ledger is "bolted to the top-right of the plan" — it does not mandate
+  where `.progresstag` sits relative to it, so this does not violate the W2d spec or any AC.
+  Not a bounce. Flagging forward for 085 (the diorama slice) per the developer's own note,
+  since the mock's `.stagehead` puts the built-tag under the title rather than stacked
+  above the ledger.
+
+**Result: 8/8 ACs pass.** Status flipped `needs_verification` → `done`.
+
+**089:** no distinct new defect found independent of the 8 ACs — everything found above is
+either a pass or a non-blocking note already covered by the ACs. **089 lapses.**
+
+Commands, fixtures and full pass/fail output live in `qa-scripts/084-tester.mjs` (primary,
+30/30) and `qa-scripts/_tester-084-extra.mjs` (ad hoc extra-edge-case sweep, not required by
+any AC but run for coverage). Server killed (`taskkill`), `netstat` reconfirmed no
+`LISTENING` socket on 4242 before finishing.
