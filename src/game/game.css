@@ -579,9 +579,15 @@ button { font-family: inherit; }
 .floor {
   position: absolute; left: -20%; right: -20%; bottom: -40px; height: 320px;
   transform: perspective(560px) rotateX(56deg); transform-origin: bottom center;
+  /* 089-fix: rgba(--bg-grid) blended straight over --night sits at ~1.05:1 contrast —
+     invisible in an actual render, not just faint (measured/screenshotted, assignment
+     089). --bg-grid stays the theme hook (52/W6: elk thema kleurt de vloer mee), but the
+     LINE colour is now color-mix'd with --line (already an opaque paneelrand-token, no
+     new token/hex) so the rasterlijnen read as quiet blueprint terrain instead of a flat
+     tint. --bg-grid keeps its per-theme rgba as the "wash" component of the mix. */
   background:
-    repeating-linear-gradient(90deg, transparent 0 39px, var(--bg-grid) 39px 40px),
-    repeating-linear-gradient(0deg, transparent 0 39px, var(--bg-grid) 39px 40px);
+    repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--line) 26%, var(--bg-grid) 74%) 39px 40px),
+    repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--line) 26%, var(--bg-grid) 74%) 39px 40px);
   -webkit-mask-image: linear-gradient(180deg, transparent 0, black 45%);
   mask-image: linear-gradient(180deg, transparent 0, black 45%);
 }
