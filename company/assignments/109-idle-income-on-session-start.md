@@ -2,7 +2,7 @@
 id: 109
 title: GameScreen grants a burst of "idle" coins on every session start before the first keystroke — violates the "typing is the only faucet" guardrail
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: tester (v103 lane, tick #39, found while verifying assignment 103's AC3
