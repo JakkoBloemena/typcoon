@@ -2,7 +2,7 @@
 id: 085
 title: The Maquette — diorama floor, machine states, build ticket (world-pass slice 3)
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: [084]
 opened_by: product-owner

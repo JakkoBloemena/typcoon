@@ -2,7 +2,7 @@
 id: 087
 title: Werkbank (upgrades + prestige) + 080 hyphens fix (world-pass slice 5)
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: [069]
 opened_by: product-owner
