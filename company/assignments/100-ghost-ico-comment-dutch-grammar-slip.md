@@ -2,7 +2,7 @@
 id: 100
 title: Dutch grammar slips in the new .ghost .ghost-ico comment clause (from 099)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester (found during 099 verification)
