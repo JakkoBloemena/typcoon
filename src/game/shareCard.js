@@ -6,9 +6,13 @@
 // van assignment 024) — buildShareData() hieronder is de enige plek die dat beslist.
 //
 // De kleuren/fonts hieronder zijn 1-op-1 gekopieerd uit game.css (:root-tokens +
-// .coin-pill/.cps-pill/.streak-pill/.dash-tile/.home-title) — canvas kan geen CSS
-// custom properties lezen, dus dit is de enige plek waar die waarden letterlijk
-// terugkomen. Wijzig hier mee als het thema in game.css verandert.
+// .coin-pill/.cps-pill/.dash-tile/.home-title) — canvas kan geen CSS custom
+// properties lezen, dus dit is de enige plek waar die waarden letterlijk terugkomen.
+// De streak-pil hergebruikt de BRASS/INK_ON_BRASS-quartet (net als .unlock-pill en,
+// sinds assignment 090, .streak-pill zelf) — geen eigen kleurenset meer. De kaart
+// tekent altijd de default (Muntpers) look, ongeacht het actieve thema (design
+// ruling, assignment 095: zie "Share-card thema-beleid" in DESIGN.md). Wijzig hier
+// mee als een --brass*/--on-accent :root-default in game.css verandert.
 
 import { BUILDINGS, coinsPerSecond } from './economy.js';
 import { fmt } from './format.js';
@@ -29,10 +33,6 @@ const MINT = '#33e6a0';
 const PAPER = '#f4f7ff';
 const INK_DIM = '#93a2d8';
 const INK_ON_BRASS = '#3d2c00';  // .btn color
-const STREAK_TEXT = '#5a2a00';   // .streak-pill color
-const STREAK_HI = '#ffd0a0';     // .streak-pill gradient stop
-const STREAK_LO = '#ff9f43';
-const STREAK_SHADOW = '#b5651d';
 const PANEL_SHADOW = '#0c1430';
 
 // Fabriekstaat -> platte data voor de kaart (geen canvas/DOM erin — apart testbaar,
@@ -144,8 +144,8 @@ export function drawShareCard(canvas, data) {
   if (data.streak > 0) {
     const streakLabel = `🔥 ${data.streak}`; // 🔥
     const streakW = ctx.measureText(streakLabel).width + 56;
-    pill(ctx, px, pillY, streakW, pillH, { grad: [STREAK_HI, STREAK_LO], shadow: STREAK_SHADOW });
-    ctx.fillStyle = STREAK_TEXT;
+    pill(ctx, px, pillY, streakW, pillH, { grad: [BRASS_HI, BRASS], shadow: BRASS_DEEP });
+    ctx.fillStyle = INK_ON_BRASS;
     ctx.fillText(streakLabel, px + 28, pillY + 37);
   }
 

@@ -2,7 +2,7 @@
 id: 095
 title: shareCard.js's STREAK_* hex constants no longer match the live .streak-pill (post-090)
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 090)
@@ -170,3 +170,87 @@ re-opening the theme-aware question, and states the maintenance rule: when a `--
 
 **Not used — 108 lapses.** No new defect found; the only issue is the one this assignment
 already describes, and the recipe above resolves it.
+
+## Delivery notes (developer, dev/095, 2026-07-24)
+
+Implemented the recipe exactly, in `src/game/shareCard.js` only, no other file touched.
+
+**What changed:**
+1. Deleted the four stale constants (`STREAK_TEXT`/`STREAK_HI`/`STREAK_LO`/`STREAK_SHADOW`).
+2. In the `if (data.streak > 0)` block, the pill call now reads
+   `{ grad: [BRASS_HI, BRASS], shadow: BRASS_DEEP }` and `ctx.fillStyle = INK_ON_BRASS`
+   — byte-identical styling to the coin pill drawn three lines above, as specified.
+   No other line in that block (`streakLabel`, `streakW`, geometry, `fillText`) changed.
+3. Reworded the header comment: dropped `.streak-pill` from the "1-op-1 gekopieerd"
+   token list and added a note that the streak pill now reuses the BRASS/INK_ON_BRASS
+   quartet (same as `.unlock-pill` and, post-090, the live `.streak-pill`), that the
+   card always renders the default Muntpers look regardless of active theme, and
+   pointed at the "Share-card thema-beleid" note in `DESIGN.md` (already present,
+   added by des095 — I did not touch `DESIGN.md`).
+4. No new constant introduced; nothing else in the file (background, coin/cps pills,
+   tiles, footer, `buildShareData`) changed.
+
+**Evidence (AC2):**
+- `qa-scripts/095-screenshot.mjs` (new, committed): boots a warm localStorage save
+  via the real engine (`newProfile`/`newState`, same pattern as `090-screenshot.mjs`),
+  loads `/speel/` against a `vite preview` server, clicks the home menu's
+  "📸 Deel je fabriek" link (`.link-parents` filtered by text — the share screen is
+  reachable directly from home, no need to enter the play view first), and
+  screenshots `canvas.share-canvas` — i.e. it renders the actual `drawShareCard()`
+  output, not a DOM proxy. Run twice: once with `streak: 5` (pill drawn) and once
+  with `streak: 0` (pill not drawn), producing `095-{before,after}-{streak5,streak0}.png`.
+  - Captured "before" screenshots against the unmodified code (`npx vite build` +
+    `vite preview --port 4274 --strictPort`), then applied the edit, rebuilt, and
+    re-served on the same port for "after".
+  - `streak0`: `095-before-streak0.png` and `095-after-streak0.png` are **byte-identical**
+    (MD5 `3de2ce1fad20c6211aa6eb01816c98df` both) — confirms the streak===0 path is
+    untouched, as required.
+  - `streak5`: `095-before-streak5.png` vs `095-after-streak5.png` differ (expected).
+    Wrote `qa-scripts/095-diff.mjs` (new, committed) — loads both PNGs as data URLs
+    into an offscreen canvas via Playwright and diffs every pixel. Result: 1430
+    changed pixels out of 149,940 (490×306 screenshot), all inside a single bounding
+    box `{minX:185, minY:82, maxX:240, maxY:110}` — a ~55×28px region matching exactly
+    the streak pill's position (third pill in the row, `pillY=165` in the 1000×620
+    canvas scales to ~y81 in the 306px-tall screenshot). Sampled the pill's mid-gradient
+    pixel: before `rgba(255,179,107,255)` (warm orange), after `rgba(255,192,56,255)`
+    (brass/gold) — the hue shift matches the recipe's described delta. No pixels
+    changed anywhere else on the card (title, coin pill, cps pill, machine tiles,
+    footer all unchanged).
+  - Screenshots saved under `company/assignments/`: `095-before-streak5.png`,
+    `095-before-streak0.png`, `095-after-streak5.png`, `095-after-streak0.png`.
+
+**Tests (AC3):** `npm ci` clean (fresh worktree). `npm install playwright-core --no-save`
+for the probe browser — `package.json`/`package-lock.json` stayed diff-clean, confirmed
+via `git status --porcelain` before committing. `npm test` → **266/266 pass**, including
+`check-no-dutch-en: PASS`. `test/shareCard.test.js` (covers `buildShareData`, not colours)
+untouched and green, per the recipe's test note. `npm test`'s internal `vite build`
+regenerated `public/**` (blog/sitemap pages, unrelated to this change) — reverted with
+`git checkout -- public/` before committing, per the environment note.
+
+**Judgment calls for the tester:**
+- The assignment's evidence note suggested reusing "assignment 024's verification
+  approach" for a probe; 024's own tester noted the canvas draw can't run under the
+  Node test runner and used a throwaway (uncommitted) Playwright script instead. I
+  followed 090's *pattern* (real engine state → localStorage → `vite preview`) since
+  090 is the closer precedent (same file area, same pill construct) rather than 024's
+  literal script (which didn't exist as a committable file to reuse). Committed both
+  probes (`095-screenshot.mjs`, `095-diff.mjs`) per the assignment's explicit
+  allowance ("a qa-scripts/095-*.mjs probe is fine and committable").
+- Pixel diff was done at the screenshot's rendered resolution (490×306, browser's
+  default devicePixelRatio scaling of the 1000×620 canvas element down to its CSS
+  box), not the canvas's native pixel buffer. Since both before/after screenshots
+  were captured identically (same viewport, same zoom, same server), this is a valid
+  apples-to-apples comparison for "did anything besides the pill move" — but a tester
+  wanting native-resolution confirmation could instead call `canvas.toDataURL()` via
+  `page.evaluate` for a 1000×620 pixel-exact compare.
+
+**109 not used** — no new defect found beyond what this assignment already describes;
+109 lapses.
+
+**Files touched:** `src/game/shareCard.js` (the fix), `qa-scripts/095-screenshot.mjs`
+(new), `qa-scripts/095-diff.mjs` (new), `company/assignments/095-before-streak5.png`,
+`company/assignments/095-before-streak0.png`, `company/assignments/095-after-streak5.png`,
+`company/assignments/095-after-streak0.png` (new evidence), this assignment file
+(frontmatter + delivery notes).
+
+Terminal status: **needs_verification**.
