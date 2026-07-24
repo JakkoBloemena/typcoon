@@ -3,9 +3,18 @@ id: 069
 title: "<html lang> never syncs to the active UI locale (breaks lang-dependent CSS/a11y for English sessions)"
 owner: developer
 status: open
-priority: 3
+priority: 2
+blocked_by: []
 opened_by: tester
 ---
+
+> **World-pass cut (082, 2026-07-24):** raised priority 3 → 2 and sequenced as the
+> `blocked_by` of slice **087** (werkbank + 080 hyphens fix). `hyphens: auto` picks its
+> dictionary from `<html lang>`; this fix makes `<html lang>` track the active locale so an
+> English session hyphenates under the English dictionary instead of the Dutch one. Not
+> folded — it is a real pre-existing `src/**` fix and stays its own assignment. Dispatchable
+> now (no blocker); file-disjoint (`App.jsx` / `index.html`) from every world-pass slice, so
+> it can run in the first wave alongside 083 / 084.
 
 ## Context
 

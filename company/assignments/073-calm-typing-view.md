@@ -2,11 +2,20 @@
 id: 073
 title: Calm typing view — goal sliver, one-line bar, remove FactoryFloor + meters
 owner: developer
-status: open
+status: blocked
 priority: 2
-blocked_by: [071, 072]
+blocked_by: [083]
 opened_by: product-owner
 ---
+
+> **World-pass cut (082, 2026-07-24):** the remaining AC2 fix (three chips —
+> `.golden-banner` / `.boost-chip` / `.type-hint` — carry infinite `goldpulse`/`hintPulse`
+> pulses) is **folded into slice 083 (typing strip)**. W3/W4 re-spec exactly those three
+> chips as one-shot as part of the earnings-only typing strip — a separate assignment would
+> touch the same files (`GameScreen.jsx` / `game.css`) for the same fix. Set `blocked` on
+> 083 (071/072 are done; the gating that matters now is 083). No separate developer work.
+> 083's tester independently re-checks AC2 on the built tree (repro:
+> `qa-scripts/073-tester.mjs`) and flips this → `done`.
 
 ## Goal
 
