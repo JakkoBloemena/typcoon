@@ -688,7 +688,7 @@ button { font-family: inherit; }
    in de svg zelf) — een tweede opacity-laag erbovenop maakte het icoon vrijwel
    onzichtbaar tegen de gearceerde achtergrond; grayscale alleen is genoeg om elke
    restkleur weg te halen. */
-.ghost .ghost-ico { width: 48px; height: 42px; filter: grayscale(1); }
+.ghost .ghost-ico { width: 48px; height: 42px; filter: brightness(0) invert(1); }
 .ghost .gname { margin-top: 6px; font-weight: 800; font-size: 0.8rem; color: var(--ink-dim); }
 .ghost .glock { font-family: var(--data); font-size: 0.66rem; color: var(--ink-dim); font-weight: 700; }
 .ghost.premium .draw { border-color: color-mix(in srgb, var(--brass) 60%, var(--line)); }

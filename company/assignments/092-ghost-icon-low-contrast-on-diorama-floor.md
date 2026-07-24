@@ -2,7 +2,7 @@
 id: 092
 title: Locked ghost machine icon is nearly invisible on the diorama floor
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 085)
@@ -140,3 +140,121 @@ Maquette direction (ADR 012/013), not a new design decision — so no new ADR. R
 **014 lapses (unused).** No separate assignment needed — id **095 lapses (unused).** A
 one-line clarifying addendum was added to DESIGN-FACTORY.md §W2b so a future dev cannot
 re-substitute a dark asset and reintroduce this defect.
+
+## Delivery notes (developer, dev/092, 2026-07-24)
+
+**Diff stat.** Exactly the recipe, nothing else:
+
+```
+ src/game/game.css | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+
+`.ghost .ghost-ico { width: 48px; height: 42px; filter: grayscale(1); }` →
+`.ghost .ghost-ico { width: 48px; height: 42px; filter: brightness(0) invert(1); }`.
+No other line in `game.css` touched; `assets.jsx`/`Shop.jsx`/`package.json` untouched.
+
+**Verification method.** Per retro/2026-07-24-tick33-declaration-vs-effect-verification.md,
+verified the *effect*, not the CSS declaration. Built with `npx vite build`, served with
+`npx vite preview --port 4257 --strictPort`, drove the REAL served build with a fresh
+Playwright browser (`playwright-core` + local Chromium at
+`ms-playwright/chromium-1228`) through the actual start flow (typed a name, clicked
+Start, dismissed the intro overlay, clicked into Fabriek) — no synthetic save injected
+for the main scenario, so the "fresh/early save, multiple locked ghosts" state is exactly
+what a real new player sees: 0 buildings, 0-2 letters learned, 4 of 5 machines
+(printer/robotarm/assembly/megafab) render as `.ghost` letter-gated silhouettes. Script:
+`qa-scripts/092-dev-verify.mjs` (kept in the branch as evidence; not part of `npm test`).
+
+**Per-AC evidence:**
+
+- **AC1 (one-line filter change, game.css only).** `git diff --stat` above; `git status`
+  after `npm test` + `npx vite build` showed only `src/game/game.css` modified (public/
+  churn from content-gen reverted each time, see below).
+- **AC2 (no third SVG variant / no assets.jsx change).** `git diff` confirms
+  `src/game/assets.jsx` and `src/game/Shop.jsx` are untouched.
+- **AC3 (legibility bar, rendered).** Computed style on the live page:
+  `.ghost .ghost-ico` → `getComputedStyle(el).filter === "brightness(0) invert(1)"`.
+  Pixel evidence: sampled the icon box's rendered luminance (0.2126R+0.7152G+0.0722B
+  per pixel, via Chromium's own canvas decoder on the actual screenshot bytes — no
+  external image-decoding dependency added) before vs. after, same DOM node, default
+  theme: BEFORE (`grayscale(1)`, simulated inline to reproduce pre-092 rendering)
+  luminance range 31.9 (24.2–56.1, effectively flat/invisible against the ~24 floor
+  black-point); AFTER (`brightness(0) invert(1)`) luminance range 89.9 (24.2–114.0) —
+  nearly 3x the contrast range, a light silhouette clearly separated from the dark
+  floor. Full-diorama screenshot
+  (`company/assignments/092-screenshots/092-dev-verify-diorama-default.png`) shows all
+  four locked machines (Drukpers/printer, Robotarm, Lopende band/conveyor, Mega-fabriek)
+  as visually distinct, identifiable silhouettes — printer body, robot-arm elbow,
+  conveyor bars, factory-with-smokestacks are each unambiguous. Side-by-side crop:
+  `092-dev-verify-before-after.png`.
+- **AC4 (theme-safety, rendered across all 4 `[data-theme]` values).** Swapped
+  `document.documentElement`'s `data-theme` through all four `theme.js` THEMES entries
+  (`muntpers` default/no-attribute, `nachtploeg`, `snoepfabriek`, `diepzee`) and
+  re-sampled the same icon box each time: luminance range stayed 89.9–100.3 and mean
+  38–48 across all four — legible on every themed floor, no theme where the silhouette
+  collapses back toward the ~15–24 floor black-point. Grid screenshot:
+  `092-dev-verify-themes.png`. Confirmed by inspection of `game.css`: the changed rule
+  has zero `var(--...)` reference and zero hex/rgb literal — `filter: brightness(0)
+  invert(1)` operates on rendered pixels only, so it is mechanically incapable of
+  varying with `[data-theme]` (grep for new `:root` tokens in the diff: none, diff is
+  the one line shown above).
+- **AC5 (`npm test` green; no regression to `.mch-ico`/`.plot-ico`).** `npm test` →
+  259/259 pass, then `vite build` + `check-no-dutch-en` both pass (see Commands run).
+  Computed-filter check on live pages: `.plot .plot-ico` → `"none"` (matches source —
+  that rule never had a `filter` property); `.mch .mch-ico` → `"drop-shadow(color(srgb 0
+  0 0 / 0.55) 0px 4px 6px)"` (matches source's `drop-shadow(0 4px 6px color-mix(in srgb,
+  black 55%, transparent))` exactly) — both unchanged, because the diff touches only the
+  `.ghost .ghost-ico` selector and CSS selector specificity gives that rule zero reach
+  into either.
+
+**Judgment calls.**
+
+1. Left the Dutch comment immediately above `.ghost .ghost-ico` (lines 687-690)
+   untouched even though its last clause ("grayscale alleen is genoeg om elke restkleur
+   weg te halen") is now stale — it describes the superseded `grayscale(1)` rationale.
+   The dispatcher's hard limit was explicit: "the single `.ghost .ghost-ico` rule
+   ONLY" / "that is the entire intended diff", scoped tight because a parallel lane
+   (d088) is landing unrelated sections in the same file. Fixing the comment is a
+   real, separate, zero-risk cleanup — opened as assignment **099** rather than folded
+   in here.
+2. Built the primary verification scenario from the real start-flow (typed name →
+   Start → dismiss overlay → Fabriek) rather than an injected synthetic save, so the
+   "fresh/early save" scenario in the assignment's AC3 is literally what a first-time
+   player sees, not a constructed approximation. A second, synthetic-save page (same
+   pattern as `qa-scripts/085-screenshot.mjs`) was used only to get a `.mch` (built
+   machine) on screen for the AC5 `.mch-ico` regression check, since a truly fresh save
+   has 0 built machines.
+3. Did not overwrite the designer's existing reference images
+   (`092-filter-comparison.png`, `092-theme-check.png`, both already committed by
+   des092) — added distinctly-named `092-dev-verify-*.png` files alongside them so both
+   the designer's mock-comparison and the developer's real-build verification are
+   preserved.
+
+**Commands run** (from `C:\companies\typcoon-lanes\d092`, worktree only):
+
+```
+npm ci
+npm test                                    # 259/259 pass, vite build, check-no-dutch-en PASS
+git checkout -- public/                     # revert gen-content churn from npm test's build step
+npx vite build
+npm install playwright-core --no-save
+node qa-scripts/092-dev-verify.mjs          # builds screenshots + logs computed-style/luminance evidence
+taskkill /PID <preview-pid> /F              # port 4257 released, confirmed via netstat
+npm test                                    # re-run after screenshot pass, still 259/259 + check-no-dutch-en PASS
+git checkout -- public/                     # revert again
+```
+
+**099 consumed.** One new assignment opened:
+`company/assignments/099-stale-ghost-ico-comment-post-092.md` (priority 4,
+`opened_by: developer (proposed during 092)`) — the stale comment described in
+judgment call 1.
+
+**Port / churn / tree state.** Port 4257 confirmed not LISTENING after teardown.
+`public/**` churn from `npm test`'s internal `vite build` step reverted both times
+(`git checkout -- public/`). Final `git status --short`: only
+`src/game/game.css` (modified, the one-line diff),
+`qa-scripts/092-dev-verify.mjs` (new, verification script),
+`company/assignments/092-screenshots/092-dev-verify-*.png` (new, evidence),
+`company/assignments/099-stale-ghost-ico-comment-post-092.md` (new assignment), and
+this file's own status/notes edit — working tree otherwise clean, nothing under
+`dist/`/`node_modules/` tracked (both gitignored).
