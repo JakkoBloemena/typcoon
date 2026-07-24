@@ -2,7 +2,7 @@
 id: 081
 title: "test/htmllang.test.js's static source-check does not distinguish live code from a comment (would pass even if the fix were commented out)"
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: tester
