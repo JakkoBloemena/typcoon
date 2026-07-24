@@ -2,7 +2,7 @@
 id: 069
 title: "<html lang> never syncs to the active UI locale (breaks lang-dependent CSS/a11y for English sessions)"
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: tester

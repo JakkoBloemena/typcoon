@@ -2,7 +2,7 @@
 id: 083
 title: Typing strip — earnings-first, remove goal sliver, one-shot chips (world-pass slice 1)
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: product-owner
