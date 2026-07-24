@@ -17,13 +17,13 @@ import {
   accuracyMultiplier, comboMultiplier, prestigeMultiplier,
   earnFromExercise, tick, applyTypcoonExamResult,
 } from './economy.js';
+import { nextGoal } from './goals.js';
 import { pendingAchievements, achievementDef } from './achievements.js';
 import { getPack } from '../data/packs.js';
 import { getLayout } from '../layouts/index.js';
 import { sound, setMuted, unlockAudio } from '../ui/sound.js';
 import TypingSurface from '../ui/TypingSurface.jsx';
 import Keyboard from '../ui/Keyboard.jsx';
-import FactoryFloor from './FactoryFloor.jsx';
 import { Machine, Coin, Mascot } from './assets.jsx';
 import { FREE_LETTER_CAP, machineLocked, applyFreeCapGuard } from './premium.js';
 import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
@@ -50,7 +50,6 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
   const [golden, setGolden] = useState(false);
   const [nextKey, setNextKey] = useState(null);
   const [step, setStep] = useState(0);
-  const [typingActive, setTypingActive] = useState(false);
   const [combo, setCombo] = useState(0);
   const [coinFlash, setCoinFlash] = useState(null); // { gained, acc, comboMult, golden }
   const [moment, setMoment] = useState(null); // huidig vier-moment (overlay)
@@ -81,6 +80,12 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
   useEffect(() => { setMuted(!soundOn); }, [soundOn]);
 
   const unlockedKeys = activeKeys(state.curriculum, state.profile.curriculumIndex);
+  const lettersLearned = activeLetters(state.curriculum, state.profile.curriculumIndex).length;
+  // doel-sliver (assignment 073): het ÉNE eerstvolgende doel, puur en deterministisch
+  // uit tycoon + geleerde letters (071's nextGoal) — herberekend bij elke render, dus
+  // hij loopt vanzelf mee zodra munten/levels/letters veranderen (research/
+  // milestone-factory.md §3b). Geen bewaard "huidig doel" om uit sync te raken.
+  const goal = nextGoal(state.tycoon, lettersLearned);
   // toets/diploma (assignment 049): optioneel aanbod, nooit gating — de engine bepaalt
   // zelf wanneer een toets "klaar" is (confidence-poort + niet frustrated).
   const availableExam = nextAvailableExam(state);
@@ -123,12 +128,14 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
     examWasReadyRef.current = !!nextAvailableExam(engineRef.current);
   }, [step, layout, pack]);
 
-  // productie-tick: machines produceren alleen vlak na een aanslag (geen idle winst)
+  // productie-tick: machines produceren alleen vlak na een aanslag (geen idle winst).
+  // Dit is de fabriek-kant van de bewaarde-waarde-clausule (073): zolang er getypt
+  // wordt lopen de munten door, dus de doel-sliver hierboven schuift live mee —
+  // zonder enige ambient/idle animatie (geen losse UI-state meer voor een fabrieksvloer).
   useEffect(() => {
     const id = setInterval(() => {
       const now = performance.now();
       const active = now - lastKeyRef.current < ACTIVE_WINDOW_MS;
-      setTypingActive(active && lastKeyRef.current > 0);
       const dt = lastTickRef.current ? (now - lastTickRef.current) / 1000 : 0;
       lastTickRef.current = now;
       if (!active || dt <= 0) return;
@@ -312,12 +319,30 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
           {state.tycoon.rebirths > 0 && (
             <span className="star-pill" title={gt('play.stars', { mult: prestige.toFixed(2) })}>⭐ {state.tycoon.rebirths}</span>
           )}
+          {/* 073: ×multiplier + nauwkeurigheid% verhuisden hierheen uit het aparte
+              .meters-blok (dat mét de fabrieksvloer verdween) — één rustige regel. */}
+          <span className="mult-pill" title={gt('play.accuracyLever', { pct: accPct })}>×{liveMult.toFixed(1)}</span>
+          <span className="acc-pill">{accPct}% {gt('play.flashNeat')}</span>
           <span className="coin-pill" key={coinPop} title={gt('play.coins')}><Coin className="pill-coin" /> {fmt(coins)}</span>
           <span className="cps-pill" title={gt('play.perSec')}>⚙️ {fmt(cps)}/s</span>
         </div>
       </header>
 
-      <FactoryFloor tycoon={state.tycoon} active={typingActive} />
+      {/* doel-sliver (073): het ÉNE zichtbare doel — vervangt de altijd-animerende
+          fabrieksvloer (verwijderd, design/DESIGN-FACTORY.md §7/§11). De vulling gebruikt
+          --reward (design §5a); dit is de enige "beweging" op de rustige typweergave, en
+          alleen omdat de staat (munten) echt verandert — geen ambient/idle motion. */}
+      <div className="goalsliver">
+        <span className="goalsliver-icon" aria-hidden="true">{goal.icon}</span>
+        <div className="goalsliver-info">
+          <span className="goalsliver-name">{goal.name}</span>
+          <span className="goalsliver-kicker">{gt('goal.sliverLabel')}</span>
+        </div>
+        <div className="goalsliver-bar" aria-hidden="true">
+          <span className="goalsliver-fill" style={{ width: (goal.fraction * 100) + '%' }} />
+        </div>
+        <span className="goalsliver-remaining">{gt('goal.remaining', { n: fmt(goal.remaining) })}</span>
+      </div>
 
       <div className="game-main">
         <section className="type-pane">
@@ -329,23 +354,6 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
               {state.tycoon.boostLeft > 0 && (
                 <div className="boost-chip">{gt('daily.boostChip', { mult: boostMultiplier(state.tycoon.streak), n: state.tycoon.boostLeft })}</div>
               )}
-
-              <div className="meters">
-                <div className="meter mult-meter" aria-live="polite">
-                  <span className="meter-face">{liveAcc >= 0.95 ? '🤩' : liveAcc >= 0.8 ? '🙂' : '😌'}</span>
-                  <div>
-                    <div className="meter-big">×{liveMult.toFixed(1)}</div>
-                    <div className="meter-sub">{gt('play.accuracyLever', { pct: accPct })}</div>
-                  </div>
-                </div>
-                <div className={'meter combo-meter' + (combo >= 10 ? ' hot' : '')}>
-                  <span className="meter-face">⚡</span>
-                  <div>
-                    <div className="meter-big">{combo}</div>
-                    <div className="meter-sub">{gt('play.combo')} {combo >= 10 && <b>×{comboMultiplier(combo).toFixed(1)}</b>}</div>
-                  </div>
-                </div>
-              </div>
 
               {firstRun && <div className="type-hint">{gt('play.typeHint')} 👇</div>}
               {checkHands && (
