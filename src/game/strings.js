@@ -236,6 +236,14 @@ const STRINGS = {
   'factory.ledger.perSecond': 'Per seconde',
   'factory.ledger.stars': 'Sterren',
 
+  // randtoestanden van de wereld (assignment 088, design/DESIGN-FACTORY.md §W5,
+  // laatste bouwslice van de wereld-pas): leeg / laden / offline. Nooit een dood
+  // scherm en nooit een alarmerende kleur — dit is een kinderproduct.
+  'factory.buildHereBadge': '🔨 BOUW HIER',
+  'factory.emptyLine': 'Je fabriek staat klaar om te groeien — typ je eerste opdracht.',
+  'factory.offlineTitle': 'Geen verbinding',
+  'factory.offlineBody': 'Je fabriek is lokaal opgeslagen — je raakt niets kwijt.',
+
   'reminders.home': 'Vingers terug op de thuisrij! 🏠',
   'reminders.peek': 'Niet spieken — voel de bultjes op F en J 👀',
 
@@ -560,6 +568,11 @@ const STRINGS_EN = {
   'factory.ledger.coins': 'Coins',
   'factory.ledger.perSecond': 'Per second',
   'factory.ledger.stars': 'Stars',
+
+  'factory.buildHereBadge': '🔨 BUILD HERE',
+  'factory.emptyLine': 'Your factory is ready to grow — type your first task.',
+  'factory.offlineTitle': 'No connection',
+  'factory.offlineBody': "Your factory is saved locally — you won't lose anything.",
 
   'reminders.home': 'Fingers back on the home row! 🏠',
   'reminders.peek': "Don't peek — feel the bumps on F and J 👀",

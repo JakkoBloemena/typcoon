@@ -18,6 +18,13 @@
 // ambient leven + het aankomst-/bouwmoment. `--rise-i` (de positie-index) en de
 // kind-bewuste React-key hieronder zijn de enige toevoegingen aan dit bestand —
 // de animaties zelf leven in game.css (`idleBob`/`plotGlow`/`riseIn`).
+// 088 (world-pass slice 6, design/DESIGN-FACTORY.md PART II W5 — laatste bouwslice
+// van de wereld-pas): drie randtoestanden. Leeg (verse save, nul gebouwde machines):
+// het eerste bouwterrein draagt "BOUW HIER" i.p.v. "NU BOUWEN" en er verschijnt één
+// vriendelijke regel onderaan de vloer — nooit een dood scherm. Laden (save nog niet
+// gehydrateerd): een blauwdruk-SKELET vervangt de hele vloer, hergebruikt
+// `layoutDiorama`. Beide zijn puur presentatie + kopij: geen economie-, engine- of
+// store-wijziging, geen nieuwe :root-tokens (game.css).
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { activeLetters } from '../engine/curriculumCore.js';
 import {
@@ -129,6 +136,34 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
     });
   }, [setGame, showNextMoment]);
 
+  // 088 (world-pass slice 6, design/DESIGN-FACTORY.md W5): render guard voor het
+  // laad-moment. Zolang `state.tycoon` niet bestaat toont de vloer een blauwdruk-
+  // SKELET (plot/plinth-placeholders + shimmer) i.p.v. de echte diorama — nooit
+  // munten/gebouwen uit het niets verzinnen. Eerlijk gezegd: App.jsx (buiten dit
+  // bestand z'n bestandsoppervlak, dus hier niet aan te passen) zet `view==='factory'`
+  // pas nadat `game` al volledig gehydrateerd is (zie App.jsx's laad-effect), dus dit
+  // pad is via echte navigatie vandaag niet bereikbaar — het is bewuste verdediging
+  // voor een toekomstige asynchrone laadfase (bijv. een server-gesynced save), geen
+  // dode code zonder reden. Zie de opleverkennotities van 088 voor de volledige
+  // afweging. Hergebruikt dezelfde `layoutDiorama`-plaatsingsregel als de echte vloer
+  // (W2c) — geen eigen per-machine magic getallen.
+  if (!state?.tycoon) {
+    const skeletonItems = layoutDiorama(BUILDINGS.map((b, i) => ({ b, lane: i === 0 ? 'front' : 'back' })));
+    return (
+      <div className="hal" aria-hidden="true">
+        <div className="floor" />
+        <div className="horizon" />
+        {skeletonItems.map((item) => (
+          <div className="sk" style={{ left: `${item.x}%`, top: `${item.y}%` }} key={item.b.id}>
+            <div className="b node" />
+            <div className="b line" />
+            <div className="b line s" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const coins = state.tycoon.coins;
   const lettersLearned = activeLetters(state.curriculum, state.profile.curriculumIndex).length;
   const prestige = prestigeMultiplier(state.tycoon);
@@ -169,6 +204,13 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
     if (!lettersOk) return { kind: 'ghost-letters', b, remaining: Math.max(1, b.unlockAt - lettersLearned), lane: 'back' };
     return { kind: 'plot', b, isCurrentBuild: goal.kind === 'build' && goal.id === b.id, lane: 'front' };
   });
+  // 088 (W5): een verse save heeft nul gebouwde machines — precies de voorwaarde
+  // waaronder het bouwterrein van de eerste machine "BOUW HIER" draagt i.p.v. "NU
+  // BOUWEN" en de vriendelijke regel onderaan de vloer verschijnt (geen dood
+  // scherm). Zelfde bron (`stationItems`, uit `state.tycoon.buildings`) als
+  // FactoryPage.jsx's eigen "N van 5 gebouwd"-telling — kan dus nooit uit sync
+  // raken, net als de nextGoal-opmerking hierboven.
+  const isEmpty = stationItems.every((it) => it.kind !== 'built');
   const diorama = layoutDiorama(stationItems);
   // 086-bounce-fix: `--bob-i` is a counter that increments ONLY for built stations —
   // the same inline-custom-property idiom as `--rise-i` above, but keyed off built-
@@ -227,12 +269,27 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
             const { b, isCurrentBuild } = item;
             return (
               <div className="plot" style={style} key={key}>
-                {isCurrentBuild && <span className="flag">🦾 {gt('factory.currentBadge')}</span>}
+                {isCurrentBuild && (
+                  <span className="flag">
+                    {/* 088 (W5): een verse save benoemt het eerste bouwterrein
+                        expliciet anders ("BOUW HIER") dan de gewone "NU BOUWEN"-
+                        vlag die elders ook op een niet-lege fabriek verschijnt —
+                        precies de kopij die de AC citeert. */}
+                    {isEmpty ? gt('factory.buildHereBadge') : `🦾 ${gt('factory.currentBadge')}`}
+                  </span>
+                )}
                 <div className="pad"><Machine id={b.id} className="plot-ico" /></div>
                 <div className="pname">{gt('building.' + b.id)}</div>
-                <div className="pnote">
-                  {isCurrentBuild ? gt('factory.plotRemaining', { n: fmt(goal.remaining) }) : gt('factory.toBuild')}
-                </div>
+                {/* 088 (W5): op een verse save is dit bouwterrein het ENIGE station
+                    op de vloer en staat de vriendelijke regel er al pal onder — de
+                    "nog N munten"-kostenregel (mock world-states.html laat 'm hier
+                    bewust weg) botste anders visueel met die regel. Overal elders
+                    (niet-lege fabriek) blijft de kostenregel gewoon staan. */}
+                {!isEmpty && (
+                  <div className="pnote">
+                    {isCurrentBuild ? gt('factory.plotRemaining', { n: fmt(goal.remaining) }) : gt('factory.toBuild')}
+                  </div>
+                )}
               </div>
             );
           }
@@ -255,6 +312,10 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
             </div>
           );
         })}
+        {/* 088 (W5): één vriendelijke regel op een verse save — het plan staat er
+            wel degelijk, maar is nog leeg; deze regel zegt wat de eerste stap is.
+            Nooit getoond zodra er ook maar één machine gebouwd is. */}
+        {isEmpty && <div className="emptyline">{gt('factory.emptyLine')}</div>}
       </div>
 
       {/* BOUWBON: het bouwbriefje voor nextGoal (071), nu de ENE plek waar het
