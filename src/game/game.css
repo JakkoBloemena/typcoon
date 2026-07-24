@@ -822,7 +822,16 @@ button { font-family: inherit; }
    nul gebouwde machines zijn. Geen dood scherm: het plan zelf (ghosts + het bouw-
    terrein) blijft gewoon getekend, zoals de rest van .hal/.plot/.ghost al doen. */
 .emptyline {
-  position: absolute; left: 50%; bottom: 16px; max-width: 90%; z-index: 3;
+  /* 088-fix (tester bounce, AC4): `width:auto` on an absolutely positioned box that's
+     centred via `left:50%; transform:translateX(-50%)` sizes itself via shrink-to-fit
+     using the space from that 50% offset to the container's right edge — HALF of
+     `.hal`'s real width, not the full floor. That's why this pill wrapped to two
+     lines at the 1024px floor with room to spare: it was never actually testing
+     against the full 90%, only ~50%. `width:max-content` sizes the box off its own
+     content instead, so `max-width` finally caps against the FULL floor width like
+     it always should have, and the pill only wraps when the sentence genuinely
+     doesn't fit (see retro/2026-07-24-tick36-scrollwidth-is-not-clipping.md). */
+  position: absolute; left: 50%; bottom: 16px; width: max-content; max-width: 90%; z-index: 3;
   transform: translateX(-50%); text-align: center; font-weight: 800; color: var(--paper);
   background: color-mix(in srgb, var(--night) 80%, transparent); border-radius: 999px;
   padding: 8px 18px;

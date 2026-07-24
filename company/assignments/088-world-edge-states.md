@@ -2,7 +2,7 @@
 id: 088
 title: Edge states for the world — empty / loading / offline (world-pass slice 6)
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: [085]
 opened_by: product-owner
@@ -284,3 +284,137 @@ for defects *outside* 088's own acceptance criteria, and this one is squarely AC
 **075 status: left as `blocked`, not flipped.** Per the assignment's own notes, 075 only flips to
 `done` once 088's edge states are verified in full; since AC4 does not hold, 075 stays blocked
 until 088 is re-verified and passes.
+
+## Fix delivery notes (developer, fix/088, 2026-07-24)
+
+**Root cause (not the fix I first assumed).** My first hypothesis reading the bounce report was
+"the sentence is genuinely too wide for 1024px, so it wraps to two lines and the taller pill
+reaches into `.pname` above it" — i.e. a content-vs-viewport budget problem. That's wrong, and a
+scratch probe (`getBoundingClientRect` dump of `.hal`/`.plot`/`.pad`/`.pname`/`.emptyline`,
+deleted before commit — not a deliverable) proved it: `.emptyline`'s effective width budget at
+1024px was only ~471px, roughly **half** of `.hal`'s real 942px width, even though `max-width:
+90%` should have allowed ~848px. The cause is a CSS box-model quirk, not a content-length one:
+`.emptyline` is `position: absolute; left: 50%; transform: translateX(-50%);` with `width: auto`
+(only `max-width` was set) — for an absolutely positioned box with `left` specified and `width`/
+`right` both auto, the browser's shrink-to-fit sizing computes its *available width* as the
+space from that `left` offset to the containing block's right edge (942px − 471px = 471px), not
+the full containing-block width. The `transform` recentres the box visually *after* layout, so
+it never fixes the underlying width computation. Every sibling on the diorama floor (`.mch`,
+`.plot`, `.ghost`, `.sk`) uses the same `left:%; transform:translateX(-50%)` centring idiom but
+never hit this because they all set an explicit fixed `width` — `.emptyline` was the one element
+on the floor relying on `width:auto`, and that's what broke.
+
+**The fix — one property, `src/game/game.css`, inside the existing `.emptyline` rule:**
+```css
+.emptyline {
+  position: absolute; left: 50%; bottom: 16px; width: max-content; max-width: 90%; z-index: 3;
+  ...
+}
+```
+`width: max-content` sizes the box off its own preferred content width instead of the buggy
+shrink-to-fit/left-offset calculation, so `max-width: 90%` finally caps against the FULL floor
+width, exactly as the AC4 judgment call in the original delivery intended. At both 1024px and
+1360px the sentence now renders on a single line (measured box width ≈500px, well under the
+~848px/~949px caps at each width) and never reaches the two-line height that caused the overlap.
+No other rule, file, or selector was touched — the diff is a one-line change plus its explanatory
+comment, entirely inside `.emptyline`, nowhere near `.streak-pill`/`.boost-chip` (090's lane),
+`.ghost .ghost-ico` (099's lane), or `.floor` (089's lane).
+
+**Judgment call: did NOT touch `layoutDiorama`'s `LANE.front.top` or any `.plot`/`.hal` sizing.**
+My first (wrong) diagnosis would have led me to shrink the pill's font-size or grow `.hal`'s
+height for the empty state specifically — both unnecessary once the real bug (the halved width
+budget) was found and fixed with a single property. Once the pill stopped wrapping, the existing
+vertical spacing between the plot and the pill turned out to already be positive (~4-5px of real
+clearance at both widths, confirmed by direct measurement) — nothing else needed adjusting.
+
+**Entry test (tester's script, unmodified): `qa-scripts/088-tester.mjs` — 36/36 passed**, up from
+the bounced build's 35/36. The single previously-failing check now reads:
+```
+PASS - AC4 (clipping, not just horizontal scroll): .emptyline does not vertically overlap the plot .pname label at the 1024px floor overlap px=0
+```
+Every other check the tester wrote (real new-player flow, live buy transition, en-locale parity,
+counterexample search, AC2/AC3 effect checks, AC5 token scan) still passes unchanged — no
+regression from this fix.
+
+**Dev's own script, re-run unmodified: `qa-scripts/088-verify.mjs` — 36/36 passed** (unchanged
+from before the fix; this script only ever checked `scrollWidth`, which is why it missed the
+original defect — flagged, not "fixed", since the tester's script is the one with the bounding-
+box check and it's now green).
+
+**Exit bar — bounding-box disjointness proof, both widths, new script `qa-scripts/088-fix-
+verify.mjs`** (kept as a permanent regression guard, not scratch — asserts
+`getBoundingClientRect` intersection, per `retro/2026-07-24-tick36-scrollwidth-is-not-clipping.md`,
+not just `scrollWidth`): **14/14 passed.**
+- `.emptyline` vs `.plot .pname`: **overlap = 0px** at both 1360px and 1024px (measured, not
+  merely "no scroll" — see the raw rects logged by the script).
+- `.emptyline` vs `.plot` (whole element): **overlap = 0px** at both widths.
+- `.plot .pnote` confirmed absent in the empty state at both widths (088's original judgment
+  call, unaffected by this fix).
+- No horizontal overflow (`scrollWidth <= clientWidth + 1`) at both 1360px and 1024px, in **all
+  three** states (empty / loading skeleton / offline banner) — the fix didn't trade the overlap
+  for a scroll regression.
+- A subtlety worth recording for future edge-state work: bounding boxes must be read **after**
+  the 086 `riseIn` arrival animation (380ms) has settled. Reading geometry ~250ms after mount
+  (mid-animation) reports the plot up to ~26px lower than its rest position and produces false
+  readings in either direction. This script waits 700ms after the factory-page click before
+  measuring; the qa-scripts/088-tester.mjs and 088-verify.mjs both already have enough
+  incidental wait/dismiss-overlay time built into their flows for this not to matter there.
+- Screenshots at both widths, all three states, saved with a `-fix` suffix (originals untouched):
+  `company/assignments/088-screenshots-verify/088-fix-empty-state-{1024,1360}.png`,
+  `088-fix-empty-hal-{1024,1360}.png` (cropped to `.hal` for a close-up of the fixed area),
+  `088-fix-loading-{1024,1360}.png`, `088-fix-offline-{1024,1360}.png`. Visually confirmed: the
+  "Typemachine" label is fully legible, the pill sits cleanly below it on one line, no wrap, no
+  overlap, at both widths.
+
+**Save-compat: unchanged, re-confirmed.** `git diff --stat -- store.js economy.js src/engine/
+theme.js goals.js` is empty. `npm test`: **266/266**, `check-no-dutch-en: PASS`. `public/**`
+build churn reverted with `git checkout -- public/` before every commit (confirmed empty diff
+both immediately after `npm test` and after the final `npx vite build`).
+
+**Token discipline: unchanged, re-confirmed.** The added line is a `width`/`max-width` sizing
+change only — zero new colours. `git diff -- src/game/game.css | grep -E '^\+' | grep -iE
+'#[0-9a-f]{3,8}|rgba?\(|:root'` returns nothing.
+
+**Files touched:** `src/game/game.css` (+10/-1, entirely inside the existing `.emptyline` rule).
+New, verification-only (same precedent as the dev's own `088-verify.mjs`/`088-screenshot.mjs`):
+`qa-scripts/088-fix-verify.mjs`, 8 new `company/assignments/088-screenshots-verify/088-fix-*.png`
+screenshots. Nothing else in the worktree changed — `FactoryPage.jsx`, `Shop.jsx`, and
+`strings.js` were read but not modified; the defect and its fix both live entirely in the CSS
+sizing algorithm, not in any render logic or copy.
+
+**Verification commands run** (worktree `C:\companies\typcoon-lanes\d088fix`, branch `fix/088`):
+`npm ci` (node_modules was missing) → `npm test` (266/266 green baseline, confirmed BEFORE any
+change) → `git checkout -- public/` → `npm install playwright-core --no-save` (package.json/
+package-lock.json diff-clean, confirmed) → `npx vite build` → `npx vite preview --port 4265
+--strictPort` (background) → `PROBE_BASE=http://localhost:4265 node qa-scripts/088-tester.mjs`
+(confirmed the exact bounced 35/36 baseline, defect reproduced: overlap px≈15.6) → scratch
+geometry probe (deleted, not committed) → the one-line `game.css` fix → `npx vite build` →
+`PROBE_BASE=http://localhost:4265 node qa-scripts/088-tester.mjs` (**36/36**) →
+`PROBE_BASE=http://localhost:4265 node qa-scripts/088-verify.mjs` (**36/36**) → wrote and ran
+`qa-scripts/088-fix-verify.mjs` (**14/14**, screenshots written) → restored the tester's two
+original bounce-evidence screenshots via `git checkout --` after my re-run of their script
+incidentally overwrote them (same output filenames — same script, same paths; the fix commit
+must not erase the record of the original defect) → `npm test` (**266/266**, `check-no-dutch-en:
+PASS`, re-run fresh after the fix) → `npx vite build` → `git checkout -- public/` → killed the
+preview process by PID (matched via `netstat -ano | grep :4265`, not a blind `node`-wide kill)
+→ confirmed `netstat -ano | grep LISTENING | grep :4265` empty → final `git status --porcelain`
+clean except the one intended `game.css` edit + the new fix-verify script + the 8 new `-fix`
+screenshots.
+
+**094 (new-assignment budget): lapsed, not consumed.** No new defect surfaced during this fix
+lane. The root cause (shrink-to-fit width quirk on `left:50%`-centred `width:auto` elements) is
+now documented in the `.emptyline` rule's own comment and in `qa-scripts/088-fix-verify.mjs`'s
+header, which doubles as the guardrail against a regression — not a pattern I found repeated
+elsewhere in `game.css` (every other centred element already sets an explicit width), so no
+speculative "audit all centred elements" assignment was opened.
+
+**Judgment calls flagged for the re-verifying tester:**
+1. The fix is a pure CSS sizing correction (`width: max-content`), not a font-size reduction or a
+   layout/spacing change to `.hal`/`.plot`/`LANE`. I initially suspected the latter would be
+   needed and verified with real measurements before deciding it wasn't — recorded above so the
+   tester doesn't have to re-derive why the fix is this small.
+2. `qa-scripts/088-fix-verify.mjs` is new and not itself independently written by a second party
+   the way `088-tester.mjs` was against `088-verify.mjs` — it should be read as *my* evidence,
+   not as a substitute for independent tester re-verification. The entry-test bar for this lane
+   was explicitly the tester's own unmodified script, which is what actually moved from 35/36 to
+   36/36.
