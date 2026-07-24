@@ -340,3 +340,101 @@ reasoning are the deliverable and are recorded in full in
 id, used — this refines an ADR reading and is where a future tester checking code
 against ADR 012 will look). 105 is re-scoped in place into the developer implementation
 (remove the star pill only; presentation-only; save/economy untouched).
+
+---
+
+## 10. Iteration "from blueprint to place" — 076 flywheel intake (product-owner, 2026-07-24, tick #39)
+
+*Authority: ADR 013 (the experience flywheel is the standing work supply; each critique's
+findings are the next iteration's backlog) and ADR 012 (the factory is a WORLD, not a
+panel). Intake: `company/research/076-playtest-critique.md`. This is the pre-declared
+scoping pass turning 076's design-headroom findings into the next scoped iteration. New ids
+allocated to me: **114–120**; I use **114–115** and let 116–120 lapse. Decision id **015
+used** (the 106 adjudication). No production code is written here.*
+
+### 10a. What the intake said, and the theme
+
+The world pass landed and is verified (069–105 family; 100/109 pending in parallel lanes,
+not this pass's concern). 076's verdict: the milestone **lands the direction** — calm
+typing alive-not-dead, growth legible, save-compat airtight, guardrails hold (once 102 was
+fixed) — **but does not yet clear ADR-013's "ultimate experience" bar: the diorama reads
+blueprint, not place.** Named gaps: grid + one horizon line + machine models, but **no sky,
+weather, parallax, background dressing, sense of scale, or day-in-the-life read**; and
+motion quality was **unverifiable from stills**.
+
+**Theme: "from blueprint to place."** Close the specific ADR-013 gap the flywheel's own
+intake named — turn the blueprint schematic into a *place a kid feels they walked into* —
+and clear the small copy/scope debris the same intake surfaced.
+
+### 10b. What is IN (this iteration's MVP)
+
+| Id | Title | Owner | Prio | blocked_by | Result |
+|----|-------|-------|------|------------|--------|
+| 114 | Designer: place-ness/atmosphere design pass for the diorama | designer | 2 | — | Competing atmosphere directions, pairwise-selected; mock + DESIGN-FACTORY addendum; belt reconciled; live-verifiable motion checklist |
+| 115 | Build the place-ness backdrop/depth/scale per 114 | developer | 2 | 114 | The diorama reads as a place; motion verified live; token-clean; save-compat |
+| 091 | Decorative belt (beltDrift) — build onto the finished backdrop | developer | 3 | 115 | Ambient belt, coherent with the new atmosphere (re-scoped, was prio 4 / unblocked) |
+| 110 | Affordable-state copy coherence: `.pnote` ready-line + locked-goal "bouw maar!" contradiction | developer | 3 | — | Both affordable-state copy defects fixed in one pass (re-scoped/expanded, was prio 4) |
+| 106 | Narrow-desktop-window degradation: width floor on the touchOnly() gate | developer | 3 | — | Keyboard user with a narrow window sees the calm width-hint, not a broken diorama/ticket (re-scoped, was prio 2 "mobile") |
+
+**Design-first is honoured:** 114 (designer) gates 115 (markup) — `blocked_by: [114]` — per
+PROTOCOL's design-before-features rule; the place-ness build cannot precede its spec. 091
+(belt) is `blocked_by: [115]` for **coordination** (same diorama files; place the belt on
+the finished backdrop), not for missing spec — the belt's own spec (W3 + world-C mock) is
+sufficient. 110 and 106 are copy/gate work in different files and run in parallel with the
+design track.
+
+**Sequencing rationale.** 114 is the headline and the gate; it starts now. 110 and 106 are
+independent quick wins (different files: 110 = `Shop.jsx`/`strings.js`; 106 =
+`App.jsx`/`strings.js`) that can land in parallel while 114 designs. 115 follows 114; 091
+follows 115. After 114 delivers, the PO firms/cuts 115 against the delivered mock (world-
+pass precedent, §8: build lanes were cut only *after* the 079 designer pass landed) — if
+114's spec is large, 115 is sliced then, using a fresh id block.
+
+### 10c. What is explicitly OUT (scope down hard)
+
+- **Mobile / touch-device layouts for game surfaces** — out per ADR 012 ruling 3, and
+  already enforced by the `touchOnly()` gate. **No responsive/reflowing diorama is built**
+  (ADR 015). Narrow *desktop windows* are handled by a width-hint gate (106), never a
+  reflow. This closes the door on re-filing "the factory is broken at width X" as a layout
+  bug — see ADR 015's standing rule.
+- **Any real weather / day-night / time-of-day engine, or crowd simulation.** The genre
+  benchmark (a tycoon with changing skyline, weather, crowds) is a *quality bar to compare
+  against*, **not** a feature list. Atmosphere is CSS on the pinned token layer — a rich
+  *sense* of place, not a simulation. If a design direction needs a runtime system, an asset
+  pipeline, or spend, it is out of bounds (114 must pick a direction that is not).
+- **Any economy / engine / save / theme change.** The presentation-only + zero-new-`:root`-
+  tokens + save-compat invariants of the whole milestone (§2) are unchanged. `--sky` stays
+  prestige-only.
+- **The typing view.** This iteration is the factory page only; ADR 011's calm mandate on
+  the typing surface is not reopened.
+- **New machine/particle art, a third per-machine "ghost" SVG variant** (W2b addendum
+  forbids it), **sound redesign, parent-dashboard rework, DesignSync publish** — all remain
+  out (§5), unchanged.
+- **Priority 1 is deliberately left free.** Nothing this iteration is a broken core flow or
+  a guardrail breach; the milestone is trustworthy since 102 was fixed. Place-ness is
+  high-value *enhancement* (prio 2); the rest is cleanup (prio 3).
+
+### 10d. Adjudications recorded this pass
+
+1. **106 — mobile vs narrow-window (ADR 015 used).** Resolved the v092-vs-v089 tension: the
+   game gate `touchOnly()` (`App.jsx`) keys on **pointer type, not width**, so phones are
+   out-of-target *and already gated* (v092 right), but a keyboard user with a **narrow
+   desktop window** falls through and hits a broken layout (the real, in-scope defect;
+   v104 reproduced it for `.ticket` too). Ruling: **gate, don't reflow** — add a width floor
+   to the friendly hint; never build a mobile diorama. 106 re-scoped, prio 2 → 3; v104's
+   `.ticket` squeeze folded in. Durable rule recorded in ADR 015 so it is not re-litigated.
+2. **Locked-goal contradiction (v104 finding, folded into 110, prio 3).** "Je hebt genoeg
+   munten — bouw maar!" next to a 🔒 Ontgrendel button tells the kid to build when only the
+   parent-gated unlock is possible. Ruled **priority 3** (above the pure-cosmetic 4): a copy
+   *logic* contradiction on the trust-sensitive premium surface, but rare and non-functional
+   (the gate still gates correctly → **not** a guardrail breach, no CEO escalation). Fix
+   routes toward the parent gate ("vraag een volwassene om te ontgrendelen") instead of
+   contradicting it. Folded into 110 (same files/family) rather than spawning a duplicate id.
+
+### 10e. Budget & guardrails
+
+Entirely presentation/copy/gate work — CSS, strings, one media-query gate. **No new spend;**
+well within the €50/mo ceiling. Guardrails intact: no idle income (ambient life is at rest,
+never spouts coins), breadth-not-power (premium still routes to the parent gate — the
+locked-goal fix *reinforces* this), no pressure/dark patterns, free tier complete,
+privacy/SEO untouched.
