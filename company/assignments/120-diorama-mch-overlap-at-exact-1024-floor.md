@@ -2,7 +2,7 @@
 id: 120
 title: "Diorama .mch cards overlap by ~1.6px at the exact 1024px desktop floor (5 built machines)"
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (found incidentally while re-verifying assignment 106/ADR 015 for
