@@ -2,7 +2,7 @@
 id: 090
 title: .boost-chip / .streak-pill use raw hex colours, not theme tokens
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 083)
@@ -35,16 +35,16 @@ left untouched there to stay in scope for that slice.
 
 ## Acceptance criteria
 
-- [ ] `.streak-pill` and `.boost-chip` use only `var(--token)` (or `color-mix(in srgb,
+- [x] `.streak-pill` and `.boost-chip` use only `var(--token)` (or `color-mix(in srgb,
       var(--token) N%, transparent)`) colours — no raw hex/rgba, except the acceptable
       case of a genuinely themable warm/flame token if one already exists (e.g.
       `--flame`) or a documented reason none fits.
-- [ ] Visually equivalent (or better) under the default Muntpers theme — a screenshot
+- [x] Visually equivalent (or better) under the default Muntpers theme — a screenshot
       diff shows no unintended visual regression.
-- [ ] Re-tints correctly under at least one non-default `[data-theme]` (verify with
+- [x] Re-tints correctly under at least one non-default `[data-theme]` (verify with
       `qa-scripts/contrast-052.mjs` or an equivalent WCAG check if the token choice
       changes contrast).
-- [ ] `npm test` stays green.
+- [x] `npm test` stays green.
 
 ## Notes
 
@@ -135,3 +135,101 @@ capture and port-free was confirmed both times. `public/**` build churn from `np
 /`npm run build` was reverted via `git checkout -- public/` before staging this commit.
 `playwright-core` was installed via `npm install playwright-core --no-save`;
 `package.json`/`package-lock.json` are diff-clean.
+
+## Verification (tester, v090, 2026-07-24)
+
+Verdict: **met — status: done.**
+
+**AC1 (token discipline).** Read `git show 4da665b -- src/game/game.css` directly rather
+than trusting the delivery-notes table. The full diff touches exactly two rule bodies
+(`.streak-pill`, `.boost-chip`) plus one new comment above them; both rule bodies now
+contain only `var(--on-accent)`, `var(--brass-hi)`, `var(--brass)`, `var(--brass-deep)`,
+and `color-mix(in srgb, var(--brass) 40%, transparent)` — scanned the two rules
+character-by-character for `#`/`rgb`/`rgba` and found none. `git diff` on `:root` and every
+`[data-theme=...]` block is untouched (confirmed via `grep -c "^\s*--" ` before/after and a
+visual read of lines 15-145) — zero new tokens added, satisfying the Notes' "zero new
+`:root` tokens" rule and W6.
+
+**AC2 (visual equivalence, default theme).** Independent build+serve, not the dev's
+server: `npx vite build` then `npx vite preview --port 4269 --strictPort` (reserved lane
+port). Wrote my own probe (`qa-scripts/tester-090-probe.mjs`, not a copy of the dev's
+`090-screenshot.mjs` — same seeding shape since that's the only way to get both elements
+on screen, but written independently and extended to dump live `getComputedStyle()`
+values, not just screenshots) against a save with `streak: 5`/`boostLeft: 8`. Computed
+styles for `.streak-pill`/`.boost-chip` under default (no `data-theme` attr, i.e.
+Muntpers/`:root`) resolved to `color: rgb(61,44,0)` (`--on-accent` = `#3d2c00`),
+`background: linear-gradient(rgb(255,210,94), rgb(255,185,21) 55%)` (`--brass-hi` =
+`#ffd25e` → `--brass` = `#ffb915`), `box-shadow` hard edge `rgb(198,127,0)`
+(`--brass-deep` = `#c67f00`) — an exact token-value match, confirmed live in the DOM, not
+by reading source. Screenshots (`company/assignments/tester-090-default-{wallet,full}.png`)
+show both the 🔥 streak pill and the "Opwarm-boost ×1.5 — nog 5 opdrachten" chip rendering
+with the same warm peach→amber gradient pill as the dev's `090-before-wallet.png` /
+`090-after-wallet.png` — no visible regression, layout, sizing, or legibility change.
+
+**AC3 (re-tint under alternate theme).** Ran `node qa-scripts/contrast-052.mjs` myself
+(fresh `npm ci` + `npm install playwright-core --no-save` in this worktree first) — **ALL
+CHECKS PASS** across all four themes, numbers matching the delivery notes exactly
+(on-accent-on-brass: 7.83/7.26/5.42/7.10; on-accent-on-brass-hi: 9.39/10.82/8.04/9.64,
+muntpers/nachtploeg/snoepfabriek/diepzee order). Beyond the computational check, drove the
+actual browser under `data-theme=nachtploeg`: computed styles flipped to `color:
+rgb(28,10,62)` (`--on-accent` nachtploeg = `#1c0a3e`), gradient
+`rgb(211,190,255)→rgb(180,145,255)` (`--brass-hi`/`--brass` nachtploeg), edge
+`rgb(106,63,206)` (`--brass-deep` nachtploeg) — both pill and chip visibly re-tinted to
+violet in the screenshot (`tester-090-tester-nachtploeg-{wallet,full}.png`), fixing the
+pre-fix "stuck orange" bug the assignment describes. Also spot-checked `.coin-pill`
+(uses the same `--brass` family, out of this assignment's scope but a useful sanity
+check) re-tinted identically — the coin *icon* glyph looked visually gold-ish in the
+screenshot at a glance, which I initially misread as a re-tint miss, but its computed
+background gradient confirmed violet (`rgb(211,190,255)`/`rgb(180,145,255)`); the icon
+itself is a small fixed-color asset unrelated to the pill background, not a defect.
+
+**AC4 (tests green).** `npm test`: **266/266 passing**, including
+`check-no-dutch-en: PASS — 5 built en file(s) checked against 59 Dutch lexicon words,
+zero unallowlisted hits.` — ran it myself in this worktree, not re-quoted from the dev.
+
+**Judgment-call adjudication (brass vs. `--flame`): upheld.** Read the AC's "e.g.
+`--flame`" as an example, same as the dev. Verified the two supporting claims against the
+file directly rather than taking them on faith: (1) `--flame` is in fact used exclusively
+for error/alarm semantics in this file — `.tchar.current.err`, `.link-reset:hover`,
+`.friends-msg.bad`, `.acc-err`, and `.price-tag` (a "SALE"-style urgency badge) — and the
+`.offline` banner's own comment (game.css:859-863) states in Dutch, verbatim, "Nooit
+--flame (fout/heet) — dit is een kinderproduct, niets mag hier alarmerend lezen" ("never
+--flame (error/hot) — this is a kids' product, nothing here should read as alarming"),
+which is a real, pre-existing, documented constraint, not an invented one. A streak count
+and a positive daily-warmup boost are reward/encouragement UI, not error/urgency UI, so
+routing them through `--flame` would misuse that documented contract. (2) `.unlock-pill`
+(game.css:892-899) and `.premium-cta`/`.plot .pnote` badge (game.css:668-671) already
+implement the exact `--brass-hi`→`--brass` 55%/`--brass-deep`/`--on-accent` pill idiom
+being reused here — confirmed by direct inspection, not the dev's say-so. Weighed against
+`design/DESIGN-FACTORY.md` §W6 ("Zero new `:root` tokens... every colour is a
+`var(--token)`... `color-mix` not raw `rgba()`"): W6 requires token discipline and
+re-tinting, and is silent on *which* token family to use for a given semantic — it does
+not mandate `--flame` for warmth. Brass satisfies W6's letter (zero new tokens, no raw
+hex/rgba, `color-mix` for the glow) and its intent (full re-tint per `[data-theme]`) at
+least as well as `--flame` would have, while `--flame` would have introduced a semantic
+mismatch the file's own comments explicitly warn against. Adjudication: **brass-over-
+flame stands**, no design escalation needed.
+
+**Scope check (AC "touched nothing outside the two rule bodies").** `git show 4da665b`
+confirms the only source-file change is `src/game/game.css`, and within it only the two
+rule bodies + the new comment line changed — independently confirmed by reading the full
+diff hunk myself: no touch to `.emptyline`, `.sk`, `.offline`, any shimmer/goldpulse
+keyframe, `.ghost .ghost-ico`, or `.floor`. No changes to `store.js`, `economy.js`,
+`src/engine/`, `theme.js`, or `goals.js`.
+
+**No new defect filed under 098.** Nothing found here rises to a new bug — the one thing
+that gave me pause (the coin-pill icon's apparent color mismatch in the nachtploeg
+screenshot) was a visual misread on my part, not a real defect once checked against
+computed styles. Assignment 095 (shareCard.js's stale `STREAK_*` hex constants) was
+already filed by the developer and is not refiled here. Reserved id 098 is unused and
+lapses.
+
+**Environment notes.** Fresh worktree: `npm ci` (22 packages), `npm install
+playwright-core --no-save` (package.json/package-lock.json confirmed diff-clean after).
+Server ran on the reserved lane port 4269 (`--strictPort`), killed by PID via `netstat
+-ano` immediately after both screenshot passes; port confirmed free afterward (only
+`TIME_WAIT` residue, no `LISTENING` entry). `public/**` build churn from `npm test`/
+`vite build` reverted via `git checkout -- public/` before staging. New files added by
+this verification: `qa-scripts/tester-090-probe.mjs` (my independent probe script) and
+`company/assignments/tester-090-{default,tester-nachtploeg}-{wallet,full}.png`
+(screenshot evidence) — both committed alongside this note.
