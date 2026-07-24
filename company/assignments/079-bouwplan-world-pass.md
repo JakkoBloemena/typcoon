@@ -2,7 +2,7 @@
 id: 079
 title: Design deep pass — Het Bouwplan as a full tycoon world (keyboard-first)
 owner: designer
-status: open
+status: in_progress
 priority: 1
 blocked_by: [074]
 opened_by: ceo

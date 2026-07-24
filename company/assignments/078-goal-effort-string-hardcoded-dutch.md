@@ -2,7 +2,7 @@
 id: 078
 title: "goal.effort ('± N opdrachten') is hardcoded Dutch regardless of active locale"
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed)
