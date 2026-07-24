@@ -2,7 +2,7 @@
 id: 083
 title: Typing strip — earnings-first, remove goal sliver, one-shot chips (world-pass slice 1)
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: product-owner
@@ -193,3 +193,77 @@ so it mechanically still applies — I didn't additionally screenshot it for thi
 pre-existing `.boost-chip`/`.streak-pill` raw hex colours (not tokens) that predate this
 assignment, discovered while fixing `.boost-chip`'s animation. `status: open, priority:
 4`, noted as developer-proposed. Left untouched here to stay in scope.
+
+## Verification (tester, tick #30)
+
+Worktree `v083` (branch `verify/083`), merged tree at `d2833b3` (main, includes 069's
+htmllang tests). Independent pass — own fixtures, own script
+(`qa-scripts/083-tester.mjs`), not a re-run of the dev's `083-verify.mjs`. Ran on
+`vite preview --port 4239` (only port used), `playwright-core` against the system
+Chromium at `C:/Users/Jakko/AppData/Local/ms-playwright/chromium-1228`.
+
+**Pipeline:** `npm install` (22 pkgs) → `npm test`: **232/232 green** (232, not the
+AC's pre-069-merge "230/230" — expected per dispatcher instruction, includes 069's 2
+htmllang tests). `vite build` OK (101 modules). `check-no-dutch-en` PASS (5 built en
+files, 0 unallowlisted Dutch hits). `gen-content` churned `public/**`/`sitemap.xml` as
+its documented side effect; reverted via `git checkout -- public/` before and after,
+confirmed clean via `git status --porcelain`.
+
+**Per-AC verdict, all independently re-derived:**
+- **AC1 (goal sliver gone)** — PASS. `.goalsliver` count 0 and no "JE VOLGENDE
+  MACHINE"/"YOUR NEXT MACHINE" text anywhere on `.game`, checked in nl (default) and
+  en (forced-boost) states.
+- **AC2 (earnings cluster hierarchy)** — PASS. Own computed-style read: rate=16.8px,
+  total=18.4px vs mult=12.8px, acc=12.8px (independently reproduces the dev's numbers).
+  Also confirmed DOM order: `.earn-cluster` precedes `.lever` inside `.wallet`.
+- **AC3+AC4 (no infinite chip animation / zero ambient motion — the 073 bounce bar)**
+  — PASS. Full `.game *` computed-style animation sweep (`tchar` caret allowlisted) run
+  in **six** driven states: default mid-session, first-run pre-keystroke (`.type-hint`,
+  iter=`"1"`), forced daily-warmup boost via fixture `boostLeft:3`+`lastDay=dayKey()`
+  (`.boost-chip`, iter=`"1"`), forced golden run via `Math.random=()=>0` addInitScript
+  (`.golden-banner`, iter=`"1"`), **and two states the dev's script did not
+  cover**: (a) boost AND golden simultaneously (both chips render together, sweep
+  clean) and (b) the en locale in a forced-boost state (`.boost-chip` present, no
+  "YOUR NEXT MACHINE" leftover, sweep clean). Zero `infinite` offenders in any of the
+  six states. Also probed `prefers-reduced-motion: reduce` (adversarial, not an
+  explicit AC): the global rule correctly zeroes duration (`0.01ms` → `1e-05s`
+  computed) and forces `animation-iteration-count: 1` on all three chips even under a
+  forced golden+first-run state.
+- **AC5 (preserved live earn signal)** — PASS. Coin-pill ticked `500` → `550` after a
+  real driven exercise (own fixture, own text, not a re-run of the dev's numbers).
+- **AC6 (long-sentence wrap)** — PASS. Injected a longer stress sentence than the
+  dev's at 1280px: `.typing-surface` `overflowsCard: false`, page `overflowsPage:
+  false`. Noted for the record (not a defect): `.typing-text` is still a flat
+  `font-size: 2.1rem` with `word-break: break-word`, not literally the
+  `clamp(1.25rem,4.4vw,2.1rem)` W5 describes — this predates 083 (083 did not touch
+  `.typing-surface`/`.typing-text` sizing, confirmed via the diff), is honestly
+  flagged as unverified-for-clamp in the dev's own delivery notes, and the AC's actual
+  wording ("wraps... no clipping or horizontal overflow at desktop width") holds
+  regardless. Not filed as a new defect — pre-existing, out of this slice's diff.
+- **AC7 (token discipline)** — PASS. `git diff 5a2d3c2 8b82cce -- src/game/game.css`
+  shows zero new `:root` token declarations added. The only hex/rgba hit in the diff
+  is the pre-existing `text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35)` line on `.type-hint`,
+  value unchanged — it only appears because it shares a source line with the changed
+  `animation:` declaration, a line-diff artifact, exactly as the dev described. The
+  `.boost-chip`/`.streak-pill` raw-hex debt is confirmed genuinely pre-existing (only
+  the `animation:` line on `.boost-chip` is touched; the hex-bearing lines do not
+  appear in the diff at all) — 090 is a truthful flag, not scope-dodging.
+- **AC8 (save-compat)** — PASS. `git diff 5a2d3c2 083b6ee --stat -- src/game/store.js
+  src/game/economy.js src/engine/ src/game/theme.js src/game/goals.js src/game/App.jsx
+  src/game/Shop.jsx src/game/FactoryPage.jsx index.html` is empty. Drove a
+  pre-existing-shaped save (`coins:1234`, `curriculumIndex:20`, `exercisesDone:80`)
+  through a full exercise with no errors; coin total displayed correctly and updated
+  as expected — plays identically.
+- **AC9 (tests green)** — PASS, see pipeline above.
+
+**Also checked, adversarial, no explicit AC:** 375px mobile viewport with the new
+`.earn-cluster`/`.lever` wallet groups — no horizontal page overflow. No unexpected
+4xx/5xx (only the documented `/api/track` 404). `.mult-pill`/`.acc-pill`'s new global
+`font-size: 0.8rem` and `.cps-pill`'s `.game-bar .wallet`-scoped `1.05rem` bump
+confirmed not to leak onto the home screen's `.coin-pill.big`/`.cps-pill.big` (separate
+selectors, different scope).
+
+**Overall verdict: PASS, all 9 ACs hold. No new defect filed — 089 lapses, unused.**
+Killed the port-4239 preview server afterward (`Get-NetTCPConnection`/`netstat` confirm
+no LISTENING socket on 4239, only residual TIME_WAIT). New file kept for the record:
+`qa-scripts/083-tester.mjs` (31/31 own checks passed).
