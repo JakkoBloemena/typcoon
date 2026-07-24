@@ -964,16 +964,22 @@ button { font-family: inherit; }
 .dash-exam-icon { font-size: 1.2rem; }
 
 /* ---------- Dagelijkse terugkeer (streak + opwarm-boost) ---------- */
+/* 090: was raw hex (#5a2a00/#ffd0a0/#ff9f43/#b5651d) — predated the theme system
+   (052) and never re-tinted under [data-theme]. Migrated onto the same --brass-hi/
+   --brass/--brass-deep/--on-accent quartet .unlock-pill already uses for a warm
+   gradient pill with dark ink (--on-accent is literally "ink on --brass" per its
+   :root comment) — nul nieuwe tokens (W6), and the pair is already covered by
+   qa-scripts/contrast-052.mjs's "on-accent ink on brass(-hi)" checks. */
 .streak-pill {
   font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap;
-  color: #5a2a00; background: linear-gradient(180deg, #ffd0a0, #ff9f43);
-  padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 0 #b5651d;
+  color: var(--on-accent); background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%);
+  padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 0 var(--brass-deep);
 }
 /* 083 (closes 073 AC2): one-shot dropIn entrance, no more infinite goldpulse. */
 .boost-chip {
-  font-family: 'Lilita One', sans-serif; font-size: 0.95rem; color: #5a2a00;
-  background: linear-gradient(180deg, #ffd0a0, #ff9f43); border-radius: 999px;
-  padding: 7px 18px; box-shadow: 0 4px 0 #b5651d, 0 0 20px rgba(255, 159, 67, 0.4);
+  font-family: 'Lilita One', sans-serif; font-size: 0.95rem; color: var(--on-accent);
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%); border-radius: 999px;
+  padding: 7px 18px; box-shadow: 0 4px 0 var(--brass-deep), 0 0 20px color-mix(in srgb, var(--brass) 40%, transparent);
   animation: dropIn 0.6s var(--pop);
 }
 .welcome-card .welcome-flame { font-size: 3.6rem; animation: cardPop 0.6s var(--pop) 0.05s backwards; }
