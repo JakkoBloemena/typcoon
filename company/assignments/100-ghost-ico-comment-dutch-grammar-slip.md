@@ -2,7 +2,7 @@
 id: 100
 title: Dutch grammar slips in the new .ghost .ghost-ico comment clause (from 099)
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 4
 blocked_by: []
 opened_by: tester (found during 099 verification)
@@ -63,3 +63,51 @@ green tests) are unaffected and already verified independently.
 - [ ] No functional/CSS-value change — comment-only edit, `.ghost .ghost-ico`
       declaration byte-identical.
 - [ ] `npm test` stays green (266/266 + check-no-dutch-en).
+
+## Delivery notes
+
+Fixed both slips in `src/game/game.css` (comment above `.ghost .ghost-ico`,
+now lines 693-699), nothing else touched:
+
+- **Issue 1 (missing verb):** "brightness(0) plat alle gevulde pixels naar zwart"
+  → "brightness(0) **drukt** alle gevulde pixels **plat** naar zwart" (separable
+  verb "platdrukken", conjugated).
+- **Issue 2 (article gender):** "zodat de silhouet leesbaar blijft" →
+  "zodat **het** silhouet leesbaar blijft".
+
+Full new comment text:
+
+```
+/* geen extra opacity hier: de idle-variant van Machine is al gedempt (0.42, gebakken
+   in de svg zelf) — een tweede opacity-laag erbovenop maakte het icoon vrijwel
+   onzichtbaar tegen de gearceerde achtergrond; brightness(0) drukt alle gevulde
+   pixels plat naar zwart, invert(1) klapt dat om naar wit, zodat het silhouet leesbaar
+   blijft tegen de donkere vloer in alle vier thema's — grayscale(1) alleen hield
+   het icoon donker en dus onzichtbaar (designer-uitspraak des092, zie 092 /
+   DESIGN-FACTORY.md §W2b). */
+```
+
+Technical content/attribution (brightness(0)/invert(1) mechanics, des092 /
+DESIGN-FACTORY.md §W2b citation, "alle vier thema's") preserved verbatim, only the
+two grammar slips changed.
+
+**Diff verified comment-only:** `git diff -- src/game/game.css` shows exactly 2
+changed lines (4 lines touched: 2 removed/2 added), both inside the comment block;
+the `.ghost .ghost-ico { width: 48px; height: 42px; filter: brightness(0) invert(1); }`
+declaration line is byte-identical (confirmed via diff — no hunk touches it).
+
+**Tests:** `npm install` (node_modules was missing) then `npm test` →
+`node --test`: 266/266 pass, 0 fail; `vite build` succeeds; `check-no-dutch-en`:
+PASS (5 built en files checked against 59-word lexicon, zero unallowlisted hits).
+
+**Build/bundle hash check:** built bundle is `dist/assets/speel-CgjEJUIp.css` and
+`dist/assets/speel-D4f6hOXw.js`. Verified unchanged by stashing the game.css edit,
+rebuilding (same two hashes: `speel-CgjEJUIp.css`, `speel-D4f6hOXw.js`), then
+popping the stash back — confirms the minifier strips comments and the comment-only
+change produces a byte-for-byte-hash-identical bundle.
+
+Note: running `npm test`/`npm run build` regenerates `public/**` content files via
+`gen-content.mjs` with LF line endings, which Windows git reports as "modified" due
+to line-ending normalization only (no content diff — `git diff --stat` showed 0
+changes for those files). Reverted with `git checkout -- public/` before committing,
+so the commit touches only the two files in scope.

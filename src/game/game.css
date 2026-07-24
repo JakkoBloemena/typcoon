@@ -692,8 +692,8 @@ button { font-family: inherit; }
 .ghost .draw.clickable { cursor: pointer; }
 /* geen extra opacity hier: de idle-variant van Machine is al gedempt (0.42, gebakken
    in de svg zelf) — een tweede opacity-laag erbovenop maakte het icoon vrijwel
-   onzichtbaar tegen de gearceerde achtergrond; brightness(0) plat alle gevulde
-   pixels naar zwart, invert(1) klapt dat om naar wit, zodat de silhouet leesbaar
+   onzichtbaar tegen de gearceerde achtergrond; brightness(0) drukt alle gevulde
+   pixels plat naar zwart, invert(1) klapt dat om naar wit, zodat het silhouet leesbaar
    blijft tegen de donkere vloer in alle vier thema's — grayscale(1) alleen hield
    het icoon donker en dus onzichtbaar (designer-uitspraak des092, zie 092 /
    DESIGN-FACTORY.md §W2b). */
