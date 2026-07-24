@@ -2,7 +2,7 @@
 id: 088
 title: Edge states for the world — empty / loading / offline (world-pass slice 6)
 owner: developer
-status: needs_verification
+status: open
 priority: 3
 blocked_by: [085]
 opened_by: product-owner
@@ -169,3 +169,118 @@ navigation under the current synchronous-hydration architecture) is a documented
 in this delivery, not a bug to fix; filing a speculative "wire async save-hydration" assignment
 with no concrete trigger today would be exactly the speculative work the protocol asks developers
 to avoid.
+
+## Verification (tester, v088, 2026-07-24)
+
+**Verdict: BOUNCE — AC4 fails at the 1024px floor for the empty state.** Everything else holds.
+Independent probes in `qa-scripts/088-tester.mjs` (35 checks, deliberately different in approach
+from the dev's own `qa-scripts/088-verify.mjs`, per `retro/2026-07-24-tick33-declaration-vs-
+effect-verification.md`'s "verify the effect, not the declaration" lesson) — 35/36 pass. Setup:
+`npm ci` (node_modules was missing) → `npm install playwright-core --no-save` (package.json/
+package-lock.json diff-clean, confirmed) → `npm test` (**259/259 green**, `check-no-dutch-en:
+PASS`, both independently re-run, not just re-read from the delivery notes) → `npx vite build` →
+`npx vite preview --port 4258 --strictPort`.
+
+**AC1 (empty/fresh save): PASS, independently re-verified via a DIFFERENT method than the dev's
+script.** The dev's script clears storage then injects a hand-built `persisted` object. This
+tester instead drove the actual new-player path: cleared `localStorage`, loaded `/speel/`,
+confirmed the real "new player" name-entry card renders (not "continue"), typed a name, and
+clicked the real `Start je fabriek` button — i.e. exercised App.jsx's actual `start()` code path,
+not a stand-in for it. Result: exactly one `.plot` (Typemachine), zero `.mch`, exactly 4
+`.ghost` nodes, flag text exactly `"🔨 BOUW HIER"`, `.emptyline` text exactly `"Je fabriek staat
+klaar om te groeien — typ je eerste opdracht."`, `.pnote` absent. Repeated for the real
+`?lang=en` locale-detection path (not a `uiTaal:'en'` fixture): flag `"🔨 BUILD HERE"`, line
+`"Your factory is ready to grow — type your first task."` — real translated text, not a raw key.
+Additionally ran a **live in-session transition** the dev's script didn't do: seeded a save with
+`buildings:{}` but enough coins to actually click buy, confirmed the pre-buy empty markers, then
+clicked the real buy button and confirmed `.emptyline` disappears and `.pnote` reappears the
+instant a real purchase lands (not two separate static fixtures). Counterexample search across
+three additional non-empty state shapes (all 5 built, only-megafab "skip pattern", single
+typewriter) confirms `.emptyline`/`"BOUW HIER"`/pnote-suppression never leak outside the true
+`isEmpty` condition. Screenshot: `company/assignments/088-screenshots-verify/088-tester-real-
+fresh-save.png`.
+
+**Judgment call 1 (`.pnote` suppressed only in the empty frame): UPHELD.** Confirmed by the live
+buy transition above (pnote absent pre-buy, present post-buy in the same session) and by all
+three counterexample fixtures (every `.plot` has a `.pnote` whenever the factory is non-empty).
+Matches the mock, matches the stated rationale (visual crowding), and is genuinely conditional on
+`isEmpty`, not always-on or always-off.
+
+**AC2 (loading skeleton): PASS on the render guard + CSS effect; the "unreachable via real nav"
+claim independently confirmed.** Read `App.jsx` end-to-end myself: every render path that reaches
+`FactoryPage`/`Shop` (`if (view === 'factory' && game)`) requires `game` truthy, and `game` is
+only ever set already spread over `{...newTycoon(), ...persisted}` or a fresh `newTycoon()` —
+`state.tycoon` can never be missing at mount today. Grepped every `.jsx` in `src/game/` for
+`setView('factory')`: only `App.jsx` calls it. The dev's honest-dead-code framing holds up under
+independent code review, and the task brief sanctions a simulated trigger, so this is accepted as
+verified. Independently re-verified the CSS effect with a different technique than the dev's
+script: `getAnimations()` reports a live `running` animation named `shimmer`, AND (per the exact
+lesson from the `plotGlow` bounce in the tick #33 retro — a declaration can parse fine and do
+nothing) a **screenshot-diff of the same DOM node 350ms apart is provably non-identical**
+(confirms the rendered surface actually changes over time, not just that a computed style
+resolves once). Note: an earlier draft of this specific check used a `position:fixed` wrapper for
+the injected probe, which — with no explicit width — collapsed to near-zero content width and
+shifted mostly off-screen, producing a false-negative byte-identical screenshot; corrected by
+injecting in normal document flow (matching how `.hal` actually renders, and how the dev's own
+script injects it). Recorded but not gating: `context().setOffline(true)` **did** synthesize a
+real DOM `'offline'` event unassisted in this Chromium build/environment (the dev's script assumes
+it might not and dispatches one explicitly regardless — a reasonable belt-and-braces choice either
+way, not a discrepancy that affects the verdict).
+
+**AC3 (offline banner): PASS, independently re-verified.** Real `context().setOffline(true)` +
+real navigation to the factory page: banner appears with the exact copy, `.hal` stays rendered
+underneath, `border-left-color` matches `--mint-deep` and differs from both `--flame` and `--sky`
+(re-confirmed), a theme swap recolours it. Additionally stress-tested a **rapid online/offline
+flap** (offline→online→offline→online in quick succession) the dev's script didn't cover: the
+banner tracked truthfully on every transition, no stuck state. Screenshot: `company/assignments/
+088-screenshots-verify/088-tester-offline-banner.png`.
+
+**AC5 (token discipline): PASS, independently re-verified with a different scan method.** Instead
+of trusting the dev's string-offset slice of `game.css`, this tester's scan located the three 088
+rule-blocks by selector (`.emptyline`, `.sk`, `.offline`, `@keyframes shimmer`) wherever they
+physically sit in the file, and confirmed zero hex, zero raw `rgba()`/`rgb()`, and no stray new
+custom-property declarations near them. Zero hits, consistent with the dev's own scan.
+
+**AC6 (save-compat): PASS, independently re-verified.** `git diff --stat 335b484^ HEAD -- store.js
+economy.js src/engine/ theme.js goals.js` (335b484 = the 088 commit; diffed against its own parent
+through current HEAD, not just re-reading the dev's claim) is empty — zero touches across the
+entire 088 lane, not just the single commit. `npm test`: 259/259, `check-no-dutch-en: PASS`, both
+re-run fresh by this tester. `public/**` build churn reverted before commit.
+
+**AC4 (no horizontal scroll or clipping at 1360px and 1024px, all three states): FAIL at the
+1024px floor, empty state only.** Horizontal-scroll checks pass cleanly everywhere (1360px and
+1024px, all three states) — but AC4 names **clipping** as a separate condition from horizontal
+scroll, and there is a real one: at the 1024px floor, the `.emptyline` friendly-line pill wraps
+to two lines (by design — the delivery notes say this was deliberately built with `max-width:90%`
++ normal wrap instead of the mock's `white-space:nowrap`, specifically anticipating the 1024px
+floor might not fit the sentence on one line). Nobody then checked what the taller two-line pill
+does to the layout around it: it grows tall enough to **visually overlap the `.plot .pname`
+label ("Typemachine") sitting directly above it** — measured vertical bounding-box overlap of
+**15.8px** in Chromium at 1024×800 (`document.querySelector('.plot .pname').getBoundingClientRect()`
+vs `.emptyline`'s — bottom of the name label sits below the top of the pill). Confirmed
+visually in a screenshot, not just via the numeric overlap: the "Typemachine" text is
+partially obscured behind the pill's rounded background.
+
+**Reproduction:**
+1. Serve the built app (`npx vite build && npx vite preview --port 4258 --strictPort`), open
+   `http://localhost:4258/speel/`.
+2. Clear `localStorage`, reload.
+3. Set the viewport to 1024×800 (or any similar 1024px-wide desktop viewport).
+4. Type a name and click "Start je fabriek" (a genuinely fresh save: 0 buildings, 0 coins).
+5. Click through to "🏭 Fabriek".
+6. Observe: the friendly empty-line pill ("Je fabriek staat klaar om te groeien — typ je eerste
+   opdracht.") wraps to two lines and visually overlaps/obscures the "Typemachine" label of the
+   lit `🔨 BOUW HIER` plot directly above it.
+
+Screenshot: `company/assignments/088-screenshots-verify/088-tester-empty-state-1024-overlap.png`.
+Note this does **not** reproduce in the loading-skeleton state or the offline-banner state at the
+same 1024px width (both checked and clean) — it is specific to the empty state's own new markup.
+
+**Scope note for the next developer pass:** this is inside 088's own file surface
+(`FactoryPage.jsx`/`Shop.jsx`/`game.css`, the `.emptyline` rule and/or the plot layout at the
+1024px floor) — not a new out-of-scope defect, so no 094 was filed for it (094 lapsed — it exists
+for defects *outside* 088's own acceptance criteria, and this one is squarely AC4).
+
+**075 status: left as `blocked`, not flipped.** Per the assignment's own notes, 075 only flips to
+`done` once 088's edge states are verified in full; since AC4 does not hold, 075 stays blocked
+until 088 is re-verified and passes.
