@@ -2408,3 +2408,165 @@ quota-relevant credential is present; endpoint checks show no pause symptoms on
 any DB-backed route. Assignment 096 (relay rewire ask) still open, no
 relay-delivered ops summary observed this tick — expected, not a finding. No
 incident to open this tick — **assignment 112 lapses**.**
+
+## 2026-07-24 20:51 UTC — tick #41 (stage-duty health pass + bundle re-baseline deferred from tick #40)
+
+Nineteenth monitor pass, first since tick #39 (tick #40 skipped per one-pass-per-heartbeat;
+its close explicitly deferred re-baselining the bundle it produced to this pass). Working
+from `HEAD` = `6275366` (this tick's own open commit), on top of tick #40's close
+`92ab509`, which merged `349c240` (dev/115 — "De Werktafel" place-ness backdrop build,
+assignment 115, needs_verification) and `359dc44`/`f7e0aad` (113 — `.gitattributes` scope
+fix). `GET /` returned `Last-Modified: Fri, 24 Jul 2026 20:50:38 GMT`, `X-Vercel-Cache:
+MISS` (edge cache cold on this probe, not a staleness signal — timestamp itself is fresh,
+concurrent with tick #40's push). **Conclusion: the live deploy commit is `92ab509` or
+later**, matching this tick's brief (97c2c52..349c240 is reachable and live).
+
+**Bundle re-baseline (deferred from #40): new pair confirmed live, old pair (tick #39's
+baseline) cleanly retired.** `/speel/` now references **`speel-Bu5ref-P.js` /
+`speel-IpG916SB.css`** — both fetched directly (not just referenced) and both 200:
+
+- JS `speel-Bu5ref-P.js` (293408 bytes): sha256
+  `c87cb4c489196297a7e8d9147f23750bf7538d0f2a20a4533bfb343ad7700fe`
+- CSS `speel-IpG916SB.css` (41787 bytes): sha256
+  `cf4fa5e7ed91de989d7c9f1ccb37bfabfe6f54691a7f53b22bdbd7fb968e00d`
+
+**Old baseline (tick #39's `speel-D4f6hOXw.js` / `speel-CgjEJUIp.css`) confirmed 404 on
+both files** — clean full replacement, not a partial/mixed deploy. **Recording this new
+pair as the bundle-identity baseline going forward, superseding tick #39's.** (Note: this
+tick's brief named `speel-DvonnYS_.js` as the expected-stale old filename — that does not
+match any baseline this monitor has ever recorded; tick #39's actual recorded baseline,
+`speel-D4f6hOXw.js`/`speel-CgjEJUIp.css`, is what was checked and confirmed 404. Flagging
+the mismatch rather than silently substituting, in case it points at a dispatcher
+transcription slip — no impact on the result: both the brief's named file and the
+monitor's own last-recorded baseline are 404, so the replacement is clean either way.)
+
+**Guardrail check ("ALLEEN VANDAAG" fake-urgency string, per prior pass's check):**
+fetched the new JS and CSS bytes directly and grepped both, case-sensitive and
+case-insensitive: `grep -c "ALLEEN VANDAAG"` → **0** in both files; `grep -ci "alleen
+vandaag"` → **0** in both files. Still absent from the live production bundle, consistent
+with tick #39's finding (102's removal), not reintroduced by 115's build.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash/method redirects on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, `Last-Modified: Fri, 24 Jul 2026 20:50:38 GMT`, `X-Vercel-Cache: MISS` (cold probe, not stale — see above) |
+| `GET /speel/` (game) | 200; bundle **`speel-Bu5ref-P.js` / `speel-IpG916SB.css`** — new baseline, see above |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** (`<url>`/`<loc>`/`</url>` counts all agree) — matches tick #12–#39, no change |
+| Static assets: `/assets/speel-Bu5ref-P.js`, `/assets/speel-IpG916SB.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `POST /api/admin/notify` (no auth) | **401** `{"error":"unauthorized"}` |
+| `POST /api/admin/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `POST /api/admin/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+**30/30 checks pass** (13 page/resource checks incl. sitemap count, 5 static asset
+checks, 9 auth-boundary checks — all three credential shapes on all three
+admin-facing endpoints, matching tick #39's coverage exactly — 2 `/api/track`
+checks, 1 `/api/school/redeem` check). No 4xx/5xx surprises outside
+documented/expected behavior, no auth boundary breach on any admin-facing endpoint
+under any tested credential shape, no data leak in any 401 body, no broken asset
+despite the bundle changing underneath this pass, old bundle filenames cleanly
+404.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, not
+re-opened.** `env | grep -iE "FUNNEL|VERCEL|SUPABASE|CRON|OPS_NOTIFY|TELEGRAM"`
+this tick returned only `SUPABASE_GO_BINARY=...supabase-go.exe` — no
+`FUNNEL_READ_TOKEN`, no `OPS_NOTIFY_TOKEN`, no Vercel/Supabase dashboard or API
+credential, in this session (checked explicitly, not assumed). Standing
+Shareholder ask 4 in ADR 008 (monthly glance at usage pages) remains open and
+unactioned. Per ADR 008/010's framing that a Supabase free-tier pause is a
+priority-1 incident, this monitor still cannot itself detect an
+approaching-pause scenario before it becomes a visible outage — flagging again,
+not papering over it. Endpoint checks above found no 5xx/pause symptoms on any
+DB-backed route probed (funnel/cron/notify/track/redeem all responded correctly,
+none returned a Supabase-down error shape).
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7 —
+confirmed via git history this tick, not just re-read.** `git log --oneline --
+company/metrics/spend.md` still shows only the two pre-monitor commits
+(`aa85ab4`, `c68f46a`) — no commit has touched the file since. Four lines
+unchanged: domain (Shareholder-owned auto-renew, immaterial, untracked per
+decisions/003), Vercel/Supabase/Resend all €0 free tier (escalate to CEO before
+any paid-plan upgrade). **Checked `company/decisions/` explicitly — directory now
+tops out at `015-desktop-only-gated-not-reflowed.md`** (new since tick #39: a
+product-owner/UX ruling on desktop-only gating for the factory diorama, not
+reflowing for narrow widths) — read in full, carries no spend or provisioning
+language of any kind (grepped explicitly for spend/budget/paid/upgrade/
+recurring/provision/cost/€ — zero matches). Tick #40's landed work (113
+gitattributes scope, 115 De Werktafel backdrop build) is presentation/tooling
+only, no infrastructure implications, per their own assignment files. No new
+recurring commitment found. No line in spend.md carries a Shareholder "approved
+one-time, cancel before renewal" condition to watch — nothing to escalate
+pre-renewal this tick. Budget ceiling €50/month (decisions/003) — current
+recorded recurring spend: **€0 actuals against the €50/mo ceiling.** No
+upcoming renewal to flag.
+
+**Relay-delivered ops summary (assignment 096 observable): absence still
+expected, not a finding.** 096 (owner: ceo) remains `status: open`, no AC checked
+off — read the file directly this tick, unchanged from tick #39. The
+framework-side rewire of the scheduler-side summarizer onto `/api/admin/notify`
+is CEO/framework-side work this monitor cannot do or verify from here (no
+company agent may touch `C:\cc`, per PROTOCOL). Checked explicitly this tick: no
+`OPS_NOTIFY_TOKEN`/`CRON_SECRET` in this environment to inspect a rate-limit
+counter or invoke the endpoint authentically; no repo artifact, no Telegram-
+forwarded content, and no change to 096's own file indicates a relay-delivered
+summary has arrived yet. This is the expected state per this tick's brief, not
+re-filed as a gap.
+
+**ADR 010 revisit-trigger evaluation (T1–T6) — still armed per ADR 011/013:**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` unchanged since its creation commit `be2a450` (`git log` confirms) — baseline still dated 2026-07-23; today is 2026-07-24, ~1 day of possible data. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (`git log -- company/metrics/funnel.md` shows only its creation commit `c7f29a6`); `FUNNEL_READ_TOKEN` confirmed absent this tick; no Shareholder digest paste has landed since tick #39. |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no repo artifact records one — checked explicitly this tick, none found. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. |
+| T6 | Any production incident or new defect | **NOT FIRED.** 30/30 endpoint checks pass, auth boundaries intact on all three admin-facing endpoints under every tested credential shape, no data leak, spend clean, bundle cleanly replaced (old baseline 404s confirmed), fake-urgency guardrail still clean. |
+
+**No trigger fired this tick.** Nothing reopens or blocks dispatchable work.
+**Assignment 119 (pre-allocated for this pass) lapses** — no incident found this
+tick.
+
+**Verdict: HEALTHY. All 30 checks pass against the documented live domain
+`typcoon.com`. Live deploy commit confirmed as `92ab509` or later (tick #40's
+close, incl. 349c240/dev-115 and the 113 gitattributes fix). `/speel/` bundle
+re-baselined to `speel-Bu5ref-P.js` (sha256 `c87cb4c4…43a7700fe`) /
+`speel-IpG916SB.css` (sha256 `cf4fa5e7…7fb968e00d`), superseding tick #39's
+`speel-D4f6hOXw.js`/`speel-CgjEJUIp.css` pair (both old filenames now 404,
+confirming clean replacement — no partial/mixed deploy; a filename named in this
+tick's brief, `speel-DvonnYS_.js`, did not match any monitor-recorded baseline
+and is flagged above as a probable transcription slip, not acted on further).
+The "ALLEEN VANDAAG" fake-urgency guardrail remains absent from the live
+production bundle (re-checked, unchanged since tick #39/102). Auth boundaries on
+`/api/admin/funnel`, `/api/cron/notify`, and `/api/admin/notify` all hold under
+every tested credential shape (bare, `?token=garbage`, `Bearer garbage`); no data
+leak. Sitemap steady at 22 URLs, spend ledger clean and unchanged (€0 actuals
+against the €50/mo ceiling; decisions/ scanned through the new 015, no spend
+language, no new recurring commitment), no upcoming renewal to flag. All six ADR
+010 revisit triggers evaluated explicitly; none fired (T1/T5 not yet due,
+T2/T3/T4 unevaluable for lack of data, T6 clear). Quota consumption remains
+unmeasured (ADR 008 gap, unchanged) — this tick's env check ran cleanly and
+confirmed no quota-relevant credential is present; endpoint checks show no pause
+symptoms on any DB-backed route. Assignment 096 (relay rewire ask) still open, no
+relay-delivered ops summary observed this tick — expected, not a finding. No
+incident to open this tick — **assignment 119 lapses**.**
