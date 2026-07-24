@@ -2,7 +2,7 @@
 id: 100
 title: Dutch grammar slips in the new .ghost .ghost-ico comment clause (from 099)
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: tester (found during 099 verification)
@@ -111,3 +111,42 @@ Note: running `npm test`/`npm run build` regenerates `public/**` content files v
 to line-ending normalization only (no content diff — `git diff --stat` showed 0
 changes for those files). Reverted with `git checkout -- public/` before committing,
 so the commit touches only the two files in scope.
+
+## Verification (tester v100, tick #40)
+
+Verified independently in a fresh worktree (`C:\companies\typcoon-lanes\v100`).
+
+- **Diff scope:** `git show 34b98f7 -- src/game/game.css` shows exactly one hunk,
+  2 lines removed / 2 lines added, both inside the comment block above
+  `.ghost .ghost-ico`. The declaration line
+  `.ghost .ghost-ico { width: 48px; height: 42px; filter: brightness(0) invert(1); }`
+  is outside the hunk — byte-identical, confirmed. Comment-only, as claimed.
+- **Grammar — Issue 1 (verb):** "brightness(0) drukt alle gevulde pixels plat naar
+  zwart" now has a properly conjugated separable verb ("platdrukken" → "drukt …
+  plat", 3rd person singular present). Parses as a real clause; slip fixed.
+- **Grammar — Issue 2 (article gender):** "zodat het silhouet leesbaar blijft" —
+  "silhouet" is confirmed a het-word (Van Dale, neuter); "het" is correct. Slip
+  fixed.
+- **Technical content/attribution:** unchanged by the diff — still describes
+  `brightness(0)`/`invert(1)` mechanics, still cites "designer-uitspraak des092,
+  zie 092 / DESIGN-FACTORY.md §W2b" verbatim. Confirmed assignment 092 exists
+  (`company/assignments/092-ghost-icon-low-contrast-on-diorama-floor.md`) and
+  `company/design/DESIGN-FACTORY.md` has a §W2b section (Machine states). "alle
+  vier thema's" re-confirmed accurate — `src/game/theme.js`'s `THEMES` array
+  still has exactly 4 entries (muntpers, nachtploeg, snoepfabriek, diepzee).
+- **Tests:** ran `npm install` (node_modules wasn't present in the worktree) then
+  `npm test` → `node --test`: 266/266 pass, 0 fail; `vite build` succeeds;
+  `check-no-dutch-en`: PASS, 5 built en files checked against the 59-word
+  lexicon, zero unallowlisted hits.
+- **Bundle hash:** built `dist/assets/speel-CgjEJUIp.css` — matches the CSS hash
+  the developer reported, confirming the comment change doesn't perturb the CSS
+  bundle. The JS hash I got (`speel-DvonnYS_.js`) differs from the developer's
+  reported `speel-D4f6hOXw.js`; investigated by checking out `src/game/game.css`
+  as of `34b98f7~1` (pre-fix comment) on top of current HEAD and rebuilding —
+  produced the *same* `speel-DvonnYS_.js` hash. So the JS hash delta is not
+  caused by this commit; it's explained by other work that landed in the repo
+  between the developer's tick #39 build and this tick #40 verification (e.g.
+  the 114 design pass touching JS-bundled files), which is outside this
+  assignment's scope. CSS-hash match plus this isolation test together confirm
+  the comment-only change has no functional bundle impact.
+- No new defects found. Verdict: **PASS** — all four acceptance criteria met.
