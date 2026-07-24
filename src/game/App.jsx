@@ -74,6 +74,22 @@ function layoutForLocale(locale) {
   return locale === 'en' ? 'qwerty-us' : 'qwerty-nl';
 }
 
+// Breedte-hint (assignment 106/117): dezelfde kalme "maak je venster breder"-opzet,
+// nu op drie plekken gebruikt (zie narrowWindow hieronder) — één component in plaats
+// van drie keer dezelfde markup, geen gedragswijziging.
+function NarrowHint() {
+  return (
+    <div className="home">
+      <div className="home-hero">
+        <Mascot pose={0} className="home-logo" />
+        <h1 className="home-title">{gt('brand.name')}</h1>
+        <p className="home-tagline">{gt('desktop.widthTitle')}</p>
+        <p className="home-how">{gt('desktop.widthBody')}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [game, setGame] = useState(null); // engine-state + .tycoon, of null
   const [view, setView] = useState('home'); // 'home' | 'play' | 'factory' | 'dashboard'
@@ -221,18 +237,25 @@ export default function App() {
 
   // breedte-vloer (assignment 106, ADR 015 decision 2): een toetsenbord-gebruiker
   // met een te smal venster krijgt dezelfde kalme hint-opzet als touchOnly()
-  // hierboven — nooit de diorama of het BOUWBON-kaartje in gereflowde vorm.
-  if (narrowWindow) {
-    return (
-      <div className="home">
-        <div className="home-hero">
-          <Mascot pose={0} className="home-logo" />
-          <h1 className="home-title">{gt('brand.name')}</h1>
-          <p className="home-tagline">{gt('desktop.widthTitle')}</p>
-          <p className="home-how">{gt('desktop.widthBody')}</p>
-        </div>
-      </div>
-    );
+  // hierboven — nooit de diorama of het BOUWBON-kaartje in gereflowde vorm. Buiten
+  // een al-lopende speel/fabriek-sessie (`liveSession` hieronder) blijft dit exact
+  // het 106-gedrag: een verse of nog-niet-gestarte bezoeker die smal is/wordt ziet
+  // altijd meteen de hint, nooit een spelscherm.
+  //
+  // (assignment 117) Bínnen een al-lopende sessie (`view === 'play'`/`'factory'`
+  // met een geladen save) blijft de hint het ENIGE dat zichtbaar is beneden de vloer
+  // — ADR 015's "nooit reflowen" geldt onverkort, geen uitzondering — maar App
+  // unmount `GameScreen`/`FactoryPage` daarvoor niet langer. Zie de `view === 'play'`
+  // en `view === 'factory'` takken hieronder: die renderen het spelscherm zelf altijd
+  // door (CSS-verborgen zolang narrowWindow), met de hint ernaast. Zo overleeft lokale,
+  // nog niet naar `game`/localStorage weggeschreven staat (TypingSurface's `pos`, de
+  // sessie-combo, een geopende `examMode`) een korte smalle uitstap zonder dat de
+  // speler ooit de gereflowde laag te zien krijgt. Zie ## Decision in
+  // company/assignments/117-narrow-resize-mid-exercise-state-loss.md.
+  const liveSession = (view === 'play' || view === 'factory') && !!game;
+
+  if (narrowWindow && !liveSession) {
+    return <NarrowHint />;
   }
 
   if (view === 'onboarding' && game) {
@@ -245,10 +268,15 @@ export default function App() {
 
   if (view === 'play' && game) {
     return (
-      <GameScreen
-        state={game} setGame={setGame} onBack={() => setView('home')} onGoFactory={() => setView('factory')}
-        unlocked={unlocked} onUnlock={() => setUnlocked(true)}
-      />
+      <>
+        <div style={narrowWindow ? { display: 'none' } : undefined}>
+          <GameScreen
+            state={game} setGame={setGame} onBack={() => setView('home')} onGoFactory={() => setView('factory')}
+            unlocked={unlocked} onUnlock={() => setUnlocked(true)} paused={narrowWindow}
+          />
+        </div>
+        {narrowWindow && <NarrowHint />}
+      </>
     );
   }
 
@@ -257,10 +285,15 @@ export default function App() {
   // doodlopend scherm (design/DESIGN-FACTORY.md §5b/§11).
   if (view === 'factory' && game) {
     return (
-      <FactoryPage
-        state={game} setGame={setGame} onBack={() => setView('play')}
-        unlocked={unlocked} onUnlock={() => setUnlocked(true)}
-      />
+      <>
+        <div style={narrowWindow ? { display: 'none' } : undefined}>
+          <FactoryPage
+            state={game} setGame={setGame} onBack={() => setView('play')}
+            unlocked={unlocked} onUnlock={() => setUnlocked(true)}
+          />
+        </div>
+        {narrowWindow && <NarrowHint />}
+      </>
     );
   }
 
