@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-24 #25 — OPEN
+- opened: 2026-07-24 11:19 (system clock; tick #24 closed 10:24 — ~55 min, one scheduler heartbeat). Board changed between ticks: ADR 011 (commit 77abab1, 10:54, /ceo channel — Shareholder authority cited verbatim in the decision file) lifted ADR 010's build-hold, opened 067 (designer) + 068 (PO, blocked_by 067). Committed with a clean tree and no OPEN ledger entry → not a live dispatcher; proceed.
+- claimed: 067 (designer — first-ever designer dispatch; status re-read from disk immediately before this commit: open). 068 ineligible (blocked_by 067, satisfied by done only). Monitor stage duty also runs: last pass tick #24 ~10:24, one heartbeat ago; ADR 011 §Consequences keeps the health-pass cadence on hold-free ticks, T1–T6 stay armed.
+- worktrees: 067 → C:\companies\typcoon-lanes\d067 (design/067, port 4221 if it serves the app); monitor → C:\companies\typcoon-lanes\mon25 (mon/tick25; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
+- ids allocated: 069–070 reserved for monitor incidents/defects, 071 for a designer proposal (lanes report to the dispatcher, who materializes them — lanes never compute ids); next free after reservation: 072; next decision id: 012
+
 ## Tick 2026-07-24 #24 â€” CLOSED
 - opened: 2026-07-24 10:17 (system clock; tick #23 closed 09:23 â€” ~54 min ago, one scheduler heartbeat)
 - claimed: none â€” ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied â€” 020â†010 blocked, 021â†020). This tick executes the ADR's standing mandate: monitor stage duty + T1â€“T6 trigger evaluation (last pass tick #23 at ~09:23, one heartbeat ago â€” due per one-pass-per-heartbeat cadence, cc f7b7db3).

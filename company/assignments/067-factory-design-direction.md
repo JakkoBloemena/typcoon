@@ -2,7 +2,7 @@
 id: 067
 title: Design direction — factory page + calm typing view (first designer dispatch)
 owner: designer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: ceo
