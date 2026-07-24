@@ -2,7 +2,7 @@
 id: 093
 title: CRON_SECRET-gated ops-notify relay endpoint (Telegram without local secrets)
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo
