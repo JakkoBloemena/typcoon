@@ -2,7 +2,7 @@
 id: 079
 title: Design deep pass — Het Bouwplan as a full tycoon world (keyboard-first)
 owner: designer
-status: needs_verification
+status: done
 priority: 1
 blocked_by: [074]
 opened_by: ceo
@@ -101,3 +101,115 @@ No `public/**`/`sitemap.xml` churn (no build/test run). `playwright-core` instal
 `--no-save` (node_modules gitignored; package.json untouched); render harness deleted, not
 committed. No 083 proposed — the follow-ups (goal-thread playtest, ambient-life QA) are
 already owned by 076's flywheel intake.
+
+### Verification (tester, tick #29)
+
+Verified independently in worktree `typcoon-lanes/v079`. Method: read PART II (W0–W8) and
+§0–§11 history in `design/DESIGN-FACTORY.md`, ADR 012, charter §Guardrails; viewed the
+committed PNGs cold; installed `playwright-core --no-save`, served the repo root on
+**port 4234** (a plain Node static server — required because the mocks `<link>` to
+`/design/factory-mocks/_base.css` with an absolute path that 404s under `file://`, so a
+naive `file://` open renders unstyled; this is a mock-tooling quirk, not a product bug, and
+doesn't affect any AC) and re-rendered all five `world-*.html` at 1360px through Chromium —
+rendered output is pixel-identical in substance to the committed PNGs, so the screenshots
+are not stale. Cross-checked every claim against the live `src/**` (not taken on faith).
+Screenshots saved to `company/assignments/079-screenshots-verify/` (re-renders + a forced-
+narrow hyphenation probe). Server killed after verification.
+
+**AC1 — reads as a place/world at desktop scale, with atmosphere/motion spec + reduced-motion
+fallback: PASS.** `world-C-maquette.png`/`-http.png` cold-read as a diorama you look across —
+standing plinths with cast shadows and status lights, a glowing brass "NU BOUWEN" foundation
+plot, flat blue-line ghosts receding toward a horizon line, a control-desk ledger. This reads
+"tycoon game," not "dashboard" — a real qualitative jump from A (`world-A-werkvloer.png`,
+near-empty iso void, immersion promised but not delivered) and B (`world-B-skyline.png`,
+literally a settings list). Motion spec verified in the CSS itself, not just prose: `idleBob`
+(staggered ambient bob, 5.5s), `plotGlow` (3.4s breathing brass glow), `beltDrift` (decorative,
+carries no coins), and `riseIn` (one-shot arrival spring, `animation-fill-mode:backwards`,
+staggered 0.06s/0.12s/…, no `infinite`). Reduced-motion fallback confirmed real, not aspirational:
+`src/game/game.css:163-165` has the global `@media (prefers-reduced-motion:reduce)` that zeroes
+`animation-duration`/`iteration-count`, and every keyframe's `to`/`100%` state is the fully-built
+resting look (`riseIn`'s `to` = risen in place; `idleBob`'s `100%` = neutral; `plotGlow`'s
+`0%,100%` = its mid glow level) — so freezing at duration≈0 shows a complete, correct factory,
+matching W3's claim exactly.
+
+**AC2 — typing-strip re-specced earnings-first per ADR 012 ruling 1: PASS.**
+`world-typing-strip.png`/`-http.png` shows rate (+66/s) + total (4.820) as the primary LED
+cluster, ×mult and acc% visibly smaller/secondary, no goal sliver. Challenged the "removal, not
+demotion" call per the brief: ADR 012's own ruling 1 text says "earnings-first, goal secondary
+**or absent**" — removal is an explicitly licensed reading, not an overreach. Also verified the
+073 motion fix this section folds in is real and needed: `src/game/game.css` currently has
+`.golden-banner{animation:goldpulse 1.1s ease-in-out infinite}`, `.type-hint{animation:hintPulse
+1.3s ... infinite}`, `.boost-chip{animation:goldpulse 1.4s ... infinite}` — the `infinite` pulses
+073 bounced on are genuinely still shipped; `world-typing-strip.html` replaces all three with a
+one-shot `dropIn` (`animation:dropIn var(--dur-arrive) var(--pop)`, no `infinite`).
+
+**AC3 — keyboard-first, no mobile layouts, states coverage carried over from 075: PASS.**
+`grep -n "@media" design/factory-mocks/world-*.html` → zero matches across all five files (no
+mobile breakpoints anywhere in the world-pass surfaces). `world-states.html`/`.png` covers empty
+(spotlit first plot + friendly one-liner, not a dead screen), loading (blueprint skeleton +
+shimmer), offline (see AC4), and long-text (a deliberately long Dutch sentence wraps cleanly at
+1360px). Independently verified the 080 hyphenation fix actually works, not just "should work
+per spec": forced the `.tool .tn` tile to 90px width and re-rendered — `Precisiegereedschap`
+breaks as **"Precisiege-" / "reedschap"**, a real syllable-boundary hyphen (see
+`hyphen-forced-narrow.png`), not the old ugly mid-word `Precisiegereed/schap` split the 080
+defect described. Computed style confirmed `hyphens:auto` + `document.documentElement.lang ===
+"nl"` on the rendered page, matching the spec's own precondition. (See "found but not grounds for
+bounce" below — this precondition is not actually met by the live app for English-locale
+sessions, filed as 069.)
+
+**AC4 — theme layering + charter guardrails intact: PASS.** "Zero new `:root` tokens" verified
+by extracting every `var(--...)` used across `world-*.html` + `_base.css` and diffing against
+`src/game/game.css`'s `:root` block (all four themes) — every token used already exists there;
+the handful that don't appear in `game.css` directly (`--goal`, `--reward`, `--calm-ink`,
+`--dur-arrive`, `--s1`–`--s6`, `--data`) are the pre-existing 067 aliases/additions in
+`_base.css`, not new to 079. Grep for hardcoded colour in the `world-*.html` files themselves
+(excluding `_base.css`, which is the pre-existing 067 token-definition layer and legitimately
+contains hex — that's where tokens *are* defined) found exactly two hex hits, both `#000` inside
+a `mask:`/`-webkit-mask:` alpha stencil on the BOUWBON ring (`world-C-maquette.html:158-159`) —
+matches the claim precisely. Glows use `color-mix(in srgb, var(--brass) N%, transparent)`, not
+raw `rgba()` (074's actual raw-rgba slip this corrects for). Offline banner confirmed moved off
+`--sky`: §9's original spec (line ~365) literally says "sky-blue"; the new
+`.offline{background:var(--panel);border-left:6px solid var(--mint-deep)}` in `world-states.html`
+has zero `--sky`/`--flame` — verified by reading the CSS. No pressure mechanics: "nog N munten —
+dat haal je in ± N opdrachten" is an effort estimate, not a countdown; no timers found in any
+mock. No idle income: the only ambient animations (`idleBob`/`plotGlow`/`beltDrift`) touch
+opacity/transform/box-shadow/background-position, never a coin count or `.coin` element — the two
+`.coin` elements on the page are static ledger/button icons, not animation targets. Breadth not
+power: premium ghosts carry `🔒 volledige fabriek` styling routing to `Unlock.jsx` (confirmed
+that file exists and is reused, not replaced).
+
+**AC5 — explicit build delta vs 074, buildable: PASS.** Every reused class/handler named in W7 is
+real, checked against current `src/**`, not assumed: `.road` and `.objrow` exist in
+`src/game/Shop.jsx`; `.goalsliver` exists in `src/game/GameScreen.jsx` (the exact element W4
+removes); `.goalspot` exists in `Shop.jsx` (the exact element W2e enlarges into the BOUWBON
+ticket); `buyBuilding`/`buyUpgrade`/rebirth logic live in `src/game/economy.js`; `nextGoal` lives
+in `src/game/goals.js` and is imported by both `Shop.jsx` and `GameScreen.jsx` today (confirming
+W2e's "same `nextGoal` as the doubled goal surface" claim); `Unlock.jsx` and
+`src/ui/TypingSurface.jsx` exist as claimed. The 070 ledger-fix claim is grounded too:
+`Shop.jsx:96` reads `state.tycoon.coins` only to gate buy buttons, never renders it — the
+bottom context line (`Shop.jsx:248`) shows `lifetimeCoins`+`rebirths` only, exactly the gap W2d
+describes and the ledger fixes. Six slices as declared, ordered small-to-big, no economy/engine/
+store/theme touch claimed anywhere in W7 and none found in the diff (`design/**` + this file
+only — confirmed via `git show --stat` on the 079 delivery commit).
+
+**Pairwise selection + folded-in defects — spot-checked, hold up.** A vs B vs C read as three
+genuinely distinct metaphors in their own renders (isometric hall / vertical cross-section tower
+/ tilted diorama floor), and the critic's stated reasons match what's actually on screen (A's
+render really is a near-empty void; B really does read as a stacked settings list). 070
+(ledger) and 080 (hyphens) are both concretely addressed and independently re-verified above, not
+just asserted.
+
+**Found, not grounds for the bounce — filed as 069.** W2f's own spec says the `hyphens:auto` fix
+"requires the active locale on `<html lang>` (nl/en)." Checked whether the live app actually
+keeps `document.documentElement.lang` in sync with the active UI locale — it does not.
+`index.html` hardcodes `<html lang="nl">`; `src/game/App.jsx`'s `detectLocale()`/`setLocale()`
+only drive `gt()` string lookups, and the only `document.documentElement` write anywhere in
+`src/**` is `theme.js`'s `data-theme` attribute. So an English-locale session (`?lang=en` or a
+saved `uiTaal:'en'` profile) still renders under `<html lang="nl">` for its entire lifetime. Not
+a 079 regression (079 touched no `src/**`) and doesn't fail any 079 AC (the mocks themselves
+correctly set `lang="nl"` and the Dutch hyphenation was verified to work), but it undermines the
+079 spec's own stated precondition for the slice-5 build and is a real, pre-existing i18n/a11y
+correctness gap (hyphenation, quote glyphs, screen-reader pronunciation all key off `lang`).
+Filed as `company/assignments/069-html-lang-locale-sync.md`, owner developer, priority 3.
+
+**Verdict: all 5 acceptance criteria PASS. Status set to `done`.**
