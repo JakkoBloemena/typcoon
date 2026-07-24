@@ -1160,3 +1160,129 @@ incident to open, no defect to materialize this tick. Known environment debris
 (stale worktree dirs q033/v026/b049–b056b, orphaned chrome PIDs 25560/30368, dead
 port-4173 dev server) noted per dispatcher brief, not re-reported as new, not
 touched.**
+
+## 2026-07-24 09:21 UTC — tick #25 (health + ADR 010 trigger evaluation; ADR 011 build-hold-lift noted, does not change monitor duty)
+
+Eleventh monitor pass, mirroring tick #14/#16–#24's method. This tick's brief
+flags `company/decisions/011-factory-redesign-direction.md` (new, Shareholder
+direct, /ceo channel, 2026-07-24 morning): ADR 010's build-hold is lifted,
+assignments 067 (designer, first-ever dispatch) and 068 (PO, factory-experience
+scope, blocked_by 067) are opened. **This does not change monitor duty** — ADR
+011 §Consequences states explicitly "ADR 010's monitor cadence continues
+unchanged on hold-free ticks" and ADR 010's T1–T6 triggers "stay armed for their
+growth purposes." No product code has shipped from 067/068 yet (both freshly
+opened this tick per `company/ticks.md`'s tick #25 open commit) — confirmed via
+git cross-check below.
+
+**Git cross-check (deploy-path, expect empty): `git log 4dadd49..main --oneline
+-- api/ src/ config/ index.html vite.config.js vercel.json package.json` →
+empty.** `4dadd49` (061) is still the live deploy commit, same as every tick
+since #12. `main` HEAD is `c3b184e` ("Tick #25 open: claim 067 (designer, first
+dispatch) per ADR 011; monitor stage duty due") — a `company/` bookkeeping
+commit only, confirmed by `git log --oneline` on the intervening range: the only
+commits since tick #24's close (`1e37470`) are `c3b184e` (this tick's open).
+Neither ADR 011's own commit nor tick #25's open commit touches a deploy path —
+matches the brief's expectation exactly.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, 0.37s, `Last-Modified: Fri, 24 Jul 2026 09:20:29 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle `speel-Dx9n5T0C.js` / `speel-B2OxpAxn.css` — **identical filenames to tick #12–#24**; sha256 of fetched bytes: JS `44edca9d73c24f8c5fe4993264faa62cdfb7fd6818019f9d712dbf3c8504e5f4`, CSS `8d015d0d7a05800bb365e1b96086d758b35181ee79f857916f27ddea067f9e9d` — **byte-for-byte identical to tick #24's baseline**, confirming zero drift at the byte level, not just filename level |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** (`<url>`/`<loc>`/`</url>` counts all agree at 22) — matches tick #12–#24, no change |
+| Static assets: `/assets/speel-Dx9n5T0C.js`, `/assets/speel-B2OxpAxn.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+27/27 checks pass, same set as tick #16–#24 (all three token shapes tested
+against both `/api/admin/funnel` and `/api/cron/notify`). All results match
+tick #12–#24 exactly where directly comparable (same status codes, same bundle
+filenames and now byte-identical sha256, same sitemap count). No 4xx/5xx
+surprises, no auth boundary breach on either endpoint under any of the three
+tested token shapes, no data leak in any 401 body, no stale or drifted content.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, not
+re-opened.** This tick's attempt to re-check the process environment for
+`FUNNEL_READ_TOKEN`/`VERCEL_TOKEN`/`SUPABASE_*_KEY` (`printenv`/`env | grep`)
+was **blocked by this session's permission classifier** — a new observation
+this tick (prior ticks report these commands succeeding and returning only
+`SUPABASE_GO_BINARY`). Reporting this explicitly rather than reusing the prior
+ticks' "absent" conclusion: I could not directly re-verify the credential gap
+this tick, though nothing in the endpoint checks above (no 5xx, no
+Supabase-down error shapes on any DB-backed route) suggests a pause. Standing
+Shareholder ask 4 in decisions/010 (monthly glance at usage pages) remains open
+and unactioned. Per ADR 010's framing that a Supabase free-tier pause is a
+priority-1 incident, this monitor still cannot itself detect an
+approaching-pause scenario before it becomes a visible outage — flagging
+explicitly again, not papering over it. This is a measurement-method gap to
+note for the dispatcher, not itself an incident.
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7 —
+confirmed via git history this tick, not just re-read.** `git log --oneline --
+company/metrics/spend.md` still shows only the two pre-monitor commits
+(`aa85ab4` adoption overlay, `c68f46a` ADR 003 budget ceiling). No commit has
+touched the file since. Four lines unchanged: domain (Shareholder-owned
+auto-renew, immaterial, untracked per decisions/003), Vercel/Supabase/Resend
+all €0 free tier (escalate to CEO before any paid-plan upgrade). **Checked ADR
+011 explicitly for spend language** (per this tick's brief, since it's a new
+decision touching build direction): its §Consequences opens 067/068 with no
+spend line, no recurring commitment, no cancel-by condition — the designer/PO
+work is time only, not money. No new recurring commitment found anywhere in the
+repo. No line in spend.md carries a Shareholder "approved one-time, cancel
+before renewal" condition to watch — nothing to escalate pre-renewal this tick.
+Budget ceiling €50/month (decisions/003) — current recorded recurring spend:
+**€0**.
+
+**ADR 010 revisit-trigger evaluation (T1–T6) — still armed per ADR 011
+§Consequences ("triggers T1–T6 stay armed for their growth purposes"):**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` unchanged since its creation commit `be2a450` (git log confirms, re-checked this tick) — baseline still dated 2026-07-23; today is 2026-07-24, ~1 day of possible data. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (re-read directly this tick; `git log` confirms unchanged since creation at 043/`c7f29a6`); `FUNNEL_READ_TOKEN` presence could not be re-checked this tick (env inspection blocked by classifier, see quota section above) but no Shareholder digest paste has landed in `company/metrics/funnel.md` since tick #24 (file unchanged per git log above). |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no repo artifact records one — checked explicitly this tick, none found. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. |
+| T6 | Any production incident or new defect | **NOT FIRED.** This tick's health check found zero incidents: 27/27 endpoint checks pass, auth boundaries intact under all three token shapes on both endpoints, bundle byte-identical (sha256-confirmed) since tick #24, spend clean. |
+
+**No trigger fired this tick.** ADR 011 already superseded the build-hold on
+its own Shareholder authority this morning (assignments 067/068 open); this
+evaluation is unaffected by that — T1–T6 continue to govern the *growth* levers
+(content re-rank, payments package, en spokes, parent-signal review, escalation
+date, incident flow) independent of the factory-redesign milestone ADR 011
+opened. Nothing here reopens or blocks that milestone.
+
+**Verdict: HEALTHY. Bundle byte-identical to tick #24's newly-established sha256
+baseline (zero product-code commits on `main` since tick #14's close, confirmed
+via git cross-check again this tick — only bookkeeping/ADR commits since tick
+#24), all 27 checks pass against the documented live domain `typcoon.com`,
+sitemap steady at 22 URLs, spend ledger clean and unchanged (verified via git
+log, including explicit spend-language check on the new ADR 011), no renewal
+risk. All six ADR 010 revisit triggers evaluated explicitly and remain armed
+per ADR 011; none fired (T1/T5 not yet due, T2/T3/T4 unevaluable for lack of
+data, T6 clear). One carried-forward measurement gap (quota consumption, ADR
+008) plus one new tooling gap this tick (env-credential re-check blocked by
+session permission classifier — noted, not treated as an incident, endpoint
+checks show no pause symptoms). No incident to open, no defect to materialize
+this tick. Known environment debris (stale worktree dirs q033/v026/b049–b056b,
+orphaned chrome PIDs 25560/30368, dead port-4173 dev server) noted per
+dispatcher brief, not re-reported as new, not touched.**
