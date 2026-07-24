@@ -1,0 +1,38 @@
+{
+  "muntpers": {
+    "rect": {
+      "left": 153,
+      "top": 208.0625,
+      "width": 1054,
+      "height": 460
+    },
+    "floorBg": "repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.228867 0.292968 0.549256 / 0.312235) 39px, color(srgb 0.228867 0.292968 0.549256 / 0.312235) 40px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.228867 0.292968 0.549256 / 0.312235) 39px, color(srgb 0.228867 0.292968 0.549256 / 0.312235) 40px)"
+  },
+  "diepzee": {
+    "rect": {
+      "left": 153,
+      "top": 208.0625,
+      "width": 1054,
+      "height": 460
+    },
+    "floorBg": "repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.15592 0.47231 0.474229 / 0.318039) 39px, color(srgb 0.15592 0.47231 0.474229 / 0.318039) 40px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.15592 0.47231 0.474229 / 0.318039) 39px, color(srgb 0.15592 0.47231 0.474229 / 0.318039) 40px)"
+  },
+  "nachtploeg": {
+    "rect": {
+      "left": 153,
+      "top": 208.0625,
+      "width": 1054,
+      "height": 460
+    },
+    "floorBg": "repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.376041 0.247263 0.703553 / 0.326745) 39px, color(srgb 0.376041 0.247263 0.703553 / 0.326745) 40px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.376041 0.247263 0.703553 / 0.326745) 39px, color(srgb 0.376041 0.247263 0.703553 / 0.326745) 40px)"
+  },
+  "snoepfabriek": {
+    "rect": {
+      "left": 153,
+      "top": 208.0625,
+      "width": 1054,
+      "height": 460
+    },
+    "floorBg": "repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.573613 0.270105 0.514272 / 0.318039) 39px, color(srgb 0.573613 0.270105 0.514272 / 0.318039) 40px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 39px, color(srgb 0.573613 0.270105 0.514272 / 0.318039) 39px, color(srgb 0.573613 0.270105 0.514272 / 0.318039) 40px)"
+  }
+}
