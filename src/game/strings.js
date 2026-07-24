@@ -314,6 +314,12 @@ const STRINGS = {
   'desktop.title': 'Pak een toetsenbord erbij!',
   'desktop.body': 'Typcoon speel je met een echt toetsenbord — op een laptop of computer. Tot zo!',
 
+  // Breedte-vloer (assignment 106, ADR 015 decision 2): dezelfde kalme hint als
+  // hierboven, maar voor een toetsenbord-gebruiker wiens VENSTER te smal staat
+  // i.p.v. een kapotte diorama of dichtgeknepen BOUWBON.
+  'desktop.widthTitle': 'Maak je venster wat breder!',
+  'desktop.widthBody': 'Typcoon is ontworpen voor een breed scherm. Maak je venster wat breder om te spelen. Tot zo!',
+
   // Toetsen/typdiploma (assignment 049): optioneel, nooit gating — puur erkenning.
   'exam.pillLabel': 'Toets beschikbaar',
   'exam.banner': 'TOETS: {name}',
@@ -649,6 +655,12 @@ const STRINGS_EN = {
 
   'desktop.title': 'Grab a keyboard!',
   'desktop.body': 'Typcoon is played with a real keyboard — on a laptop or computer. See you there!',
+
+  // Width floor (assignment 106, ADR 015 decision 2): same calm hint as above, but
+  // for a keyboard user whose WINDOW is too narrow, instead of a broken diorama or
+  // a squeezed BOUWBON ticket.
+  'desktop.widthTitle': 'Make your window a little wider!',
+  'desktop.widthBody': 'Typcoon is designed for a wide screen. Make your window a little wider to play. See you there!',
 
   // Exams/typing diploma (assignment 049): optional, never gating — recognition only.
   'exam.pillLabel': 'Exam available',

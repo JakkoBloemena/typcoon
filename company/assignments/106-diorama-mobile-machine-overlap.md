@@ -2,11 +2,107 @@
 id: 106
 title: "Narrow-desktop-window degradation on the game surfaces — add a width floor to the touchOnly() gate (mobile/touch is out of target per ADR 012 and already gated)"
 owner: developer
-status: in_progress
+status: needs_verification
 priority: 3
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 089); re-scoped by product-owner (ADR 015, tick #39 intake)
 ---
+
+## Delivery notes (developer, tick #39, dev/106)
+
+**Threshold chosen: `DESKTOP_MIN_WIDTH = 1024px`** (the ADR 012 design target the PO
+suggested), gating any window narrower than 1024px (i.e. `(max-width: 1023px)`).
+
+**Measurements behind it.** Built + previewed (`npx vite preview --port 4291`), seeded a
+save with all 5 `BUILDINGS` built (the worst-case front-lane count — `FRONT_LANE_CAP` is
+5, so this is the densest the diorama ever gets without demoting a machine to the back/
+"established" cluster), and measured `.hal`/`.mch` via `getBoundingClientRect()` at a
+fine pointer (no coarse-pointer emulation) across several viewport widths:
+
+| viewport | `.hal` width | max `.mch` overlap | `.ticket` |
+|---|---|---|---|
+| 700px | 618px | 31.2px | 1 line ("Smeerolie") |
+| 767px | 685px | 20.0px | 1 line |
+| 860px | 778px | 4.5px | 1 line |
+| 1023px | — | — | width-hint shown (below floor) |
+| 1024px | — | — | full game (at floor) |
+| 1360px | — | — | full game, unchanged |
+
+The overlap shrinks roughly linearly with `.hal` width in this data (700→767→860),
+extrapolating to zero overlap around `.hal` ≈ 800-810px (viewport ≈ 880-900px, given the
+`#root`/`.plan` chrome subtracts ~76px from the raw viewport width). 1024px leaves
+comfortable margin above that zero-overlap point. The `.ticket` (BOUWBON) did not squeeze
+in this test's data (short upgrade name "Smeerolie" never wrapped even at 700px) — the
+squeeze v104 originally reproduced at 375px (folded into this assignment, see the
+re-scope block above) used a longer goal string; 1024px sits far above both the 767px
+breakpoint already used elsewhere in `game.css` and the 375px squeeze point, so it carries
+generous margin for the ticket too. I did not attempt to reproduce the exact ticket-squeeze
+string/width from v104's finding directly (the seeded-save harness needed to drive real
+gameplay state through Playwright was the long pole here — see below); the 1024px floor
+is justified by (a) the ADR's own suggested target, (b) the measured diorama zero-overlap
+point sitting well below it, and (c) the existing 767px breakpoint plus the documented
+375px ticket-squeeze point both sitting well below it too.
+
+Verified the exact boundary behaves correctly: 1023px fine-pointer → width-hint; 1024px
+fine-pointer → full game (screenshots: `case3-fine-1024.png`, `boundary-fine-1023.png`).
+
+**Reactivity — judgment call for the tester.** `touchOnly()` (the existing gate) is
+evaluated inline during render with no resize/media-change listener — it is effectively
+static-at-load, re-evaluated only when some *other* state change happens to trigger a
+re-render (pointer type essentially never changes mid-session, so this has never
+mattered in practice). The new width gate is different: window width changes constantly
+during normal desktop use (a player dragging their window wider is the whole point of
+the "make your window a little wider to play" invitation), so I made it **reactive**:
+a `matchMedia('(max-width: 1023px)')` query with its own `'change'` event listener
+(feature-detected `addEventListener`/`addListener` for older engines), driving a
+`narrowWindow` state that the render checks. This deliberately does **not** match
+`touchOnly()`'s static idiom — I judged the ADR's explicit ask ("a user who widens the
+window should get the game back") to require it, since a stale non-reactive gate would
+mean a resize needs an unrelated state change (or full reload) to clear, which defeats
+the point of the friendly invitation. Verified live: resizing 800px → 1360px → 700px in
+a single page session (no reload) toggles the width-hint and the game home screen
+correctly each time. Flagging this as the one place I deviated from "match the existing
+gate's idiom" per the assignment's instruction to do so explicitly.
+
+**Diff summary.** `src/game/App.jsx`: added `DESKTOP_MIN_WIDTH`/`tooNarrow()` next to
+`touchOnly()`, a `narrowWindow` state + `matchMedia` change-listener effect (both declared
+unconditionally alongside the existing hooks, before any early return — rules of hooks),
+and a second early-return branch (after the existing `touchOnly()` branch, so a coarse-
+pointer touch device still hits the touch hint first and never reaches the width check)
+rendering the same `.home`/`.home-hero` markup as the touch hint, with
+`desktop.widthTitle`/`desktop.widthBody` copy. `src/game/strings.js`: added
+`desktop.widthTitle`/`desktop.widthBody` in both the nl and en blocks, directly under the
+existing `desktop.title`/`desktop.body` keys (no other keys touched — stayed clear of
+d110's concurrent `goal.*`/`factory.*` work in the same file). No other file touched;
+`store.js`, `economy.js`, `src/engine/`, `theme.js`, `goals.js`, and
+`layoutDiorama`/`.mch`/`.hal` math are all untouched (`git diff --stat` confirms).
+
+**Evidence.** `company/assignments/106-screenshots-dev/`:
+- `case1-fine-375.png`, `case1-fine-390.png` — fine pointer, narrow window → width hint
+  (nl: "Maak je venster wat breder!" / "Typcoon is ontworpen voor een breed scherm...").
+- `case2-coarse-390.png` — coarse-pointer-only emulated at 390px → existing touch hint
+  unchanged ("Pak een toetsenbord erbij!").
+- `case3-fine-1360.png`, `case3-fine-1024.png` — fine pointer, ≥1024px → full home screen
+  (name input, "Start je fabriek"), unaffected.
+- `boundary-fine-1023.png` — fine pointer, 1023px → width hint (confirms the exact floor
+  edge).
+- English width-hint string verified via `/speel/?lang=en` at 390px (not screenshotted,
+  logged via `.textContent()`): "Make your window a little wider!" / "Typcoon is designed
+  for a wide screen. Make your window a little wider to play. See you there!"
+
+**Test status.** `npm test` green: 266/266 unit tests pass, `vite build` succeeds,
+`check-no-dutch-en` PASS (5 built en files, zero unallowlisted Dutch-lexicon hits).
+`public/**` gen-content churn reverted (`git checkout -- public/`) before every commit per
+instructions.
+
+**Process note (not a defect, just flagging the time cost):** getting a Playwright harness
+to reach the factory view required seeding a full `typcoon:save` localStorage record
+matching `hydrateState`'s expected shape (`keyStats`/`bigramStats`/`srsItems`/`prevKey`
+all required, not just `profile`/`tycoon` — omitting them crashes `exams.js`'s
+`nextAvailableExam` on `undefined.keyStats[k]`) — cost most of the investigation time
+before the actual gate implementation. No code changed as a result of this; noting it in
+case a future assignment wants a reusable seeded-save test fixture (I'm not proposing that
+as new work myself — it's outside this assignment's surface).
 
 > **PRODUCT-OWNER RE-SCOPE (2026-07-24, tick #39 intake — read this first; ADR 015).**
 >
