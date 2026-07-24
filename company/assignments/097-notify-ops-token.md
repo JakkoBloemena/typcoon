@@ -2,7 +2,7 @@
 id: 097
 title: notify relay — accept OPS_NOTIFY_TOKEN as alternative bearer (one-line auth extension)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -115,3 +115,92 @@ Terminal state needs_verification.
 **Assignment 095:** lapsed — nothing surfaced during this task that warranted a new
 proposal/defect. Scope stayed within the auth-check-only surface; no adjacent bug or
 missing coverage found outside what's already flagged as judgment calls above.
+
+## Verification (tester, v097, 2026-07-24)
+
+Independently verified in worktree `C:\companies\typcoon-lanes\v097`, branch `verify/097`.
+Did not re-run the developer's assertions — added 7 new probes of my own construction to
+`test/notify.tester.test.js` (the v093-tester-owned file, deliberately left untouched by the
+developer for the same reason), exercising the real handler against my own fixtures, not a
+re-implementation.
+
+**AC1 — valid OPS_NOTIFY_TOKEN (Bearer + ?token=) authorizes exactly like CRON_SECRET;
+invalid/missing still 401; absent env grants nothing** — HOLDS.
+- Own fixture (`tester-alt-token-9317`, distinct from the dev's `ops-secret`): Bearer path →
+  `{ ok: true }`, `tg()` called once with verbatim text; `?token=` path → same; CRON_SECRET
+  continues to authorize alongside it in the same run (two sends in one test, one per
+  credential).
+- Method-check-before-auth cross-check: GET with a *valid* OPS_NOTIFY_TOKEN in the query is
+  still 405, not 401-then-405 — confirms the new token didn't shift the method-check position.
+- Duplicated/array `?token=a&token=b` (what real query parsers produce) never authorizes via
+  the alt-token path either — re-derived the array-rejection angle this file already
+  established for CRON_SECRET in 093, specifically against the new 097 branch. 401, `tg()`
+  never called.
+- Whitespace-only `OPS_NOTIFY_TOKEN='   '` (a variant the dev did not probe — dev covered
+  unset and `''`): this is a *truthy* string, distinct from the empty-string case, so
+  `opsTokenValid` falls through to an exact-string match same as any other token value. A
+  wrong guess still 401; the literal whitespace as Bearer value authorizes. This is not a
+  fail-safe hole (an attacker still needs to send the exact whitespace string, which they
+  can't guess any easier than a real token) — recording it as a real-world footgun worth
+  awareness (accidental whitespace-only provisioning in Vercel would be silently "valid"
+  rather than caught), not a defect against this assignment's stated criteria.
+
+**AC1/2 — ordering (030 lesson) re-derived independently** — HOLDS. Built my own variant
+rather than re-running the dev's verbatim 31-request/cap-30 pattern: `text: null` (not the
+dev's invalid-number `12345`) as the invalid shape, and `MAX_NOTIFY_HOUR=5` (not the default
+30) as the cap, using OPS_NOTIFY_TOKEN as the credential — request 6 of 6 gets 429, `tg()`
+never called, confirming the alt-token path doesn't disturb rate-limit-counts-before-
+validation at an arbitrary cap value, not just the default one.
+
+**AC1 — alias judgment call (OPS_NOTIFY_TOKEN === CRON_SECRET)** — ruled sound, verified by
+cross-checking behavior, not by trusting the delivery note. Read `api/admin/funnel.js`
+directly: `funnelTokenValid(funnelToken, secret, req) = !!funnelToken && funnelToken !== secret
+&& matches(req, funnelToken)`, OR'd into `funnelAuthorized` with the unchanged
+`matches(req, secret)` CRON_SECRET branch — byte-for-byte the same shape as notify.js's
+`opsTokenValid`/`notifyAuthorized`. Added a parametrized test that imports both modules'
+exported functions side by side and asserts `opsTokenValid`≡`funnelTokenValid` and
+`notifyAuthorized`≡`funnelAuthorized` across the alias case, a normal distinct-token case, an
+empty-token case, and an unset-token case — all four pairs agree exactly, and the alias case
+specifically resolves to `true` in both modules (denied at the weak-token layer, still
+authorized via the untouched strong-secret branch). The developer's framing — "044's fail-safe
+*is* both unset-grants-nothing AND no-aliasing as one idiom" — is correct: it is not an
+extrapolation beyond the literal assignment text, it is the actual shipped 044 behavior, now
+proven identical rather than merely "mirrored in spirit."
+- Contextual note (not a defect, just a fact worth recording since it stands in some tension
+  with 093's own tester ruling): 093's verification explicitly ruled CRON_SECRET-only auth as
+  the *correct asymmetry* for notify.js specifically **because** it is a send endpoint, unlike
+  funnel.js's read-only counts. 097 revisits that call and extends the dual-token idiom to
+  notify.js anyway — but this is a CEO-opened, Shareholder-authorized scope change (see Notes:
+  "Authority: Shareholder ops-visibility thread"), not the developer or tester silently
+  reversing a prior verified ruling, so there is nothing to bounce here. Flagging for the
+  record only.
+
+**AC2 — existing notify tests stay green; new cases cover the alt token + absent-env
+fail-safe** — HOLDS. `node --test test/notify.test.js test/notify.tester.test.js`: 34/34 pass
+(11 pre-existing tester probes from v093 + 7 new ones added this pass, alongside the dev's own
+16 in notify.test.js — 10 baseline + 6 new from 097).
+
+**AC3 — all tests green, clean build** — HOLDS.
+- `node --test test/*.test.js`: **266/266 green** (259 baseline + 7 new tester probes).
+- `npm test`: 266/266 tests, `gen-content` (22 URLs), `vite build` clean (5 built en files),
+  `check-no-dutch-en` PASS (0 unallowlisted hits against the 59-word Dutch lexicon).
+- `git checkout -- public/` reverted the `npm test`-triggered `gen-content`/build churn before
+  committing; `git status --porcelain` clean afterward except the intentional test-file change.
+
+**Handler-scope check (independent, per the assignment's "auth check only" scope claim)** —
+confirmed via `git diff 0f68169^ 0f68169 -- api/admin/notify.js` (the dev's own 097 commit
+against its parent): the only functional changes are the two new exported functions
+(`opsTokenValid`, `notifyAuthorized`) and swapping the handler's bare `matches(req, secret)`
+check for `notifyAuthorized(req, secret, opsToken)`, same line position — before the `try`
+block, before rate-limit/validation. No other line in the handler changed; rate-limit
+ordering, validation, and response shapes are untouched, matching the delivery notes exactly.
+
+**Verdict: all three acceptance criteria HOLD. Status set to `done`.**
+
+New defect scan: nothing outside 097's scope surfaced during this pass beyond the
+whitespace-env observation above (recorded as a footgun note, not filed as a defect — no
+actual access-control failure, no criterion violated). **098 lapsed.**
+
+Commands run: `npm ci` (worktree had no `node_modules`), `node --test test/notify.test.js
+test/notify.tester.test.js`, `node --test test/*.test.js`, `npm test`, `git checkout --
+public/`, `git status --porcelain`.
