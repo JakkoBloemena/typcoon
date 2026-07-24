@@ -658,7 +658,21 @@ button { font-family: inherit; }
    091 (W10e-ladder): z-index 2 -> 3 — de nieuwe .belt (hieronder, z2) legt zich
    tussen gebouwde machines, dus alles "leesbaar/interactief" (mch/plot) moet z ≥ 3
    blijven zodat het atmosfeer-laag nooit vóór een label of knop komt te liggen. */
-.mch { position: absolute; transform: translateX(-50%); text-align: center; width: 148px; z-index: 3; }
+/* 120 (genuine-defect fix, company/assignments/120-*.md): was 148px. `layoutDiorama`
+   spaces the front lane's 5-built-machine worst case at `.hal`'s padding-box width / 6
+   (`place()` in Shop.jsx, unchanged) — 115's `.desk` wrapper (added after this 148px
+   value and after assignment 106 measured the 1024px floor's margin) added ~58px of
+   its own border+padding chrome between `.hal` and the viewport that 106 never
+   measured against, so at exactly the 1024px floor `.hal`'s padding-box (878px
+   headless; measured as low as 863px in a real headed Chromium window, since Windows'
+   classic ~15px scrollbar subtracts from the viewport before any of this chrome runs)
+   fell under the 6*148=888px six adjacent cards need — a real, deterministic ~1.7-4px
+   pairwise overlap (root-caused and reproduced in headed, non-headless Chromium; see
+   120's Delivery notes). 140px restores a positive margin (~3.5-6px) at the exact
+   floor pixel under both headless and real-scrollbar measurement, with no `.hal`/
+   `layoutDiorama` math touched and no viewport-width floor change (`DESKTOP_MIN_WIDTH`
+   stays 1024, matching ADR 012/114's repeated "≥1024px" design target). */
+.mch { position: absolute; transform: translateX(-50%); text-align: center; width: 140px; z-index: 3; }
 .mch .plinth {
   position: relative; width: 116px; margin: 0 auto; border-radius: 18px;
   background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 2px solid var(--mint-deep);
