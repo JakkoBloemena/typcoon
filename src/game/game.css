@@ -805,6 +805,59 @@ button { font-family: inherit; }
   font-variant-numeric: tabular-nums; text-align: right;
 }
 
+/* ==================================================================================
+   RANDTOESTANDEN VAN DE WERELD (assignment 088, world-pass slice 6 — laatste
+   bouwslice van de wereld-pas, design/DESIGN-FACTORY.md PART II W5): leeg / laden /
+   offline. Puur presentatie + kopij — geen economie-, engine- of store-wijziging.
+   Elke kleur hieronder is een var()/color-mix() van een bestaand token: nul nieuwe
+   :root-tokens (W6). Desktop/toetsenbord-only, net als de rest van de wereld-pas.
+   ================================================================================== */
+
+/* leeg (verse save, W5): het bouwterrein van de eerste machine draagt zijn eigen
+   "BOUW HIER"-vlag (Shop.jsx kiest de sleutel op `isEmpty`) — deze regel styled
+   alleen de vriendelijke één-regelige zin die onderaan de vloer verschijnt zodra er
+   nul gebouwde machines zijn. Geen dood scherm: het plan zelf (ghosts + het bouw-
+   terrein) blijft gewoon getekend, zoals de rest van .hal/.plot/.ghost al doen. */
+.emptyline {
+  position: absolute; left: 50%; bottom: 16px; max-width: 90%; z-index: 3;
+  transform: translateX(-50%); text-align: center; font-weight: 800; color: var(--paper);
+  background: color-mix(in srgb, var(--night) 80%, transparent); border-radius: 999px;
+  padding: 8px 18px;
+}
+
+/* laden (save-hydratatie, W5): een blauwdruk-SKELET — plot/plinth-placeholders met
+   een zachte shimmer op de vloer, precies zo groot als de plek waar de echte podia/
+   bouwterreinen straks staan (Shop.jsx hergebruikt `layoutDiorama`). Reduced-motion
+   heeft hier GEEN eigen override nodig: de globale @media hierboven (regel 163-165)
+   knijpt animation-duration al naar 0.01ms en iteration-count naar 1, dus het skelet
+   bevriest vrijwel meteen op de `to`-fase van `shimmer` — nog altijd een rustige,
+   volledig leesbare gradient, geen bewegend lichtspoor (zelfde redenering als
+   `plotGlow`/`riseIn` hierboven). */
+.sk { position: absolute; transform: translateX(-50%); width: 130px; z-index: 2; }
+.sk .b {
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--panel-2), color-mix(in srgb, var(--panel) 70%, var(--line)), var(--panel-2));
+  background-size: 200% 100%; animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.sk .node { height: 66px; margin-bottom: 8px; }
+.sk .line { height: 12px; margin: 0 auto 6px; width: 70%; }
+.sk .line.s { width: 45%; }
+
+/* offline / fout (W5, folds in 075's edge-states scope): kalm en geruststellend —
+   een neutrale --panel-kaart met een --mint-deep linkeraccent (veilig/oké, geen
+   alarm). Re-specced OFF --sky (§9's eerdere ontwerp was hemelsblauw): --sky blijft
+   prestige-only (W6-invariant). Nooit --flame (fout/heet) — dit is een kinderproduct,
+   niets mag hier alarmerend lezen. */
+.offline {
+  display: flex; align-items: center; gap: 14px; max-width: 640px; margin: 14px 0;
+  background: var(--panel); border: 2px solid var(--line); border-left: 6px solid var(--mint-deep);
+  border-radius: var(--r-md); padding: 14px 16px; box-shadow: 0 6px 0 var(--sink);
+}
+.offline .oico { font-size: 1.8rem; flex: none; }
+.offline .otxt { font-weight: 800; color: var(--paper); }
+.offline .otxt small { display: block; color: var(--ink-dim); font-weight: 700; font-size: 0.85rem; margin-top: 2px; }
+
 /* ---------- Overlays / vier-momenten ---------- */
 .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(6, 10, 28, 0.72); z-index: 60; }
 .card {
