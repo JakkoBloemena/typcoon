@@ -2,7 +2,7 @@
 id: 116
 title: "Correct the invalid W10c color-mix() percentages in DESIGN-FACTORY.md and the world-C-maquette-place mock"
 owner: designer
-status: in_progress
+status: done
 priority: 4
 opened_by: developer (proposed, d115fix tick #41)
 ---
@@ -27,7 +27,7 @@ next reader.
 
 ## Acceptance criteria
 
-- [ ] `design/DESIGN-FACTORY.md` W10c's `.warmth` code block (currently line ~856,
+- [x] `design/DESIGN-FACTORY.md` W10c's `.warmth` code block (currently line ~856,
       `color-mix(in srgb,var(--bg-wash) 130%, transparent) 0,` /
       `color-mix(in srgb,var(--bg-wash) 60%, transparent) 38%,`) is updated to valid
       percentages (`≤100%` each) that preserve the documented intent — "a broad, low,
@@ -39,14 +39,14 @@ next reader.
       shape. Use that pairing unless the designer has a specific reason to pick
       different (still-valid) numbers, but the pairing should stay reasoned rather than
       arbitrary since it drives the "no hotspot" AC downstream.
-- [ ] `design/factory-mocks/world-C-maquette-place.html` line 84 (the same `.warmth`
+- [x] `design/factory-mocks/world-C-maquette-place.html` line 84 (the same `.warmth`
       rule, inline in the mock's `<style>` block) gets the identical corrected
       percentages, so the mock renders the wash for real in a browser instead of
       silently failing the same way the shipped app did before 115's fix.
-- [ ] Both files' prose (the comments/paragraphs around the code, which describe the
+- [x] Both files' prose (the comments/paragraphs around the code, which describe the
       wash as "whisper-subtle but present") is left otherwise unchanged — this is a
       value correction, not a rewrite of the W10c direction.
-- [ ] No other `color-mix()` call in either file is touched — this assignment is scoped
+- [x] No other `color-mix()` call in either file is touched — this assignment is scoped
       to the one already-identified invalid value, not a general spec audit. (The
       developer's 115 fix already swept `src/game/game.css` for any other
       out-of-range `color-mix()` percentage and found none; a similar quick check of
@@ -102,3 +102,57 @@ Priority 4 per protocol: a specialist-proposed assignment (not opened by CEO/pro
 owner) defaults to priority 4 regardless of the interest of the finding, since only the
 CEO/product-owner reprioritize the board — this is spec/mock hygiene behind an
 already-shipped fix, not a live defect blocking a user-facing flow.
+
+## Delivery notes (designer des116, tick #41)
+
+Value correction only — no prose, comment, or direction touched. Adopted the shipped
+115 pairing verbatim (`130%`→`100%`, `60%`→`55%`); no design-reason deviation, so the
+spec/mock now match live `src/game/game.css` and preserve W10c's "whisper-subtle, no
+hotspot" intent (100% resolves to `--bg-wash` itself with no artificial oversaturation;
+55% keeps the hotter-center → fading-edge falloff one notch below the original).
+
+**1. `design/DESIGN-FACTORY.md` — W10c `.warmth` code block (line ~856)**
+
+Before:
+```css
+    color-mix(in srgb,var(--bg-wash) 130%, transparent) 0,
+    color-mix(in srgb,var(--bg-wash) 60%, transparent) 38%,
+```
+After:
+```css
+    color-mix(in srgb,var(--bg-wash) 100%, transparent) 0,
+    color-mix(in srgb,var(--bg-wash) 55%, transparent) 38%,
+```
+
+**2. `design/factory-mocks/world-C-maquette-place.html` — `.warmth` rule (line 84, inline)**
+
+Before:
+```css
+  background:radial-gradient(78% 100% at 42% 118%, color-mix(in srgb,var(--bg-wash) 130%, transparent) 0, color-mix(in srgb,var(--bg-wash) 60%, transparent) 38%, transparent 66%);
+```
+After:
+```css
+  background:radial-gradient(78% 100% at 42% 118%, color-mix(in srgb,var(--bg-wash) 100%, transparent) 0, color-mix(in srgb,var(--bg-wash) 55%, transparent) 38%, transparent 66%);
+```
+
+**Other out-of-range percentages found:** none. Read-only scan of both files for any
+`color-mix()` percentage ≥101% returned only the two just-corrected sites. The other
+three-digit hits in each file (`color-mix(in srgb,var(--night) 86%, black)` at
+DESIGN-FACTORY.md:836 / mock:66) are valid — the `86%` is the mix amount, the `100%` on
+those lines is a gradient color-stop *position*, not a `color-mix()` argument. Nothing
+else to fix, and nothing out-of-scope to file.
+
+**Mock render check:** attempted, could not run in this lane. Playwright's
+`playwright-core` package is currently an empty/partial install at
+`C:\Users\Jakko\node_modules` (unresolvable from every cwd tried, incl. the main repo);
+it worked for the tester at tick #41 but has since been cleaned, and reinstalling is out
+of scope for this correction. Falling back to the deterministic guarantee: per CSS
+Color 4, `color-mix()`'s percentage is typed `<percentage [0,100]>`, so `100%` and `55%`
+are both in range and the whole `background` declaration now parses (where `130%`
+previously invalidated it → `none`). The byte-identical `100%`/`55%` pairing was already
+proven to render live by the developer in shipped `src/game/game.css`
+(`CSS.supports(...)`→`true`, `getComputedStyle(...).backgroundImage`→a real gradient,
+`qa-scripts/115-tester-verify.mjs`→29/29), so the corrected mock renders the wash for the
+same reason the shipped app does.
+
+Reserved id 122 was **not** consumed — no distinct defect or proposal surfaced.

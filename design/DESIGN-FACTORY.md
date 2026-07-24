@@ -853,8 +853,8 @@ out a machine's own contrast.
 ```css
 .warmth{position:absolute;left:0;right:0;bottom:-30px;height:62%;z-index:1;pointer-events:none;
   background:radial-gradient(78% 100% at 42% 118%,
-    color-mix(in srgb,var(--bg-wash) 130%, transparent) 0,
-    color-mix(in srgb,var(--bg-wash) 60%, transparent) 38%,
+    color-mix(in srgb,var(--bg-wash) 100%, transparent) 0,
+    color-mix(in srgb,var(--bg-wash) 55%, transparent) 38%,
     transparent 66%);
   animation:warmBreath 8s ease-in-out infinite}
 @keyframes warmBreath{0%,100%{opacity:.72}50%{opacity:1}}
