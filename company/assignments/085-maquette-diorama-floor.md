@@ -2,7 +2,7 @@
 id: 085
 title: The Maquette — diorama floor, machine states, build ticket (world-pass slice 3)
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: [084]
 opened_by: product-owner
@@ -46,7 +46,7 @@ is deliberately **not** in this slice (it is 086) — ship the static, correct d
       single primary goal surface: progress ring (`fraction`), name, reward (`+N/s` / `×N`),
       `nog N munten — dat haal je in ± N opdrachten` (encouragement, **never** a countdown or
       timer), and a buy button in `--reward` using the same buy handlers as 074. (W2e)
-- [ ] Cold-read test: a reviewer shown the built page cold reads it as a **tycoon place /
+- [x] Cold-read test: a reviewer shown the built page cold reads it as a **tycoon place /
       world**, not a dashboard. (079 AC1 spirit — verified by the tester's own cold read)
 - [x] The ledger from slice 084 remains present, integrated into the diorama (top-right of the
       plan). (W2d)
@@ -214,3 +214,119 @@ verify script and re-running).
 
 **092 used** (not lapsed): filed `092-ghost-icon-low-contrast-on-diorama-floor.md`, priority 4,
 `opened_by: developer (proposed during 085)`.
+
+### Verification (tester, v085, 2026-07-24)
+
+Independently verified in an isolated worktree (`verify/085`, port 4246 — never the
+dev's 4244). `npm install` → `npm test` (232/232 green, matches dev's own re-baselined
+count) → `npx vite build` (green) → `git checkout -- public/` → `npx vite preview --port
+4246` → drove it with `playwright-core` against the cached Chromium. Wrote my own
+assertions in `qa-scripts/085-tester.mjs` (37/37 pass) plus two screenshot scripts
+(`085-tester-screenshot.mjs`, `085-tester-screenshot-crop.mjs`); I also re-ran the dev's
+own `qa-scripts/085-verify.mjs` as a sanity cross-check (still 42/42) but my verdict
+rests on my own script and manual probes, not on trusting theirs.
+
+- **AC1 (diorama stage/floor, W2a) — PASS.** `.hal > .floor + .horizon` structure
+  confirmed; `.floor`'s computed transform is a genuine `matrix3d(1, 0, 0, 0, 0,
+  0.559193, 0.829038, ...)` (T7) — real perspective+rotateX, not just "non-identity" as
+  the dev's own check only asserted. Every `.mch`/`.plot`/`.ghost` node's transform is a
+  plain 2D `matrix(1, 0, 0, 1, x, 0)` (the translateX centering trick), confirmed on a
+  different fixture than the dev used.
+- **AC2 (machine states + exact precedence, W2b) — PASS**, and I found two precedence
+  branches the dev's script never exercised: (T1) a machine that is **simultaneously**
+  letter-locked AND premium-locked (robotarm, 3 letters learned, family not unlocked) —
+  code correctly renders it as `.ghost.premium` with "in de volledige fabriek" text, not
+  a letter-count ghost, confirming `premiumLocked` really is checked before `lettersOk`
+  in the precedence chain, not just when letters happen to already be sufficient (the
+  dev's own scenario 6 only tested the latter). (T2) the `isCurrentLevelup` branch on a
+  **built** plinth (all 5 machines built, typewriter at level 9 so the next level is a
+  milestone and `nextGoal` returns `kind:'levelup'`) — the plinth's badge correctly reads
+  "NU BOUWEN" (`.badge.cur`) instead of the milestone-count badge, and the BOUWBON
+  ticket names the same machine. This exact branch was not touched anywhere in the dev's
+  42 checks. (T3) clicking a non-premium (letter-gated) ghost does **not** open
+  `Unlock.jsx` — only premium ghosts are wired clickable, confirmed.
+- **AC3 (computed placement rule, W2c) — PASS.** Read `layoutDiorama`/`FRONT_LANE_CAP`/
+  `LANE` directly in the shipped `src/game/Shop.jsx` myself (not just the dev's prose):
+  confirmed zero per-machine constants — `x` is `(i+1)/(list.length+1)*100`, `y` comes
+  from one of exactly two lane constants. I did not reuse the dev's hand-copied unit
+  script; instead `qa-scripts/085-tester.mjs` (T10) regex-extracts `FRONT_LANE_CAP`/
+  `LANE`/the function body straight from the shipped file at test time and feeds it a
+  synthetic **7**-item roster (one more than the dev's 6-item test): front lane correctly
+  caps at 5, the two oldest/cheapest items recede to the back lane flagged
+  `established`, and no per-machine literal appears anywhere in the computation. Also
+  independently verified the real, reachable 5/5-all-built save (T9: today's actual
+  maximum front-lane load) renders as exactly 5 plinths, 0 established, no overflow —
+  confirming the cap is never spuriously tripped by real data either. On the AC's own
+  wording ("a reviewer can confirm a 6th machine would slot in by rule") — I did that
+  confirmation myself, independently, and it holds. The gap the dev flagged (no real
+  6-building save possible since `economy.js` is read-only) is real but does not weaken
+  this: the rule lives entirely in presentation code with no hidden economy dependency,
+  so code-level proof is sufficient evidence for what the AC asks.
+- **AC4 (BOUWBON ticket, W2e) — PASS.** `nextGoal` fields render read-only; `goal.effort`
+  line never contains countdown/timer wording (spot-checked). A **real buy** via the
+  ticket's buy button dropped the ledger's raw balance by exactly the cost (independent
+  fixture, `cost=15`→`before=500`/`after=485` in my own run of the dev's script, and I
+  separately confirmed the buy handler is untouched via the `economy.js`/`goals.js` diff
+  below). Additionally verified two edge cases the dev did not: (T5) with `coins:1` the
+  buy button is `disabled`, and force-clicking it through Playwright does not mutate the
+  ledger balance; (T4) over a real 3-second wait on the factory page with
+  `coinsPerSecond > 0` and zero typing, the ledger balance does not move at all — a
+  **behavioural** no-idle-income check, not just an animation-absence check.
+- **AC5 (cold-read) — PASS, my own independent judgment.** Screenshot evidence:
+  `company/assignments/085-screenshots-verify/085-tester-cold-read.png` (full page) and
+  `085-tester-hal-crop.png` (tight crop of just `.hal`), a different mid-game fixture
+  from the dev's own screenshot (2 built machines at different levels, 1 rebirth star, 1
+  flagged plot, 1 plain plot, 1 letter-gated ghost). My honest read: this is clearly no
+  longer a settings/dashboard list — physical plinths with rounded panel gradients,
+  mint status lights, a flagged glowing brass foundation plot, and small greyed ghost
+  drawings sitting further back and higher up all read as distinct **build states**, and
+  the near/far size difference genuinely communicates depth and growth ("built stuff is
+  big and close, not-yet stuff is small and far"). It passes the bar the AC actually sets
+  ("not a dashboard"). **However**, I do not think the specific "tilted blueprint floor
+  you look across" metaphor reads clearly: the `--bg-grid` pattern that is supposed to
+  be the visible floor terrain is, in practice, nearly imperceptible against `--night` in
+  my screenshots (contrast delta of roughly 6-11 out of 255 per channel — see 089 below)
+  — a viewer reads "icons at two distances on a dark background with a line," not "a
+  floor I'm looking across." That's a real, named gap against W2a's own ambition, but it
+  does not drag this below "reads as a place, not a dashboard" — the depth/physicality
+  signals that do work (scale, position, plinth styling, status lights, atmosphere
+  gradient) are enough on their own. Filed as a **separate, non-blocking** defect (089)
+  rather than bouncing this AC, since the AC's bar ("not a dashboard") is met even though
+  the specific floor-grid execution underdelivers on the mock's ambition.
+- **AC6 (ledger, W2d) — PASS.** `.ledger` renders top-right, unchanged from 084;
+  confirmed live in every one of my fixtures and updates correctly after a real buy.
+- **AC7 (guardrails, W8) — PASS.** Premium ghosts and the ticket's own `goalLocked`
+  branch route to `Unlock.jsx` (re-confirmed). No idle income confirmed two ways: (a)
+  animation sweep — T6 swept the **entire page body** (not just `.hal`/`.ticket` like the
+  dev's scenario 10) for any element with an `infinite` animation at rest: zero found;
+  (b) the behavioural wait-test (T4) above, which the dev's script did not do at all.
+  `± N opdrachten` verified as `goal.effort` text, never a countdown, on multiple
+  fixtures.
+- **AC8 (token discipline, W6) — PASS.** Independently re-ran the grep the dev
+  describes (`git diff 638a8f0 -- src/game/Shop.jsx src/game/game.css | grep -nE
+  "^\+.*(#[0-9a-fA-F]{3,8}|rgba?\()"`) myself: zero hits. Also grepped independently for
+  any new `--token:` declaration inside the diff: zero. Extended the dev's single-theme
+  (diepzee) swap check to **three** themes (nachtploeg, snoepfabriek, diepzee) and more
+  surfaces than the dev checked (`.floor` grid, `.horizon` line, ghost border, plinth
+  border, werkbank tile border) — all recolour correctly under every theme tested (T8,
+  12 checks).
+- **AC9 (save-compat/tests/build) — PASS.** Independently ran `git diff --stat 638a8f0 --
+  src/store.js src/game/store.js src/game/economy.js src/engine src/game/theme.js
+  src/game/goals.js` myself: empty output, confirming all five save-compat surfaces are
+  byte-for-byte untouched (not just trusting the dev's own note). `npm test`: 232/232 in
+  my own fresh `npm install`. `vite build`: green. `check-no-dutch-en`: PASS (part of the
+  `npm test` pipeline output I ran myself). en locale: independently spot-checked outside
+  either verify script (`qa-scripts/_tmp-en-check.mjs`, not committed, scratch only) —
+  confirmed `"ticket kicker": "BUILD TICKET"` and `"plot note": "60 coins to go"` render
+  live from a fresh en fixture. `public/**` churn reverted with `git checkout -- public/`
+  before every commit; `git status --porcelain` clean of `public/**` at commit time.
+
+**New defect filed: 089** (`089-diorama-floor-grid-imperceptible.md`, priority 3,
+`opened_by: tester (proposed)`) — the `.floor`'s `--bg-grid` terrain pattern is visually
+almost invisible against `--night` in a real render (confirmed by screenshot, not just
+computed CSS), undermining the "tilted floor you look across" read that W2a names as
+the point of this pass, even though the transform itself and AC1's narrow "only
+transformed element" guarantee both hold correctly. Not blocking 085 — see the AC5 note
+above for why.
+
+**Verdict: all acceptance criteria pass. Status set to `done`.**
