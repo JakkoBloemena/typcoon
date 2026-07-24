@@ -60,6 +60,7 @@ const STATIC_FLOW_KEYS = [
   'play.nice', 'play.checkHands', 'play.achievement', 'play.buyLabel',
   'factory.title', 'factory.navButton', 'factory.backButton',
   'factory.planTitle', 'factory.builtTag', 'factory.currentBadge', 'factory.toBuild',
+  'factory.ticketLabel', 'factory.plotRemaining',
   'factory.prestigeMeta', 'factory.prestigeReady', 'factory.contextLine',
   'factory.ledger.coins', 'factory.ledger.perSecond', 'factory.ledger.stars',
   'goal.spotKicker', 'goal.togoLine', 'goal.effort',

@@ -8,6 +8,12 @@
 // (design §7 "reuse vs replace"). `nextGoal` (071) is de ÉNE bron voor "wat nu?" — de
 // spotlit-doel-panel tekent letterlijk zijn velden, net als de doel-sliver (073) op de
 // typweergave doet, zodat beide surfaces nooit uit sync kunnen raken.
+// 085 (world-pass slice 3, design/DESIGN-FACTORY.md PART II): de platte `.road`-
+// chiprij is herbouwd tot "De Maquette" — een diorama-vloer waar gebouwde machines
+// als podium vooraan staan, de volgende machine een gloeiend bouwterrein is, en
+// op-slot machines platte lijn-tekeningen zijn richting de horizon. `.goalspot`
+// werd het BOUWBON-werkbon-kaartje. Nog altijd puur presentatie: dezelfde
+// handlers, dezelfde `nextGoal`, dezelfde precedentie hieronder.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { activeLetters } from '../engine/curriculumCore.js';
 import {
@@ -21,6 +27,32 @@ import { sound } from '../ui/sound.js';
 import { Machine, Coin, Star } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt } from './strings.js';
+
+// De Maquette (assignment 085, design/DESIGN-FACTORY.md PART II W2c): plaatsing
+// op de diorama-vloer is een REGEL, nooit een hardgecodeerde %-waarde per machine.
+// Twee dieptebanen — front (gebouwd + het huidige bouwterrein, "scale 1") en back
+// (op-slot spookstations, "scale ≈0.72", dichter bij de horizon) — elk met hun
+// EIGEN baan-constante voor y/grootte; x komt alleen uit de index BINNEN de baan.
+// Zo schuift een 6de machine vanzelf mee zonder dat deze functie of de CSS eronder
+// hoeft te veranderen. FRONT_LANE_CAP bewaakt de (bij de huidige 5 machines nooit
+// geraakte) roster-groei-regel: als de front-baan ooit voller is dan de kaap trekt
+// het oudste gebouwde station zich terug naar een "gevestigd" back-links-cluster
+// (kleiner, draait nog door) i.p.v. dat de vloer een scrollbalk krijgt.
+const FRONT_LANE_CAP = 5;
+const LANE = { front: { top: 60 }, back: { top: 22 } };
+
+function layoutDiorama(items) {
+  const front = items.filter((it) => it.lane === 'front');
+  const back = items.filter((it) => it.lane === 'back');
+  while (front.length > FRONT_LANE_CAP) {
+    const oldest = front.shift();
+    back.unshift({ ...oldest, lane: 'back', established: true });
+  }
+  const place = (lane, list) => list.map((it, i) => ({
+    ...it, x: ((i + 1) / (list.length + 1)) * 100, y: LANE[lane].top,
+  }));
+  return [...place('back', back), ...place('front', front)];
+}
 
 // Koopknop met vasthouden-om-te-herhalen: één klik = één keer; ingedrukt houden
 // (na ~420ms) blijft kopen zolang het kan. Zo hoeft een kind niet 25× te klikken.
@@ -114,86 +146,115 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
   const goalDesc = (goal.kind === 'build' || goal.kind === 'levelup') ? gt('building.' + goal.id + '.desc') : null;
   const buyGoal = () => (goal.kind === 'upgrade' ? buyUpg(goal.id) : buy(goal.id)); // build + levelup delen buyBuilding
 
+  // De Maquette (085, design/DESIGN-FACTORY.md W2b): per BUILDINGS-entry hetzelfde
+  // precedentie-stelsel als de oude .road ONGEWIJZIGD — gebouwd (level>0) >
+  // premium-poort > letter-poort > "nu bouwen" (== nextGoal's doel) > overig
+  // beschikbaar (zeldzaam randgeval, zie de oorspronkelijke opmerking hierboven bij
+  // `goalLocked`) — alleen nu getagd met een DIEPTE-BAAN i.p.v. een chip-positie.
+  // `layoutDiorama` (boven) rekent uit BUILDINGS' eigen volgorde de x/y uit; er
+  // staat geen enkele %-constante per machine in dit bestand.
+  const stationItems = BUILDINGS.map((b) => {
+    const level = state.tycoon.buildings[b.id] || 0;
+    if (level > 0) {
+      const isCurrentLevelup = goal.kind === 'levelup' && goal.id === b.id;
+      return { kind: 'built', b, level, isCurrentLevelup, nextMs: nextMilestone(level), lane: 'front' };
+    }
+    const premiumLocked = machineLocked(b.id, unlocked);
+    const lettersOk = buildingUnlocked(b.id, lettersLearned);
+    if (premiumLocked) return { kind: 'ghost-premium', b, lane: 'back' };
+    if (!lettersOk) return { kind: 'ghost-letters', b, remaining: Math.max(1, b.unlockAt - lettersLearned), lane: 'back' };
+    return { kind: 'plot', b, isCurrentBuild: goal.kind === 'build' && goal.id === b.id, lane: 'front' };
+  });
+  const diorama = layoutDiorama(stationItems);
+
   return (
     <>
-      {/* de weg: één station per BUILDINGS-entry, links-naar-rechts op ontgrendel-
-          volgorde (§7 "restyled/relocated" — zelfde BUILDINGS-data, nieuwe presentatie).
-          Precedentie per station: gebouwd (level>0) > premium-poort > letter-poort >
-          "nu bouwen" (== nextGoal's doel) > overig beschikbaar (zeldzaam randgeval —
-          de kostenvolgorde in economy.js loopt gelijk met de ontgrendel-volgorde, dus
-          de goedkoopste ontgrendelde-onbebouwde machine ís vrijwel altijd nextGoal's
-          keuze; deze tak bestaat alleen als bewaking tegen een handmatig gemanipuleerde
-          save, niet als iets dat normaal spelen ooit bereikt). */}
-      <div className="road">
-        {BUILDINGS.map((b) => {
-          const level = state.tycoon.buildings[b.id] || 0;
-          const nextMs = nextMilestone(level);
-          if (level > 0) {
-            const isCurrentLevelup = goal.kind === 'levelup' && goal.id === b.id;
+      {/* de vloer: een getilde blauwdruk-laag onder alles, alleen dat ene element
+          heeft een 3D-transform (rotateX) — machines/tekst staan er flat bovenop
+          (W2a). Gebouwde machines staan als podium (plinth) vooraan; het volgende
+          bouwterrein gloeit messing; op-slot machines zijn platte lijn-tekeningen
+          richting de horizon. */}
+      <div className="hal">
+        <div className="floor" aria-hidden="true" />
+        <div className="horizon" aria-hidden="true" />
+        {diorama.map((item) => {
+          const style = { left: `${item.x}%`, top: `${item.y}%` };
+          if (item.kind === 'built') {
+            const { b, level, isCurrentLevelup, nextMs, established } = item;
             return (
-              <div className={'station' + (isCurrentLevelup ? ' cur' : '')} key={b.id}>
-                {isCurrentLevelup && <span className="badge">{gt('factory.currentBadge')}</span>}
-                {!isCurrentLevelup && nextMs && <span className="badge">{gt('play.nextMilestone', { n: nextMs })}</span>}
-                <div className="station-node"><Machine id={b.id} running className="station-icon" /></div>
-                <div className="station-name">{gt('building.' + b.id)}</div>
-                <div className="station-lv">Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</div>
-                <div className="station-rate">+{fmt(b.rate * milestoneMultiplier(level))}/s</div>
+              <div className={'mch' + (established ? ' established' : '')} style={style} key={b.id}>
+                {isCurrentLevelup
+                  ? <span className="badge cur">{gt('factory.currentBadge')}</span>
+                  : nextMs && <span className="badge">{gt('play.nextMilestone', { n: nextMs })}</span>}
+                <div className="plinth">
+                  <span className="status" aria-hidden="true" />
+                  <div className="glass" aria-hidden="true" />
+                  <Machine id={b.id} running className="mch-ico" />
+                </div>
+                <div className="cast" aria-hidden="true" />
+                <div className="plate">{gt('building.' + b.id)}</div>
+                <div className="lv">Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</div>
+                <div className="rate">+{fmt(b.rate * milestoneMultiplier(level))}/s</div>
               </div>
             );
           }
-          const premiumLocked = machineLocked(b.id, unlocked);
-          const lettersOk = buildingUnlocked(b.id, lettersLearned);
-          if (premiumLocked) {
+          if (item.kind === 'plot') {
+            const { b, isCurrentBuild } = item;
             return (
-              <div className="station locked" key={b.id} onClick={() => onUnlockOffer('plain')}>
-                <div className="station-node clickable"><Machine id={b.id} className="station-icon" /></div>
-                <div className="station-name">🔒 {gt('building.' + b.id)}</div>
-                <div className="station-rate station-rate-dim">{gt('premium.inFull')}</div>
+              <div className="plot" style={style} key={b.id}>
+                {isCurrentBuild && <span className="flag">🦾 {gt('factory.currentBadge')}</span>}
+                <div className="pad"><Machine id={b.id} className="plot-ico" /></div>
+                <div className="pname">{gt('building.' + b.id)}</div>
+                <div className="pnote">
+                  {isCurrentBuild ? gt('factory.plotRemaining', { n: fmt(goal.remaining) }) : gt('factory.toBuild')}
+                </div>
               </div>
             );
           }
-          if (!lettersOk) {
-            const remaining = Math.max(1, b.unlockAt - lettersLearned);
+          if (item.kind === 'ghost-premium') {
+            const { b } = item;
             return (
-              <div className="station locked" key={b.id}>
-                <div className="station-node"><Machine id={b.id} className="station-icon" /></div>
-                <div className="station-name">{gt('building.' + b.id)}</div>
-                <div className="station-rate station-rate-dim">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</div>
+              <div className="ghost premium" style={style} key={b.id} onClick={() => onUnlockOffer('plain')}>
+                <div className="draw clickable"><Machine id={b.id} className="ghost-ico" /></div>
+                <div className="gname">🔒 {gt('building.' + b.id)}</div>
+                <div className="glock">{gt('premium.inFull')}</div>
               </div>
             );
           }
-          const isCurrentBuild = goal.kind === 'build' && goal.id === b.id;
+          const { b, remaining } = item; // ghost-letters
           return (
-            <div className={'station' + (isCurrentBuild ? ' cur' : '')} key={b.id}>
-              {isCurrentBuild && <span className="badge">{gt('factory.currentBadge')}</span>}
-              <div className="station-node"><Machine id={b.id} className="station-icon" /></div>
-              <div className="station-name">{gt('building.' + b.id)}</div>
-              <div className="station-rate station-rate-brass">{gt('factory.toBuild')}</div>
+            <div className="ghost" style={style} key={b.id}>
+              <div className="draw"><Machine id={b.id} className="ghost-ico" /></div>
+              <div className="gname">{gt('building.' + b.id)}</div>
+              <div className="glock">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</div>
             </div>
           );
         })}
       </div>
 
-      {/* het uitgelichte volgende doel: nextGoal's velden vergroot, zelfde als de
-          doel-sliver hierboven surfacet, plus de koopknop (design §5b/§6). */}
-      <div className="goalspot">
-        <div className="goalspot-ringwrap">
-          <div className="goalspot-ring" style={{ '--p': Math.round(goal.fraction * 100) }} />
-          <span className="goalspot-ringicon" aria-hidden="true">{goal.icon}</span>
+      {/* BOUWBON: het bouwbriefje voor nextGoal (071), nu de ENE plek waar het
+          volgende doel leeft sinds 083 de doel-sliver van de typweergave haalde
+          (W2e). Zelfde velden + koopknop als de oude .goalspot, in een messing-
+          werkbon-kaartje. */}
+      <div className="ticket">
+        <span className="ticket-kicker">{gt('factory.ticketLabel')}</span>
+        <div className="ringwrap">
+          <div className="ring" style={{ '--p': Math.round(goal.fraction * 100) }} />
+          <span className="ringicon" aria-hidden="true">{goal.icon}</span>
         </div>
         <div>
-          <div className="goalspot-kick">{gt('goal.spotKicker')}</div>
-          <h3 className="goalspot-name">{goal.name}</h3>
-          <div className="goalspot-sub">
+          <div className="ticket-kick">{gt('goal.spotKicker')}</div>
+          <h3 className="ticket-name">{goal.name}</h3>
+          <div className="ticket-sub">
             {goalDesc && <>{goalDesc} · </>}
-            <b className="goalspot-reward">{goal.reward}</b>
+            <b className="ticket-reward">{goal.reward}</b>
           </div>
-          <div className="goalspot-togo">{gt('goal.togoLine', { n: fmt(goal.remaining), effort: goal.effort })}</div>
+          <div className="ticket-togo">{gt('goal.togoLine', { n: fmt(goal.remaining), effort: goal.effort })}</div>
         </div>
         {goal.kind === 'prestige' ? (
           rbReady
             ? <button className="btn big rebirth-btn" onClick={() => setRebirthAsk(true)}>{gt('rebirth.button')}</button>
-            : <span className="goalspot-locked-pct">{Math.round(goal.fraction * 100)}%</span>
+            : <span className="ticket-locked-pct">{Math.round(goal.fraction * 100)}%</span>
         ) : goalLocked ? (
           <button className="btn big" onClick={() => onUnlockOffer('plain')}>🔒 {gt('premium.unlockShort')}</button>
         ) : (

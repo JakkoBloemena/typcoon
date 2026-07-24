@@ -220,6 +220,11 @@ const STRINGS = {
   'factory.builtTag': '{built} van {total} machines gebouwd',
   'factory.currentBadge': 'NU BOUWEN',
   'factory.toBuild': 'te bouwen',
+  // 085 (design/DESIGN-FACTORY.md §W2e): het pinned label op het BOUWBON-kaartje,
+  // en het korte "nog N munten"-regeltje op het bouwterrein zelf (korter dan de
+  // volle `goal.togoLine` met de inspannings-schatting, die staat al op het kaartje).
+  'factory.ticketLabel': 'BOUWBON',
+  'factory.plotRemaining': 'nog {n} munten',
   'factory.prestigeMeta': '+{bonus}% ⭐ · nog {n}',
   'factory.prestigeReady': 'Klaar om te verkopen!',
   'factory.contextLine': '{coins} ooit verdiend · ⭐ {stars}',
@@ -546,6 +551,8 @@ const STRINGS_EN = {
   'factory.builtTag': '{built} of {total} machines built',
   'factory.currentBadge': 'BUILDING NOW',
   'factory.toBuild': 'to build',
+  'factory.ticketLabel': 'BUILD TICKET',
+  'factory.plotRemaining': '{n} coins to go',
   'factory.prestigeMeta': '+{bonus}% ⭐ · {n} to go',
   'factory.prestigeReady': 'Ready to sell!',
   'factory.contextLine': '{coins} ever earned · ⭐ {stars}',
