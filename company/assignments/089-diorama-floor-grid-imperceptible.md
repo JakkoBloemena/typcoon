@@ -2,7 +2,7 @@
 id: 089
 title: Diorama floor grid (--bg-grid) is nearly imperceptible — the "tilted floor" reads as a flat dark backdrop, not terrain
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: tester (proposed)
@@ -158,3 +158,70 @@ token discipline reusing `--bg-grid` + the existing `--line` token, no new hex/t
 266/266 green with the transform/mask/floor-only-transformed guarantee independently
 probed and unchanged (AC4). Setting `status: needs_verification` for the tester —
 assignment 107 was not needed; no new defect was found while doing this work.
+
+## Verification (tester, v089, 2026-07-24)
+
+Independently rebuilt from scratch in my own worktree/branch (`verify/089`) — did not
+reuse the developer's running server or screenshots as evidence, only as a prior to
+compare against. `npm install` (node_modules was absent), `npm install playwright-core
+--no-save` (kept package.json/lock diff-clean, confirmed via `git status` before/after),
+`node scripts/gen-content.mjs && npx vite build`, served with `npx vite preview --port
+4280 --strictPort` (my own reserved port), drove it with a from-scratch Playwright script
+(`qa-scripts/089-tester.mjs`) against the real Chromium at
+`C:/Users/Jakko/AppData/Local/ms-playwright/chromium-1228/chrome-win64/chrome.exe`, same
+save-fixture/navigation convention as the dev's own scripts (necessary to reach the same
+page state) but independently written and independently run. Reverted `public/`
+build-timestamp churn from `gen-content.mjs`/`npm test` before committing
+(`git checkout -- public/`), same as the dev's own delivery notes describe.
+
+- **AC1 (grid visibly legible, real screenshot, default theme):** HOLDS. My own fresh
+  screenshot (`company/assignments/089-screenshots-tester/089-tester-muntpers-hal-crop.png`)
+  shows a clearly legible fading blueprint grid across the front half of `.hal`, matching
+  the dev's `089-after-muntpers-hal-crop.png` and visibly different from the pre-fix
+  `089-before-muntpers-hal-crop.png` (no discernible pattern). Cross-checked the computed
+  `background-image` in-browser: the resolved line colour is
+  `color(srgb 0.228867 0.292968 0.549256 / 0.312235)` — alpha ~0.31, consistent with the
+  dev's claimed ~0.3–0.33 target. Judgment call: I also hand-computed an approximate WCAG
+  contrast ratio of the new blended line vs `--night` (~1.22:1, up from ~1.05:1) — this is
+  still numerically low in absolute terms, but the AC's own methodology is explicitly
+  "verified by an actual screenshot... not computed CSS," and both the dev's and my
+  independent screenshots show a plainly visible grid pattern at the front of the floor
+  (fading out near the horizon by design, per the mask). Treating the screenshot evidence
+  as controlling per the AC's own text, not the numeric ratio.
+- **AC2 (token discipline):** HOLDS. `git show da06275 -- src/game/game.css` touches
+  exactly 10 lines inside the `.floor` rule (a comment + the two gradient colour stops);
+  no `:root`/`[data-theme]` block edited, no new hex/rgba introduced — `color-mix(in srgb,
+  var(--line) 26%, var(--bg-grid) 74%)` uses only two pre-existing tokens. Verified via
+  `git show da06275 --stat` (only markdown, screenshots, two qa-scripts, and this one CSS
+  file changed) and a full grep of `--bg-grid`/`--line`/`--night` usage in `game.css`.
+- **AC3 (theme swap recolours grid):** HOLDS, all 4 themes not just 1. My own screenshots
+  (`089-tester-{diepzee,nachtploeg,snoepfabriek}-hal-crop.png`) each show a distinctly
+  coloured, clearly legible grid (teal/cyan, purple, pink respectively). Computed
+  `background-image` per theme (`089-tester-results.json`) confirms 4 distinct resolved
+  colours with alpha in the same ~0.31–0.33 band across all themes.
+- **AC4 (transform/mask/floor-only-transformed unchanged, npm test green):** HOLDS. Ran
+  `npm test` myself: 266/266 green including `check-no-dutch-en`. Ran my own invocation of
+  the dev's `qa-scripts/089-ac4-probe.mjs` against my own server
+  (`PROBE_BASE=http://localhost:4280`): `.floor` computed transform is
+  `matrix3d(1, 0, 0, 0, 0, 0.559193, 0.829038, ...)` (the `perspective(560px)
+  rotateX(56deg)` skew), computed mask-image is `linear-gradient(rgba(0,0,0,0) 0px,
+  rgb(0,0,0) 45%)` (the documented 45% fade point), and no other `.hal` child carries a
+  `matrix3d` transform — only pre-existing 2D `matrix(...)` idle-bob transforms on
+  `.mch`/`.plot`/`.ghost` (086's animation, out of scope). The `git show da06275 --
+  src/game/game.css` diff independently confirms these lines are byte-identical to
+  before — only the two colour-stop expressions changed.
+
+**Beyond the ACs (exploratory):** checked console/page errors on load (3 pre-existing 404s,
+unrelated to `.floor`, not investigated further — no `.floor`/grid-related errors) and
+took a mobile-viewport (390×844) pass over the same factory screen. Found a real,
+reproducible, pre-existing defect unrelated to 089's scope: `.mch` machine cards (fixed
+148px width) overlap badly inside a narrow `.hal` (308px wide at this viewport) — two
+built machines' name/rate labels render on top of each other, illegible. Confirmed by
+`git diff` that 089's commit never touches `.mch`/`.hal`/`layoutDiorama`, so this is not a
+089 regression, and confirmed 085's own acceptance criteria never mention mobile/viewport
+at all, so it's a real gap rather than a broken promise. Filed separately as
+`company/assignments/106-diorama-mobile-machine-overlap.md` (id 106 consumed, priority 2)
+per the tester's "verified, reproduced defect" exception to who sets priority — it does
+not block or bounce 089.
+
+**Verdict: all 4 acceptance criteria independently verified — status set to `done`.**
