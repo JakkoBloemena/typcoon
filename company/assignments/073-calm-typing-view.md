@@ -2,7 +2,7 @@
 id: 073
 title: Calm typing view — goal sliver, one-line bar, remove FactoryFloor + meters
 owner: developer
-status: needs_verification
+status: open
 priority: 2
 blocked_by: [071, 072]
 opened_by: product-owner
@@ -152,3 +152,91 @@ assignment — the two things I might otherwise have filed (the `goal.locked`/`i
 combination question, and the mobile stacked-layout treatment) are already explicitly
 owned by other in-flight/queued assignments (074's spotlit-goal buy button; 075's mobile
 reflow), not gaps this assignment introduced. 078 lapses, unused.
+
+### Verification (tester, tick #28) — BOUNCE, AC2 fails
+
+Worktree `v073` (branch `verify/073`), merged tree at `8ebae88` (main, includes 074's
+factory-page landing on top of 073). `npm install` (22 pkgs) → `npm test`: **229/229
+green**, `vite build` OK (101 modules), `check-no-dutch-en` PASS. `git diff --stat` on
+`bb6844d` (073's own commit) confirms `store.js`/`economy.js`/`theme.js`/`src/engine/`/
+`App.jsx`/`Shop.jsx`/`FactoryPage.jsx` untouched — save-compat holds, 071's invariant
+test is in the green run. `src/game/FactoryFloor.jsx` confirmed deleted, no reference
+anywhere in `src`. Wrote an independent script, `qa-scripts/073-tester.mjs` (own
+fixtures, own `nextGoal()` re-derivation, not a re-run of the dev's `073-verify.mjs`),
+served on port 4230, drove with `playwright-core`/cached Chromium.
+
+**Per-AC verdict:**
+- AC1 (FactoryFloor/.meters/.shop gone, typing card dominant) — **PASS**. All three
+  selectors return 0 on the play view; `.typing-surface` present and visually dominant.
+- AC2 (zero ambient/idle animation) — **FAIL**, see below.
+- AC3 (preserved-value clause: coin tick-up + sliver advance) — **PASS**, re-derived on
+  a fresh fixture: coins 500→550 after one exercise, `.goalsliver-fill` width
+  83.3333%→91.8287% in the same run, both from real state (payout + production tick).
+- AC4 (goal sliver matches `nextGoal` output) — **PASS**. Independently imported
+  `nextGoal` from `src/game/goals.js` and called it on the exact fixture tycoon passed
+  to the page; DOM name/kicker/remaining/fill% match the function's return value
+  exactly (Robotarm, JE VOLGENDE MACHINE, nog 100, 83.3333%).
+- AC5 (FactoryFloor.jsx deleted if unreferenced) — **PASS**, confirmed via Glob (no
+  matches) and `grep -rn FactoryFloor src` (no hits).
+- AC6 (save-compat) — **PASS**, see diff-stat above; 071 invariant test green.
+- AC7 (`npm test` green) — **PASS**, 229/229.
+
+**AC2 failure — reproduction.** The AC text is explicit: *"zero ambient/idle animation
+(no floor animation, no idle wiggle/pulse); only the next-key hint and caret move per
+keystroke, and celebration overlays still fire between exercises as before."* Three
+elements on the typing view still carry `animation: goldpulse 1.1s ease-in-out
+infinite` or `hintPulse 1.3s ease-in-out infinite` — a continuous scale/opacity pulse,
+not a one-shot celebration and not the caret/next-key-hint the AC carves out as the
+sole exception:
+
+1. **`.golden-banner`** (`game.css` — the "GOUDEN OPDRACHT — 3× munten!" chip shown for
+   the full duration of a golden exercise) — `animation: goldpulse 1.1s ease-in-out
+   infinite`.
+2. **`.boost-chip`** (the "Opwarm-boost ×1.5 — nog N opdrachten" daily-warmup chip,
+   visible across multiple exercises while `boostLeft > 0`) — `animation: goldpulse
+   1.4s ease-in-out infinite`.
+3. **`.type-hint`** (the "Typ de letters om je eerste munten te maken 👇" first-run
+   hint, visible continuously until the child's first keystroke) — `animation:
+   hintPulse 1.3s ease-in-out infinite`.
+
+Repro: `node qa-scripts/073-tester.mjs` (build+preview on port 4230 first) — the
+"animation audit" sections log these three as `iter:"infinite"` offenders in the
+default, first-run, and forced-golden states respectively (forced golden via
+`Math.random = () => 0` in an `addInitScript`, since `GOLDEN_CHANCE` is only 0.12 and
+needs `exercisesDone >= 3`). Screenshots at
+`company/assignments/073-screenshots-verify/ac2-golden-boost-ambient-pulse.png` and
+`.../ac2-firstrun-typehint-ambient-pulse.png` — both visibly show the pulsing chips
+(computed style confirmed via `getComputedStyle(el).animationName`/
+`animationIterationCount`, not just class-name presence, per the tester brief).
+
+All three animations **predate 073** (`git log -S goldpulse` → `11eb35a`/`4e49aed`;
+`git log -S hintPulse` → `11db89b`, all pre-073) — this assignment did not introduce
+them. But AC2 is written as a criterion of the *delivered* calm-typing-view state, not
+a diff-only claim, and the delivery notes explicitly assert *"no `animation`/
+`@keyframes` left on the typing view besides the pre-existing caret blink … and the
+discrete `coinBump`/`comboBurst` event flashes"* and the commit message claims *"no
+decorative/idle animation anywhere else on the view"* — both false as written. The
+dev's own `073-verify.mjs` never exercised the first-run, daily-boost, or golden-run
+states, which is how this was missed.
+
+**Bounce action for the developer:** either (a) stop these three chips animating
+continuously — e.g. a single one-shot entrance pulse (like the existing `cardPop`/
+`dropIn` idiom used elsewhere) instead of `infinite`, or (b) if product intends them to
+stay as designed motion, get that exception written into the AC text via the PO before
+closing — do not silently re-close with the same infinite pulses. This is not a
+FactoryFloor-scope question (Notes section's "do NOT re-open FactoryFloor removal"
+guardrail does not apply here — these three chips are unrelated to FactoryFloor).
+
+**Non-blocking observations for the record (not filed as 069 — informational only):**
+- `.shop` no longer exists anywhere in the merged tree (074's factory-page redesign
+  renamed the markup away from `.shop`/`.shop-list`) — the dev's `073-verify.mjs` nav
+  round-trip check (`'.shop' present on factory page`) is now stale against the current
+  merged tree, though it was accurate when 073 was built. Not a 073 regression; noted so
+  the next lane doesn't get confused re-running that script verbatim.
+- en-locale goal sliver strings checked independently (`YOUR NEXT MACHINE`, `{n} to
+  go`) — correct, no Dutch leak.
+- 375px viewport: no horizontal overflow, re-confirmed independently.
+
+**Verdict: status → `open`, bounced on AC2.** All other ACs independently re-derived
+and hold. New file: `qa-scripts/073-tester.mjs` (own checks, kept for the next pass).
+Evidence screenshots in `company/assignments/073-screenshots-verify/`.
