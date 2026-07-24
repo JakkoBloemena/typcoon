@@ -2,7 +2,7 @@
 id: 113
 title: gen-content.mjs output flagged modified on every Windows run (missing .gitattributes)
 owner: developer
-status: open
+status: in_progress
 priority: 4
 blocked_by: []
 opened_by: developer (proposed, found during 100 verification)
