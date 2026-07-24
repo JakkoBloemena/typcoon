@@ -3,10 +3,35 @@ id: 091
 title: Decorative belt (beltDrift) named in W3 and the world-C mock was never built — zero .belt markup anywhere
 owner: developer
 status: open
-priority: 4
-blocked_by: []
-opened_by: tester (proposed)
+priority: 3
+blocked_by: [115]
+opened_by: tester (proposed); re-sequenced by product-owner (tick #39 intake)
 ---
+
+> **PRODUCT-OWNER RE-SCOPE (2026-07-24, tick #39 intake).** The belt is folded into the
+> "from blueprint to place" iteration (`research/milestone-factory.md` §10) as one of the
+> ambient/atmosphere elements the 076 critique's "blueprint, not place" gap points at.
+>
+> **Design-spec sufficiency (the question the PO was asked to judge):** the belt's *own*
+> spec is **sufficient** — DESIGN-FACTORY.md PART II **W3** names it explicitly and
+> `design/factory-mocks/world-C-maquette.html` ships a literal `.belt` element with the
+> `@keyframes beltDrift` animation. A developer can build the belt directly from that; it
+> does **not** need a new designer spec to *exist*. So this is **not** blocked for a
+> missing-spec reason.
+>
+> **Why blocked_by [115] anyway (coordination, not spec):** building a lone drifting belt
+> onto today's bare blueprint floor is low-value churn — it does not move the "blueprint,
+> not place" needle, and the 114→115 atmosphere pass is about to rework the very floor the
+> belt sits on and touches the same files (`Shop.jsx` + `game.css`). So the belt lands
+> **after** 115's backdrop, placed onto the finished atmosphere, coherently. Assignment 114
+> (the designer place-ness pass) is also asked to reconcile the belt into the winning
+> direction, so its final placement follows the atmosphere spec rather than the old mock in
+> isolation. Priority raised 4 → 3 to match the iteration it now belongs to (still
+> atmosphere/cosmetic; below the 115 backdrop it completes).
+>
+> Acceptance criteria below stand, with one addition: the belt's placement matches wherever
+> the 114 spec reconciles it into the winning atmosphere direction (falling back to the
+> W3 / world-C-maquette placement idiom if 114 does not move it). ────────
 
 ## Goal
 

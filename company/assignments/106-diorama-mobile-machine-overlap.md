@@ -1,12 +1,78 @@
 ---
 id: 106
-title: Diorama (.hal) machine plinths overlap illegibly at common mobile widths — fixed 148px .mch width vs narrow .hal container
+title: "Narrow-desktop-window degradation on the game surfaces — add a width floor to the touchOnly() gate (mobile/touch is out of target per ADR 012 and already gated)"
 owner: developer
 status: open
-priority: 2
+priority: 3
 blocked_by: []
-opened_by: tester (found while independently verifying assignment 089)
+opened_by: tester (found while independently verifying assignment 089); re-scoped by product-owner (ADR 015, tick #39 intake)
 ---
+
+> **PRODUCT-OWNER RE-SCOPE (2026-07-24, tick #39 intake — read this first; ADR 015).**
+>
+> This assignment was filed at priority 2 as a **mobile** diorama-overlap bug. The
+> adjudication (`company/decisions/015-desktop-only-gated-not-reflowed.md`) resolves the
+> standing tension between this filing and the earlier v092 ruling that "ADR 012 rules no
+> mobile target," and **re-scopes and re-prioritises it in place.** The original mobile
+> reproduction is preserved below as evidence, but the target and the fix have changed.
+>
+> **What changed and why:**
+> - **Mobile / touch devices are OUT of target** (ADR 012 ruling 3) **and already gated.**
+>   The gate is `touchOnly()` in `src/game/App.jsx` (~ln 39–43): `(pointer: coarse) && !
+>   (pointer: fine)`. A real phone gets the friendly "use a keyboard" hint and **never
+>   reaches the diorama.** The 390px overlap below is reachable only by setting a narrow
+>   viewport in Playwright *without* emulating a coarse pointer — i.e. by bypassing the
+>   gate. So the mobile-device framing that justified priority 2 ("390px is a mainstream
+>   phone width for a user who plays on a phone") does not hold: that user is out of target
+>   and screened out. **Do not build a responsive/reflowing diorama — that would contradict
+>   ADR 012 ruling 3.**
+> - **The real, in-scope defect is a narrow DESKTOP window.** The gate keys on pointer type,
+>   not width. A legitimate target user — desktop/laptop, mouse (`pointer: fine`), physical
+>   keyboard — with a **narrow browser window** passes the gate and hits the same broken
+>   diorama. v104 independently reproduced this for the `.ticket` (BOUWBON) layout too (it
+>   squeezes to one word per line at 375px on a real desktop). That is what this assignment
+>   now fixes.
+> - **Priority 2 → 3.** Real degradation for a minority of in-target users (narrow desktop
+>   windows), cheaply fixed the honest way; not a mainstream-flow break (phones, the
+>   original priority-2 population, are out of target and gated).
+> - **v104's `.ticket` narrow-viewport squeeze is folded in here** (same root cause: a game
+>   surface with no width floor; same fix: the gate). It does not get its own id.
+>
+> **The fix (ADR 015 decision 2 — gate, do not reflow):** extend `touchOnly()`'s friendly
+> hint to also cover "browser window below the desktop design floor." Below the floor
+> (~1024px, the ADR 012 design target — confirm the exact threshold against the narrowest
+> width the diorama and `.ticket` stay legible at, and against where `game.css`'s existing
+> `@media (max-width: 767px)` blocks already reshape other components), the game surfaces
+> show the same calm "maak je venster wat breder om te spelen / make your window a little
+> wider to play" invitation the touch gate already uses — instead of a broken diorama or a
+> squeezed ticket. Reuse the existing hint idiom (`desktop.title`/`desktop.body` copy
+> pattern, `touchOnly()`'s structure); add nl + en strings for the width-hint variant.
+>
+> **Revised acceptance criteria (supersede the mobile-reflow criteria below):**
+> - [ ] A desktop/laptop user (`pointer: fine`, has a keyboard) with a browser window below
+>       the desktop design floor sees the calm width-hint (same idiom as the existing touch
+>       hint), **not** the broken diorama or the squeezed `.ticket`. Verify at 375px and
+>       390px window widths with a fine pointer (the narrow-desktop path, not a coarse-
+>       pointer phone).
+> - [ ] A touch-only device (`pointer: coarse`, no fine pointer) still gets the existing
+>       touch hint, unchanged — no regression to the current gate.
+> - [ ] A desktop user at the design widths (≥1024px, verified ~1360px) sees the full game
+>       exactly as today — the floor threshold does not clip legitimate desktop play. Pick
+>       the threshold so the diorama and `.ticket` are legible above it (check both, since
+>       the ticket squeezes before the diorama overlaps).
+> - [ ] The width-hint copy exists in nl **and** en; `check-no-dutch-en` passes (no nl leak
+>       into the en build).
+> - [ ] Presentation/gate only: `store.js`, `economy.js`, `src/engine/`, `theme.js`,
+>       `goals.js`, and the diorama's `layoutDiorama`/`.mch`/`.hal` math are **untouched**
+>       (we are NOT reflowing the diorama — ADR 015). `npm test` stays green.
+>
+> **File surface:** `src/game/App.jsx` (the `touchOnly()` gate) + `src/game/strings.js`
+> (the width-hint copy), and possibly one `@media`/JS width check. This shares `game.css`
+> region with assignment 115 (place-ness) only loosely; the *gate* work here is in `App.jsx`
+> + `strings.js`, so it can run in parallel with 115 in a separate worktree.
+>
+> — The original filing (mobile reproduction + the now-superseded mobile-reflow acceptance
+> criteria) is retained below unchanged, as the evidence trail for the re-scope. ────────
 
 ## Goal
 

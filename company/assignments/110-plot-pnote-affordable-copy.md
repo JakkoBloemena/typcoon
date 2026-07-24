@@ -1,12 +1,53 @@
 ---
 id: 110
-title: "Station's .pnote plot line still reads \"nog 0 munten\" once the current build target is already affordable — same defect family as 104, milder"
+title: "Affordable-state copy coherence: fix the \".pnote nog 0 munten\" plot line AND the locked-goal \"bouw maar!\" contradiction (both same family as 104)"
 owner: developer
 status: open
-priority: 4
+priority: 3
 blocked_by: []
-opened_by: tester (t104, verifying assignment 104, reproduced live in the running product)
+opened_by: tester (t104, verifying assignment 104); re-scoped by product-owner (tick #39 intake) to also carry v104's locked-goal-contradiction finding
 ---
+
+> **PRODUCT-OWNER RE-SCOPE (2026-07-24, tick #39 intake).** This assignment's scope is
+> **expanded** to cover a second affordable-state copy defect v104 found and left unfiled
+> (recorded in `company/assignments/104-*.md` Verification, finding 1) — the **locked-goal
+> contradiction**. Both defects live in the same files (`src/game/Shop.jsx` ticket/plot
+> render + `src/game/strings.js`) and the same "affordable-state copy" family as the done
+> 104, so one developer fixes both in one pass rather than two colliding lanes. Priority
+> raised 4 → 3 (see ruling below).
+>
+> **The added defect — locked-goal contradiction (priority-3 half):** when the next goal is
+> a premium-locked machine (e.g. Robotarm) AND already affordable (`remaining === 0`, coins
+> ≥ cost, premium not unlocked), the BOUWBON ticket now reads **"Je hebt genoeg munten —
+> bouw maar!"** ("go ahead and build!") right next to a **"🔒 Ontgrendel"** button. The
+> copy is an affirmative directive to *build* while the only available action is the
+> parent-gated *unlock*. Repro (v104, live, screenshot
+> `company/assignments/104-screenshots/t05-locked-affordable-ticket.png`): nl save,
+> `curriculumIndex: 20` (≥10 letters), `tycoon.coins = 600`, `tycoon.buildings =
+> { typewriter: 1, printer: 1 }`, `typcoon:unlocked` NOT set.
+>
+> **Product-owner ruling — priority 3, not 4.** This is a notch above the pure phrasing nits
+> (the `.pnote` "nog 0 munten" half of this ticket, and 091) because: (a) it is a copy
+> *logic* contradiction — the app tells the child to do X when only Y is possible — not
+> merely awkward wording; and (b) it sits on the **premium/unlock surface**, the most
+> trust-sensitive surface in a kids' product (the charter's guardrails cluster there). It is
+> **not** a guardrail *breach* — the parent math-gate still gates the purchase correctly,
+> nothing is child-completable, nothing sells power — so it does not escalate to the CEO;
+> but "go ahead and build" over a lock is a small broken promise worth fixing above cosmetic
+> baseline. It stays below priority 2 because it is rare (needs premium-locked AND exactly
+> affordable AND not-yet-unlocked simultaneously) and has zero functional/purchase impact.
+>
+> **Fix for the locked-goal half:** when the affordable goal is locked (`goalLocked &&
+> goal.remaining === 0`), do **not** show `goal.readyLine` ("bouw maar!"). Show a
+> locked-and-affordable string that routes toward the parent gate instead of contradicting
+> it — e.g. nl "Je hebt genoeg munten — vraag een volwassene om te ontgrendelen" / en "You
+> have enough coins — ask a grown-up to unlock" — turning the contradiction into the correct
+> breadth-not-power routing. (A plain fallback to the old `togoLine` is acceptable if a
+> distinct string is judged overkill, but the routing string is the better read and
+> reinforces guardrail 3.) Copy-only; `goals.js` numeric output unchanged; `npm test` green.
+>
+> Both halves (the `.pnote` ready-line below, and this locked-goal fix) ship together.
+> ────────
 
 ## Goal
 
