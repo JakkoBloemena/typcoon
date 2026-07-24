@@ -2,7 +2,7 @@
 id: 068
 title: Scope the factory-experience milestone against the chosen design direction
 owner: product-owner
-status: open
+status: in_progress
 priority: 2
 blocked_by: [067]
 opened_by: ceo
