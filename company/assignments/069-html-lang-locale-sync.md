@@ -2,7 +2,7 @@
 id: 069
 title: "<html lang> never syncs to the active UI locale (breaks lang-dependent CSS/a11y for English sessions)"
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: tester
@@ -148,3 +148,90 @@ the preview server log, as flagged in the brief as not-mine.
 `qa-scripts/069-verify.mjs` (new). `test/locale.test.js`, `src/game/GameScreen.jsx`,
 `src/game/game.css`, `src/game/strings.js` — all untouched, confirmed via `git status
 --porcelain` immediately before commit.
+
+## Verification (tester, tick #30)
+
+Independent verification in worktree `C:\companies\typcoon-lanes\v069`, branch `verify/069`
+off `d2833b3`, against commit `5a2d3c2` (dev/069's delivery). All five checks below hold —
+**PASS**.
+
+**1. `npm install` + `npm test`**: 232/232 green (`node --test test/*.test.js` → `# pass 232
+# fail 0`), followed by `gen-content`, `vite build` (101 modules, builds clean), and
+`check-no-dutch-en` PASS (5 built en files, 59-word lexicon, zero hits) — all as claimed.
+Ran `git checkout -- public/` after every test/build invocation; `git status --porcelain`
+confirmed clean before and after (only my own new evidence files, listed below, remained
+untracked).
+
+**2. Mutation test (tick #28 precedent)**: Deliberately broke the fix two ways.
+- Commenting out the line (`// if (typeof document !== 'undefined') document...`) —
+  **surprisingly, `test/htmllang.test.js` still passed** (`ok 1`, `ok 2`). This is a real
+  gap in the test (it does a raw substring/regex match on the file text and doesn't check
+  the match isn't inside a comment) — filed separately as **assignment 081** since it's a
+  distinct issue from 069's own runtime correctness.
+- Fully *deleting* the line: `test/htmllang.test.js` correctly failed
+  (`not ok 1 ... error: 'no document.documentElement.lang assignment found after
+  setLocale()'`), proving the test does trip on the actual regression the assignment
+  brief asked me to check for (removal of the fix).
+- `git checkout -- src/game/App.jsx` restored the file exactly; `node --test
+  test/htmllang.test.js` back to `ok 1`, `ok 2` (green), `git status --porcelain` clean.
+- Verdict: criterion is met as literally specified (remove-and-confirm-fails,
+  restore-and-confirm-green both hold); the comment-out blind spot is a lower-severity
+  distinct issue, not a reason to bounce 069.
+
+**3. Live verification** (`npx vite build`, `git checkout -- public/`, `npx vite preview
+--port 4238` — port 4238 only, `npm install --no-save playwright-core`, Chromium resolved
+from the system-wide cache). Wrote my own script from scratch
+(`qa-scripts/069-tester-verify.mjs`, not the developer's `069-verify.mjs`) covering the four
+required sessions plus two extra probes:
+```
+PASS — fresh nl session, no params no save: expected "nl", got "nl"
+PASS — fresh en session, ?lang=en: expected "en", got "en"
+PASS — returning session, saved uiTaal=en, no ?lang param: expected "en", got "en"
+PASS — returning session, saved uiTaal=nl, no ?lang param: expected "nl", got "nl"
+PASS — EXTRA: saved uiTaal=nl profile revisited WITH ?lang=en (profile must still win): expected "nl", got "nl"
+PASS — EXTRA: unknown ?lang=xx, no save, must normalize to nl: expected "nl", got "nl"
+```
+The profile-over-`?lang` precedence holds in **both** directions (en profile beats no
+`?lang`, AND nl profile beats a conflicting `?lang=en` on the same visit) — confirmed
+against the code (`App.jsx` line ~76: `detectLocale()` only runs when neither `game.profile`
+nor a saved profile exists, so any saved profile always wins regardless of `?lang`).
+Unknown `?lang=xx` normalizes to `nl`, never `'xx'`, matching `setLocale`'s fallback
+(`strings.js`: `activeLocale = LOCALES[locale] ? locale : 'nl'`).
+
+Additional probe beyond the brief: emulated a touch-only viewport (`App.jsx`'s
+`touchOnly()` early-return branch, the "Grab a keyboard!" screen) with `?lang=en` — lang
+sync still applies (`document.documentElement.lang === 'en'`) because the assignment runs
+before any conditional render branch, confirmed via
+`qa-scripts/069-tester-mobile.mjs`.
+
+**4. Delivery-notes claims checked against reality**:
+- `getLocale` is imported from `./strings.js` in `App.jsx` — confirmed (line 22).
+- The lang assignment sits between `setLocale(...)` and `applyTheme(theme)`, in the same
+  synchronous render-body block, not inside a `useEffect` — confirmed by direct reading of
+  `App.jsx` lines 76–85.
+- Guard mirrors `theme.js`'s `applyTheme` (`typeof document === 'undefined'` early return
+  there vs. `typeof document !== 'undefined'` guard here) — same shape, confirmed.
+- `git show 5a2d3c2 --stat`: only `company/assignments/069-html-lang-locale-sync.md`,
+  `qa-scripts/069-verify.mjs`, `src/game/App.jsx`, `test/htmllang.test.js` touched.
+  `test/locale.test.js`, `src/game/GameScreen.jsx`, `src/game/game.css`,
+  `src/game/strings.js` are absent from that commit's file list — untouched claim confirmed.
+- `index.html` / `speel/index.html` statically declare `lang="nl"` (confirmed via grep);
+  `en/index.html` (separate static marketing page, out of scope for this fix) statically
+  declares `lang="en"` — consistent with the delivery notes' "deliberately untouched,
+  static pre-hydration fallback" reasoning.
+
+**5. Server cleanup**: `taskkill` on the vite preview PID (18128, the only LISTENING PID on
+4238); post-kill `netstat -ano | grep 4238` shows no LISTENING entry (only harmless
+`TIME_WAIT` remnants of already-closed connections, which self-clear).
+
+**Distinct new defect found**: yes — filed as **assignment 081**
+(`081-htmllang-test-blind-to-comments.md`, priority 4, opened_by: tester): the new test's
+static source-check doesn't distinguish live code from a `//`-commented-out line, so a
+future accidental comment-out of the fix would ship silently while `npm test` stays green.
+Low severity, does not affect the current live fix (verified correct above), but is a real
+gap in the regression net going forward.
+
+**Verdict: PASS. All acceptance criteria hold. `document.documentElement.lang` correctly
+tracks the active UI locale across fresh/returning, nl/en, profile-vs-param-precedence, and
+unknown-locale-normalization cases, verified live in a real Chromium browser. Status set to
+`done`.**
