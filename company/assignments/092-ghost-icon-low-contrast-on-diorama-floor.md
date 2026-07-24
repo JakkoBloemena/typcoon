@@ -2,7 +2,7 @@
 id: 092
 title: Locked ghost machine icon is nearly invisible on the diorama floor
 owner: developer
-status: needs_verification
+status: done
 priority: 4
 blocked_by: []
 opened_by: developer (proposed during 085)
@@ -258,3 +258,80 @@ judgment call 1.
 `company/assignments/099-stale-ghost-ico-comment-post-092.md` (new assignment), and
 this file's own status/notes edit — working tree otherwise clean, nothing under
 `dist/`/`node_modules/` tracked (both gitignored).
+
+## Verification (tester, v092, 2026-07-24)
+
+Independent verification in worktree `C:\companies\typcoon-lanes\v092` (branch
+`verify/092`), from a fresh `npm ci`. Own script written from scratch
+(`qa-scripts/092-tester-verify.mjs`), not importing or trusting the developer's
+`092-dev-verify.mjs` — only cross-checked its numbers land in the same ballpark. Real
+served build: `npx vite build` + `npx vite preview --port 4259 --strictPort`,
+`playwright-core` + the same local `chromium-1228`, real start flow (typed a name,
+Start, dismissed onboarding overlays, clicked into Fabriek) — no synthetic save for
+the primary scenario.
+
+- **AC1 — PASS.** `git diff aebb0d5~1 aebb0d5 -- src/` shows exactly the one-line
+  `.ghost .ghost-ico` filter change in `game.css` (`grayscale(1)` →
+  `brightness(0) invert(1)`), nothing else under `src/`.
+- **AC2 — PASS.** Same diff confirms `src/game/assets.jsx` and `src/game/Shop.jsx` are
+  byte-identical to the pre-092 base; no new SVG variant added.
+- **AC3 — PASS, reproduced independently.** Fresh save at `/speel/` → Fabriek shows 4
+  locked ghosts (Drukpers, 🔒 Robotarm, 🔒 Lopende band, 🔒 Mega-fabriek — the first is
+  letter-gated, the other three are premium-gated; both ghost kinds render the same
+  `<Machine className="ghost-ico">`, so both get the fix identically). Computed
+  `filter` on `.ghost .ghost-ico` = `"brightness(0) invert(1)"` on the live DOM.
+  Pixel-luminance sampling (own implementation, Chromium canvas decoder, no external
+  dependency), default theme: floor (`.floor`) luminance mean 34.3 (black-point);
+  BEFORE (`grayscale(1)`, reproduced via inline style override — a deterministic CSS
+  effect, independent of how the value reaches the element) icon-box range **32.7**;
+  AFTER (stylesheet value) range **90.6** — independently reproduces the developer's
+  reported ~32/~90 almost exactly. All 4 locked-ghost icon boxes individually sampled:
+  ranges 90.1–90.6, all comfortably separated from the floor's black-point. Full
+  diorama screenshot and per-icon 2x zoom crops confirm by eye: printer body+tray,
+  robot-arm L-joint, and factory+chimneys are each clearly a distinct silhouette.
+  "Lopende band" (conveyor) renders as a plain light bar with no visible roller
+  detail — the weakest of the four, but this is **not a regression**: it is pixel-
+  identical to the designer's own accepted "candidate B" reference row in
+  `092-filter-comparison.png` (same flat-bar rendering, same machine, designer signed
+  off on it as part of the ruling), and is a property of the underlying idle SVG's
+  shape (assets.jsx, out of 092's scope) losing internal color-difference detail under
+  `brightness(0)` — not something 092 introduced or could have prevented within its
+  one-line-CSS mandate. Screenshots:
+  `092-tester-diorama-default.png`, `092-tester-before-after.png`,
+  `092-tester-zoom-0.png`..`092-tester-zoom-3.png` (Drukpers/Robotarm/Lopende
+  band/Mega-fabriek in order).
+- **AC4 — PASS.** Re-sampled the same icon box across all four `data-theme` values
+  (`muntpers` default, `nachtploeg`, `snoepfabriek`, `diepzee`): icon-box max
+  luminance 112.4–124.2 vs. floor mean 25.1–34.7 in the same theme — comfortably
+  separated in every theme, no theme where the silhouette collapses back toward the
+  floor. Confirmed by direct inspection of the diff: the changed rule contains zero
+  `var(--...)` and zero hex/rgb literal, and zero new `:root` tokens were added
+  anywhere in the diff. Screenshot: `092-tester-themes.png`.
+- **AC5 — PASS.** `npm test` → 259/259 green, `vite build` clean, `check-no-dutch-en:
+  PASS`. Computed-style regression check on live nodes: `.plot .plot-ico` →
+  `filter: none`, `opacity: 0.85` (unchanged from source); `.mch .mch-ico` (synthetic
+  save, 2 built machines) → `filter: drop-shadow(color(srgb 0 0 0 / 0.55) 0px 4px
+  6px)` (unchanged, no `invert`/`brightness` bleed-through) — CSS selector
+  specificity gives `.ghost .ghost-ico` zero reach into either rule, confirmed live,
+  not just by reading the source.
+
+**Beyond the ACs.** Checked a 390×844 mobile viewport: the ghost icon silhouette
+itself stays visibly legible (filter unaffected by viewport), but the four `.ghost`
+boxes' absolute-position layout overlaps badly at that width (bounding-box overlap
+confirmed numerically, ~57–58px overlap between adjacent ghosts), garbling the
+name/lock-gate text. **Not filed as a new defect**: this is `.hal`'s absolute
+diorama-layout system (085/088), untouched by 092's one-line filter change, and
+assignments 075/088 record an explicit Shareholder ruling (ADR 012, "keyboard-first")
+that **game surfaces have no mobile target** — so this is a known, accepted
+non-target-platform limitation, not a new regression. **095 lapses** — no new
+in-scope defect found.
+
+**Verdict: all 5 ACs PASS. Status set to `done`.**
+
+Commands run (worktree `C:\companies\typcoon-lanes\v092`): `npm ci` → `npm test`
+(259/259, baseline) → `git checkout -- public/` → `npm install playwright-core
+--no-save` (package.json/package-lock.json untouched) → `npx vite build` →
+`git checkout -- public/` → `npx vite preview --port 4259 --strictPort` → `node
+qa-scripts/092-tester-verify.mjs` (own script, all checks pass) → ad hoc zoom/mobile
+probes → preview killed by PID, port 4259 confirmed released → `public/**` reverted
+→ committed on `verify/092` by explicit path.
