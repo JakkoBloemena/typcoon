@@ -2,7 +2,7 @@
 id: 075
 title: Factory + typing view — mobile reflow and state screens
 owner: developer
-status: open
+status: blocked
 priority: 3
 blocked_by: [073, 074]
 opened_by: product-owner
@@ -50,3 +50,8 @@ Implement:
 Purely responsive/stateful CSS + small render guards; no economy, engine, or theme change.
 Reduced-motion already disables celebration motion in `game.css` — keep it that way.
 Terminal state needs_verification.
+
+**Blocked 2026-07-24 by ADR 012 (Shareholder): keyboard-first ruling.** The mobile
+half of this assignment is cancelled (game surfaces have no mobile target); the
+edge-states half (empty/loading/offline/long-text) moves into 079 (world pass).
+Do not claim; the PO re-cuts or closes this after 079.
