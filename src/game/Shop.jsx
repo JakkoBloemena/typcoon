@@ -170,6 +170,16 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
     return { kind: 'plot', b, isCurrentBuild: goal.kind === 'build' && goal.id === b.id, lane: 'front' };
   });
   const diorama = layoutDiorama(stationItems);
+  // 086-bounce-fix: `--bob-i` is a counter that increments ONLY for built stations —
+  // the same inline-custom-property idiom as `--rise-i` above, but keyed off built-
+  // machine position, not raw floor index. The old idleBob stagger read DOM position
+  // among ALL `.hal` children (`.floor`/`.horizon`/plots/ghosts included) via
+  // `:nth-child`, so two built machines routinely landed on the same residue mod 3
+  // and got byte-identical duration+delay — true lockstep (see the tester bounce,
+  // company/assignments/086-atmosphere-motion.md). game.css reads `--bob-i` to
+  // derive both animation-duration and animation-delay linearly, so no two built
+  // machines can ever share a combo, regardless of how many plots/ghosts sit nearby.
+  let builtI = 0;
 
   return (
     <>
@@ -186,6 +196,7 @@ export default function Shop({ state, setGame, unlocked, onUnlockOffer }) {
           // de vloer — game.css leest 'm om riseIn ~60ms per index te spreiden. Een
           // REGEL (de indexteller), geen handmatige per-machine vertraging.
           const style = { left: `${item.x}%`, top: `${item.y}%`, '--rise-i': i };
+          if (item.kind === 'built') style['--bob-i'] = builtI++;
           // De sleutel bevat item.kind: zodra een station van plot/ghost naar built
           // kipt (een echte aankoop) mount React een NIEUW knooppunt op dezelfde
           // plek, dus riseIn speelt opnieuw af — precies eenmalig, voor dat ene

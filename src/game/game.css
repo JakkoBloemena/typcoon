@@ -654,6 +654,16 @@ button { font-family: inherit; }
   display: grid; place-items: center;
   animation: plotGlow 3.4s ease-in-out infinite;
 }
+/* 086-bounce-fix: `@keyframes plotGlow` was never actually written — the rule above
+   referenced an undefined animation-name, a silent no-op (parses fine, box-shadow
+   never changes; the tester proved it with two 1.7s-apart screenshots that were
+   byte-identical). The two shadow stops are the 16%/34% extremes the rule above's
+   own comment already promised, straddling the static 22%-tint declared above,
+   which stays the deliberate reduced-motion rest state — no `forwards` needed. */
+@keyframes plotGlow {
+  0%, 100% { box-shadow: inset 0 0 30px color-mix(in srgb, var(--brass) 16%, transparent); }
+  50% { box-shadow: inset 0 0 30px color-mix(in srgb, var(--brass) 34%, transparent); }
+}
 .plot .plot-ico { width: 58px; height: 50px; opacity: 0.85; }
 .plot .flag {
   position: absolute; top: -16px; left: 50%; transform: translateX(-50%); white-space: nowrap;
@@ -696,14 +706,23 @@ button { font-family: inherit; }
    ================================================================================== */
 
 /* ambient machineleven: een trage, lage, GESPREIDE bob op het icoon van elk gebouwd
-   station — nooit in lockstep. De stagger komt uit een REGEL (positie modulo 3
-   binnen de vloer, dezelfde nth-child-truc als de mock), geen handmatige
-   per-machine-constante: welke building op welke DOM-positie staat verandert
-   (letters/aankopen), maar de regel blijft correct zonder aanpassing. */
+   station — nooit in lockstep. 086-bounce-fix: de vorige stagger las de DOM-positie
+   onder ALLE `.hal`-kinderen (`.floor`/`.horizon`/plots/ghosts meegeteld via
+   `:nth-child`), dus twee gebouwde machines landden zodra ze toevallig dezelfde
+   restklasse modulo 3 deelden op een BYTE-IDENTIEKE duur+vertraging — echte
+   lockstep (zie de tester-bounce, company/assignments/086-atmosphere-motion.md).
+   Zelfde idioom als `--rise-i` hieronder: Shop.jsx zet `--bob-i` als inline
+   custom property, een teller die alleen voor GEBOUWDE stations optelt (niet de
+   ruwe vloer-index), dus de bucket hangt nooit af van hoeveel plots/ghosts
+   ernaast staan. `--bob-i` is uniek per gebouwde machine (0, 1, 2, …), en zowel
+   duur als vertraging zijn een lineaire functie ervan, dus geen twee gebouwde
+   machines kunnen ooit hetzelfde (duur, vertraging)-paar krijgen. */
 @keyframes idleBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-.mch .mch-ico { animation: idleBob 5.8s ease-in-out infinite; }
-.mch:nth-child(3n + 1) .mch-ico { animation-duration: 5.3s; animation-delay: 0.2s; }
-.mch:nth-child(3n + 2) .mch-ico { animation-duration: 6.4s; animation-delay: 0.5s; }
+.mch .mch-ico {
+  animation: idleBob 5.8s ease-in-out infinite;
+  animation-duration: calc(5s + (var(--bob-i, 0) * 0.3s));
+  animation-delay: calc(var(--bob-i, 0) * 0.15s);
+}
 
 /* aankomst- en bouwmoment: bij het binnenlopen van de fabriekspagina (Shop.jsx mount
    — FactoryPage.jsx rendert `<Shop>` alleen als view==='factory', dus elke navigatie
