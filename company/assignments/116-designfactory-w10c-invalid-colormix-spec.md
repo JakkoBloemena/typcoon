@@ -2,7 +2,7 @@
 id: 116
 title: "Correct the invalid W10c color-mix() percentages in DESIGN-FACTORY.md and the world-C-maquette-place mock"
 owner: designer
-status: open
+status: in_progress
 priority: 4
 opened_by: developer (proposed, d115fix tick #41)
 ---
