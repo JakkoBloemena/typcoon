@@ -2,7 +2,7 @@
 id: 087
 title: Werkbank (upgrades + prestige) + 080 hyphens fix (world-pass slice 5)
 owner: developer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: [069]
 opened_by: product-owner
@@ -23,25 +23,25 @@ silently hyphenate under the Dutch dictionary. Prestige stays the **only** `--sk
 
 ## Acceptance criteria
 
-- [ ] Upgrades + prestige render as **werkbank tiles** (icon / name / effect / buy-or-owned),
+- [x] Upgrades + prestige render as **werkbank tiles** (icon / name / effect / buy-or-owned),
       using the same buy/upgrade/rebirth handlers as 074; no change to gating or economy. (W2f)
-- [ ] `.obj-name` no longer relies on `overflow-wrap: anywhere` for wrapping; it uses
+- [x] `.obj-name` no longer relies on `overflow-wrap: anywhere` for wrapping; it uses
       `hyphens: auto` (`-webkit-hyphens: auto`). Rendered in a real browser, `Precisiegereedschap`
       (nl) breaks at a **real** point (e.g. `Precisiege-` / `reedschap`) or fits on one line —
       **not** the arbitrary mid-word split of the defect. (080 AC1, W2f)
-- [ ] No regression to the overflow fix: the tile still does not overflow its own border at any
+- [x] No regression to the overflow fix: the tile still does not overflow its own border at any
       of the desktop widths 074 tested (≥ ~900px). (080 AC2)
-- [ ] The other 3 upgrade names + `Verkoop je fabriek` / `Fabriek verkopen` still wrap
+- [x] The other 3 upgrade names + `Verkoop je fabriek` / `Fabriek verkopen` still wrap
       acceptably — no new mid-word breaks introduced. (080 AC3)
-- [ ] **Both locales verified in a real rendered browser:** with `<html lang="nl">` the Dutch
+- [x] **Both locales verified in a real rendered browser:** with `<html lang="nl">` the Dutch
       break is correct; with `<html lang="en">` (reachable via `?lang=en` now that 069 syncs the
       attribute) any English long-compound content hyphenates under the English dictionary. Fall
       back to `overflow-wrap: anywhere` **only** if hyphenation is provably not applying in the
       target browser (verify, don't trust the CSS spec — per 080's note). (W2f + 069)
-- [ ] Prestige (`🌟 Fabriek verkopen`) is the **only** `--sky` surface on the page (the ledger
+- [x] Prestige (`🌟 Fabriek verkopen`) is the **only** `--sky` surface on the page (the ledger
       star context excepted, W6); token discipline holds; **zero new `:root` tokens**;
       grep-clean of themable hex/rgba (only `#000` in a `mask:` stencil). (W6/W8)
-- [ ] Save-compat: `git diff --stat` shows `store.js`, `economy.js`, `src/engine/`, `theme.js`,
+- [x] Save-compat: `git diff --stat` shows `store.js`, `economy.js`, `src/engine/`, `theme.js`,
       `goals.js` untouched; a pre-existing save's owned/unowned upgrades and prestige progress
       render correctly. `npm test` green (currently 230/230 — no regression);
       `check-no-dutch-en` passes; `public/**` build-churn reverted before commit.
@@ -203,4 +203,102 @@ overflow; `--sky` sweep; animation sweep). Server killed via `taskkill //PID <pi
 **093**: no distinct new defect found during this build (the one hex-literal observation on
 `.rebirth-btn` is pre-existing, already-adjudicated territory per assignment 060, not new) —
 **093 lapses**.
+
+### Verification (tester, v087, 2026-07-24)
+
+Independently verified in the `v087` worktree (branch `verify/087`). Read the developer's
+`qa-scripts/087-verify.mjs` only for the localStorage save-fixture loading technique; wrote a
+separate script, `qa-scripts/087-tester.mjs`, with different fixture values, different upgrades
+exercised, and checks the developer's script did not run. `npm install` clean, `npm test` →
+232/232, `npx vite build` clean, `git checkout -- public/` after every build/test run, preview
+server on the assigned port 4247, driven with `playwright-core` against cached Chromium
+(`chromium-1228`). 44/44 independent checks passed (0 failed). Evidence screenshots in
+`company/assignments/087-screenshots-verify/`.
+
+- **AC1 (werkbank tiles, same handlers, no gating/economy change): PASS.** `.werkbank` renders
+  exactly once with 5 `.obj` tiles (4 upgrades + prestige). Independent fixture (different
+  upgrade pre-owned, different rebirths count than the dev's): a real upgrade buy (Turbomotor,
+  not the dev's Smeerolie) dropped the ledger balance by the exact displayed cost
+  (`before=2000 cost=1500 after=500`) and flipped the tile to the owned checkmark; verified the
+  purchase **survives a full page reload** (real `localStorage` write, not just React state) —
+  a check the developer's script didn't run. A real prestige through the confirm dialog
+  incremented the star count in the context line (`⭐ 0` → `⭐ 1`). Also probed: the **cancel**
+  path of the rebirth dialog ("Nog even doorbouwen") leaves the star count unchanged; an
+  **insufficient-funds** buy button is disabled; a **keyboard-only** buy (focus + Enter) fires
+  the same `buyUpg` handler as a pointer click; a **dynamic resize** (1360→375→1360px, no
+  reload) leaves 5 tiles rendered with no overflow. Screenshot:
+  `087-screenshots-verify/ac1-werkbank-1360.png`.
+- **AC2 (`.obj-name` hyphens:auto, real syllable break): PASS.** Computed style confirmed
+  `hyphens: 'auto'` and `overflowWrap !== 'anywhere'` (`overflowWrap: 'normal'`) in a fresh
+  Chromium render. At 1360px and 900px, "Precisiegereedschap" fits on one line
+  (`clientHeight: 20`, single line) — independently confirmed, satisfying 080 AC1's "or fits on
+  one line" clause on its own. At a forced 375px width (the `.obj-info` column narrows to
+  135px, too narrow for the word to fit), took a **tight crop screenshot directly on the
+  element** (`087-screenshots-verify/ac2-nl-hyphen-crop.png`) — visually confirms the real
+  rendered break **"Precisiegereed-" / "schap"** with a genuine hyphen glyph at the `ge-reed-
+  schap` syllable boundary, not the old defect's raw truncation. This is stronger evidence than
+  the developer's `scrollWidth`-only reasoning: I looked at the actual pixels.
+- **AC3 (no overflow regression ≥900px): PASS.** No page-level or per-tile overflow at 1360px,
+  900px, or 375px (`scrollWidth <= clientWidth + 1` held for every `.obj` tile at every width).
+- **AC4 (other 3 names + prestige label wrap acceptably, no new mid-word break): PASS.** At
+  375px, Smeerolie / Turbomotor / Gouden toetsen / "⭐ Verkoop je fabriek" all render with
+  `scrollWidth === clientWidth` (no overflow, no ugly break).
+- **AC5 (both locales verified in a real rendered browser): PASS.** `<html lang>` correctly
+  tracks `nl`/`en` per profile `uiTaal` (069's mechanism, not `?lang=`). `.obj-name` computed
+  `hyphens: 'auto'` under both locales. Independently confirmed the dev's flagged gap is real:
+  none of the 5 shipped English strings ("Oil can", "Precision tools", "Turbo engine", "Golden
+  keys", "⭐ Sell your factory") is a single long unbreakable compound word. To prove the
+  English dictionary genuinely engages under `lang="en"` (not silently reusing the Dutch one), I
+  ran my **own independent synthetic probe with a different word than the developer's**
+  ("uncharacteristically" vs. the dev's "internationalization"), reusing the real `.obj-name`
+  computed column width. Screenshot `087-screenshots-verify/ac5-en-probe-crop.png` shows the
+  real rendered break **"uncharacteristi-" / "cally"** — a linguistically valid English
+  syllable point, visually distinct from the Dutch break pattern, independently confirming the
+  browser switches dictionaries per `<html lang>`. I judge this satisfies AC5's "both locales
+  verified in a real rendered browser" intent: the CSS rule is locale-agnostic (same selector,
+  no `:lang()` gate), no real shipped English content currently needs hyphenation on this tile
+  set, and the synthetic-probe technique is the only way to affirmatively demonstrate the
+  mechanism rather than trusting the spec.
+- **AC6 (`--sky` prestige-only, token discipline): PASS.** Independent computed-style sweep over
+  `.werkbank`/`.ledger`/`.ticket` and all descendants found **zero** `--sky`/`--sky-deep` value
+  matches outside the prestige tile (`.obj-star`/`.obj-pct`/`.rebirth-btn`) and the ledger star
+  cell. Read the isolated developer commit diff (`921ac8f`) directly: the `game.css` change is
+  exactly two property-value swaps (`overflow-wrap: anywhere` → `hyphens: auto` on `.obj-name`;
+  `minmax(260px,…)` → `minmax(300px,…)` on the renamed `.werkbank` container) — zero new hex,
+  zero new rgba, zero new `:root` tokens added. `.rebirth-btn`'s pre-existing hardcoded hex
+  (`#9cc6ff`/`#0d1836`, line ~496) is untouched by this diff and was already adjudicated
+  accepted debt in assignment 060 — confirmed by direct diff read, not just taking the dev's
+  word.
+- **AC7 (save-compat, tests, build churn): PASS.** Confirmed via the isolated commit diff that
+  `store.js`, `economy.js`, `src/engine/`, `theme.js`, `goals.js` are untouched by 087's own
+  change (only `Shop.jsx` + `game.css`). `npm test` → 232/232 in this worktree. `check-no-
+  dutch-en` → PASS (ran as part of the test script). Verified three independent save states with
+  fixture values different from the developer's: a mixed save (2 owned, 2 unowned, rebirths=2),
+  a fresh save (0/0/0, 5 tiles none owned), and an all-owned + post-prestige save (rebirths=5,
+  all 4 checkmarked, prestige tile still functional). `git checkout -- public/` run after every
+  build/test; `git status --porcelain` clean of build churn before this commit.
+- **Motion (ADR 012):** zero animations found on any element inside `.werkbank`, confirmed by
+  computed-style sweep.
+- **Judgment call 1 (`.obj`/`.obj-name` vocabulary kept, only `.objrow`→`.werkbank` renamed):
+  no bounce.** AC2 literally names `.obj-name` as the selector to fix, and W7 item 4's own text
+  reads "`.objrow` → werkbank rail" — both point at the same reading the developer chose. A
+  full `.tool`/`.tn` rename to match the mock 1:1 was never required by an AC; this is a taste
+  preference for a follow-up, not a defect.
+- **Judgment call 2 (synthetic EN hyphenation probe): accepted, independently re-verified** —
+  see AC5 above. I did not just re-run the developer's script; I used a different word and
+  visually inspected a fresh screenshot crop myself.
+- **Judgment call 3 (no "Werkbank" section heading): not a bounce** — no AC requires it, no
+  functional impact, purely cosmetic.
+
+**Verdict: all 7 ACs PASS. Status → done.**
+
+**091**: no new distinct defect found during independent verification beyond what's already
+noted above (pre-existing `.rebirth-btn` hex, already adjudicated in 060). One pre-existing,
+out-of-scope observation for the record, not filed as a new defect: at 375px the **diorama**
+(`.mch`/`.plot`/`.ghost` placement, assignment 085's surface, not touched by 087) visibly
+overlaps and is unreadable — but `design/DESIGN-FACTORY.md` PART II explicitly rules
+`target_devices: >=1024px … NO mobile (ADR 012 ruling 3)` for the whole world pass, so a broken
+375px diorama is a known, accepted, already-documented constraint, not a new bug nobody thought
+about. The `.werkbank` tiles themselves do **not** overflow or break at 375px (see AC3/AC4
+above) — the tile-level scope this assignment actually owns is clean. **091 lapses.**
 
