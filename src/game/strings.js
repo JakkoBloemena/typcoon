@@ -208,6 +208,12 @@ const STRINGS = {
   'factory.navButton': '🏭 Fabriek',
   'factory.backButton': '← Typen',
 
+  // doel-sliver (assignment 073): het ÉNE zichtbare doel op de rustige typweergave,
+  // gevoed door nextGoal (071) — zie design/DESIGN-FACTORY.md §5a/§6. Letterlijke
+  // tekst uit de spec, ongeacht het soort doel (machine/mijlpaal/upgrade/ster).
+  'goal.sliverLabel': 'JE VOLGENDE MACHINE',
+  'goal.remaining': 'nog {n}',
+
   'reminders.home': 'Vingers terug op de thuisrij! 🏠',
   'reminders.peek': 'Niet spieken — voel de bultjes op F en J 👀',
 
@@ -226,8 +232,6 @@ const STRINGS = {
   'onb.refreshTitle': 'Even opfrissen ✋',
   'onb.refreshBody': 'Handen op de thuisrij — wijsvingers op de bultjes van F en J. Typ dit rijtje om je vingers wakker te maken.',
   'onb.skip': 'Overslaan',
-  'play.idleFloor': 'De machines wachten op jou — typ om ze aan te zetten!',
-  'play.floorEmpty': 'Nog geen machines. Verdien munten met typen en koop je eerste!',
   'play.achievement': 'Prestatie behaald!',
 
   'rebirth.button': '⭐ Verkoop je fabriek',
@@ -511,14 +515,15 @@ const STRINGS_EN = {
   'play.newLetterBody': 'You can now also type {keys}. More letters = more machines!',
   'play.nice': 'Nice!',
   'play.checkHands': '🏠 Quick check: fingers back on the home row?',
-  'play.idleFloor': 'The machines are waiting for you — type to switch them on!',
-  'play.floorEmpty': 'No machines yet. Earn coins by typing and buy your first one!',
   'play.achievement': 'Achievement unlocked!',
   'play.buyLabel': 'Buy {name}',
 
   'factory.title': 'Your factory',
   'factory.navButton': '🏭 Factory',
   'factory.backButton': '← Typing',
+
+  'goal.sliverLabel': 'YOUR NEXT MACHINE',
+  'goal.remaining': '{n} to go',
 
   'reminders.home': 'Fingers back on the home row! 🏠',
   'reminders.peek': "Don't peek — feel the bumps on F and J 👀",

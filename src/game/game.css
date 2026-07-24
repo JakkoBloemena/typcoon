@@ -43,6 +43,16 @@
   --r-md: 16px;
   --r-sm: 12px;
   --pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* veerkracht met overshoot */
+  /* 073/design-FACTORY §4: een DERDE type-rol — een LED/instrument-aflezing voor
+     getallen (muntenteller, /s, %, "nog N"), zodat cijfers niet in eigen breedte
+     springen. Alleen op de typweergave's ene regel + doel-sliver gebruikt; Lilita
+     One (kop) en Nunito (lopende tekst) blijven ongewijzigd. */
+  --data: ui-monospace, 'Cascadia Mono', 'Roboto Mono', 'SF Mono', monospace;
+  /* --reward: verdiende munten blijven de ene luide stem (messing) — een semantische
+     alias van --brass zodat de doel-sliver 'wat je verdient' leest, niet 'wat de
+     knop toevallig is'. var() van een thema-token, dus elk [data-theme] kleurt 'm
+     gratis mee (design/DESIGN-FACTORY.md §4/§8). */
+  --reward: var(--brass);
 }
 
 /* ==================================================================================
@@ -195,6 +205,10 @@ button { font-family: inherit; }
 .pill-coin { width: 21px; height: 21px; }
 .coin-pill.big .pill-coin { width: 26px; height: 26px; }
 .game-bar .coin-pill { animation: coinBump 0.4s var(--pop); }
+/* 073: op de typweergave's ene regel horen munten/tempo in de --data-instrumentenlezing
+   (design/DESIGN-FACTORY.md §5a) — bewust scoped tot .game-bar, zodat het startscherm
+   z'n .coin-pill.big/.cps-pill.big ongewijzigd in de Nunito-lopende-tekst blijven. */
+.game-bar .wallet .coin-pill, .game-bar .wallet .cps-pill { font-family: var(--data); }
 @keyframes coinBump { 0% { transform: scale(1); } 35% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
 /* combo-mijlpaal: korte burst die vrij midden op het scherm zweeft (raakt de
@@ -230,6 +244,15 @@ button { font-family: inherit; }
   padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 0 var(--sky-deep);
 }
 .star-pill.big { font-size: 1.2rem; }
+
+/* 073: ×multiplier + nauwkeurigheid% — het oude .meters-blok gevouwen in de ene
+   rustige regel (design/DESIGN-FACTORY.md §5a); zelfde pil-idioom als .cps-pill
+   hierboven, cijfers in de --data-instrumentenlezing i.p.v. de lopende-tekst-font. */
+.mult-pill, .acc-pill {
+  font-family: var(--data); font-variant-numeric: tabular-nums; white-space: nowrap;
+  font-weight: 800; color: var(--mint); background: var(--panel-2);
+  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--line); box-shadow: 0 4px 0 var(--sink);
+}
 
 /* ---------- Startscherm ---------- */
 .home { display: flex; flex-direction: column; align-items: center; gap: 28px; padding-top: 5vh; }
@@ -269,7 +292,10 @@ button { font-family: inherit; }
 .link-reset:hover { color: var(--flame); }
 
 /* ---------- Spel-layout ---------- */
-.game { display: flex; flex-direction: column; gap: 14px; }
+/* 073: rustige typweergave, gecentreerd, max ~760px (design/DESIGN-FACTORY.md §5a) —
+   nu de winkel-rail (072) en de fabrieksvloer (073) weg zijn, is de typkaart het enige
+   brede element; een smallere kolom houdt 'm het dominante element op het scherm. */
+.game { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; width: 100%; }
 .game-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
@@ -296,50 +322,30 @@ button { font-family: inherit; }
   .wallet { flex: 1 1 100%; justify-content: flex-end; }
 }
 
-/* ---------- Fabrieksvloer: de lopende band ---------- */
-.floor {
-  display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; min-height: 96px;
+/* ---------- Doel-sliver (073): het ÉNE zichtbare doel op de rustige typweergave —
+   vervangt de altijd-animerende fabrieksvloer (design/DESIGN-FACTORY.md §5a/§7/§11).
+   Gevuld door nextGoal (071); de balk gebruikt --reward (verdiende munten = de ene
+   luide stem). Geen eigen animatie behalve de width-transitie wanneer de staat zelf
+   verandert (bewaarde-waarde-clausule, 073) — geen ambient/idle motion. */
+.goalsliver {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
   background: var(--panel); border: 3px solid var(--line); border-radius: var(--r-lg);
-  padding: 14px 16px 18px; box-shadow: 0 8px 0 var(--sink); position: relative; overflow: hidden;
+  padding: 12px 18px; box-shadow: 0 6px 0 var(--sink);
+  width: 100%; max-width: 760px; align-self: center;
 }
-.floor::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 8px;
-  background: var(--stripe); opacity: 0.25;
+.goalsliver-icon { font-size: 1.9rem; line-height: 1; flex: none; }
+.goalsliver-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 120px; }
+.goalsliver-name { font-family: 'Lilita One', sans-serif; font-size: 1.05rem; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.goalsliver-kicker { color: var(--ink-dim); font-weight: 800; font-size: 0.66rem; letter-spacing: 1.2px; text-transform: uppercase; }
+.goalsliver-bar { flex: 2 1 100px; min-width: 60px; height: 14px; border-radius: 999px; background: var(--panel-2); border: 2px solid var(--line); overflow: hidden; }
+.goalsliver-fill { display: block; height: 100%; border-radius: 999px; background: var(--reward); transition: width 0.4s ease; }
+.goalsliver-remaining {
+  font-family: var(--data); font-variant-numeric: tabular-nums; font-weight: 800;
+  color: var(--brass); white-space: nowrap; flex: none;
 }
-.floor.running::after { opacity: 0.9; animation: belt 1.2s linear infinite; }
-@keyframes belt { from { background-position: 0 0; } to { background-position: 34px 0; } }
-.floor-empty, .floor-idle { color: var(--ink-dim); font-weight: 800; font-size: 0.92rem; align-self: center; }
-.floor-idle { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); max-width: 250px; text-align: right; }
-.floor-tile {
-  display: flex; flex-direction: column; align-items: center; gap: 1px; position: relative;
-  background: var(--panel-2); border: 2px solid var(--line); border-radius: var(--r-md);
-  padding: 9px 14px 7px; min-width: 84px; opacity: 0.45;
-  transition: opacity 0.4s ease, border-color 0.4s ease;
-}
-.floor.running .floor-tile { opacity: 1; border-color: #46589f; }
-.floor-machine { width: 72px; height: 60px; }
-.floor-level { font-size: 0.72rem; font-weight: 900; color: var(--ink-dim); letter-spacing: 0.4px; }
-.floor-mult {
-  position: absolute; top: -10px; right: -8px; background: var(--brass); color: var(--on-accent);
-  font-size: 0.72rem; font-weight: 900; padding: 3px 8px; border-radius: 999px;
-  box-shadow: 0 3px 0 var(--brass-deep); transform: rotate(6deg); z-index: 2;
-}
-.floor-rate { font-size: 0.74rem; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; }
 
 /* ---------- Typ-zone: de pers ---------- */
 .type-pane { display: flex; flex-direction: column; gap: 14px; align-items: center; position: relative; }
-.meters { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-.meter {
-  display: flex; align-items: center; gap: 12px; background: var(--panel);
-  border: 3px solid var(--line); border-radius: var(--r-md); padding: 10px 18px; box-shadow: 0 6px 0 var(--sink);
-}
-.meter-face { font-size: 1.9rem; }
-.meter-big { font-family: 'Lilita One', sans-serif; font-size: 1.9rem; color: var(--brass); line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35); }
-.meter-sub { color: var(--ink-dim); font-size: 0.8rem; font-weight: 800; }
-.meter-sub b { color: var(--brass); }
-.combo-meter.hot { border-color: var(--brass); box-shadow: 0 6px 0 #6b4d00, 0 0 22px rgba(255, 185, 21, 0.25); }
-.combo-meter.hot .meter-face { animation: chug 0.5s ease-in-out infinite; }
-.combo-meter.hot .meter-big { color: var(--brass-hi); }
 
 .golden-banner {
   font-family: 'Lilita One', sans-serif; font-size: 1.05rem; letter-spacing: 0.5px; color: var(--on-accent);
