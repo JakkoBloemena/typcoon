@@ -41,7 +41,15 @@ const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden ge
 // elke render laten afbreken/opnieuw opzetten.
 const EXAM_NOOP = () => {};
 
-export default function GameScreen({ state, setGame, onBack, onGoFactory, unlocked, onUnlock }) {
+// `paused` (assignment 117): App.jsx houdt GameScreen tegenwoordig GEMONTEERD (CSS-
+// verborgen, niet unmount) tijdens een narrow-window-excursie zodat lokale, nog niet
+// opgeslagen staat (typte positie/combo/examMode) de heen-en-terug overleeft — zie
+// App.jsx's narrowWindow-afhandeling. Zonder dit zou TypingSurface's window-brede
+// keydown-listener (active hieronder) gewoon door blijven luisteren terwijl het scherm
+// onzichtbaar is: een toevallige toetsaanslag zou dan de verborgen oefening laten
+// vorderen zonder dat het kind iets ziet. `paused` sluit die listener net als een
+// vier-moment-overlay (`overlayOpen`) — geen andere staat wordt aangeraakt.
+export default function GameScreen({ state, setGame, onBack, onGoFactory, unlocked, onUnlock, paused = false }) {
   const layout = useMemo(() => getLayout(state.profile.layout), [state.profile.layout]);
   const pack = useMemo(() => getPack(state.profile.trainTaal), [state.profile.trainTaal]);
 
@@ -357,7 +365,7 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
           {examMode ? (
             <TypingSurface
               text={examMode.text}
-              active={!overlayOpen}
+              active={!overlayOpen && !paused}
               onKeystroke={EXAM_NOOP}
               onComplete={finishExam}
               onNextKey={setNextKey}
@@ -366,7 +374,7 @@ export default function GameScreen({ state, setGame, onBack, onGoFactory, unlock
             exercise && (
               <TypingSurface
                 text={exercise.text}
-                active={!overlayOpen}
+                active={!overlayOpen && !paused}
                 onKeystroke={handleKeystroke}
                 onComplete={handleComplete}
                 onNextKey={setNextKey}
