@@ -126,6 +126,18 @@ dragende paren (body-tekst, munt-pill, typvlak, knoplabels, semantische pillen) 
 alle vier halen WCAG AA (body ≥ 4,5:1, grote/accent ≥ 3:1). Draai het script bij elke nieuwe
 thema-tint.
 
+## De fabriekspagina + de rustige typweergave (assignment 067, ADR 011)
+
+De speelkern wordt gesplitst: een **rustige typweergave** (typen is het werkvlak, één
+doel-strip, geen constante animatie) en een aparte **fabriekspagina — "Het Bouwplan"**
+(een blauwdruk-route van machines die je invult: gebouwd = ingekleurd, volgende = "NU
+BOUWEN", later = spookcontour). Zelfde Muntpers-tokens en zelfde thema-mechaniek
+(051/052 cascaderen automatisch over beide vlakken). De volledige richting — de drie
+vergeleken varianten, de pairwise-keuze, de winnende tokens/layouts, het doel/voortgang-
+model, en wat van de huidige UI blijft vs. vervangen wordt — staat in
+**[`design/DESIGN-FACTORY.md`](design/DESIGN-FACTORY.md)** met mocks in
+`design/factory-mocks/`.
+
 ## Wat bewust NIET
 
 - **Geen idle/offline-inkomsten** — dan is typen niet meer de enige faucet.

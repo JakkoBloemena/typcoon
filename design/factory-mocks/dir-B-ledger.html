@@ -1,0 +1,127 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Richting B — Werkblad & Lade</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* DIRECTION B — "Werkblad & Lade" (worksheet + pull-up drawer).
+   Concept: the typing view is the persistent home — a calm worksheet. The reward
+   loop is an AMBIENT vertical rail that fills toward the next goal (no shouting
+   numbers). The factory is a drawer with a persistent handle at the bottom that
+   pulses when you can afford something; pull it up for the full manager, push down
+   to return instantly. One continuous surface; the factory is one gesture away,
+   always softly present rather than a separate route. */
+.worksheet{display:grid;grid-template-columns:1fr 72px;gap:var(--s5);max-width:860px;margin:0 auto;align-items:stretch}
+.sheet{padding:var(--s6) var(--s5) var(--s5)}
+.sheet .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s6);color:var(--ink-dim);font-weight:700}
+.sheet .acc{font-family:var(--data);color:var(--mint);font-weight:800}
+.sheet .type-text{font-size:2rem}
+.sheet .kbd{margin-top:var(--s6)}
+/* the ambient reward rail */
+.rail{position:relative;border-radius:999px;background:var(--panel);border:1px solid var(--line);overflow:hidden;box-shadow:0 6px 0 var(--sink)}
+.rail .fill{position:absolute;left:0;right:0;bottom:0;height:64%;
+  background:linear-gradient(0deg,var(--brass),var(--brass-hi));opacity:.9}
+.rail .goalicon{position:absolute;top:10px;left:0;right:0;text-align:center;font-size:1.5rem;filter:grayscale(.3) opacity(.8)}
+.rail .cap{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:var(--data);
+  font-weight:800;font-size:.7rem;color:var(--on-accent)}
+.railnote{max-width:860px;margin:var(--s3) auto 0;text-align:right;color:var(--ink-dim);font-weight:700;font-size:.85rem;padding-right:84px}
+.railnote b{color:var(--brass);font-family:var(--data)}
+
+/* the persistent drawer handle */
+.handle{max-width:860px;margin:var(--s5) auto 0;display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s3) var(--s5);background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:var(--r-lg) var(--r-lg) 0 0;box-shadow:0 -4px 0 var(--sink) inset}
+.handle .grip{position:absolute;left:50%;transform:translateX(-50%);width:52px;height:5px;border-radius:3px;background:var(--line);margin-top:-14px}
+.handle .l{display:flex;align-items:center;gap:var(--s3);font-weight:800}
+.handle .l .num{color:var(--brass);font-size:1.15rem}
+.handle .afford{color:var(--mint);font-weight:800;display:flex;align-items:center;gap:8px}
+.handle .afford .dot{width:9px;height:9px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgba(51,230,160,.22)}
+
+/* the opened drawer / manager */
+.drawer{max-width:860px;margin:0 auto;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-top:none;border-radius:0 0 var(--r-lg) var(--r-lg);padding:var(--s5);box-shadow:0 12px 0 var(--sink)}
+.drawer .dhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s4)}
+.drawer .dhead .grip{position:relative;left:auto;transform:none;margin:0 auto}
+.goalcard{display:grid;grid-template-columns:auto 1fr auto;gap:var(--s4);align-items:center;
+  padding:var(--s4);background:var(--night);border:1px solid var(--brass-deep);border-radius:var(--r-md);margin-bottom:var(--s4)}
+.goalcard .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.66rem;color:var(--brass)}
+.goalcard h3{font-size:1.4rem;margin:2px 0}
+.goalcard .sub{color:var(--ink-dim);font-weight:700;font-size:.9rem}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.mcard{padding:var(--s4);text-align:center;background:var(--night);border:1px solid var(--line);border-radius:var(--r-md);position:relative}
+.mcard .mchip{margin:0 auto var(--s2)}
+.mcard .mname{font-weight:800;font-size:.95rem}
+.mcard .lv{font-family:var(--data);color:var(--brass);font-weight:800;font-size:.8rem}
+.mcard .rate{color:var(--mint);font-family:var(--data);font-size:.8rem;font-weight:700;margin:2px 0 8px}
+.mcard .buy{width:100%;background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);color:var(--on-accent);
+  border:none;border-radius:var(--r-sm);padding:8px;font-family:var(--data);font-weight:800;box-shadow:0 4px 0 var(--brass-deep);cursor:pointer}
+.mcard.locked{opacity:.7}.mcard.locked .buy{background:var(--panel);color:var(--ink-dim);box-shadow:0 4px 0 var(--sink);border:1px dashed var(--line)}
+.mcard.hot{border-color:var(--brass);box-shadow:0 0 0 2px rgba(255,185,21,.2)}
+.drawer .foot{display:flex;gap:var(--s3);margin-top:var(--s4);flex-wrap:wrap;align-items:center}
+.chipstat{font-family:var(--data);font-weight:700;color:var(--ink-dim);background:var(--night);border:1px solid var(--line);
+  border-radius:999px;padding:6px 14px;font-size:.85rem}
+.chipstat b{color:var(--paper)}
+</style></head>
+<body><div class="wrap">
+
+<div class="mocklabel">Richting B · Werkblad & Lade · <b style="color:var(--calm-ink)">① Typweergave — de fabriek is een gesloten lade onderaan</b></div>
+
+<div class="worksheet">
+  <div class="panel sheet">
+    <div class="top">
+      <button class="btn ghost" style="padding:8px 16px">← Menu</button>
+      <span class="acc">×3.0 · 100% netjes</span>
+    </div>
+    <div class="type-text">
+      <span class="done">fijne</span><span class="sp done">·</span><span class="done">dag</span><span class="sp done">·</span><span class="cur">v</span><span class="up">riend</span><span class="sp up">·</span><span class="up">je</span><span class="sp up">·</span><span class="up">tikt</span><span class="sp up">·</span><span class="up">de</span><span class="sp up">·</span><span class="up">letters</span>
+    </div>
+    <div class="kbd"><b>c</b><b>v</b><b class="hot">b</b><b>n</b><b>m</b></div>
+  </div>
+  <!-- ambient reward rail: fills toward the next goal, no shouting numbers -->
+  <div class="rail"><div class="goalicon">🦾</div><div class="fill"></div><div class="cap">78%</div></div>
+</div>
+<div class="railnote">De staaf vult naar je volgende machine · nog <b>229</b> munten</div>
+
+<!-- persistent drawer handle (closed state) -->
+<div class="handle" style="position:relative">
+  <span class="grip"></span>
+  <div class="l"><span class="coin"></span><span class="num">4.820</span><span style="color:var(--ink-dim);font-family:var(--data);font-size:.8rem">+140/s</span></div>
+  <div class="afford"><span class="dot"></span>1 machine bijna klaar — trek omhoog 🏭 ↑</div>
+</div>
+
+<div class="mocklabel">Richting B · Werkblad & Lade · <b style="color:var(--brass)">② Fabriek open (lade omhoog getrokken)</b></div>
+
+<!-- opened drawer / manager -->
+<div class="handle" style="position:relative;border-radius:var(--r-lg) var(--r-lg) 0 0">
+  <span class="grip"></span>
+  <div class="l"><span class="coin"></span><span class="num">4.820</span><span style="color:var(--ink-dim);font-family:var(--data);font-size:.8rem">+140/s</span></div>
+  <button class="btn ghost" style="padding:6px 16px">↓ Terug typen</button>
+</div>
+<div class="drawer">
+  <!-- next goal -->
+  <div class="goalcard">
+    <div class="ring-wrap" style="--sz:72px"><div class="ring" style="--p:78;--sz:72px"></div><span class="rc" style="font-size:1.4rem">🦾</span></div>
+    <div>
+      <div class="kick">Je volgende doel</div>
+      <h3>Robotarm bouwen</h3>
+      <div class="sub">+28/s · nog <b style="color:var(--brass);font-family:var(--data)">229</b> munten (± 2 opdrachten)</div>
+    </div>
+    <button class="btn" disabled>🔒 1.049</button>
+  </div>
+  <!-- machines -->
+  <div class="mgrid">
+    <div class="mcard"><span class="mchip">⌨️</span><div class="mname">Typemachine <span class="lv">Lv12</span></div><div class="rate">+12/s</div><button class="buy"><span class="coin" style="width:14px;height:14px"></span> 15</button></div>
+    <div class="mcard"><span class="mchip">🖨️</span><div class="mname">Drukpers <span class="lv">Lv8</span></div><div class="rate">+48/s · Lv10 →×2</div><button class="buy"><span class="coin" style="width:14px;height:14px"></span> 100</button></div>
+    <div class="mcard hot"><span class="mchip">🦾</span><div class="mname">Robotarm <span class="lv">Lv4</span></div><div class="rate">+28/s</div><button class="buy"><span class="coin" style="width:14px;height:14px"></span> 1.049</button></div>
+    <div class="mcard locked"><span class="mchip">📦</span><div class="mname">Lopende band</div><div class="rate" style="color:var(--ink-dim)">nog 3 letters</div><button class="buy">🔒</button></div>
+    <div class="mcard locked"><span class="mchip">🏢</span><div class="mname">Mega-fabriek</div><div class="rate" style="color:var(--ink-dim)">volledige fabriek</div><button class="buy">Unlock</button></div>
+    <div class="mcard"><span class="mchip">🌟</span><div class="mname">Fabriek verkopen</div><div class="rate">+25% ⭐</div><button class="buy" style="background:var(--night);color:var(--sky);border:1px solid var(--sky-deep);box-shadow:0 4px 0 var(--sink)">74%</button></div>
+  </div>
+  <div class="foot">
+    <span class="chipstat">Ooit verdiend <b>18.400</b></span>
+    <span class="chipstat">Sterren <b style="color:var(--sky)">⭐1 ×1,25</b></span>
+    <span class="chipstat">Upgrades <b>1/2</b></span>
+    <span class="chipstat">Machines <b style="color:var(--mint)">3/5</b></span>
+  </div>
+</div>
+
+</div></body></html>

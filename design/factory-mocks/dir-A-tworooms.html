@@ -1,0 +1,135 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Richting A — Twee Kamers</title>
+<link rel="stylesheet" href="/design/factory-mocks/_base.css">
+<style>
+/* DIRECTION A — "Twee Kamers" (Werkplaats & Controlekamer).
+   Concept: two full, separate rooms with a hard tab switch. While you TYPE the
+   factory does not exist on screen at all — the workbench is bare: text, next-key,
+   one quiet coin ticker. You LEAVE typing to manage in the control-room dashboard.
+   Separation is the whole idea: calm because the factory is literally elsewhere. */
+.tabbar{display:flex;gap:var(--s2);background:var(--panel);border:1px solid var(--line);
+  border-radius:999px;padding:6px;width:max-content;margin:0 auto var(--s5)}
+.tabbar button{border:none;background:transparent;color:var(--ink-dim);font-family:inherit;font-weight:800;
+  font-size:1rem;padding:10px 22px;border-radius:999px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.tabbar button.on{background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);color:var(--on-accent);box-shadow:0 4px 0 var(--brass-deep)}
+
+/* --- the bare workbench --- */
+.bench{max-width:760px;margin:0 auto;text-align:center}
+.bench-top{display:flex;justify-content:space-between;align-items:center;color:var(--ink-dim);font-weight:700;margin-bottom:var(--s6)}
+.tick{display:flex;align-items:center;gap:8px}
+.tick .num{font-size:1.15rem;color:var(--brass)}
+.tick small{color:var(--ink-dim);font-weight:700;font-family:var(--data);font-size:.75rem}
+.bench-card{padding:var(--s6) var(--s5)}
+.acc-dial{display:inline-flex;align-items:baseline;gap:8px;color:var(--mint);font-family:var(--data);font-weight:800;margin-bottom:var(--s5)}
+.acc-dial .big{font-size:1.5rem}
+.acc-dial small{color:var(--ink-dim);font-weight:700;font-size:.8rem}
+.bench-foot{margin-top:var(--s6);display:flex;justify-content:center}
+.to-factory{display:inline-flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--line);
+  border-radius:999px;padding:10px 18px;color:var(--calm-ink);font-weight:800;cursor:pointer;position:relative}
+.to-factory .dot{width:10px;height:10px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgba(51,230,160,.2)}
+
+/* --- the control room dashboard --- */
+.dash{display:grid;gap:var(--s4)}
+.hero{display:grid;grid-template-columns:auto 1fr auto;gap:var(--s5);align-items:center;padding:var(--s5);
+  background:linear-gradient(135deg,var(--panel),var(--panel-2));border:1px solid var(--brass-deep)}
+.hero .kick{font-family:var(--data);text-transform:uppercase;letter-spacing:.14em;font-size:.68rem;color:var(--brass)}
+.hero h2{font-size:1.7rem;margin:2px 0 4px}
+.hero .sub{color:var(--ink-dim);font-weight:700}
+.hero .togo{font-family:var(--data);font-weight:800;color:var(--paper)}
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s3)}
+.stat{padding:var(--s4);text-align:center}
+.stat .num{font-size:1.5rem;color:var(--paper);display:block}
+.stat .lab{color:var(--ink-dim);font-weight:700;font-size:.8rem;font-family:var(--data);text-transform:uppercase;letter-spacing:.08em}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:var(--s4)}
+.sec{padding:var(--s5)}
+.sec h3{font-size:1.2rem;margin-bottom:var(--s4);display:flex;align-items:center;gap:8px}
+.mrow{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-bottom:1px solid var(--line)}
+.mrow:last-child{border:none}
+.mrow .info{flex:1}
+.mrow .mname{font-weight:800}
+.mrow .mmeta{color:var(--ink-dim);font-size:.85rem;font-weight:700;font-family:var(--data)}
+.mrow .lv{color:var(--brass);font-family:var(--data);font-weight:800}
+.buy{background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%);color:var(--on-accent);border:none;
+  border-radius:var(--r-sm);padding:8px 14px;font-family:var(--data);font-weight:800;cursor:pointer;box-shadow:0 4px 0 var(--brass-deep);display:flex;gap:6px;align-items:center}
+.buy.locked{background:var(--panel-2);color:var(--ink-dim);box-shadow:0 4px 0 var(--sink);border:1px dashed var(--line)}
+.upg{display:flex;align-items:center;gap:10px;padding:var(--s3) 0;border-bottom:1px solid var(--line)}
+.upg:last-child{border:none}.upg .info{flex:1}
+.mini-road{display:flex;gap:6px;margin-top:var(--s2)}
+.mini-road i{flex:1;height:8px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line)}
+.mini-road i.done{background:var(--mint);border-color:var(--mint-deep)}
+.mini-road i.cur{background:var(--brass);border-color:var(--brass-deep)}
+</style></head>
+<body><div class="wrap">
+
+<div class="mocklabel">Richting A · Twee Kamers · <b style="color:var(--calm-ink)">① Typweergave (rustig)</b></div>
+
+<div class="tabbar">
+  <button class="on">⌨ Typen</button>
+  <button>🏭 Fabriek <span class="pill" style="padding:2px 8px;margin-left:2px"><span class="num" style="font-size:.8rem">•</span></span></button>
+</div>
+
+<div class="bench">
+  <div class="bench-top">
+    <button class="btn ghost" style="padding:8px 16px">← Menu</button>
+    <div class="tick"><span class="coin"></span><span class="num">4.820</span><small>+140/s terwijl je typt</small></div>
+  </div>
+  <div class="panel bench-card">
+    <div class="acc-dial"><span class="big">×3.0</span><small>100% NETJES</small></div>
+    <div class="type-text">
+      <span class="done">fijne</span><span class="sp done">·</span><span class="done">dag</span><span class="sp done">·</span><span class="cur">v</span><span class="up">riend</span><span class="sp up">·</span><span class="up">je</span><span class="sp up">·</span><span class="up">tikt</span><span class="sp up">·</span><span class="up">de</span><span class="sp up">·</span><span class="up">letters</span>
+    </div>
+    <div class="kbd">
+      <b>c</b><b>v</b><b class="hot">b</b><b>n</b><b>m</b>
+    </div>
+  </div>
+  <div class="bench-foot">
+    <button class="to-factory"><span class="dot"></span> Je kunt de <b style="color:var(--paper)">Robotarm</b> bijna bouwen → open de fabriek</button>
+  </div>
+</div>
+
+<div class="mocklabel">Richting A · Twee Kamers · <b style="color:var(--brass)">② Fabriekspagina (spannend)</b></div>
+
+<div class="dash">
+  <!-- HERO = "mijn volgende doel" -->
+  <div class="hero panel">
+    <div class="ring-wrap" style="--sz:84px"><div class="ring" style="--p:78;--sz:84px"></div><span class="rc" style="font-size:1.6rem">🦾</span></div>
+    <div>
+      <div class="kick">Je volgende doel</div>
+      <h2>Bouw de Robotarm</h2>
+      <div class="sub">Werkt onvermoeibaar door · <b style="color:var(--mint)">+28/s</b></div>
+      <div class="togo" style="margin-top:8px">nog <span style="color:var(--brass)">229</span> munten — dat is ± 2 opdrachten</div>
+    </div>
+    <button class="btn big" disabled>🔒 1.049</button>
+  </div>
+
+  <!-- STATS = "hoe ver ik ben" -->
+  <div class="statrow">
+    <div class="stat panel"><span class="num">140<small style="font-size:.7rem">/s</small></span><span class="lab">Productie</span></div>
+    <div class="stat panel"><span class="num" style="color:var(--brass)">18,4K</span><span class="lab">Ooit verdiend</span></div>
+    <div class="stat panel"><span class="num" style="color:var(--sky)">⭐ 1</span><span class="lab">Sterren ×1,25</span></div>
+    <div class="stat panel"><span class="num" style="color:var(--mint)">3/5</span><span class="lab">Machines</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec panel">
+      <h3>🏭 Machines</h3>
+      <div class="mrow"><span class="mchip">⌨️</span><div class="info"><div class="mname">Typemachine <span class="lv">Lv 12</span></div><div class="mmeta">+12/s · tikt munten uit</div></div><button class="buy"><span class="coin"></span>15</button></div>
+      <div class="mrow"><span class="mchip">🖨️</span><div class="info"><div class="mname">Drukpers <span class="lv">Lv 8</span></div><div class="mmeta">+48/s · Lv 10 → tempo ×2</div><div class="mini-road"><i class="done"></i><i class="done"></i><i class="cur"></i><i></i></div></div><button class="buy"><span class="coin"></span>100</button></div>
+      <div class="mrow"><span class="mchip" style="outline:2px solid var(--brass)">🦾</span><div class="info"><div class="mname">Robotarm <span class="lv">Lv 4</span></div><div class="mmeta">+28/s · bijna klaar!</div></div><button class="buy"><span class="coin"></span>1.049</button></div>
+      <div class="mrow"><span class="mchip" style="opacity:.5">📦</span><div class="info"><div class="mname" style="color:var(--ink-dim)">Lopende band</div><div class="mmeta">+130/s · leer nog 3 letters</div></div><button class="buy locked">🔒</button></div>
+      <div class="mrow"><span class="mchip" style="opacity:.5">🏢</span><div class="info"><div class="mname" style="color:var(--ink-dim)">🔒 Mega-fabriek</div><div class="mmeta">volledige fabriek</div></div><button class="buy locked">Unlock</button></div>
+    </div>
+    <div class="sec panel">
+      <h3>⚡ Upgrades</h3>
+      <div class="upg"><span class="mchip">⚙️</span><div class="info"><div class="mname">Snellere assen</div><div class="mmeta" style="font-family:inherit;color:var(--ink-dim)">Alle machines ×2</div></div><span class="lv" style="color:var(--mint)">✓</span></div>
+      <div class="upg"><span class="mchip">💰</span><div class="info"><div class="mname">Dikkere munten</div><div class="mmeta" style="font-family:inherit;color:var(--ink-dim)">Uitbetaling ×2</div></div><button class="buy"><span class="coin"></span>2.500</button></div>
+      <h3 style="margin-top:var(--s5)">🌟 Fabriek verkopen</h3>
+      <div class="mmeta" style="font-family:inherit;color:var(--ink-dim);margin-bottom:8px">Herstart met een permanente ⭐ = +25% op álles. Je leert-voortgang blijft.</div>
+      <div class="bar reward"><span style="width:74%"></span></div>
+      <div class="mmeta" style="margin-top:6px">nog 6.600 tot je volgende ster</div>
+    </div>
+  </div>
+</div>
+
+</div></body></html>
