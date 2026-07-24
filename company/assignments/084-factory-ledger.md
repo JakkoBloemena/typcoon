@@ -2,7 +2,7 @@
 id: 084
 title: Factory ledger — show coin / per-second / star readout (world-pass slice 2)
 owner: developer
-status: open
+status: in_progress
 priority: 2
 blocked_by: []
 opened_by: product-owner
