@@ -2,7 +2,7 @@
 id: 091
 title: Decorative belt (beltDrift) named in W3 and the world-C mock was never built — zero .belt markup anywhere
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [115]
 opened_by: tester (proposed); re-sequenced by product-owner (tick #39 intake)
