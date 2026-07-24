@@ -126,6 +126,23 @@ dragende paren (body-tekst, munt-pill, typvlak, knoplabels, semantische pillen) 
 alle vier halen WCAG AA (body ≥ 4,5:1, grote/accent ≥ 3:1). Draai het script bij elke nieuwe
 thema-tint.
 
+### Share-card thema-beleid (assignment 095, designer des095)
+
+De "deel je fabriek"-kaart (`src/game/shareCard.js`) is een **vaste-palet-artefact**,
+altijd getekend in het standaard **Muntpers**-thema — hij verkleurt **niet** mee onder
+`[data-theme]`, en dat is bewust. Twee redenen: (1) een `<canvas>` kan geen CSS-custom-
+properties lezen, dus themafideliteit zou 4× handmatig onderhouden hex-paletten in
+canvas-code betekenen — precies het "hardgecodeerde kleur die niet mee-tint"-antipatroon
+dat W6 in `DESIGN-FACTORY.md` verbiedt, hier onvermijdelijk door het medium; (2) de kaart
+is een statisch PNG dat de ouder één keer downloadt (assignment 024, image-download-only),
+geen live speelvlak — een deel-/previewbeeld hoort het **canonieke merk** te tonen, niet de
+cosmetische skin van de speler. Álle constanten in `shareCard.js` (achtergrond, munt-pill,
+tegels, titel, streak-pill) zijn `:root`-default-literalen; geen ervan branch't op het
+actieve thema. **Onderhoudsregel:** verandert een `--brass`/`--brass-hi`/`--brass-deep`/
+`--on-accent` (of andere gespiegelde) `:root`-default, werk dan de letterlijke hex in
+`shareCard.js` mee bij — anders drift de kaart stil weg van de live UI (dat is wat 090→095
+opende: de streak-pill migreerde naar het messing-kwartet, de canvas-constanten niet).
+
 ## De fabriekspagina + de rustige typweergave (assignment 067, ADR 011)
 
 De speelkern wordt gesplitst: een **rustige typweergave** (typen is het werkvlak, één
