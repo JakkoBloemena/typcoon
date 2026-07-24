@@ -202,6 +202,12 @@ const STRINGS = {
   'play.nice': 'Gaaf!',
   'play.checkHands': '🏠 Even checken: vingers weer op de thuisrij?',
 
+  // fabriekspagina (assignment 072): eigen route voor machines/upgrades/prestige,
+  // los van de speelweergave — zie design/DESIGN-FACTORY.md §5b.
+  'factory.title': 'Jouw fabriek',
+  'factory.navButton': '🏭 Fabriek',
+  'factory.backButton': '← Typen',
+
   'reminders.home': 'Vingers terug op de thuisrij! 🏠',
   'reminders.peek': 'Niet spieken — voel de bultjes op F en J 👀',
 
@@ -509,6 +515,10 @@ const STRINGS_EN = {
   'play.floorEmpty': 'No machines yet. Earn coins by typing and buy your first one!',
   'play.achievement': 'Achievement unlocked!',
   'play.buyLabel': 'Buy {name}',
+
+  'factory.title': 'Your factory',
+  'factory.navButton': '🏭 Factory',
+  'factory.backButton': '← Typing',
 
   'reminders.home': 'Fingers back on the home row! 🏠',
   'reminders.peek': "Don't peek — feel the bumps on F and J 👀",

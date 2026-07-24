@@ -279,8 +279,9 @@ button { font-family: inherit; }
 .bar-left { display: flex; gap: 8px; align-items: center; }
 .icon-btn { padding: 8px 12px; font-size: 1.1rem; line-height: 1; }
 .wallet { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.game-main { display: grid; grid-template-columns: 1fr 350px; gap: 16px; align-items: start; }
-@media (max-width: 920px) { .game-main { grid-template-columns: 1fr; } }
+/* 072: de winkel (machines/upgrades/rebirth) verhuisde naar de fabriekspagina
+   (FactoryPage.jsx) — .game-main draagt nu alleen nog .type-pane, dus één kolom. */
+.game-main { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
 
 /* 055: onder 768px (desktop-grens, AC3) groeit de volle pil-verzameling — unlock/toets
    links, streak/ster/munt/⚙️ rechts — breder dan het scherm; zonder wrap dwingt de rij
@@ -470,6 +471,11 @@ button { font-family: inherit; }
 .coin-flash.gold { font-size: 2.7rem; filter: drop-shadow(0 0 18px rgba(255, 185, 21, 0.9)); }
 .coin-flash.gold .flash-coin { width: 42px; height: 42px; }
 @keyframes coinrise { 0% { opacity: 0; transform: translate(-50%, 14px) scale(0.6); } 18% { opacity: 1; transform: translate(-50%, -4px) scale(1.15); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -58px) scale(1); } }
+
+/* ---------- Fabriekspagina (072): plain container om de winkel, roadmap-vormgeving
+   volgt in 074. .home-card's breedte hergebruikt zodat het paneel niet edge-to-edge
+   uitrekt op een brede pagina. ---------- */
+.factory-body { width: 100%; max-width: 480px; }
 
 /* ---------- Winkel: het bedieningspaneel ---------- */
 .shop {

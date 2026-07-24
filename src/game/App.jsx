@@ -21,6 +21,7 @@ import { Mascot, Coin } from './assets.jsx';
 import { fmt } from './format.js';
 import { gt, setLocale } from './strings.js';
 import GameScreen from './GameScreen.jsx';
+import FactoryPage from './FactoryPage.jsx';
 import Onboarding from './Onboarding.jsx';
 import Dashboard from './Dashboard.jsx';
 import Friends from './Friends.jsx';
@@ -57,7 +58,7 @@ function layoutForLocale(locale) {
 
 export default function App() {
   const [game, setGame] = useState(null); // engine-state + .tycoon, of null
-  const [view, setView] = useState('home'); // 'home' | 'play' | 'dashboard'
+  const [view, setView] = useState('home'); // 'home' | 'play' | 'factory' | 'dashboard'
   const [name, setName] = useState('');
   const [unlocked, setUnlocked] = useState(() => isUnlocked()); // familie-unlock (of school-licentie)
   const [showUnlock, setShowUnlock] = useState(false);
@@ -187,7 +188,19 @@ export default function App() {
   if (view === 'play' && game) {
     return (
       <GameScreen
-        state={game} setGame={setGame} onBack={() => setView('home')}
+        state={game} setGame={setGame} onBack={() => setView('home')} onGoFactory={() => setView('factory')}
+        unlocked={unlocked} onUnlock={() => setUnlocked(true)}
+      />
+    );
+  }
+
+  // fabriekspagina (assignment 072): machines/upgrades/prestige op hun eigen route,
+  // los van de speelweergave — heen-en-weer via 🏭 Fabriek ⇄ ← Typen, nooit een
+  // doodlopend scherm (design/DESIGN-FACTORY.md §5b/§11).
+  if (view === 'factory' && game) {
+    return (
+      <FactoryPage
+        state={game} setGame={setGame} onBack={() => setView('play')}
         unlocked={unlocked} onUnlock={() => setUnlocked(true)}
       />
     );

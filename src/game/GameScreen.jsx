@@ -13,10 +13,9 @@ import { activeKeys, activeLetters } from '../engine/curriculumCore.js';
 import { nextAvailableExam, generateExamText, gradeExam, getExam } from '../engine/exams.js';
 import { sessionKpm, updateSpeedAvg } from '../engine/speed.js';
 import {
-  BUILDINGS, UPGRADES, GOLDEN_CHANCE, buildingCost, buildingUnlocked, coinsPerSecond,
-  accuracyMultiplier, comboMultiplier, prestigeMultiplier, milestoneMultiplier,
-  nextMilestone, buyBuilding, buyUpgrade, earnFromExercise, tick,
-  rebirthCost, canRebirth, rebirth, applyTypcoonExamResult,
+  BUILDINGS, GOLDEN_CHANCE, coinsPerSecond,
+  accuracyMultiplier, comboMultiplier, prestigeMultiplier,
+  earnFromExercise, tick, applyTypcoonExamResult,
 } from './economy.js';
 import { pendingAchievements, achievementDef } from './achievements.js';
 import { getPack } from '../data/packs.js';
@@ -25,7 +24,7 @@ import { sound, setMuted, unlockAudio } from '../ui/sound.js';
 import TypingSurface from '../ui/TypingSurface.jsx';
 import Keyboard from '../ui/Keyboard.jsx';
 import FactoryFloor from './FactoryFloor.jsx';
-import { Machine, Coin, Star, Mascot } from './assets.jsx';
+import { Machine, Coin, Mascot } from './assets.jsx';
 import { FREE_LETTER_CAP, machineLocked, applyFreeCapGuard } from './premium.js';
 import { checkDailyReturn, boostMultiplier, milestoneReward, BOOST_EXERCISES } from './daily.js';
 import { makeThanksToken, ownCode, REFERRAL_MILESTONE_LETTERS } from './referral.js';
@@ -43,28 +42,7 @@ const ACTIVE_WINDOW_MS = 3500; // machines draaien alleen als er kort geleden ge
 // elke render laten afbreken/opnieuw opzetten.
 const EXAM_NOOP = () => {};
 
-// Koopknop met vasthouden-om-te-herhalen: één klik = één keer; ingedrukt houden
-// (na ~420ms) blijft kopen zolang het kan. Zo hoeft een kind niet 25× te klikken.
-function BuyButton({ onBuy, disabled, className = 'btn buy', children, label }) {
-  const t = useRef(null);
-  const stop = () => { clearTimeout(t.current); t.current = null; };
-  const begin = () => {
-    onBuy();
-    const rep = () => { onBuy(); t.current = setTimeout(rep, 130); };
-    t.current = setTimeout(rep, 420);
-  };
-  useEffect(() => stop, []);
-  return (
-    <button
-      className={className} disabled={disabled} aria-label={label}
-      onPointerDown={(e) => { if (!disabled) { e.preventDefault(); begin(); } }}
-      onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
-      onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onBuy(); } }}
-    >{children}</button>
-  );
-}
-
-export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock }) {
+export default function GameScreen({ state, setGame, onBack, onGoFactory, unlocked, onUnlock }) {
   const layout = useMemo(() => getLayout(state.profile.layout), [state.profile.layout]);
   const pack = useMemo(() => getPack(state.profile.trainTaal), [state.profile.trainTaal]);
 
@@ -78,7 +56,6 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const [moment, setMoment] = useState(null); // huidig vier-moment (overlay)
   const [unlockOffer, setUnlockOffer] = useState(null); // null | 'offer' | 'plain' → paywall open
   const [welcome, setWelcome] = useState(null); // dagelijkse terugkeer-panel { streak, mult, reward }
-  const [rebirthAsk, setRebirthAsk] = useState(false);
   const [live, setLive] = useState({ keys: 0, correct: 0 }); // sessie-nauwkeurigheid
   const [coinPop, setCoinPop] = useState(0); // teller-pop bij een uitbetaling
   const [comboFlash, setComboFlash] = useState(null); // { n } bij een combo-mijlpaal
@@ -103,7 +80,6 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
   const soundOn = state.profile.geluidAan !== false;
   useEffect(() => { setMuted(!soundOn); }, [soundOn]);
 
-  const lettersLearned = activeLetters(state.curriculum, state.profile.curriculumIndex).length;
   const unlockedKeys = activeKeys(state.curriculum, state.profile.curriculumIndex);
   // toets/diploma (assignment 049): optioneel aanbod, nooit gating — de engine bepaalt
   // zelf wanneer een toets "klaar" is (confidence-poort + niet frustrated).
@@ -273,43 +249,9 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
     [setGame, golden, showNextMoment, unlocked],
   );
 
-  const buy = useCallback((id) => {
-    setGame((e) => {
-      const r = buyBuilding(e.tycoon, id);
-      if (!r.ok) return e;
-      sound.key?.();
-      if (r.milestone) {
-        sound.unlock?.();
-        momentsRef.current.push({ kind: 'milestone', id, level: r.milestone });
-        setTimeout(showNextMoment, 150);
-      }
-      return { ...e, tycoon: r.tycoon };
-    });
-  }, [setGame, showNextMoment]);
-
-  const buyUpg = useCallback((id) => {
-    setGame((e) => {
-      const r = buyUpgrade(e.tycoon, id);
-      if (r.ok) sound.unlock?.();
-      return r.ok ? { ...e, tycoon: r.tycoon } : e;
-    });
-  }, [setGame]);
-
   const toggleSound = useCallback(() => {
     setGame((e) => ({ ...e, profile: { ...e.profile, geluidAan: e.profile.geluidAan === false } }));
   }, [setGame]);
-
-  const doRebirth = useCallback(() => {
-    setRebirthAsk(false);
-    setGame((e) => {
-      const r = rebirth(e.tycoon);
-      if (!r.ok) return e;
-      sound.cheer?.('cheer-classic');
-      momentsRef.current.push({ kind: 'rebirth', mult: prestigeMultiplier(r.tycoon) });
-      setTimeout(showNextMoment, 150);
-      return { ...e, tycoon: r.tycoon };
-    });
-  }, [setGame, showNextMoment]);
 
   // toets starten (vanaf het aanbod-moment of de vaste pil): genereert de examentekst
   // en schakelt de normale opdracht tijdelijk uit — losstaand van de leer-engine, dus
@@ -344,8 +286,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
 
   const coins = state.tycoon.coins;
   const accPct = Math.round(liveAcc * 100);
-  const rbCost = rebirthCost(state.tycoon.rebirths);
-  const overlayOpen = !!moment || rebirthAsk;
+  const overlayOpen = !!moment;
   // brand-nieuwe speler: nog nooit getypt én nog geen fabriek gebouwd
   const firstRun = state.tycoon.exercisesDone === 0 && live.keys === 0
     && Object.keys(state.tycoon.buildings).length === 0;
@@ -362,6 +303,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
           {availableExam && !examMode && (
             <button className="exam-pill" onClick={() => startExam(availableExam)}>🏅 {gt('exam.pillLabel')}</button>
           )}
+          <button className="btn-ghost" onClick={onGoFactory}>{gt('factory.navButton')}</button>
         </div>
         <div className="wallet">
           {state.tycoon.streak > 0 && (
@@ -459,98 +401,7 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
             </div>
           )}
         </section>
-
-        <aside className="shop">
-          <h2>{gt('play.factory')}</h2>
-          <ul className="shop-list">
-            {BUILDINGS.map((b) => {
-              const level = state.tycoon.buildings[b.id] || 0;
-              const available = buildingUnlocked(b.id, lettersLearned);
-              const premiumLock = machineLocked(b.id, unlocked);
-              const cost = buildingCost(b.id, level);
-              const can = coins >= cost;
-              const nextMs = nextMilestone(level);
-              // premium-machine voor een gratis speler: toon de unlock-CTA
-              if (premiumLock) {
-                return (
-                  <li className="shop-item locked premium-lock" key={b.id} onClick={() => setUnlockOffer('plain')}>
-                    <Machine id={b.id} className="shop-thumb" />
-                    <div className="shop-info">
-                      <span className="shop-name">🔒 {gt('building.' + b.id)}</span>
-                      <span className="shop-meta">{gt('premium.inFull')}</span>
-                    </div>
-                    <span className="premium-cta">{gt('premium.unlockShort')}</span>
-                  </li>
-                );
-              }
-              if (!available) {
-                const remaining = Math.max(1, b.unlockAt - lettersLearned);
-                return (
-                  <li className="shop-item locked" key={b.id}>
-                    <span className="shop-name">🔒 {gt('building.' + b.id)}</span>
-                    <span className="shop-meta">{gt(remaining === 1 ? 'play.unlockIn1' : 'play.unlockIn', { n: remaining })}</span>
-                  </li>
-                );
-              }
-              return (
-                <li className={'shop-item' + (level ? ' owned' : '')} key={b.id}>
-                  <Machine id={b.id} running={level > 0} className="shop-thumb" />
-                  <div className="shop-info">
-                    <span className="shop-name">{gt('building.' + b.id)} {level > 0 && <b>Lv {level}{milestoneMultiplier(level) > 1 ? ` ×${milestoneMultiplier(level)}` : ''}</b>}</span>
-                    <span className="shop-meta">
-                      +{fmt(b.rate * milestoneMultiplier(level))}/s · {gt('building.' + b.id + '.desc')}
-                      {level > 0 && nextMs && <em className="ms-teaser"> · {gt('play.nextMilestone', { n: nextMs })}</em>}
-                    </span>
-                  </div>
-                  <BuyButton onBuy={() => buy(b.id)} disabled={!can} label={gt('play.buyLabel', { name: gt('building.' + b.id) })}><Coin className="btn-coin" /> {fmt(cost)}</BuyButton>
-                </li>
-              );
-            })}
-          </ul>
-
-          <h2>{gt('play.upgrades')}</h2>
-          <ul className="shop-list">
-            {UPGRADES.map((u) => {
-              const owned = state.tycoon.upgrades.includes(u.id);
-              const can = coins >= u.cost;
-              return (
-                <li className={'shop-item' + (owned ? ' owned' : '')} key={u.id}>
-                  <div className="shop-info">
-                    <span className="shop-name">{u.icon} {gt('upgrade.' + u.id)}</span>
-                    <span className="shop-meta">{u.kind === 'prod' ? gt('upgrade.prod', { x: u.mult }) : gt('upgrade.payout', { x: u.mult })}</span>
-                  </div>
-                  {owned
-                    ? <span className="owned-tag">✓</span>
-                    : <button className="btn buy" disabled={!can} onClick={() => buyUpg(u.id)}><Coin className="btn-coin" /> {fmt(u.cost)}</button>}
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="rebirth-box">
-            {canRebirth(state.tycoon) ? (
-              <button className="btn rebirth-btn" onClick={() => setRebirthAsk(true)}>{gt('rebirth.button')}</button>
-            ) : (
-              <div className="rebirth-progress">
-                <div className="rebirth-bar"><span style={{ width: Math.min(100, (state.tycoon.totalCoins / rbCost) * 100) + '%' }} /></div>
-                <span className="shop-meta">{gt('rebirth.locked', { n: fmt(rbCost) })}</span>
-              </div>
-            )}
-          </div>
-        </aside>
       </div>
-
-      {rebirthAsk && (
-        <div className="overlay" onClick={() => setRebirthAsk(false)}>
-          <div className="card" onClick={(e) => e.stopPropagation()}>
-            <Star className="card-star" />
-            <h3>{gt('rebirth.title')}</h3>
-            <p>{gt('rebirth.body', { mult: (prestige + 0.25).toFixed(2) })}</p>
-            <button className="btn" onClick={doRebirth}>{gt('rebirth.confirm')}</button>
-            <button className="btn-ghost" onClick={() => setRebirthAsk(false)}>{gt('rebirth.cancel')}</button>
-          </div>
-        </div>
-      )}
 
       {moment && moment.kind === 'paywall' && (
         <div className="overlay">
@@ -589,20 +440,10 @@ export default function GameScreen({ state, setGame, onBack, unlocked, onUnlock 
               <h3>{gt('play.newMachineTitle')}</h3>
               <p>{gt('play.newMachineBody', { name: gt('building.' + moment.id) })}</p>
             </>)}
-            {moment.kind === 'milestone' && (<>
-              <Machine id={moment.id} running className="card-machine" />
-              <h3>Lv {moment.level}!</h3>
-              <p>{gt('play.milestoneReached', { name: gt('building.' + moment.id) })}</p>
-            </>)}
             {moment.kind === 'achievement' && (<>
               <div className="card-icon">{achievementDef(moment.id)?.icon}</div>
               <h3>{gt('play.achievement')}</h3>
               <p>{gt('ach.' + moment.id)}</p>
-            </>)}
-            {moment.kind === 'rebirth' && (<>
-              <Star className="card-star big" />
-              <h3>{gt('rebirth.doneTitle')}</h3>
-              <p>{gt('rebirth.doneBody', { mult: moment.mult.toFixed(2) })}</p>
             </>)}
             {moment.kind === 'thanks' && (<>
               <div className="card-icon">🎁</div>

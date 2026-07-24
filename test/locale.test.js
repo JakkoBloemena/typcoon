@@ -58,6 +58,7 @@ const STATIC_FLOW_KEYS = [
   'play.golden', 'play.unlockIn', 'play.unlockIn1', 'play.nextMilestone', 'play.milestoneReached',
   'play.newMachineTitle', 'play.newMachineBody', 'play.newLetterTitle', 'play.newLetterBody',
   'play.nice', 'play.checkHands', 'play.idleFloor', 'play.floorEmpty', 'play.achievement', 'play.buyLabel',
+  'factory.title', 'factory.navButton', 'factory.backButton',
   'reminders.home', 'reminders.peek',
   'onb.introTitle', 'onb.introBody', 'onb.introGo', 'onb.homeTitle', 'onb.homeBody', 'onb.homeGo',
   'onb.drillTitle', 'onb.drillBody', 'onb.drillHint', 'onb.powerTitle', 'onb.powerBody', 'onb.powerGo',
