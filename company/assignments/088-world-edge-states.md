@@ -2,7 +2,7 @@
 id: 088
 title: Edge states for the world — empty / loading / offline (world-pass slice 6)
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: [085]
 opened_by: product-owner
