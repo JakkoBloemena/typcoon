@@ -2,7 +2,7 @@
 id: 102
 title: "\"ALLEEN VANDAAG\" (today only) badge on the €14,99 unlock offer never expires — live, unconditional false urgency, contradicting ADR 002 §3"
 owner: developer
-status: needs_verification
+status: done
 priority: 1
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)
@@ -167,3 +167,111 @@ including `check-no-dutch-en`. No changes to `store.js`, `economy.js`, engine, o
 
 **Assignment 110 (pre-allocated for a new defect):** not used — no new defect was found
 during this work. It lapses.
+
+## Verification (tester, v102 worktree, 2026-07-24, commit c22277a)
+
+Verified independently in the running product, not from the diff. Fresh `npm install`
+in this worktree (`node_modules` was absent), plus an ad hoc `npm install --no-save
+playwright-core@1.61.1` (not a tracked dependency anywhere in this repo's package.json —
+every prior tester/dev lane installs it per-worktree the same way; confirmed by checking
+sibling worktrees). Built with `npm test` (which itself runs `vite build` +
+`check-no-dutch-en`), reverted the resulting `public/**` churn (`git checkout --
+public/`), then served the real `dist/` via `npx vite preview --port 4282` (own port).
+Wrote my own Playwright scripts from scratch (`qa-scripts/102-tester-*.mjs`) rather than
+reusing the developer's `102-*.mjs` scripts, which hardcode a different worktree path
+(`d102`) and port (4275) anyway.
+
+- **AC1/AC2/AC3 (badge gone, no unenforceable urgency claim, price difference may
+  stay):** Read `src/game/Unlock.jsx` directly — the `{offer && <span
+  className="price-tag">...}` badge span is gone entirely (not gated); the price row is
+  just `€{price}`. `src/game/strings.js` has no `unlock.today` key in either the `nl`
+  (line ~112-126) or `en` (line ~467-481) block. `src/game/premium.js` has no expiry/date
+  logic anywhere in the file (read in full) — `PRICE = { now: '19,99', anchor: '29,99',
+  offer: '14,99' }`, static strings, no clock check.
+- **AC4 (live, two independent sessions, chapter-1 paywall entry point,
+  `offer=true`/€14,99):** Reproduced the real trigger path live: seeded a save one real
+  promotion away from `FREE_LETTER_CAP` via the actual engine functions (own copy,
+  `qa-scripts/102-tester-gen-nearcap-save.mjs`), loaded `/speel/`, completed one real
+  exercise (text read live off the DOM, typed for real via `page.keyboard.type`), which
+  crossed the cap live and fired the real "Hoofdstuk 1 voltooid!" celebration
+  (`.paywall-card`), clicked through to "Bekijk de volledige fabriek", solved the real
+  parent math gate (question parsed off the DOM, answer computed and typed), landed on
+  the buy screen. Ran this twice with independent `localStorage.clear()` states
+  (`qa-scripts/102-tester-verify.mjs`). Both sessions: `priceText: "€14,99"`,
+  `.price-tag` count `0`, full `.unlock-card` innerText checked against
+  `/alleen vandaag|only today|vandaag alleen|today only|limited time|last chance|
+  expires|verloopt|nog \d+ (uur|minuten|dagen)/i` — no match either session. Screenshots:
+  `company/assignments/102-screenshots/tester-a-01-paywall-card.png` (celebration card,
+  also clean — no urgency copy), `tester-a-03-offer-screen.png`,
+  `tester-b-03-offer-screen.png` (both visually confirm: title, perk list, plain
+  `€14,99`, trust line, buy button — no badge, no scarcity language anywhere on screen).
+- **Plain (offer=false, €19,99) variant unaffected:** real onboarding flow through to
+  the always-visible header "🔓 Ontgrendel" pill (own script,
+  `qa-scripts/102-tester-plain-verify.mjs`), real parent gate, offer screen showed
+  `priceText: "€19,99"`, `.price-tag` count `0`. Screenshot:
+  `tester-plain-02-offer-screen.png`.
+- **Third entry point checked (not named in the assignment, found by reading the
+  code):** `FactoryPage.jsx`'s `<Unlock>` (reached via `Shop`'s `onUnlockOffer`, e.g. a
+  locked-theme click) never passes an `offer` prop at all — it defaults to `false`, so
+  this path was never able to show the badge, before or after this fix. No regression
+  risk there.
+- **Grep for the removed string, src AND built bundle, both locales:** `grep -rniE
+  "alleen vandaag|only today|unlock\.today" dist/` → zero matches (checked the full
+  `dist/` tree including `dist/en/**`, `dist/speel/**`). `grep -rn` over `src/` → the
+  only hit is the explanatory comment in `premium.js` line 27 ("... — het \"alleen
+  vandaag\"-badge erbij is verwijderd ..."), which documents the removal and is not
+  rendered anywhere; not a live occurrence.
+- **AC5 (tests green, scope respected):** `npm test` → **266/266 passing**, including
+  `check-no-dutch-en: PASS`. `git diff --stat` for commit c22277a confirms the product
+  code touched is exactly `Unlock.jsx` (1 line removed), `premium.js` (+7 comment/doc
+  lines only, no logic), `strings.js` (2 lines removed) — no touch to `store.js`,
+  `economy.js`, engine files, or `theme.js`.
+- **Extra probing beyond the ACs:** grepped `strings.js`/`Unlock.jsx`/`premium.js`/
+  `GameScreen.jsx` for any other scarcity/urgency vocabulary (korting, actie, beperkt,
+  op=op, verloopt, countdown, hurry, deadline, limited) — only unrelated hits (an
+  "unbeperkt sterren" perk line, and the premium.js comments referencing the *already-
+  fixed* anchor-price nepkorting). Confirmed `applyFreeCapGuard`/`completePurchase` have
+  no date/clock logic that could silently reintroduce an expiry claim later. Confirmed
+  `.price-tag` CSS (game.css:939) has zero remaining consumers anywhere in `src/`
+  (grepped all `.jsx`) — dead but inert, matches the developer's note; agree it's
+  cosmetic and correctly out of this assignment's scope.
+
+### Judgment call 1 — €14,99 vs €19,99 shown via different entry points, no explanation
+
+**Ruling: acceptable-honest, not a dark pattern, no new defect filed.** Guardrail 3 bars
+"purchases a child can complete alone" (unaffected — the math gate still sits in front
+of both prices) and "dark patterns, pressure mechanics aimed at the child" (the parent is
+the audience for the price screen, not the child, and nothing here targets the child).
+ADR 002 §3's bar is specifically about *claims*: no copy implying scarcity/urgency the
+app can't back up. With the badge gone there is no claim at all attached to either
+price — no "special," no "discount," no "act now," no implication the number will change
+if the parent waits. A dark pattern requires either a false claim or an engineered
+cognitive trap (confirmshaming, forced continuity, hidden costs, drip pricing); a flat,
+unexplained lower price on one entry path is, if anything, favorable to the parent, and
+the absence of an explanation doesn't manufacture urgency — it just doesn't proactively
+explain a harmless discrepancy. AC3 of this very assignment already anticipated and
+permitted this exact state ("€14,99 vs €19,99 ... may still differ if desired"). I
+looked for a mechanism by which the two-price gap could still function as covert
+pressure (e.g., a hidden countdown, a "this price won't come back" flag) and found none —
+`premium.js` has no such logic. Verdict: honest. A future "why this price" explainer
+line would be a nice product polish, not a guardrail requirement, and is not this
+tester's call to insert.
+
+### Judgment call 2 — dead `.price-tag` CSS left in `game.css`
+
+**Ruling: agree with the developer, correctly out of scope, not worth its own
+assignment.** Confirmed zero live consumers of the class anywhere in `src/`. It is inert:
+no user-visible or guardrail effect. Filing a board entry for a one-line dead-CSS
+removal would cost more coordination overhead than the fix itself. Noted here for
+whoever next touches `game.css`, per the developer's own note — no action needed.
+
+### Verdict
+
+**All acceptance criteria hold, verified live and independently. Status: `done`.**
+Reserved defect id 108 was not consumed — no new defect was found; it lapses back to the
+pool.
+
+**Test artifacts (this worktree, not shipped):** `qa-scripts/102-tester-gen-nearcap-
+save.mjs`, `qa-scripts/102-tester-verify.mjs`, `qa-scripts/102-tester-plain-verify.mjs`.
+**Screenshots:** `company/assignments/102-screenshots/tester-{a,b}-0{0,1,2,3}-*.png`,
+`tester-plain-0{0,1,2}-*.png`.
