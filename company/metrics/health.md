@@ -269,3 +269,88 @@ unchanged, no renewal risk. All six ADR 010 revisit triggers evaluated explicitl
 none fired (T1/T5 not yet due, T2/T3/T4 unevaluable for lack of data, T6 clear). One
 carried-forward measurement gap (quota consumption, ADR 008, unchanged) — not a new
 finding. No incident to open, no defect to materialize this tick.**
+
+## 2026-07-24 00:20 UTC — tick #16 (ADR 010 stage duty: health + trigger evaluation)
+
+Second monitor pass under ADR 010's build-hold, mirroring tick #14's method. No
+product-code deploys happened between tick #14 and this tick — confirmed both ways:
+`git log e8a4df2..main -- api/ src/ config/ index.html vite.config.js vercel.json
+package.json` returns empty (zero commits touching those paths since tick #14's
+close), and the `/speel/` bundle hashes below are byte-identical to tick #14's.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, 0.25s, `Last-Modified: Fri, 24 Jul 2026 00:19:28 GMT`, `X-Vercel-Cache: MISS` (edge cache cold on this probe, not a staleness signal — content itself unchanged per bundle/git evidence below) |
+| `GET /speel/` (game) | 200; bundle `speel-Dx9n5T0C.js` / `speel-B2OxpAxn.css` — **identical hashes to tick #12/#14**, direct confirmation the same build is still being served |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** — matches tick #12/#14, no change |
+| Static assets: `/assets/speel-Dx9n5T0C.js`, `/assets/speel-B2OxpAxn.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` — bearer-formatted garbage also rejected, not previously tested against this endpoint (tick #14 only tried `?token=garbage`); no additional exposure found |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+27 checks this tick (up from 18 at tick #14 — added the bearer-formatted-garbage
+variant against `/api/admin/funnel` and the `?token=garbage` variant against
+`/api/cron/notify`, since this pass's brief asked for all three token shapes against
+both admin-facing endpoints, not just one each). All results match tick #12/#14
+exactly where directly comparable (same status codes, same bundle hashes, same
+sitemap count). No 4xx/5xx surprises, no auth boundary breach on either endpoint
+under any of the three tested token shapes, no stale or drifted content.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, not
+re-opened.** No Vercel/Supabase dashboard or API credentials in this environment.
+Standing Shareholder ask 4 in decisions/010 (monthly glance at usage pages) remains
+open and unactioned as of this tick.
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7.**
+`git log` on `company/metrics/spend.md` shows no commits since its creation at ADR
+003 (`c68f46a`) — confirmed unchanged, not just re-read. Four lines: domain
+(Shareholder-owned auto-renew, immaterial, untracked per decisions/003),
+Vercel/Supabase/Resend all €0 free tier (escalate to CEO before any paid-plan
+upgrade). Checked `company/decisions/` for anything dated after 010 — none found; no
+new recurring commitment. No line carries a Shareholder "approved one-time, cancel
+before renewal" condition to watch — nothing to escalate pre-renewal this tick.
+Budget ceiling €50/month (decisions/003) — current recorded recurring spend: €0.
+
+**ADR 010 revisit-trigger evaluation (T1–T6):**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` baseline still dated 2026-07-23 (git log confirms no commits since `be2a450`, the baseline commit); today is 2026-07-24, ~1 day of possible data, unchanged from tick #14. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (git log confirms unchanged since creation at 043/`c7f29a6`); no `FUNNEL_READ_TOKEN` in this environment, no Shareholder digest paste has landed since tick #14. |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no Telegram access in this environment, no repo artifact records one. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. |
+| T6 | Any production incident or new defect | **NOT FIRED.** This tick's health check found zero incidents: 27/27 endpoint checks pass, auth boundaries intact under all three token shapes on both endpoints, bundle byte-identical since tick #12, spend clean. |
+
+**No trigger fired this tick.** The build-hold stands unchanged; nothing reopens
+dispatchable work.
+
+**Verdict: HEALTHY. Bundle byte-identical since tick #12 (zero product-code commits
+on `main` since tick #14's close, confirmed via `git log`), all 27 checks pass
+(broadened auth-boundary coverage vs. tick #14: all three token shapes now tested on
+both `/api/admin/funnel` and `/api/cron/notify`), sitemap steady at 22 URLs, spend
+ledger clean and unchanged (verified via git log, not just re-read), no renewal risk.
+All six ADR 010 revisit triggers evaluated explicitly; none fired (T1/T5 not yet due,
+T2/T3/T4 unevaluable for lack of data — no new Shareholder digest paste since tick
+#14, T6 clear). One carried-forward measurement gap (quota consumption, ADR 008,
+unchanged) — not a new finding. No incident to open, no defect to materialize this
+tick.**
