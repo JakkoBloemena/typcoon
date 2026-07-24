@@ -2,7 +2,7 @@
 id: 097
 title: notify relay — accept OPS_NOTIFY_TOKEN as alternative bearer (one-line auth extension)
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: ceo
