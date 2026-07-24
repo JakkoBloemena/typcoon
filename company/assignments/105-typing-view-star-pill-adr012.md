@@ -2,7 +2,7 @@
 id: 105
 title: Remove the ⭐ rebirths pill from the typing view (ADR 012 ruling 1); keep 🔥 streak
 owner: developer
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tester (t076, playtest-critique gate, verified live in the running product)
