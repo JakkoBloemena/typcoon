@@ -1589,3 +1589,150 @@ open, no defect to materialize this tick — **assignment 092 lapses**. Known
 environment debris (stale worktree dirs q033/v026/b049–b056b, orphaned
 chrome PIDs 25560/30368, dead port-4173 dev server) noted per dispatcher
 brief, not re-reported as new, not touched.**
+
+## 2026-07-24 14:30 UTC — tick #32 (health + bundle re-baseline + ADR 010 trigger evaluation)
+
+Fourteenth monitor pass, one heartbeat after tick #30 (merged `df95560`,
+~15:25). Tick #31 closed at `058ed19` (16:22:35 +0200 = 14:22:35 UTC), folding
+in 085 (The Maquette — diorama floor, machine states) and 087 (werkbank
+tiles + hyphenation fix) on top of tick #30's checked baseline — a
+product-code push, expected to change the `/speel/` bundle. Since then, main
+gained `62f144e` (open 093, ops-notify relay) and `74b309b` (tick #32 open):
+both board/assignment bookkeeping only.
+
+**Deploy cross-check.** `git log --oneline 058ed19..HEAD -- api/ src/ config/
+index.html vite.config.js vercel.json package.json` returns **empty** — no
+product-path commit exists between `058ed19` and `HEAD` (`74b309b`) in this
+worktree; `62f144e` and `74b309b` touch only `company/assignments/` and
+`company/board.md`-equivalent bookkeeping. **Conclusion: the live deploy
+commit is `058ed19`**, matching this tick's brief. The live `GET /`
+response's `Last-Modified: Fri, 24 Jul 2026 14:29:31 GMT` (`X-Vercel-Cache:
+MISS`) is essentially concurrent with this check, well after the 14:22:35 UTC
+push — normal Vercel auto-deploy propagation, not stale cache. Deploy parity
+confirmed: nothing on `main` is undeployed as of this check.
+
+**Bundle identity: changed as expected — re-baselining, not an incident.**
+`/speel/` now serves **`speel-CfQaohg4.js` / `speel-CfcFo2ET.css`** (both
+200), replacing tick #30's baseline `speel-CumRCQf2.js` / `speel-gQNunfsV.css`
+— the old filenames now **404** (checked directly, both), confirming a clean
+full replacement. sha256 of the new bytes (fetched directly, not just
+referenced):
+
+- JS `speel-CfQaohg4.js`: `d2da58ba07df2c360a11f82c695e81241395e37aac9345fe8c3f480122941889`
+- CSS `speel-CfcFo2ET.css`: `3b54707120d9c6daeced222b69fdcbe9e445dc7c13f47ce8c8225a50a29019dd`
+
+Both differ from tick #30's recorded baseline (JS `1f7fe7dc…857b9a4`, CSS
+`cb79dfa1…3acb850`), as expected for a genuinely new build (085+087 folded
+in). **Recording this new pair as the bundle-identity baseline going
+forward, superseding tick #30's.**
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign
+trailing-slash redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, 0.39s, `Last-Modified: Fri, 24 Jul 2026 14:29:31 GMT`, `X-Vercel-Cache: MISS` |
+| `GET /speel/` (game) | 200; bundle **`speel-CfQaohg4.js` / `speel-CfcFo2ET.css`** — new baseline, see above |
+| `GET /en/` | 200 — still live, no regression |
+| `GET /en/learn-typing-for-kids/` (en pillar) | 200 |
+| `GET /en/blog/` | 200 |
+| `GET /en/blog/free-typing-games-for-kids/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /blog/op-welke-leeftijd-leren-typen/` (nl article) | 200 |
+| `GET /blog/blind-typen-leren-tips/` (nl article) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** (`<url>`/`<loc>`/`</url>` counts all agree at 22) — matches tick #12–#30, no change despite the deploy |
+| Static assets: `/assets/speel-CfQaohg4.js`, `/assets/speel-CfcFo2ET.css`, `/track.js`, `/fonts/lilita-one-latin.woff2`, `/fonts/nunito-var-latin.woff2` | all 200, fetched directly (not just referenced) |
+| `GET /api/admin/funnel` (no token) | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/admin/funnel` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (no auth header) | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify?token=garbage` | **401** `{"error":"unauthorized"}` |
+| `GET /api/cron/notify` (`Authorization: Bearer garbage`) | **401** `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) — matches source, GET not allowed |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` — endpoint live, correctly rejects |
+
+**27/27 checks pass** (13 page/resource checks incl. sitemap count, 5 static
+asset checks, 6 auth-boundary checks across all three token shapes on both
+admin-facing endpoints, 2 `/api/track` checks, 1 `/api/school/redeem` check).
+No 4xx/5xx surprises outside documented/expected behavior, no auth boundary
+breach on either endpoint under any of the three tested token shapes, no data
+leak in any 401 body, no broken asset despite the bundle changing underneath
+this pass.
+
+**Non-scoped probe (informational only, not part of the 27):** `POST
+/api/admin/notify` (093's in-progress endpoint) → **404** — expected, 093 is
+`in_progress`/not yet deployed per its assignment file; not counted as a
+failure, will be added to the checklist once 093 ships.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged,
+not re-opened.** This tick's `env | grep -iE "FUNNEL|VERCEL|SUPABASE|CRON"`
+**ran cleanly** (no classifier block this tick) and returned only
+`SUPABASE_GO_BINARY=...supabase-go.exe` — no `FUNNEL_READ_TOKEN`, no Vercel
+or Supabase dashboard/API credential, in this session. No Vercel/Supabase
+dashboard or API credentials are available to this monitor via any channel
+tried. Standing Shareholder ask 4 in ADR 008 (monthly glance at usage pages)
+remains open and unactioned. Per ADR 008/010's framing that a Supabase
+free-tier pause is a priority-1 incident, this monitor still cannot itself
+detect an approaching-pause scenario before it becomes a visible outage —
+flagging again, not papering over it. Endpoint checks above found no
+5xx/pause symptoms on any DB-backed route probed (funnel/cron/track/redeem
+all responded correctly, none returned a Supabase-down error shape).
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick
+#7 — confirmed via git history this tick, not just re-read.** `git log
+--oneline -- company/metrics/spend.md` still shows only the two pre-monitor
+commits (`aa85ab4`, `c68f46a`) — no commit has touched the file since. Four
+lines unchanged: domain (Shareholder-owned auto-renew, immaterial, untracked
+per decisions/003), Vercel/Supabase/Resend all €0 free tier (escalate to CEO
+before any paid-plan upgrade). **Checked `company/decisions/` for any file
+newer than ADR 013** (`git log 8ebae88..HEAD -- company/decisions/` —
+empty): none exists; ADR 013 (the autonomous-experience mandate) remains the
+latest and was already scanned for spend language at tick #30 (none found,
+escalation-only language re-confirmed by this tick's re-read). **Assignment
+093 (ops-notify relay, in_progress this tick)** is a code change only —
+`api/admin/notify.js`, gated like the existing funnel endpoint, using
+credentials (`TELEGRAM_*`, `CRON_SECRET`) that already exist in the Vercel
+project — its own assignment file states no new provisioning; confirmed no
+new recurring commitment. No line in spend.md carries a Shareholder "approved
+one-time, cancel before renewal" condition to watch — nothing to escalate
+pre-renewal this tick. Budget ceiling €50/month (decisions/003) — current
+recorded recurring spend: **€0**.
+
+**ADR 010 revisit-trigger evaluation (T1–T6) — still armed per ADR 011/013:**
+
+| # | Trigger | Verdict | Basis |
+|---|---|---|---|
+| T1 | GSC ~4+ weeks of impression/CTR data | **NOT FIRED — insufficient time elapsed.** `search-console.md` unchanged since its creation commit `be2a450` (`git log` confirms) — baseline still dated 2026-07-23; today is 2026-07-24, ~1 day of possible data. |
+| T2 | 7-day avg ≥5 game-starts/day | **UNEVALUABLE — no data.** `funnel.md`'s table is still empty (`git log -- company/metrics/funnel.md` shows only its creation commit `c7f29a6`); `FUNNEL_READ_TOKEN` confirmed absent this tick (env check ran cleanly, see quota section); no Shareholder digest paste has landed since tick #30 (file unchanged). |
+| T3 | First meaningful en signal (GSC impressions or en game-starts) | **UNEVALUABLE — no data.** Same two sources (GSC, funnel.md) as T1/T2, both empty/unavailable for en specifically. en confirmed live and healthy (endpoint checks above) but that is reachability, not a traffic signal. |
+| T4 | First parent opt-in ping | **UNEVALUABLE — no data.** Lands with the Shareholder via Telegram/paste per ADR 008; no repo artifact records one — checked explicitly this tick, none found. |
+| T5 | 2026-08-20 with funnel.md still empty and no FUNNEL_READ_TOKEN | **NOT FIRED — date not reached.** Today is 2026-07-24, 27 days before the trigger date. |
+| T6 | Any production incident or new defect | **NOT FIRED.** 27/27 endpoint checks pass, auth boundaries intact under all three token shapes on both endpoints, no data leak, spend clean. The bundle change (headline finding above) is a confirmed, explained deploy of already-merged work (085/087) at parity with `main` — not an incident: no broken page, no broken asset, no 4xx/5xx regression traced to it. |
+
+**No trigger fired this tick.** Nothing reopens or blocks dispatchable work.
+**095 lapses** — no incident found this tick.
+
+**Verdict: HEALTHY. All 27 checks pass against the documented live domain
+`typcoon.com`. Live deploy commit confirmed as `058ed19`, at full parity with
+`main`/HEAD `74b309b` (bookkeeping-only since). `/speel/` bundle re-baselined
+to `speel-CfQaohg4.js` (sha256 `d2da58ba…2941889`) / `speel-CfcFo2ET.css`
+(sha256 `3b547071…9019dd`), superseding tick #30's
+`speel-CumRCQf2.js`/`speel-gQNunfsV.css` pair (both old filenames now 404,
+confirming clean replacement). Sitemap steady at 22 URLs, spend ledger clean
+and unchanged (€0 against the €50/mo ceiling; decisions/ scanned through 013,
+none newer, no new recurring commitment — 093's in-progress code change
+carries zero spend), no renewal risk. All six ADR 010 revisit triggers
+evaluated explicitly; none fired (T1/T5 not yet due, T2/T3/T4 unevaluable for
+lack of data — no new Shareholder digest paste or GSC update since tick #30,
+T6 clear). Quota consumption remains unmeasured (ADR 008 gap, unchanged) —
+this tick's env check ran cleanly (unlike tick #25/#30's classifier block)
+and confirmed no quota-relevant credential is present; endpoint checks show
+no pause symptoms on any DB-backed route. No incident to open, no defect to
+materialize this tick — **assignment 095 lapses**. Known environment debris
+(stale worktree dirs q033/v026/b049–b056b, orphaned chrome PIDs 25560/30368,
+dead port-4173 dev server) noted per dispatcher brief, not re-reported as
+new, not touched.**
