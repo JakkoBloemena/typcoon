@@ -2,7 +2,7 @@
 id: 093
 title: CRON_SECRET-gated ops-notify relay endpoint (Telegram without local secrets)
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: ceo
@@ -94,6 +94,78 @@ Judgment calls / notes for the tester:
   than degrade gracefully.
 - Did not touch src/game/**, game.css, Shop.jsx, store.js, economy.js,
   src/engine/, theme.js, goals.js, strings.js, or any other test file.
+
+## Verification (tester, v093, 2026-07-24)
+
+Independently re-derived, not re-run: wrote `test/notify.tester.test.js` (11 new tests,
+own copy of the in-memory Supabase/PostgREST shim + tg-spy idiom, not the dev's file) to
+probe angles the delivery notes don't claim coverage of. All 11 pass against the shipped
+`api/admin/notify.js` unmodified. Also statically re-read `api/admin/notify.js` against
+`api/admin/funnel.js`, `api/track.js`, `api/_ratelimit.js`, `api/_telegram.js`, `api/_db.js`.
+
+Per-AC verdict:
+- **AC1 (gate + method + mirrored `{ ok }`)** — HOLDS. Confirmed independently: GET *and*
+  PUT/PATCH/DELETE/HEAD all 405 (dev only tested GET); missing token, wrong Bearer, and a
+  battery of *malformed* Authorization shapes (`"Bearer"` alone, `"Bearer "` empty value,
+  `"Bearertestsecret"` no space, bare token with no scheme, lowercase `"bearer ..."`, double
+  space, trailing space on the value, `"Basic ..."`) all 401, none crash. Header/query are a
+  true OR (not "each works in isolation" as the dev's tests show, but genuine independence):
+  correct-header+wrong-query → 200, wrong-header+correct-query → 200. A query token
+  delivered as an array (`?token=a&token=b`, which real query-string parsers produce) never
+  authorizes — `===` against an array is always false, confirmed safe. `{ ok: true }` and a
+  non-throwing Telegram failure (`tg()` returns `{ ok: false }` because Telegram itself
+  replied non-2xx, not because it threw — a case the dev's suite didn't isolate) both mirror
+  through as HTTP 200 with the correct body, never a 500.
+- **AC2 (verbatim + type/length cap, no storage)** — HOLDS. Extra/unexpected body fields
+  (including an `__proto__` entry) are ignored; only `text` is forwarded, unmangled.
+  Entirely missing `body` (`undefined`, not `{}`) is a clean 400, not a crash. Cap semantics
+  verified precisely: the 3500 cap is JS `.length` (UTF-16 code units), and Telegram's own
+  Bot API entity-offset limit is likewise UTF-16-code-unit-based, so the two are consistent
+  — not a byte-vs-length mismatch. Proved with real astral-plane emoji (😀 = 1 code point but
+  2 UTF-16 units): 1750 emoji = exactly `.length` 3500 → accepted verbatim, no surrogate-pair
+  corruption; 1751 emoji = `.length` 3502 → rejected, `tg()` never called. Because the
+  handler *rejects* over-cap text rather than truncating it, there is no risk of a truncation
+  slicing a surrogate pair in half. Confirmed nothing resembling the sent text lands in the
+  `rate_limits` ledger — rows contain only `{ bucket: 'g:notify' }`, verified against a
+  distinctive payload string.
+- **AC3 (rate limit trips at cap, counting before validation)** — HOLDS, dev's tests
+  (31st-request-429 with invalid text, and the valid-then-429 variant) independently spot-
+  checked by re-reading the handler: the `rateLimited()` call is the first statement inside
+  the `try`, strictly before the `typeof`/length check, so unauthenticated (401) traffic is
+  the only thing that does *not* count — which is correct, since counting failed-auth probes
+  against an authenticated internal caller's own quota would let an attacker exhaust the
+  scheduler's real budget with wrong tokens.
+- **AC4 (green/clean)** — HOLDS. `npm test`: 253/253 green (242 baseline + 11 new tester
+  probes in `test/notify.tester.test.js`; did not touch `test/notify.test.js`). `npx vite
+  build` clean. `check-no-dutch-en`: PASS (5 built en files, 0 unallowlisted hits). Reverted
+  the incidental `public/**` regeneration churn (`git checkout -- public/`) both before and
+  after adding my own test file, before committing — none landed.
+
+Judgment-call verdicts (all three: sound, no bounce):
+1. **CRON_SECRET-only auth, no FUNNEL_READ_TOKEN-style secondary** — sound. funnel.js's
+   weaker secondary token exists specifically because funnel.js is read-only, no-PII counts
+   — a plausible thing to hand to a lower-trust caller. notify.js is an active *send* surface
+   to a real human's Telegram chat; a leaked secondary token here would buy an attacker
+   arbitrary-text delivery, not just read access. Declining to extend the dual-secret pattern
+   to a send endpoint is the correct asymmetry, not an oversight.
+2. **Single global `g:notify` bucket, no per-IP** — sound. The only credential that grants
+   access is `CRON_SECRET`, held by exactly one caller (the scheduler); per-IP bucketing
+   would add a dimension with no distinguishing power here (a leaked secret is exploitable
+   from any IP regardless) while doing nothing to lower the real cost (Telegram spam volume,
+   which a global cap already bounds). Matches the assignment's own "modest cap e.g. 30/hr
+   global" wording.
+3. **`not_configured` → 500 when Supabase env is absent, vs. track.js's silent-degrade** —
+   sound, and correctly distinguished from track.js on the right axis: track.js degrades
+   silently because it is public/unauthenticated and its failure mode (a dropped analytics
+   event) is low-stakes compared to ever blocking a child's play session. notify.js is
+   authenticated/internal and the *entire* value of the endpoint beyond raw `tg()` access is
+   the rate limit; if Supabase is unreachable, `rateLimited()`'s own fail-open behavior means
+   the guard would vanish, not degrade — a compromised or merely double-fired `CRON_SECRET`
+   could spam the channel as fast as Telegram allows. Requiring the DB (matching
+   funnel.js/create.js/redeem.js's existing convention for admin/rate-limited endpoints) is
+   the safer default, not an inconsistency.
+
+No distinct new defect found. 094 lapsed (not filed).
 
 ## Notes
 
