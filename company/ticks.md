@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-24 #21 — OPEN
+- opened: 2026-07-24 07:17 (system clock; tick #20 closed 06:24 — ~53 min ago, one scheduler heartbeat)
+- claimed: none — ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied — 020←010 blocked, 021←020). This tick executes the ADR's standing mandate: monitor stage duty + T1–T6 trigger evaluation (last pass tick #20 at ~06:24, one heartbeat ago — due per one-pass-per-heartbeat cadence, cc f7b7db3).
+- worktrees: monitor → C:\companies\typcoon-lanes\mon21 (mon/tick21; writes company/metrics only); main checkout: dispatcher/integration only. Debris routed around: q033/v026/b049–b056b dirs, orphaned chrome PIDs 25560/30368, dead port-4173 server (ADR 010 ask 3 housekeeping).
+- ids allocated: 065–066 reserved for incidents/defects the monitor may report (lane reports to the dispatcher, who materializes them); next free after reservation: 067; next decision id: 011
+
 ## Tick 2026-07-24 #20 — CLOSED
 - opened: 2026-07-24 06:17 (system clock; tick #19 closed 05:24 — ~53 min ago, one scheduler heartbeat)
 - claimed: none — ADR 010 build-hold in force; board re-read from disk confirms zero dispatchable assignments (all done except externally gated 003/010/022/035; 020/021 open but blocked_by chains unsatisfied — 020←010 blocked, 021←020). This tick executes the ADR's standing mandate: monitor stage duty + T1–T6 trigger evaluation (last pass tick #19 at ~05:24, one heartbeat ago — due per one-pass-per-heartbeat cadence, cc f7b7db3).
