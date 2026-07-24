@@ -2,7 +2,7 @@
 id: 114
 title: "Designer: \"From blueprint to place\" — atmosphere/place-ness design pass for the Maquette diorama (076 critique intake)"
 owner: designer
-status: needs_verification
+status: done
 priority: 2
 blocked_by: []
 opened_by: product-owner
@@ -178,3 +178,60 @@ AA preserved by construction: the pass adds no text over the raw backdrop, and `
 **Reserved id 122 — LAPSED (unused).** No out-of-scope work surfaced; atmosphere, the belt
 reconciliation, and the motion checklist were all inside this pass's scope, so no new proposal
 was filed. (No `src/**` touched; write surface was `design/**` + this assignment file only.)
+
+## Review (product-owner po114, tick #40)
+
+**Verdict: PASS → `done`.** Held against every AC and every hard scope cap; scope caps
+spot-checked in the winner mock's own CSS and the four theme renders, not trusted from the
+ticked boxes (ADR 013: flattery is a defect).
+
+**Deliverables — all met.**
+- *Three genuinely distinct places (not decoration-density variants).* Confirmed in the
+  renders: **A "Onder de Kap"** (hanging work-lamps + ceiling beam — a lit hall), **B "De
+  Werktafel"** (framed drafting desk, `MAQUETTE 1:50` tag, ruled lip, pencil, front warm
+  wash), **C "De Modelstad"** (blue-line skyline receding under a haze). They differ in the
+  *place concept*, as the AC demands. The critique's own admission that A "reads closest to
+  the bare schematic" is visible in `dir-place-A-muntpers.png` and is stated, not hidden.
+- *Pairwise ranked-not-scored selection with real reasoning.* Independent critic, renders +
+  source, no numeric scores. A-vs-B→B, A-vs-C→C, **B-vs-C→B** (the decider, on the
+  anti-default test). Ranking **1) B  2) C  3) A**; winner **B**. Losing costs paid honestly
+  (C = the generic dusk-sky+haze default and busiest backdrop; A = least transformation +
+  fights the miniature grammar). The critic's one required change was **taken, not defended**:
+  the literal drafting-lamp fixture (ambiguous streak, blew a hotspot onto one machine) was
+  dropped for the soft `.warmth` wash. This is the ADR-013 discipline working.
+- *W-series addendum appended, PART II not rewritten.* **PART III (W9–W15)** sits after PART
+  II (W0–W8, unchanged); the front-matter `place_pass:` block was **added** after the
+  `world_pass:` block, not a rewrite. Additive, as required.
+- *Belt (091) reconciled.* W12: front lane between adjacent **built** machines, `z2`,
+  `beltDrift` re-timed 1.1s→5.5s (~4px/s), carries no coins. Placement rule stated so 091
+  survives build/level changes and lands onto the finished backdrop.
+- *Live-verifiable motion checklist — present and actually verifiable.* W13 is a 5-row probe
+  table (idleBob / warmBreath / plotGlow / beltDrift / riseIn) with period + intended *felt*
+  read + a concrete in-app pass/fail probe ("watch two machines ~10s; bobs must be visibly
+  out of phase"), plus a reduced-motion resting-state table proving every frozen state is the
+  finished surface. This is checkable in the running app, not guessed from a still — it closes
+  exactly the gap 076 could not judge.
+
+**Scope caps — spot-checked, all genuinely held.**
+- *Zero new `:root` tokens.* Grep of `world-C-maquette-place.html`: no `:root` block at all;
+  every backdrop element (`.desk`/`.warmth`/`.hal`/`.ruler`/`.pencil`/`.scaletag`) is
+  `var(--token)` or `color-mix()` of a token. **HELD.**
+- *No raw rgba/hex in styling.* The only `rgba()`/hex occurrences are lines 21–23 — the three
+  `[data-theme]` token *definitions* (verbatim from `game.css`) — plus one `#000` in the
+  build-ticket ring **alpha-mask** (a mask, not a rendered colour; W14's documented exception).
+  Clean. **HELD.**
+- *No runtime engine / asset pipeline / spend.* Pure CSS gradients + keyframes. **HELD.**
+- *Guardrail 2 visible in motion.* Belt carries nothing; `idleBob`/`warmBreath` are at-rest
+  ambience; nothing spouts or transports coins. **HELD.**
+- *`--sky` prestige-only.* Grep confirms `--sky` appears only in the ledger star context
+  (`.val.star`, W6 exception) and the prestige `.tool.star` tile — **never in the backdrop**.
+  Verified in the Snoepfabriek render: the whole desk re-tints hot-pink while the prestige
+  tile stays sky-blue. **HELD.**
+- *Desktop-only.* No `@media` queries anywhere in the mock — no narrow/mobile reflow variant.
+  **HELD** (narrow desktop windows remain 106's width-hint gate, correctly out of scope).
+- *Typing view untouched.* This pass is the factory page only. **HELD.**
+
+**4-theme re-tint** verified rendered (Muntpers brass, Snoepfabriek hot-pink checked directly;
+Nachtploeg/Diepzee renders present). Every atmosphere element themes for free.
+
+Nothing to bounce. 115 is firmed against this spec in the same tick (see milestone-factory §10f).
