@@ -216,6 +216,11 @@ const STRINGS = {
   'goal.spotKicker': 'JE VOLGENDE DOEL',
   'goal.togoLine': 'nog {n} munten — dat haal je in {effort}',
   'goal.effort': '± {n} opdrachten',
+  // 104: als het doel al betaalbaar is (goal.remaining === 0) leest "nog 0 munten —
+  // dat haal je in ± 0 opdrachten" als een gek soort niet-goed-nieuws voor een kind
+  // dat er al is. Deze regel vervangt goal.togoLine in dat geval — puur goed nieuws,
+  // geen inspannings-schatting (die is dan zinloos: 0 opdrachten).
+  'goal.readyLine': 'Je hebt genoeg munten — bouw maar!',
   'factory.planTitle': 'Het Bouwplan',
   'factory.builtTag': '{built} van {total} machines gebouwd',
   'factory.currentBadge': 'NU BOUWEN',
@@ -555,6 +560,7 @@ const STRINGS_EN = {
   'goal.spotKicker': 'YOUR NEXT GOAL',
   'goal.togoLine': '{n} coins to go — about {effort} away',
   'goal.effort': '± {n} tasks',
+  'goal.readyLine': 'You have enough coins — go ahead and build!',
   'factory.planTitle': 'The Build Plan',
   'factory.builtTag': '{built} of {total} machines built',
   'factory.currentBadge': 'BUILDING NOW',
