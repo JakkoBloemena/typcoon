@@ -23,6 +23,14 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #17 — OPEN
+- opened: 2026-07-25 14:17 (system clock; #16 closed 13:18 — ~59 min gap. Tree clean, no OPEN entry, HEAD = 3ae60f5 = #16's own close commit, zero foreign commits since → proceed.)
+- claimed: monitor heartbeat pass mon8 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). funnel.md re-checked directly: last commit 2026-07-23 18:19, no new Shareholder paste — tripwire 010 unevaluable as expected. mon7 closed 12:23 (~1h54m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m, #11 at 1h50m, #15 at 1h52m, #13 at 1h55m).
+- worktrees: mon8 → C:\companies\typcoon-lanes\mon8 (mon/tick2026-07-25-17; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only.
+- ids allocated: 127 → mon8 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+- closed:
+- retro:
+
 ## Tick 2026-07-25 #16 — CLOSED
 - opened: 2026-07-25 13:17 (system clock; #15 closed 12:23 — ~54 min gap. Tree clean, no OPEN entry, HEAD = 50a8eed = #15's own close commit, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; only 020/021 open — 020 blocked_by [010] (blocked), 021 blocked_by [020]; 003/022 gate on 010 (traction relay per ADR 016), 035 gates on GSC accrual. funnel.md re-checked directly: last commit 2026-07-23 18:19, table still empty — no new Shareholder paste, tripwire 010 unevaluable as expected. Monitor: SKIPPED — mon7 closed 12:23 (~54 min ago, healthy 22/22), ~2h cadence puts the next pass due ~14:25 (skip precedent #12 at 55 min, #14 at 52 min); zero product/deploy commits since mon7's baseline (ledger commits only).
