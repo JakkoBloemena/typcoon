@@ -23,11 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-25 #15 — OPEN
+## Tick 2026-07-25 #15 — CLOSED
 - opened: 2026-07-25 12:18 (system clock; #14 closed 11:19 — ~59 min gap. Tree clean, no OPEN entry, HEAD = edac497 = #14's own close commit, zero foreign commits since → proceed.)
 - claimed: monitor heartbeat pass mon7 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). mon6 closed 10:25 (~1h52m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m, #11 at 1h50m, #13 at 1h55m; #14 correctly skipped at ~52 min).
 - worktrees: mon7 → C:\companies\typcoon-lanes\mon7 (mon/tick2026-07-25-15; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only.
 - ids allocated: 127 → mon7 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+- closed: 2026-07-25 12:23 (system clock)
+- outcomes: mon7 health pass **HEALTHY 22/22** (commit b572b06, merged FF) — all pages/sitemap/bundle-asset checks pass, admin auth boundaries hold 9/9 (401 under all credential shapes on /api/admin/funnel, /api/cron/notify, /api/admin/notify; no leak), track/redeem behavior checks pass, deploy correspondence git-verified (live = edac497 via vercel inspect; zero product-path commits since mon6's baseline — 294443f/1bfb04f are ledger bookkeeping only; bundles byte-identical since mon2). **Tripwire 010: unevaluable pending Shareholder relay — expected steady state per ADR 016, NOT FIRED** (funnel.md still empty, no new paste). **Tripwire 035: NOT FIRED** (~2.4 of ~28 days GSC accrual). Quota: ADR 008 account-scope gap re-confirmed (typcoon absent from supabase account scope; no pause/5xx symptoms). Spend €0 actuals vs €50/mo ceiling, no renewals pending. 127 lapses unfiled (no incident). Worktree mon7 swept clean, branch deleted. Board unchanged: zero eligible work, zero needs_verification; all remaining gates external (010 traction relay → 003/020/021/022; GSC accrual → 035). **Nothing blocked on a human** — the standing weekly traction-relay expectation is already carried by owner-ceo assignment 010, and the FUNNEL_READ_TOKEN ask stands recorded low-priority non-blocking (ADR 016 §2 with its own escalation backstops).
+- retro: clean — monitor-only tick per cadence (~1h52m since mon6, due side of the ~2h heartbeat); no role can compress the external triggers.
 
 ## Tick 2026-07-25 #14 — CLOSED
 - opened: 2026-07-25 11:17 (system clock; #13 closed 10:25 — ~52 min gap. Tree clean, no OPEN entry, HEAD = 294443f = #13's own close commit, zero foreign commits since → proceed.)
