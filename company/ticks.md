@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #11 — OPEN
+- opened: 2026-07-25 08:17 (system clock; #10 closed 07:18 — ~1h gap. Tree clean, no OPEN entry, HEAD = 83f74b3 = #10's own close commit, zero foreign commits since, main synced with origin → proceed.)
+- claimed: monitor heartbeat pass mon5 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual, ~2.5 of ~28 days). mon4 closed 06:26 (~1h50m ago); on the ~2h cadence with ~1h scheduler heartbeats, skipping now stretches the gap to ~3h — due side of the one-pass-per-heartbeat precedent (#9 dispatched at 1h45m; #10 correctly skipped at 50 min).
+- worktrees: mon5 → C:\companies\typcoon-lanes\mon5 (mon/tick2026-07-25-11; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only. Standing debris routed around: q033/v026/b049–b056b/d078/v078/d125 dirs (unregistered).
+- ids allocated: 127 → mon5 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-25 #10 — CLOSED
 - opened: 2026-07-25 07:17 (system clock; #9 closed 06:26 — ~50 min gap. Tree clean, no OPEN entry, HEAD = 6ca2c04 = #9's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual (~2 of ~28 days as of mon4). Monitor: SKIPPED — mon4 closed 06:26 (~50 min ago, healthy 16/16), ~2h cadence puts the next pass due ~08:30 (one-pass-per-heartbeat precedent #6/#9, skips #2/#5/#7/#8); zero product/deploy commits since mon4's baseline (ledger commits only).
