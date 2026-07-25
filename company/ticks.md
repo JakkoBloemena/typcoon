@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #14 — CLOSED
+- opened: 2026-07-25 11:17 (system clock; #13 closed 10:25 — ~52 min gap. Tree clean, no OPEN entry, HEAD = 294443f = #13's own close commit, zero foreign commits since → proceed.)
+- claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual. funnel.md re-checked directly: table still empty, file unmodified since 2026-07-23 18:20 — no new Shareholder paste, tripwire 010 unevaluable as expected. Monitor: SKIPPED — mon6 closed 10:25 (~52 min ago, healthy 22/22), ~2h cadence puts the next pass due ~12:25 (one-pass-per-heartbeat precedent #6/#9/#11/#13, skips #2/#5/#7/#8/#10/#12); zero product/deploy commits since mon6's baseline (ledger commits only).
+- worktrees: none — no lanes dispatched; main checkout: dispatcher only.
+- ids allocated: none. Next free assignment id: 127, next decision id: 017.
+- closed: 2026-07-25 11:19 (system clock)
+- outcomes: null tick — identical constraint picture to #7/#8/#10/#12: every remaining gate is external wall-clock (traction relay for 010 → 003/020/021/022; Search Console accrual for 035) and already recorded on the board; the FUNNEL_READ_TOKEN ask stands recorded non-blocking (ADR 016 §2, with its own re-escalation backstops). No incident, no dispatch, no status change. Blocked on a human: none newly — the standing traction-relay expectation (weekly paste, per ADR 016) is already carried by owner-ceo assignment 010.
+- retro: clean — null by design per #5/#7/#8/#10/#12 precedent, not a stall: no role can compress the external triggers, and the monitor heartbeat is not yet due.
+
 ## Tick 2026-07-25 #13 — CLOSED
 - opened: 2026-07-25 10:17 (system clock; #12 closed 09:19 — ~1h gap. Tree clean, no OPEN entry, HEAD = 08ed189 = #12's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: monitor heartbeat pass mon6 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere — 013's frontmatter is `done`, the phrase in its body is prose; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). mon5 closed 08:22 (~1h55m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m, #11 at 1h50m; #12 correctly skipped at 55 min).
