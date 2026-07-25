@@ -2,7 +2,7 @@
 id: 096
 title: Ask the Shareholder/framework side to rewire ops-summary-typcoon.ps1 onto the live notify relay
 owner: ceo
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: tick-dispatcher (enforcement of the tick skill's owner-ceo rule; follow-up pre-declared in tick #33's ledger entry)
