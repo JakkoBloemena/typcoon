@@ -2766,3 +2766,148 @@ forward as a capability note, not a new escalation. Assignment 096 (relay rewire
 open, no relay-delivered ops summary observed this tick — expected, not a finding, checked
 with a new (if narrow) instrument. No incident to open this tick — **assignment 123
 lapses**.**
+
+## 2026-07-25 00:43 UTC — mon2 (Tick 2026-07-25 #4: re-baseline tick #2's bundles + 010/035 tripwire checks)
+
+Second monitor pass of the day under this numbering (worktree `C:\companies\typcoon-lanes\mon2`,
+branch `mon/tick2026-07-25-4`), first since mon1 (health.md tick #43, closed 2026-07-25 00:42,
+commit `f5046a1`). Since mon1: Tick 2026-07-25 #1 (091 verified, 120 fixed nv), #2 (120 verified,
+125 filed+fixed nv — `.plot` 156→140px in `game.css`), #3 (096 done — relay rewire confirmed
+live, telegram.env retired; 125 verified done). This pass's brief: re-baseline the bundle #2
+produced (queued explicitly by #2's close note), confirm current origin/main matches the live
+deploy despite #2/#3's docs-only follow-up commits, and evaluate tripwires 010 and 035.
+
+**Deploy-correspondence check: live deploy matches current `origin/main` exactly.**
+`vercel inspect typcoon.com --logs` shows the live deployment cloned **`Commit: 4364d5f`** —
+`git log origin/main` confirms `4364d5f` ("Tick 2026-07-25 #3 close") is `origin/main`'s tip;
+this worktree's own HEAD (`778032d`, #4's open commit) is one docs-only commit ahead of that,
+confirmed via `git merge-base --is-ancestor origin/main HEAD`. No product-path commit exists
+between `4364d5f` and this worktree's HEAD (#4's open is board bookkeeping only), so "live
+deploy corresponds to current origin/main" holds without qualification.
+
+**Bundle re-baseline: new pair confirmed live, mon1's pair cleanly retired.** `/speel/` now
+references **`speel-BFcMiTcx.js` / `speel-DKmkEeHX.css`** — both fetched directly and 200,
+sizes matching the Vercel build log exactly (`dist/assets/speel-BFcMiTcx.js 293.39 kB`,
+`dist/assets/speel-DKmkEeHX.css 42.18 kB`):
+
+- JS `speel-BFcMiTcx.js` (294116 bytes): sha256
+  `3c9c40a9a56efccdaf4578326c8d1f3c23e4753b00422f4a2195541687bbf570`
+- CSS `speel-DKmkEeHX.css` (42177 bytes): sha256
+  `0fc4a35782d303d4bb30f93c6684372605501c45d9c1ff41d4f6c0a42956fc4d`
+
+**Anomaly, explained, not concerning:** the JS sha256 is **byte-identical** to mon1's baselined
+`speel-6AzGaq-6.js` — i.e. the JS chunk's actual content did not change between the two builds,
+only its content-hash filename did (Vite/Rollup chunk hashing can shift when a co-emitted
+asset, here the CSS, changes, even without a literal in-JS string reference — `/speel/`'s CSS
+is `<link>`-referenced from HTML, not imported from JS). This is exactly consistent with
+assignment 125 being a **CSS-only** fix (`.plot` 156→140px in `game.css`): only the CSS bytes
+actually changed. Recording this because it's a new observation this pass, not because
+anything is wrong — the alternative (an unrelated JS content change slipping in unlabeled)
+would have been a real finding, and this rules it out.
+
+**Old baseline (mon1's `speel-6AzGaq-6.js` / `speel-CYWeJ5KN.css`) confirmed 404 on both
+files** — clean full replacement.
+
+**125 fix content verified present in the live CSS, not just claimed.** Grepped the live
+`speel-DKmkEeHX.css` directly: `.plot{position:absolute;transform:translate(-50%);width:140px;
+text-align:center;z-index:3}` — **140px**, present. Searched for `156px` anywhere near `.plot`
+context — **zero matches** in the whole file. The fix is live, not just merged.
+
+**Guardrail check ("ALLEEN VANDAAG" fake-urgency string):** grepped both new files,
+case-sensitive and case-insensitive — **0** matches in both. Still absent from production.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows redirects):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, `Last-Modified: Sat, 25 Jul 2026 00:40:41 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle **`speel-BFcMiTcx.js` / `speel-DKmkEeHX.css`** — new baseline, see above |
+| `GET /en/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>` entries** — unchanged |
+| `GET /api/admin/funnel` (no token / `?token=garbage` / `Bearer garbage`) | **401** all three, `{"error":"unauthorized"}`, no data leak |
+| `GET /api/cron/notify` (no auth / `?token=garbage` / `Bearer garbage`) | **401** all three |
+| `POST /api/admin/notify` (no auth / `Bearer garbage` / `?token=garbage`) | **401** all three |
+| `GET /api/track` | **405** (empty body) |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` |
+
+**16/16 checks pass** (7 page/sitemap checks, 9 auth-boundary checks across all three
+credential shapes on all three admin-facing endpoints, plus track/redeem behavior). No
+4xx/5xx surprises, no auth boundary breach under any tested credential shape, no data leak,
+no stale content, old bundle filenames cleanly 404.
+
+**Tripwire 010 (payments reopening) — UNEVALUABLE, not fired.** `company/metrics/funnel.md`'s
+table is still empty (unchanged since creation). No `CRON_SECRET`/`FUNNEL_READ_TOKEN` in this
+environment (checked `env | grep` explicitly this tick — only `SUPABASE_GO_BINARY` present, no
+funnel-auth secret). `/api/admin/funnel` correctly rejects every credential shape tried (see
+above) — confirms the boundary holds, not that data is unreachable-by-design. No Shareholder
+digest paste has landed in funnel.md since mon1. **Cannot compute the 7-day
+≥5-game-starts/day average from zero rows — reported as a gap, not assumed below/above
+threshold.** Trigger state: **NOT FIRED** (no basis to say it fired; nothing to route to the
+CEO this pass).
+
+**Tripwire 035 (content batch 3 / GSC data window) — NOT FIRED, ~2 days elapsed of the ~28
+needed.** `company/metrics/search-console.md` baseline is dated 2026-07-23, sourced from
+assignment 009's verification (GSC verified pre-adoption, sitemap submitted 2026-07-08, last
+read 2026-07-15; 009 itself closed 2026-07-23). Today is 2026-07-25 — **2 days elapsed** since
+009's close/baseline, against 035's own stated default of **~4 weeks (~28 days)**. No new
+entry has landed in search-console.md since the baseline (`git log` confirms unchanged).
+**Window nowhere near met** — 26 days remain at minimum.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, re-confirmed this
+tick with the same instruments mon1 established.** `vercel logs typcoon.com` and `vercel
+inspect typcoon.com --logs` both work (used above for the deploy-correspondence check); `vercel
+metrics` remains blocked by the plan itself (`Observability Plus is required`, a paid add-on,
+confirmed again); `vercel api /v1/billing/charges` returned an argument error this tick rather
+than the prior explicit classifier denial (not pursued further — same net effect, no usage
+data). `supabase projects list` authenticates and lists four projects (`typie-fun`, `pim`,
+`bloemena-site`, `shadowfist`) — **`typcoon` is still absent**, same account-scope gap as
+mon1. No row-count/pause-risk read possible. Endpoint checks above found no 5xx/pause symptoms
+on any DB-backed route (funnel/cron/notify/track/redeem all responded correctly, no
+Supabase-down error shape).
+
+**Relay-delivered ops summary (096, closed 2026-07-25 per Tick #3): flowing, not newly
+verified this pass — narrow-window check only.** `vercel logs typcoon.com` tail (13 most
+recent entries) contained only this pass's own probe traffic (`/api/admin/notify`,
+`/api/cron/notify`, `/api/admin/funnel`, `/api/track`, `/api/school/redeem`) — no
+externally-sourced hit in that short window, which is expected (the relay fires on its own
+schedule, not synchronized to this probe) and is not evidence either way about 096's live
+status. 096's own file records a proven send log (2026-07-24 19:25 → 2026-07-25 00:03) per
+this pass's brief — treating that as the standing evidence and not re-litigating it; no new
+action taken or needed.
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7 — confirmed via
+git history this tick.** `git log --oneline -- company/metrics/spend.md` still shows only the
+two pre-monitor commits (`aa85ab4`, `c68f46a`) — no commit since. Four lines unchanged: domain
+(Shareholder-owned auto-renew, immaterial, untracked per decisions/003), Vercel/Supabase/Resend
+all €0 free tier (escalate to CEO before any paid-plan upgrade). `company/decisions/` checked
+explicitly — still tops out at `015-desktop-only-gated-not-reflowed.md`, no new decision since
+mon1, no new recurring commitment. No line carries a Shareholder "approved one-time, cancel
+before renewal" condition — nothing to escalate pre-renewal this tick. Budget ceiling €50/month
+(decisions/003) — current recorded recurring spend: **€0 actuals against the €50/mo ceiling.**
+No upcoming renewal to flag.
+
+**Verdict: HEALTHY. 16/16 checks pass against the live domain `typcoon.com`. Live deploy
+confirmed as commit `4364d5f`, matching current `origin/main` tip exactly (this worktree's own
+HEAD is one docs-only commit ahead). `/speel/` bundle re-baselined to `speel-BFcMiTcx.js`
+(sha256 `3c9c40a9…687bbf570`) / `speel-DKmkEeHX.css` (sha256 `0fc4a357…6c0a42956fc4d`),
+superseding mon1's `speel-6AzGaq-6.js`/`speel-CYWeJ5KN.css` pair (both old filenames now 404,
+clean replacement). 125's `.plot` 140px fix confirmed live in the served CSS by direct grep (no
+156px anywhere), not assumed from the merge. Byte-identical JS content across the rebuild
+(explained: CSS-only fix, chunk-hash shift from the co-emitted CSS change, not a hidden JS
+diff) is noted as an anomaly-explained, not a finding. "ALLEEN VANDAAG" guardrail remains
+absent. Auth boundaries on all three admin-facing endpoints hold under every tested credential
+shape; no data leak. Sitemap steady at 22 URLs. **Tripwire 010: UNEVALUABLE/NOT FIRED** —
+funnel.md still empty, no FUNNEL_READ_TOKEN/CRON_SECRET in this environment, cannot compute the
+7-day game-starts average; auth boundary on `/api/admin/funnel` confirmed intact rather than
+guessed. **Tripwire 035: NOT FIRED** — 2 of ~28 days elapsed since 009's verification baseline.
+Quota consumption remains unmeasured (ADR 008 gap, unchanged, same narrowed reason as mon1 —
+paid add-on + Supabase account-scope gap, not a bare missing-credential gap). Spend ledger
+clean and unchanged, no renewal risk. 096 relay: standing evidence (send log) accepted per
+brief, no new external hit observed in this pass's narrow log window (not conclusive either
+way, not treated as a finding). No incident reproduced — **assignment 126 not filed, lapses
+unused.**
