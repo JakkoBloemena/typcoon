@@ -23,7 +23,11 @@ Entry format:
 
 ---
 
-## Tick 2026-07-25 #3 — CLOSED
+## Tick 2026-07-25 #4 — OPEN
+- opened: 2026-07-25 02:39 (system clock; #3 closed 02:35 — near-adjacent per #27–#42/#1–#3 precedent. Tree clean, no OPEN entry, HEAD = 4364d5f = #3's own close commit, zero foreign commits since → proceed.)
+- claimed: monitor heartbeat pass mon2 (stage duty, no assignment status changes — this entry is the claim). Rationale: last pass mon1 closed 00:42 (~2h ago, prior heartbeat); tick #2's deploy left NEW bundles speel-BFcMiTcx.js / speel-DKmkEeHX.css un-baselined (#2 close note names this as next-pass work); 010/035 tripwire checks are monitor duty per both assignments' own text. Nothing else eligible: no needs_verification remains, 020/021/022 gate on 010 (external traction trigger), 035 gates on GSC accrual, 003 parked under decisions/002 until 010 fires — all external, all already recorded on the board (010 is the standing owner-ceo watch), no new human ask to open.
+- worktrees: mon2 → C:\companies\typcoon-lanes\mon2 (mon/tick2026-07-25-4; writes company/metrics + company/assignments/126 only if an incident reproduces); main checkout: dispatcher/integration only. Standing debris routed around: q033/v026/b049–b056b/d078/v078/d125 dirs (unregistered).
+- ids allocated: 126 → mon2 (incidents it may file — lapsed twice, re-reserved per #3 precedent). Next free after reservation: 127; next decision id: 016 (unreserved — no lane this tick writes ADRs).
 - opened: 2026-07-25 02:20 (system clock; #2 closed 01:21. Tree clean, no OPEN entry, HEAD = 3bb8eec = #2's own close commit, zero foreign commits since → proceed.)
 - claimed: 096 → in_progress (ceo — the ops-summary relay ask; re-read from disk immediately before this commit: open) + 125 verification pass (status stays needs_verification; this entry is the claim — tick #13/#26–#42/#1/#2 precedent; re-read from disk immediately before this commit: needs_verification). Verifier: tester — 125 was built by d125 last tick, verification is sequential by nature, this is the next tick.
 - worktrees: v125 → C:\companies\typcoon-lanes\v125 (verify/125, port 4308); c096 → C:\companies\typcoon-lanes\c096 (ceo/096, no server); main checkout: dispatcher/integration only. Standing debris routed around: q033/v026/b049–b056b/d078/v078/d125 dirs (unregistered, worktrees already pruned).
