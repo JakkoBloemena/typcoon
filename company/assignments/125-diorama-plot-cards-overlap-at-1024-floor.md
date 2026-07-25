@@ -2,7 +2,7 @@
 id: 125
 title: "Diorama .plot (build-site) cards overlap by up to ~9.7px at the exact 1024px desktop floor — worse than and untouched by assignment 120's .mch fix"
 owner: developer
-status: needs_verification
+status: done
 priority: 3
 blocked_by: []
 opened_by: tester (found while independently verifying assignment 120, tick 2026-07-25,
@@ -219,3 +219,161 @@ needed. `App.jsx`, `qa-scripts/106-tester-verify.mjs`, `qa-scripts/091-tester-ve
 
 **Dev server:** `npx vite --port 4307` stopped before returning; confirmed nothing listens
 on 4307.
+
+## Verification (tester v125, tick 2026-07-25 #3)
+
+**Verdict: PASS on 125's own written acceptance criteria — `status: done`.** Verified
+independently against `npx vite --port 4308` in the tester worktree
+(`C:\companies\typcoon-lanes\v125`, branch `verify/125`), with my own probe scripts
+(`qa-scripts/125-tester-probe.mjs`, `125-tester-visual-1360.mjs`), not by reading the diff
+or re-running only the dev's own `125-*.mjs` scripts, and with deliberately different
+fixture parameters than the dev's (`ProbeVijf`/`ProbeNul`/`ProbeMix` save names, different
+building counts, coins, and a distinct third fixture — `2-built-3-plot` instead of the
+dev's `1-built-4-plot` — to control for fixture-dependence, same discipline the 120
+verification used).
+
+**AC1 (no overlap at exactly 1024px, any front-lane combination) — CONFIRMED, own
+probe, headless AND headed.** `qa-scripts/125-tester-probe.mjs`, 900ms past `riseIn`'s
+settle window, three fixtures (5-built; 0-built/5-plot; my own 2-built+3-plot mixed cut):
+- `.hal`'s true padding-box (border-box rect minus its 3px+3px border), measured on MY
+  OWN fixtures independently: **878px headless / 863px headed** — byte-identical to both
+  the dev's claimed figures and to 120's own tester-verified figures. Confirms this is
+  still the same shared `.hal`-width constraint (115's `.desk` wrapper), unaffected by
+  which save/fixture is used, exactly as expected since `.hal`'s box doesn't depend on its
+  children's widths.
+- All 5 card widths measured directly from the live DOM in every fixture: **140px**
+  (both `.mch` and `.plot`), confirming the CSS actually shipped 140px, not just what the
+  diff claims.
+- **6/6 own-probe checks passed, zero overlap in every case** (5-built, 0-built/5-plot,
+  2-built+3-plot-mixed × headless/headed). Screenshots:
+  `company/assignments/125-screenshots-verify/tester-{headless,headed}-{5-built,0-built-5-plot,2-built-3-plot-mixed}-1024-hal.png`.
+- **Own arithmetic re-derivation, post-fix:** `140 - 878/6 = 6.333px` margin headless,
+  `140 - 863/6 = 3.833px` margin headed — both comfortably positive, matching the dev's
+  claimed ~3.5-6.3px margin range to within rounding.
+- **Pre-fix defect independently re-confirmed as genuine** (not just trusting the dev's
+  before/after narrative): `git diff e2ce5fe~1 e2ce5fe -- src/game/game.css` shows the
+  `.plot` rule's width literal was `156px` immediately before this commit — a fact from
+  git history, not the dev's claim. Since `.hal`'s padding-box does not depend on
+  `.plot`'s own width (a different element; confirmed by my own measurement matching the
+  dev's on the post-fix code), the pre-fix overlap follows from the same measured
+  878px/863px figures: `156 - 878/6 = 9.667px` (headless), `156 - 863/6 = 12.167px`
+  (headed) — matches the dev's claimed pre-fix numbers (9.656-9.672 / 12.156-12.172) to
+  float noise. I did not edit `src/game/game.css` to re-run a live pre-fix measurement
+  (a source-file edit is outside a tester's write surface and the sandbox's own
+  classifier declined the attempt) — the arithmetic re-derivation plus the dev's own
+  `0-before-fix-headed-0-built-5-plot-1024-hal.png` screenshot (viewed directly, not
+  taken on faith) together constitute independent confirmation: that screenshot visibly
+  shows four adjacent dashed `.plot` borders overlapping/crossing at 1024px headed,
+  clearly visible by eye, matching the filing's own claim that this defect (unlike 120's)
+  is not "too subtle to see." The corresponding post-fix screenshot
+  (`headed-0-built-5-plot-1024-hal.png`) shows clean, non-overlapping cards at the same
+  fixture/viewport — visually confirms the fix closes the gap that was visibly open before.
+- **Math generalization check (why 3 fixtures suffice for "any combination"):**
+  `layoutDiorama`'s front lane can hold at most 5 items total (`BUILDINGS.length === 5` —
+  confirmed by reading `Shop.jsx`'s `stationItems` map, which produces exactly one item
+  per building, front-lane iff `built` or `plot`; `ghost-premium`/`ghost-letters` are
+  back-lane and don't participate in this math). `place()`'s slot width is
+  `hal-padding-box / (N+1)`, monotonically increasing as N decreases, so N=5 (whichever
+  mix of `.mch`/`.plot`) is always the worst case, and since AC1's fix makes every current
+  front-lane card class share one 140px ceiling, the overlap arithmetic depends only on N,
+  never on composition. This is why 5-built, 0-built/5-plot, and one mixed cut cover every
+  reachable N=5 composition, and why N<5 states are automatically safer. Independently
+  re-derived from the code, not asserted from the dev's notes.
+- **Back-lane `.ghost` sanity check (adjacent-but-out-of-scope element the same
+  `place()` math also lays out):** `.ghost` is CSS-fixed at **118px** (`game.css` line
+  803), well under the 140px ceiling — `118 - 878/6 = -28.3px` (i.e. ~28px of margin even
+  in the worst N=5 back-lane case). No overlap risk there; confirms this fix didn't need
+  to (and didn't) touch `.ghost`, and there's no adjacent defect lurking in the back lane
+  at this floor.
+
+**Visual quality check (AC1 "any combination", eyeballed) — CONFIRMED clean, no
+degradation from the 156→140px shrink.** Screenshots at 1024px (all three fixtures,
+headed) and at 1360px (a comfortable width, my own `2-built-3-plot` fixture,
+`tester-headed-2built-3plot-1360-hal.png`) show: machine names ("Typemachine",
+"Drukpers", "Robotarm", "Lopende band", "Mega-fabriek") render on one line, not wrapped;
+"te bouwen" and "nog N munten" build-cost labels fit inside the dashed card without
+overflow or clipping; machine icons are centered and unclipped in both `.mch` and `.plot`
+cards; at 1360px the same five slots simply have more inter-card gap, no visual crowding.
+Judgment: **140px is not a visibly cramped or broken size for either card kind** — the
+16px trim from 156px is not perceptible as a quality regression in these screenshots.
+
+**AC2 (documented consideration of the floor-bump route) — CONFIRMED, genuinely
+weighed, not a rubber-stamp.** Verified the dev's central claim — that a "dispatcher's
+constraint" made the floor-bump route out-of-surface — against the actual tick ledger
+rather than taking it on faith: `company/ticks.md`, Tick 2026-07-25 #2 wave-2 dispatch
+entry, literally reads *"floor stays 1024 absent escalation (ADR 012/114/015 language —
+if the AC2 weighing concludes the floor-bump root-cause route is right, set blocked and
+flag for adjudication rather than editing 106's boundary literals)"* — this is a real,
+pre-existing constraint recorded before the dev lane ran, not a post-hoc justification
+invented in the delivery notes. Given that constraint, the dev's three-route write-up
+(floor bump / per-class patch / shared-ceiling convergence) is genuine documented
+consideration, not a formality: it names the concrete alternative, explains why it wasn't
+re-measured (not actionable within this surface), and honestly weighs the two remaining
+routes against each other with reasons, not just picks one. **AC2 asks for documented
+consideration, not a particular choice — satisfied.**
+
+Judging the reasoning itself: the "converge `.plot` onto `.mch`'s existing 140px" choice
+is sound — it reuses a value already validated at this exact floor (no fresh margin
+judgment call needed), and my own math-generalization check above independently confirms
+the stated benefit is real: with every current front-lane card class capped at 140px, no
+composition of `.mch`/`.plot` at N≤5 can overlap at 1024px, closing the bug class for
+today's roster. The residual risk the dev flagged — a hypothetical future third front-lane
+card class wider than 140px would reproduce this bug again — is correctly identified and
+not overstated; it is a real, if currently unrealized, latent gap that only a floor bump
+(not another per-class width patch) would close structurally. I agree with the dev's
+framing that this is an acceptable trade given the floor bump was explicitly fenced off
+for this assignment.
+
+**AC3 (regression duties) — CONFIRMED, own re-run:**
+- `npm test`: **266/266 green**, `vite build` succeeded, `check-no-dutch-en`: PASS (5
+  built en files, zero unallowlisted Dutch-lexicon hits).
+- `qa-scripts/106-tester-verify.mjs` (verified byte-identical/unmodified via
+  `git status --short` and `git diff --stat` before running — zero diff): **25/25
+  passed**, including "1024px fine-pointer: no .mch/.mch overlap []". Matches the dev's
+  claim exactly.
+- `qa-scripts/091-tester-verify.mjs` (verified unmodified the same way): **34/34
+  passed.** Matches the dev's claim exactly.
+- Both scripts regenerated their own tracked screenshot directories
+  (`106-screenshots-verify/`, `091-screenshots-verify/`) as a side effect; both reverted
+  via `git checkout --` before committing, per precedent.
+
+**Judgment-call rulings (as asked):**
+
+1. **140px (matching `.mch`) vs. a `.plot`-specific value.** Agree with the dev's choice.
+   A distinct, larger `.plot`-only value (e.g. 142-143px) would also have satisfied AC1's
+   raw "no overlap" requirement with a thinner margin, but it would have reintroduced a
+   second magic-number width for no functional benefit, and my own math-generalization
+   check shows the shared-ceiling choice is what makes the "any combination" clause of
+   AC1 provably true by construction rather than by enumeration. No objection.
+2. **Floor-bump route not re-measured for `.plot` specifically.** Agree this was the
+   correct call given the constraint — independently confirmed the constraint is real (see
+   AC2 above, ticks.md citation), not just asserted. Spending probe time re-deriving a
+   `.plot`-specific zero-crossing viewport width would have been dead work against an
+   already-fenced-off route.
+3. **126 not consumed.** Agree with the dev's conclusion. I independently checked the one
+   adjacent surface the dev's reasoning didn't explicitly rule out — the back-lane
+   `.ghost` cards, which share the same `place()` slot math — and confirmed no overlap
+   risk there (118px width, ~28px margin even at N=5 worst case; see the "Back-lane
+   `.ghost` sanity check" above). No distinct, reproduced defect found outside 125's own
+   scope during this verification. Reserved id 126 left unused/lapsed.
+
+**Tester's own file surface (write-surface-compliant):** this file (Verification section
++ frontmatter status only), `qa-scripts/125-tester-probe.mjs`,
+`qa-scripts/125-tester-visual-1360.mjs` (new, untracked qa-only scripts), screenshots in
+`company/assignments/125-screenshots-verify/`. No `src/**` file touched — I attempted a
+temporary `.plot` width revert for a live pre-fix re-measurement and the environment's own
+permission classifier declined the `src/game/game.css` edit (a source-file edit is outside
+a tester's write surface); I used the git-history diff plus the dev's own before/after
+screenshots for pre-fix confirmation instead (see AC1 above), which is independent
+evidence, not reliance on the dev's prose claim. `qa-scripts/106-tester-verify.mjs` and
+`091-tester-verify.mjs` untouched (zero edits, confirmed via `git status --short`/`git
+diff --stat` before running); their regenerated screenshot dirs reverted via
+`git checkout --` before committing.
+
+**Dev server:** `npx vite --port 4308` stopped before returning; confirmed nothing
+LISTENING on 4308 (`netstat -ano | grep LISTENING | grep :4308` empty — a few stale
+`SYN_SENT`/`TIME_WAIT` entries from an unrelated pre-existing `firefox.exe` process
+remain, not something this session started, and not a listening socket).
+
+Commit(s) under test: `e2ce5fe` (dev/125). Tester worktree:
+`C:\companies\typcoon-lanes\v125` (branch `verify/125`).
