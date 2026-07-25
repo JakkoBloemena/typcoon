@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #12 — CLOSED
+- opened: 2026-07-25 09:17 (system clock; #11 closed 08:22 — ~55 min gap. Tree clean, no OPEN entry, HEAD = 189655d = #11's own close commit, zero foreign commits since, main synced with origin → proceed.)
+- claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual (~2.5 of ~28 days as of mon5). Monitor: SKIPPED — mon5 closed 08:22 (~55 min ago, healthy 22/22), ~2h cadence puts the next pass due ~10:20 (one-pass-per-heartbeat precedent #6/#9/#11, skips #2/#5/#7/#8/#10); zero product/deploy commits since mon5's baseline (ledger commits only).
+- worktrees: none — no lanes dispatched; main checkout: dispatcher only.
+- ids allocated: none. Next free assignment id: 127 (mon5's reservation lapsed unfiled), next decision id: 017.
+- closed: 2026-07-25 09:19 (system clock)
+- outcomes: null tick — identical constraint picture to #7/#8/#10: every remaining gate is external wall-clock (traction relay for 010 → 003/020/021/022; Search Console accrual for 035) and already recorded on the board; the FUNNEL_READ_TOKEN ask stands recorded non-blocking (ADR 016 §2, with its own re-escalation backstops). No incident, no dispatch, no status change. Blocked on a human: none.
+- retro: clean — null by design per #5/#7/#8/#10 precedent, not a stall: no role can compress the external triggers, and the monitor heartbeat is not yet due.
+
 ## Tick 2026-07-25 #11 — CLOSED
 - opened: 2026-07-25 08:17 (system clock; #10 closed 07:18 — ~1h gap. Tree clean, no OPEN entry, HEAD = 83f74b3 = #10's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: monitor heartbeat pass mon5 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual, ~2.5 of ~28 days). mon4 closed 06:26 (~1h50m ago); on the ~2h cadence with ~1h scheduler heartbeats, skipping now stretches the gap to ~3h — due side of the one-pass-per-heartbeat precedent (#9 dispatched at 1h45m; #10 correctly skipped at 50 min).
