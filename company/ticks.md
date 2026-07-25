@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #8 — CLOSED
+- opened: 2026-07-25 05:17 (system clock; #7 closed 04:36 — ~40 min gap. Tree clean, no OPEN entry, HEAD = 1bd8f2b = #7's own close commit, zero foreign commits since → proceed.)
+- claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual (~2 of ~28 days); 010 is the standing owner-ceo watch, last evaluated by mon3 04:34 (NOT FIRED). Monitor: SKIPPED — mon3 closed ~45 min ago, healthy 16/16, ~2h cadence puts the next pass due ~06:30 (one-pass-per-heartbeat precedent #37/#40/#42, skips #2/#5/#7); zero src/deploy commits since mon3's baseline (ledger commits only).
+- worktrees: none — no lanes dispatched; main checkout: dispatcher only.
+- ids allocated: none. Next free assignment id: 127, next decision id: 017.
+- closed: 2026-07-25 05:18 (system clock)
+- outcomes: null tick — identical constraint picture to #7: every remaining gate is external wall-clock (traction for 010 → 003/020/021/022; Search Console accrual for 035) and already recorded on the board; the FUNNEL_READ_TOKEN ask stands recorded non-blocking (ADR 016 §2, with its own re-escalation backstops). No incident, no dispatch, no status change. Blocked on a human: none.
+- retro: clean — null by design per #5/#7 precedent, not a stall: no role can compress the external triggers, and the monitor heartbeat is not yet due.
+
 ## Tick 2026-07-25 #7 — CLOSED
 - opened: 2026-07-25 04:31 (system clock; reads *before* #6's 04:34 close stamp — the known few-minute stamp skew, trusting commit order per tick #2/#9 retro: close commit 2cb599b is committed and complete, tree clean, no OPEN entry, HEAD = 2cb599b = #6's own close commit, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual (~2 of ~28 days); 010 is the standing owner-ceo watch, checked by mon3 minutes ago (NOT FIRED). Monitor: SKIPPED — mon3 closed in this same scheduler heartbeat (16/16 healthy, deploy baseline unchanged), one-pass-per-heartbeat precedent (#37/#40/#42, #2/#5 skips); nothing new to baseline (only #6's own ledger/decision commits since).
