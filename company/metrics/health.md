@@ -2911,3 +2911,117 @@ clean and unchanged, no renewal risk. 096 relay: standing evidence (send log) ac
 brief, no new external hit observed in this pass's narrow log window (not conclusive either
 way, not treated as a finding). No incident reproduced — **assignment 126 not filed, lapses
 unused.**
+
+## 2026-07-25 02:22 UTC — mon3 (Tick 2026-07-25 #6: health sweep + 010/035 tripwires + funnel-observability gap filed as 126)
+
+Third monitor pass of the day (worktree `C:\companies\typcoon-lanes\mon3`, branch
+`mon/tick2026-07-25-6`, checked out at main tip `7fcae4a`), first since mon2 (health.md
+above, closed 2026-07-25 00:43, commit `14339ee`). Since mon2: Tick 2026-07-25 #5 was a
+null tick (zero eligible work, board fully externally gated on 010/035) — no product-path
+commits landed. This pass's brief: re-run mon2's 16-check baseline, confirm deploy still
+matches (zero drift expected), re-evaluate 010/035, and — mon2's retro headline — stop
+re-logging "unevaluable" for the funnel-token gap and file it as assignment 126 instead.
+
+**Deploy-correspondence check: live deploy matches current `origin/main` exactly, zero
+product-path drift since mon2.** `vercel inspect typcoon.com --logs` shows the live
+deployment cloned **`Commit: 7fcae4a`** (tick #5's close commit) — `git log --oneline
+4364d5f..7fcae4a` (mon2's baseline commit through current tip) shows exactly three
+commits, all tick-ledger bookkeeping (#4 close, #5 open+close); `git log --oneline
+4364d5f..7fcae4a -- api/ src/ config/ index.html vite.config.js vercel.json package.json`
+returns **empty** — no product-path commit exists in that range. Live deploy correctly
+redeployed the same build.
+
+**Bundle baseline: byte-identical to mon2's, no drift.** `/speel/` still references
+**`speel-BFcMiTcx.js` / `speel-DKmkEeHX.css`** — both fetched directly, both 200. Given
+zero product-path commits since mon2 (confirmed above), a hash re-derivation was not
+needed to establish "unchanged"; the filenames matching mon2's recorded baseline exactly
+is itself conclusive given the git evidence. No stale-asset or drift incident.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign trailing-slash
+redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200, `Last-Modified: Sat, 25 Jul 2026 01:56:55 GMT`, `X-Vercel-Cache: HIT` |
+| `GET /speel/` (game) | 200; bundle `speel-BFcMiTcx.js` / `speel-DKmkEeHX.css` — matches mon2 exactly |
+| `GET /en/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>`/22 `<loc>`/22 `</url>`** — unchanged, tags balanced |
+| `GET /api/admin/funnel` (no token / `?token=garbage` / `Bearer garbage`) | **401** all three, `{"error":"unauthorized"}`, no data leak |
+| `GET /api/cron/notify` (no auth / `?token=garbage` / `Bearer garbage`) | **401** all three |
+| `POST /api/admin/notify` (no auth / `Bearer garbage` / `?token=garbage`) | **401** all three |
+| `GET /api/track` | **405** (empty body) |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"malformed"}` |
+
+**16/16 checks pass** (8 page/sitemap checks, 9 auth-boundary checks across all three
+credential shapes on all three admin-facing endpoints collapsed to 3 table rows, plus
+track/redeem behavior) — same checklist and result as mon2's 16/16. No 4xx/5xx surprises,
+no auth boundary breach under any tested credential shape, no data leak, no stale content.
+
+**Tripwire 010 (payments reopening) — UNEVALUABLE, not fired; gap now filed as
+assignment 126 instead of re-logged bare.** `company/metrics/funnel.md`'s table is still
+empty (unchanged since creation, re-read directly this tick). Environment check
+(`Get-ChildItem Env: | Where-Object Name -match 'FUNNEL|CRON_SECRET|VERCEL_TOKEN|SUPABASE'`)
+returns only `SUPABASE_GO_BINARY` — no `FUNNEL_READ_TOKEN`, no `CRON_SECRET` — confirming
+mon1/mon2's finding is still true, not assumed. `/api/admin/funnel` correctly rejects
+every credential shape tried (see above) — the auth boundary holds; that is not the same
+claim as "data is unreachable-by-design." **Cannot compute the 7-day ≥5-game-starts/day
+average from zero rows.** Trigger state: **NOT FIRED** (no basis to say it fired).
+Per this pass's brief and mon2's retro note, this gap has now recurred across every
+growing-stage pass since tick #14 (2026-07-23) — roughly a dozen consecutive
+"unevaluable" log lines for the identical structural reason. Read decisions/008 in full
+this pass: assignment 044 (the build half of ADR 008's durable fix — `FUNNEL_READ_TOKEN`
+support on `/api/admin/funnel`) shipped and was independently re-verified done
+(commit `5996aff`/rework `f63f1a0`) on 2026-07-23; only the Shareholder-side provisioning
+half (ADR 008 ask 2: generate the token, set it in Vercel env, expose it to tick
+sessions) has not happened. **Filed `company/assignments/126-funnel-tripwire-observability-gap.md`**
+(id 126 as pre-allocated, owner ceo, priority 3, open) asking the CEO to adjudicate: either
+close the loop per ADR 008 ask 2, or formally accept digest-only observability and record
+that as an amendment to 010's own Notes section — not re-logging the same bare gap a
+thirteenth time.
+
+**Tripwire 035 (content batch 3 / GSC data window) — NOT FIRED, ~2 days elapsed of the
+~28 needed, unchanged from mon2.** `company/metrics/search-console.md` baseline still
+dated 2026-07-23 (re-read directly this tick; no new entry). Today is 2026-07-25 —
+**2 days elapsed**, ~26 days remain at minimum against 035's own ~4-week default. Wall-clock
+check only, not forced.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, re-confirmed
+this tick with the same instruments mon1/mon2 established.** `vercel inspect
+typcoon.com --logs` works (used above for deploy-correspondence); `supabase projects
+list` authenticates and lists the same four projects (`typie-fun`, `pim`, `bloemena-site`,
+`shadowfist`) — **`typcoon` is still absent**, same account-scope gap as mon1/mon2. No
+row-count/pause-risk read possible from this environment. Endpoint checks above found no
+5xx/pause symptoms on any DB-backed route (funnel/cron/notify/track/redeem all responded
+correctly, no Supabase-down error shape). This gap is tracked under ADR 008 itself (not a
+new finding, not folded into 126 — 126 is scoped to the funnel-tripwire/010 gap
+specifically, per the brief).
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7.**
+`git log --oneline -- company/metrics/spend.md` still shows only the two pre-monitor
+commits (`aa85ab4`, `c68f46a`) — no commit since, confirmed via history this tick. Four
+lines unchanged: domain (Shareholder-owned auto-renew, immaterial, untracked per
+decisions/003), Vercel/Supabase/Resend all €0 free tier (escalate to CEO before any
+paid-plan upgrade). `company/decisions/` checked explicitly — still tops out at
+`015-desktop-only-gated-not-reflowed.md`, no new decision since mon2, no new recurring
+commitment. No line carries a Shareholder "approved one-time, cancel before renewal"
+condition — nothing to escalate pre-renewal this tick. Budget ceiling €50/month
+(decisions/003) — current recorded recurring spend: **€0 actuals against the €50/mo
+ceiling.** No upcoming renewal to flag.
+
+**Verdict: HEALTHY. 16/16 checks pass, identical result and checklist to mon2. Live
+deploy confirmed as commit `7fcae4a`, zero product-path commits since mon2's `4364d5f`
+baseline (git-verified, not assumed) — bundle filenames byte-identical
+(`speel-BFcMiTcx.js`/`speel-DKmkEeHX.css`), no drift, no incident. Auth boundaries on all
+three admin-facing endpoints hold under every tested credential shape; no data leak.
+Sitemap steady at 22 URLs. **Tripwire 010: UNEVALUABLE/NOT FIRED** — same structural gap
+as mon1/mon2 (no `FUNNEL_READ_TOKEN`/`CRON_SECRET` in this environment, funnel.md empty),
+now **filed as assignment 126** for CEO adjudication rather than re-logged bare, per
+mon2's retro instruction. **Tripwire 035: NOT FIRED** — 2 of ~28 days elapsed, unchanged.
+Quota consumption remains unmeasured (ADR 008 gap, unchanged, not folded into 126). Spend
+ledger clean and unchanged, no renewal risk. No other incident found or opened this
+pass.**
