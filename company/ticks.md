@@ -23,11 +23,14 @@ Entry format:
 
 ---
 
-## Tick 2026-07-25 #13 — OPEN
+## Tick 2026-07-25 #13 — CLOSED
 - opened: 2026-07-25 10:17 (system clock; #12 closed 09:19 — ~1h gap. Tree clean, no OPEN entry, HEAD = 08ed189 = #12's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: monitor heartbeat pass mon6 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere — 013's frontmatter is `done`, the phrase in its body is prose; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). mon5 closed 08:22 (~1h55m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m, #11 at 1h50m; #12 correctly skipped at 55 min).
 - worktrees: mon6 → C:\companies\typcoon-lanes\mon6 (mon/tick2026-07-25-13; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only.
 - ids allocated: 127 → mon6 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+- closed: 2026-07-25 10:25 (system clock)
+- outcomes: mon6 health pass **HEALTHY 22/22** (commit afe5c2f, merged FF) — all pages/sitemap/bundle-asset checks pass, admin auth boundaries hold 9/9 (401 under all credential shapes, no leak), deploy correspondence git-verified (live = 08ed189 via vercel inspect; zero product-path commits since mon5's baseline, bundles byte-identical to mon2–mon5). **Tripwire 010: unevaluable pending Shareholder relay — expected steady state per ADR 016, NOT FIRED** (funnel.md still empty, no new paste). **Tripwire 035: NOT FIRED** (~2.3 of ~28 days GSC accrual). Quota: ADR 008 account-scope gap re-confirmed (typcoon absent from supabase account scope; no pause/5xx symptoms). Spend €0 actuals vs €50/mo ceiling, no renewals pending. 127 lapses unfiled (no incident). Worktree mon6 swept clean, branch deleted. Board unchanged: zero eligible work, zero needs_verification; all remaining gates external (010 traction relay → 003/020/021/022; GSC accrual → 035). **Nothing blocked on a human** — the FUNNEL_READ_TOKEN ask stands recorded low-priority non-blocking (ADR 016 §2 with its own escalation backstops).
+- retro: clean — monitor-only tick per cadence (~1h55m since mon5, due side of the ~2h heartbeat); no role can compress the external triggers.
 
 ## Tick 2026-07-25 #12 — CLOSED
 - opened: 2026-07-25 09:17 (system clock; #11 closed 08:22 — ~55 min gap. Tree clean, no OPEN entry, HEAD = 189655d = #11's own close commit, zero foreign commits since, main synced with origin → proceed.)
