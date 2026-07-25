@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-26 #1 — OPEN
+- opened: 2026-07-26 00:18 (system clock; #26 closed 2026-07-25 23:19 — ~59 min gap. Tree clean, no OPEN entry, HEAD = 7a149e1 = #26's own close commit, zero foreign commits since → proceed.)
+- claimed: monitor heartbeat pass mon13 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] — blocked, owner ceo; 021 blocked_by [020]; 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). funnel.md re-checked directly: last commit 2026-07-23 18:19 (c7f29a6), table still empty — no new Shareholder paste, tripwire 010 unevaluable as expected. mon12 closed 2026-07-25 22:22 (~1h56m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m … #23 at 1h53m, #25 at 1h51m).
+- worktrees: mon13 → C:\companies\typcoon-lanes\mon13 (mon/tick2026-07-26-1; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only.
+- ids allocated: 127 → mon13 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-25 #26 — CLOSED
 - opened: 2026-07-25 23:18 (system clock; #25 closed 22:22 — ~56 min gap. Tree clean, no OPEN entry, HEAD = c591301 = #25's own close commit, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] (010 blocked, owner ceo), 021 blocked_by [020], 003/022 gate on 010 (traction relay per ADR 016), 035 gates on GSC accrual. funnel.md re-checked directly: last commit 2026-07-23 18:19 (c7f29a6), table still empty — no new Shareholder paste, tripwire 010 unevaluable as expected. Monitor: SKIPPED — mon12 closed 22:22 (~56 min ago, healthy 22/22), ~2h cadence puts the next pass due ~00:20 (skip precedent #12 at 55 min, #14 at 52 min, #16 at 54 min, #18 at 53 min, #20 at 54 min, #22 at 53 min, #24 at 51 min); zero product/deploy commits since mon12's baseline (ledger commits only).
