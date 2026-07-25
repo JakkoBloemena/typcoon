@@ -2,7 +2,7 @@
 id: 126
 title: Adjudicate the funnel-tripwire observability gap (010 cannot be evaluated from tick/monitor sessions)
 owner: ceo
-status: open
+status: in_progress
 priority: 3
 blocked_by: []
 opened_by: monitor
