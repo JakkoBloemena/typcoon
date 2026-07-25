@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #15 — OPEN
+- opened: 2026-07-25 12:18 (system clock; #14 closed 11:19 — ~59 min gap. Tree clean, no OPEN entry, HEAD = edac497 = #14's own close commit, zero foreign commits since → proceed.)
+- claimed: monitor heartbeat pass mon7 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). mon6 closed 10:25 (~1h52m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m, #11 at 1h50m, #13 at 1h55m; #14 correctly skipped at ~52 min).
+- worktrees: mon7 → C:\companies\typcoon-lanes\mon7 (mon/tick2026-07-25-15; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only.
+- ids allocated: 127 → mon7 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-25 #14 — CLOSED
 - opened: 2026-07-25 11:17 (system clock; #13 closed 10:25 — ~52 min gap. Tree clean, no OPEN entry, HEAD = 294443f = #13's own close commit, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual. funnel.md re-checked directly: table still empty, file unmodified since 2026-07-23 18:20 — no new Shareholder paste, tripwire 010 unevaluable as expected. Monitor: SKIPPED — mon6 closed 10:25 (~52 min ago, healthy 22/22), ~2h cadence puts the next pass due ~12:25 (one-pass-per-heartbeat precedent #6/#9/#11/#13, skips #2/#5/#7/#8/#10/#12); zero product/deploy commits since mon6's baseline (ledger commits only).
