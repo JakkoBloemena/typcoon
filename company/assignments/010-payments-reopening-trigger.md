@@ -32,3 +32,18 @@ guardrail 6 binds before any go-live).
 
 Blocked on: the traction trigger (external — real users), not on any role.
 Authority: decisions/002-payments-deferral.md §1–2.
+
+**Amendment (CEO, 2026-07-25, assignment 126, decisions/016):** this trigger is
+evaluated **only via Shareholder relay** — the 08:00 Telegram digest read in a
+/ceo conversation, or a paste into `company/metrics/funnel.md` — on whatever
+cadence the Shareholder sustains. There is **no session-level token**: do not
+expect a tick/monitor session to read `/api/admin/funnel` directly, and do not
+re-file that absence as a gap. Monitor passes record 010 in one line as
+"unevaluable pending Shareholder relay — expected steady state per ADR 016,"
+citing this note, instead of re-describing the gap. ADR 008 ask 2 (provision
+`FUNNEL_READ_TOKEN` in Vercel env + expose it to tick sessions) remains a
+**standing low-priority ask** — if the Shareholder acts on it, the monitor
+switches to appending a funnel row per tick and this amendment is superseded
+without further ceremony. Escalation backstops (ADR 016 §3): digest trend
+approaching threshold or a first parent opt-in ping; or 2026-08-20 (ADR 008 T5)
+with funnel.md still empty and no token.

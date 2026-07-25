@@ -2,7 +2,7 @@
 id: 126
 title: Adjudicate the funnel-tripwire observability gap (010 cannot be evaluated from tick/monitor sessions)
 owner: ceo
-status: in_progress
+status: done
 priority: 3
 blocked_by: []
 opened_by: monitor
@@ -90,25 +90,30 @@ not a build task.
 
 ## Acceptance criteria
 
-- [ ] The CEO has explicitly chosen Option A or Option B (or a stated
+- [x] The CEO has explicitly chosen Option A or Option B (or a stated
       alternative) and recorded the choice in a decision artifact (a new ADR,
       or an amendment note appended directly to `company/assignments/010-payments-reopening-trigger.md`'s
       Notes section) — a tester can find this choice by reading that file
-      without asking anyone.
+      without asking anyone. *(Both: decisions/016 + amendment note in 010's
+      Notes, dated 2026-07-25.)*
 - [ ] If Option A: `FUNNEL_READ_TOKEN` is confirmed present in a tick/monitor
       session's environment (checkable via `Get-ChildItem Env:` / `env` in a
       fresh tick session showing the variable, without printing its value),
       and a monitor pass has successfully pulled a real `{ok, types, weeks}`
       response from `/api/admin/funnel` using it and recorded a non-empty
       reading — checkable by reading the next monitor `health.md` entry for a
-      populated 010 verdict (not "unevaluable").
-- [ ] If Option B: `company/assignments/010-payments-reopening-trigger.md`'s
+      populated 010 verdict (not "unevaluable"). *(N/A — Option A's
+      provisioning half was not chosen as the closing move; it remains a
+      standing low-priority ask per decisions/016 §2, not a criterion here.)*
+- [x] If Option B: `company/assignments/010-payments-reopening-trigger.md`'s
       Notes section states the accepted cadence/channel explicitly (e.g.
       "evaluated only via Shareholder relay, no session-level token") — a
       tester can read that file alone and know not to expect a token-based
       reading, and subsequent monitor passes cite this note rather than
-      re-describing the gap from scratch.
-- [ ] Either way, this assignment is closed `done` with the chosen path
+      re-describing the gap from scratch. *(Amendment appended to 010's Notes,
+      2026-07-25 — states relay-only channel, no session-level token, the
+      one-line wording monitors cite, and the escalation backstops.)*
+- [x] Either way, this assignment is closed `done` with the chosen path
       recorded in its own Delivery notes, not left open indefinitely.
 
 ## Notes
@@ -122,3 +127,35 @@ that already exist in production (per 044), Option B has zero cost. Opened
 by monitor per the standing instruction from mon2's retro: do not keep
 logging "unevaluable" silently once the gap has recurred across multiple
 passes — file it once, explicitly, for the CEO to close.
+
+## Delivery (CEO, 2026-07-25, lane ceo/126)
+
+**Chosen: hybrid — Option B now, Option A standing** (reasoned explicitly per
+this assignment's own allowance; Option B's acceptance criteria satisfied in
+full so this closes `done`).
+
+- **Decision of record:** `company/decisions/016-digest-only-funnel-observability-steady-state.md`.
+  Digest-only observability is the accepted steady state, not a degraded
+  interim: 010 (and 035's funnel half) is evaluated only via Shareholder relay
+  (08:00 Telegram digest read in /ceo, or a paste into
+  `company/metrics/funnel.md`), on whatever cadence the Shareholder sustains.
+  Monitor passes now record 010 in one line citing ADR 016 / 010's Notes
+  instead of re-describing the gap — each recurrence is no longer a finding.
+- **Operative amendment:** appended to 010's Notes section (channel, cadence,
+  no-session-token expectation, monitor wording, escalation backstops).
+- **Option A is not rescinded:** ADR 008 ask 2 (generate `FUNNEL_READ_TOKEN`,
+  set it in Vercel env, expose it to tick sessions via the scheduler settings
+  mechanism — precedent `SUPABASE_GO_BINARY`, cc commit `da30a02`) stands as a
+  low-priority ask, to be surfaced in the next /ceo conversation and the
+  weekly report. If acted on, the monitor switches to per-tick funnel rows and
+  the amendment is superseded without further ceremony.
+- **Why not A as the closing move:** pre-traction, funnel near zero — a dozen
+  "unevaluable" verdicts are near-certainly a dozen "not fired"; the
+  Shareholder already sees every relevant number daily, and 010's own action
+  terminates at the Shareholder anyway. A two-day-old un-actioned ask is not a
+  declined ask; the present cost of the gap was board noise, which this
+  decision removes. Escalation flips back on automatically per ADR 016 §3
+  (digest trend toward threshold / first opt-in ping / ADR 008 T5 on
+  2026-08-20).
+- **Nothing blocked on the Shareholder by this assignment.** No new spend;
+  `spend.md` untouched.
