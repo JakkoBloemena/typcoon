@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #9 — OPEN
+- opened: 2026-07-25 06:19 (system clock; #8 closed 05:18 — ~1h gap. Tree clean, no OPEN entry, HEAD = d034b01 = #8's own close commit, zero foreign commits since, main synced with origin → proceed.)
+- claimed: none — full board re-read from disk at open: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (relay-evaluated per ADR 016), 035 gates on GSC accrual (~2 of ~28 days as of mon3). Monitor stage duty DISPATCHED — mon3 closed 04:34, ~1h45m ago; on a ~2h cadence with ~1h scheduler heartbeats, skipping now stretches the gap to ~2h45m, so this is the due side of the one-pass-per-heartbeat precedent (#8 correctly skipped at 45 min).
+- worktrees: mon4 → C:\companies\typcoon-lanes\mon4 (mon/tick2026-07-25-9; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only. Standing debris routed around: q033/v026/b049–b056b/d078/v078/d125 dirs (unregistered).
+- ids allocated: 127 → mon4 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-25 #8 — CLOSED
 - opened: 2026-07-25 05:17 (system clock; #7 closed 04:36 — ~40 min gap. Tree clean, no OPEN entry, HEAD = 1bd8f2b = #7's own close commit, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual (~2 of ~28 days); 010 is the standing owner-ceo watch, last evaluated by mon3 04:34 (NOT FIRED). Monitor: SKIPPED — mon3 closed ~45 min ago, healthy 16/16, ~2h cadence puts the next pass due ~06:30 (one-pass-per-heartbeat precedent #37/#40/#42, skips #2/#5/#7); zero src/deploy commits since mon3's baseline (ledger commits only).
