@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-25 #13 — OPEN
+- opened: 2026-07-25 10:17 (system clock; #12 closed 09:19 — ~1h gap. Tree clean, no OPEN entry, HEAD = 08ed189 = #12's own close commit, zero foreign commits since, main synced with origin → proceed.)
+- claimed: monitor heartbeat pass mon6 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification anywhere — 013's frontmatter is `done`, the phrase in its body is prose; 020 blocked_by [010] not done, 021 blocked_by [020], 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). mon5 closed 08:22 (~1h55m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m, #11 at 1h50m; #12 correctly skipped at 55 min).
+- worktrees: mon6 → C:\companies\typcoon-lanes\mon6 (mon/tick2026-07-25-13; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only.
+- ids allocated: 127 → mon6 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-25 #12 — CLOSED
 - opened: 2026-07-25 09:17 (system clock; #11 closed 08:22 — ~55 min gap. Tree clean, no OPEN entry, HEAD = 189655d = #11's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification anywhere; 020 blocked_by [010] (not done), 021 blocked_by [020], 003/022 gate on 010 (traction watch, relay-evaluated per ADR 016), 035 gates on GSC accrual (~2.5 of ~28 days as of mon5). Monitor: SKIPPED — mon5 closed 08:22 (~55 min ago, healthy 22/22), ~2h cadence puts the next pass due ~10:20 (one-pass-per-heartbeat precedent #6/#9/#11, skips #2/#5/#7/#8/#10); zero product/deploy commits since mon5's baseline (ledger commits only).
