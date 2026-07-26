@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-26 #9 — OPEN
+- opened: 2026-07-26 08:17 (system clock; #8 closed 07:18 — ~59 min gap. Tree clean, no OPEN entry, HEAD = a40c36f = #8's own close commit, zero foreign commits since, main synced with origin → proceed.)
+- claimed: monitor heartbeat pass mon17 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] — blocked, owner ceo; 021 blocked_by [020]; 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). funnel.md re-checked directly: last commit 2026-07-23 18:19 (c7f29a6), no new Shareholder paste, tripwire 010 unevaluable as expected. mon16 closed 06:26 (~1h51m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: #9 at 1h45m … 07-26 #5 at 1h53m, 07-26 #7 at 1h53m).
+- worktrees: mon17 → C:\companies\typcoon-lanes\mon17 (mon/tick2026-07-26-9; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only. Worktree cut after this open commit per mon15's retro note (FF integration).
+- ids allocated: 127 → mon17 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-26 #8 — CLOSED
 - opened: 2026-07-26 07:17 (system clock; #7 closed 06:26 — ~51 min gap. Tree clean, no OPEN entry, HEAD = ca28899 = #7's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] (010 blocked, owner ceo), 021 blocked_by [020], 003/022 gate on 010 (traction relay per ADR 016), 035 gates on GSC accrual. funnel.md re-checked directly: last commit 2026-07-23 18:19 (c7f29a6), table still empty — no new Shareholder paste, tripwire 010 unevaluable as expected. Monitor: SKIPPED — mon16 closed 06:26 (~51 min ago, healthy 22/22), ~2h cadence puts the next pass due ~08:20 (skip precedent #12 at 55 min … 07-26 #4 at 53 min, 07-26 #6 at 53 min); zero product/deploy commits since mon16's baseline (ledger commits only, show-stat-verified ticks.md-only).
