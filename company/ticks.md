@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-07-26 #13 — OPEN
+- opened: 2026-07-26 12:18 (system clock; #12 closed 11:19 — ~59 min gap. Tree clean, no OPEN entry, HEAD = b751a13 = #12's own close commit, zero foreign commits since, main synced with origin → proceed.)
+- claimed: monitor heartbeat pass mon19 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] — blocked, owner ceo; 021 blocked_by [020]; 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). funnel.md re-checked directly: last commit 2026-07-23 18:19 (c7f29a6), table still empty — no new Shareholder paste, tripwire 010 unevaluable as expected. mon18 closed 10:21 (~1h56m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: 07-26 #5 at 1h53m, #7 at 1h53m, #9 at 1h51m, #11 at 1h51m).
+- worktrees: mon19 → C:\companies\typcoon-lanes\mon19 (mon/tick2026-07-26-13; writes company/metrics + company/assignments/127 only if an incident reproduces); main checkout: dispatcher/integration only. Worktree cut after this open commit per mon15's retro note (FF integration).
+- ids allocated: 127 → mon19 (incidents it may file; lanes never compute ids). Next free after reservation: 128; next decision id: 017 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-07-26 #12 — CLOSED
 - opened: 2026-07-26 11:17 (system clock; #11 closed 10:21 — ~56 min gap. Tree clean, no OPEN entry, HEAD = 4df6c01 = #11's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] (010 blocked, owner ceo), 021 blocked_by [020], 003/022 gate on 010 (traction relay per ADR 016), 035 gates on GSC accrual. funnel.md re-checked directly: last commit 2026-07-23 18:19 (c7f29a6), table still empty — no new Shareholder paste, tripwire 010 unevaluable as expected. Monitor: SKIPPED — mon18 closed 10:21 (~56 min ago, healthy 22/22), ~2h cadence puts the next pass due ~12:20 (skip precedent #12 at 55 min … 07-26 #8 at 51 min, 07-26 #10 at 51 min); zero product/deploy commits since mon18's baseline (HEAD = #11's close, ledger commits only).
