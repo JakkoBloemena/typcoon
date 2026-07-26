@@ -4642,3 +4642,113 @@ still empty, no new Shareholder paste; not re-filed — already adjudicated as a
 remains unmeasured (ADR 008 gap, unchanged, re-confirmed with same instruments, not
 re-filed). Spend ledger clean and unchanged, no renewal risk. No incident reproduced —
 **assignment 127 not filed, id lapses unused.**
+
+## 2026-07-26 10:22 UTC — mon19 (Tick 2026-07-26 #13: health sweep + 010/035 tripwires)
+
+Nineteenth monitor pass of the day (worktree `C:\companies\typcoon-lanes\mon19`, branch
+`mon/tick2026-07-26-13`, cut from main at `bcb945a`), first since mon18 (health.md
+above, closed 2026-07-26 08:20 UTC, deploy `f7479d8`). Since mon18: tick #12 was a null
+tick (monitor not due, zero eligible work, `b751a13`, touches only `company/ticks.md`)
+— tick #13 (this pass) is this monitor heartbeat, id 127 reserved. This pass re-runs
+mon6–mon18's 22-check checklist verbatim, confirms deploy correspondence, re-evaluates
+010 (citing ADR 016) and 035, and re-confirms the ADR 008 quota gap without re-filing it.
+
+**Deploy-correspondence check: live deploy matches current `origin/main` exactly, zero
+product-path drift since mon18.** `vercel inspect typcoon.com --logs` shows the live
+deployment cloned **`Commit: b751a13`** (build started 2026-07-26T09:18:46Z, clean
+build, no errors). `git fetch origin main` confirms `origin/main` tip is `b751a13`, the
+same commit. This worktree's own `HEAD` (`bcb945a`) is one commit ahead of that —
+`git show --stat bcb945a` confirms it touches only `company/ticks.md` (this tick's own
+open/claim commit) — zero product-path drift, confirmed by identity not inference.
+
+**Bundle baseline: byte-identical to mon2–mon18's, no drift.** `/speel/` still
+references **`speel-BFcMiTcx.js` / `speel-DKmkEeHX.css`** — both fetched directly, both
+200.
+
+**Endpoint checks (plain HTTP, no secrets used, `-L` follows the benign trailing-slash
+redirect on `/api/*`):**
+
+| Check | Result |
+|---|---|
+| `GET /` | 200 |
+| `GET /speel/` (game) | 200; bundle `speel-BFcMiTcx.js` / `speel-DKmkEeHX.css` — matches mon2–mon18 exactly |
+| `GET /en/` | 200 |
+| `GET /leren-typen-voor-kinderen/` (nl pillar) | 200 |
+| `GET /voor-scholen/` | 200 |
+| `GET /blog/` | 200 |
+| `GET /robots.txt` | 200 |
+| `GET /sitemap.xml` | 200; **22 `<url>`/22 `<loc>`/22 `</url>`** — unchanged, tags balanced |
+| `GET /assets/speel-BFcMiTcx.js` (bundle JS, fetched directly) | 200 |
+| `GET /assets/speel-DKmkEeHX.css` (bundle CSS, fetched directly) | 200 |
+| `GET /api/admin/funnel` (no token / `?token=garbage` / `Bearer garbage`) | **401** all three, `{"error":"unauthorized"}`, no data leak |
+| `GET /api/cron/notify` (no auth / `?token=garbage` / `Bearer garbage`) | **401** all three, `{"error":"unauthorized"}` |
+| `POST /api/admin/notify` (no auth / `Bearer garbage` / `?token=garbage`) | **401** all three, `{"error":"unauthorized"}` |
+| `GET /api/track` | **405** (empty body) |
+| `POST /api/track` (empty `{}` body) | **204** — fails silently by design |
+| `POST /api/school/redeem` (bogus code) | **400** `{"ok":false,"error":"invalid"}` — clean reject; error string is input-length-dependent (a 17-char normalized bogus code hits the signature-mismatch branch → `invalid`; any other length hits the format-length branch → `malformed`; both are the same `_licence.js verifyCode` clean-400 path, not a regression — first noted at tick #7/mon2) |
+
+**22/22 discrete checks pass** (8 page/sitemap checks, 2 direct bundle-asset fetches, 9
+auth-boundary checks across all three credential shapes on all three admin-facing
+endpoints, 2 track behavior checks, 1 redeem check) — same checklist and result as
+mon18. No 4xx/5xx surprises, no auth boundary breach under any tested credential shape,
+no data leak, no stale content.
+
+**Tripwire 010 (payments reopening): unevaluable pending Shareholder relay — expected
+steady state per ADR 016, NOT FIRED.** `company/metrics/funnel.md` re-read directly this
+tick — table still empty, no new Shareholder paste since mon17/mon18 (`git log --
+company/metrics/funnel.md` still tops out at `c7f29a6`, 2026-07-23 18:19). Per the CEO
+amendment in `company/assignments/010-payments-reopening-trigger.md` Notes (ADR 016,
+decisions/016), this trigger is evaluated only via Shareholder relay; the digest-only
+gap is not re-filed or re-described as a fresh finding this pass.
+
+**Tripwire 035 (content batch 3 / GSC data window): NOT FIRED, ~2.95 of ~28 days
+elapsed, unchanged verdict.** `company/metrics/search-console.md` baseline still dated
+2026-07-23 13:30 (`git log` confirms no commits since `be2a450`, re-read directly this
+tick; no new entry). Baseline commit timestamp is `2026-07-23 13:30:33 +0200` (11:30:33
+UTC); now is `2026-07-26 10:22:40 UTC` — **~2.95 days elapsed** (70h52m) on a direct
+UTC-normalized wall-clock computation this tick, at least ~25 days remain against 035's
+own ~4-week default. Wall-clock check only, not forced.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, re-confirmed
+this tick with the same instruments mon1–mon18 established.** `vercel inspect typcoon.com
+--logs` works (used above for deploy-correspondence, exit clean, build log shows no
+errors); `supabase projects list` authenticates and lists the same four projects
+(`typie-fun`, `pim`, `bloemena-site`, `shadowfist`, all `ACTIVE_HEALTHY`) —
+**`typcoon` is still absent**, same account-scope gap as mon1–mon18 (`supabase link
+--project-ref typcoon` fails with `LegacyInvalidProjectRefError` / "Invalid project ref
+format", consistent with the gap — the project is not addressable from this environment
+at all, not merely unlinked). No row-count/pause-risk read possible from this
+environment, and no Supabase pause/5xx symptom on any DB-backed route this tick either
+(funnel/cron/notify/track/redeem all responded correctly, no Supabase-down error shape).
+Not re-filed — tracked under ADR 008 itself.
+
+**Spend: verified against `company/metrics/spend.md`, unchanged since tick #7.** `git
+log --oneline -- company/metrics/spend.md` still shows only the two pre-monitor commits
+(`aa85ab4`, `c68f46a`) — no commit since, confirmed via history this tick. Four lines
+unchanged: domain (Shareholder-owned auto-renew, immaterial, untracked per
+decisions/003), Vercel/Supabase/Resend all €0 free tier (escalate to CEO before any
+paid-plan upgrade). `company/decisions/` checked explicitly — still tops out at
+`016-digest-only-funnel-observability-steady-state.md` (16 files), no new decision since
+mon18, no new recurring commitment. No line carries a Shareholder "approved one-time,
+cancel before renewal" condition — nothing to escalate pre-renewal this tick. Budget
+ceiling €50/month (decisions/003) — current recorded recurring spend: **€0 actuals
+against the €50/mo ceiling.** No upcoming renewal to flag. `spend.md` left unchanged
+(reality unchanged).
+
+**Verdict: HEALTHY. 22/22 discrete checks pass, identical substantive result and
+checklist to mon18** (redeem error-string wording differs — `invalid` vs mon18's
+`malformed` — purely from bogus-code length landing on a different validation branch in
+`_licence.js`, both clean 400s on the same code path, not a regression; see table note
+above). Live deploy confirmed as commit `b751a13`, which is `origin/main`'s own current
+tip; this worktree's own `HEAD` (`bcb945a`) is one ledger-only commit ahead, verified
+touching only `company/ticks.md` — zero product-path drift, confirmed by identity not
+inference. Bundle filenames byte-identical (`speel-BFcMiTcx.js`/`speel-DKmkEeHX.css`)
+since mon2, no drift, no incident. Auth boundaries on all three admin-facing endpoints
+hold under every tested credential shape; no data leak. Sitemap steady at 22 URLs.
+**Tripwire 010: unevaluable pending Shareholder relay — expected steady state per ADR
+016, NOT FIRED** (funnel.md still empty, no new Shareholder paste; not re-filed —
+already adjudicated as assignment 126/decisions/016). **Tripwire 035: NOT FIRED** —
+~2.95 days elapsed of ~28 (UTC-normalized computation), at least ~25 days remain,
+unchanged. Quota consumption remains unmeasured (ADR 008 gap, unchanged, re-confirmed
+with same instruments, not re-filed). Spend ledger clean and unchanged, no renewal risk.
+No incident reproduced — **assignment 127 not filed, id lapses unused.**
