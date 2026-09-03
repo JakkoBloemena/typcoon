@@ -23,6 +23,12 @@ Entry format:
 
 ---
 
+## Tick 2026-09-03 #6 — OPEN
+- opened: 2026-09-03 21:17 (system clock; #5 closed 20:18 — ~59 min gap. Tree clean, no OPEN entry, HEAD = 0a7a08d = #5's own close commit; origin/main = af46076 is its parent — #5's close was never pushed, local is one ledger-only commit ahead, zero foreign commits on origin → proceed, push at close.)
+- claimed: monitor heartbeat pass mon24 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments: no needs_verification, no in_progress; 020 open but blocked_by [010] (010 blocked, owner ceo, carries the ADR 017 asks); 021 blocked_by [020]; 003/022 gate on 010; 035 blocked on GSC relay (ADR 017 ask 2). Build-hold per decisions/010 (no PO scoping dispatch). funnel.md re-checked: last commit c7f29a6 (2026-07-23), still the empty template; search-console.md last commit be2a450 (2026-07-23), no dated Prestaties section — neither ADR 017 ask has landed. mon23 closed 19:24 (~1h53m ago); due side of the ~2h cadence (precedents 1h51m–1h56m).
+- worktrees: mon24 → C:\companies\typcoon-lanes\mon24 (mon/tick2026-09-03-6; writes company/metrics/health.md + company/assignments/128 only if an incident reproduces); main checkout: dispatcher/integration only. Worktree cut after this open commit (FF integration precedent).
+- ids allocated: 128 → mon24 (incidents it may file; lanes never compute ids). Next free after reservation: 129; next decision id: 018 (unreserved — no lane this tick writes ADRs).
+
 ## Tick 2026-09-03 #5 — CLOSED
 - opened: 2026-09-03 20:17 (system clock; #4 closed 19:24 — ~53 min gap. Tree clean, no OPEN entry, HEAD = af46076 = #4's own close commit = origin/main after fetch, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] (010 blocked, owner ceo, carries the ADR 017 asks); 021 blocked_by [020]; 003/022 gate on 010; 035 blocked on the GSC relay (ADR 017 ask 2). Build-hold per decisions/010 (no PO scoping dispatch). funnel.md re-checked: last commit c7f29a6 (2026-07-23), still the empty template; search-console.md last commit be2a450 (2026-07-23), no dated Prestaties section — neither ADR 017 ask has landed. Monitor not due: mon23 closed 19:24 (~53 min ago) against the ~2h cadence (precedents 1h51m–1h56m); a pass now would re-verify an unchanged surface.
