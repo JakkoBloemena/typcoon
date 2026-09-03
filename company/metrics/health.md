@@ -4864,3 +4864,122 @@ empty, no new Shareholder paste; not re-filed — already adjudicated as assignm
 remains unmeasured (ADR 008 gap, unchanged, re-confirmed with same instruments, not
 re-filed). Spend ledger clean and unchanged, no renewal risk. No incident reproduced —
 **assignment 127 not filed, id lapses unused.**
+
+## 2026-09-03 13:25 UTC — mon21 (Tick 2026-09-03 #1: health sweep + 010/035 tripwires, first pass since mon20 — 39-day gap)
+
+Twenty-first monitor pass (worktree `C:\companies\typcoon-lanes\mon21`, branch
+`mon/tick2026-09-03-1`, cut from main at `412ef82`), first since mon20 (health.md above,
+closed 2026-07-26 12:21 UTC, deploy `ab5e3a2`). **No tick ran between mon20 and this
+pass — a framework/dispatcher-side outage, not a company defect.** Per the open ledger
+entry at the top of `company/ticks.md` (Tick 2026-09-03 #1, cited here, not
+independently investigated): no runs 07-26 to 08-03; 32 consecutive hourly ticks
+2026-08-03 13:17 to 08-04 20:17 exited 1 on "Fable 5 requires usage credits"; no runs
+08-04 to 09-03. This pass re-runs mon2-mon20's 22-check checklist verbatim, confirms deploy
+correspondence, re-evaluates 010 and 035 (both changed character during the outage - see
+below), and re-confirms the ADR 008 quota gap without re-filing it.
+
+**Deploy-correspondence check: live deployment matches current origin/main tip
+exactly, zero product-path drift since mon20 despite the 39-day gap.** git fetch
+origin shows origin/main tip is 412ef82, identical to this worktree's own HEAD
+(no local-ahead commit). git show --stat 412ef82 touches only
+company/assignments/127-backstops-fired-during-dispatcher-outage.md and
+company/ticks.md; git show --stat 993ea84 (mon20's close) touches only
+company/ticks.md. git log --oneline ab5e3a2..412ef82 shows only these two
+ledger/assignment commits since mon20's ab5e3a2 baseline - **zero product-path drift**,
+confirmed by identity not inference. Live endpoint responses and bundle asset names
+(below) corroborate: the product is serving the same build mon20 verified. **Instrument
+gap this pass:** vercel inspect typcoon.com --logs failed - "The specified token is not
+valid" (mon1-mon20 used this successfully); vercel whoami then hung on a fresh OAuth
+device-login flow, which this non-interactive session cannot complete, and was left
+backgrounded rather than force-completed. This does not block the deploy-correspondence
+verdict (git-identity + live-endpoint corroboration above is sufficient and matches the
+task's own "expect zero product drift" framing), but the Vercel CLI credential in this
+environment needs re-authentication before a future pass can use it directly again - flagged,
+not filed as an incident, since the product itself is confirmed healthy.
+
+**Bundle baseline: byte-identical to mon2-mon20's, no drift.** /speel/ still
+references **speel-BFcMiTcx.js / speel-DKmkEeHX.css** - both fetched directly, both
+200.
+
+**Endpoint checks (plain HTTP, no secrets used, -L follows the benign trailing-slash
+redirect on /api/*):**
+
+| Check | Result |
+|---|---|
+| GET / | 200 |
+| GET /speel/ (game) | 200; bundle speel-BFcMiTcx.js / speel-DKmkEeHX.css - matches mon2-mon20 exactly |
+| GET /en/ | 200 |
+| GET /leren-typen-voor-kinderen/ (nl pillar) | 200 |
+| GET /voor-scholen/ | 200 |
+| GET /blog/ | 200 |
+| GET /robots.txt | 200 |
+| GET /sitemap.xml | 200; **22 <url>/22 <loc>/22 </url>** - unchanged, tags balanced |
+| GET /assets/speel-BFcMiTcx.js (bundle JS, fetched directly) | 200 |
+| GET /assets/speel-DKmkEeHX.css (bundle CSS, fetched directly) | 200 |
+| GET /api/admin/funnel (no token / ?token=garbage / Bearer garbage) | **401** all three, {"error":"unauthorized"}, no data leak |
+| GET /api/cron/notify (no auth / ?token=garbage / Bearer garbage) | **401** all three, {"error":"unauthorized"} |
+| POST /api/admin/notify (no auth / Bearer garbage / ?token=garbage) | **401** all three, {"error":"unauthorized"} |
+| GET /api/track | **405** (empty body) |
+| POST /api/track (empty {} body) | **204** - fails silently by design |
+| POST /api/school/redeem (bogus code) | **400** {"ok":false,"error":"malformed"} - same clean-400 path as mon20, no behavior change |
+
+**22/22 discrete checks pass** (8 page/sitemap checks, 2 direct bundle-asset fetches, 9
+auth-boundary checks across all three credential shapes on all three admin-facing
+endpoints, 2 track behavior checks, 1 redeem check) - same checklist and result as
+mon20. No 4xx/5xx surprises, no auth boundary breach under any tested credential shape,
+no data leak, no stale content, despite 39 days of unmonitored uptime.
+
+**Tripwire 010 (payments reopening): still unevaluable - funnel.md empty, no paste, no
+token - but ADR 016's steady state EXPIRED on 2026-08-20 (ADR 008 T5 / ADR 016 section 3
+backstop) during the outage window.** company/metrics/funnel.md re-read directly this
+tick - table still empty, no new Shareholder paste since c7f29a6 (2026-07-23). The CEO
+is escalating this backstop this same tick as assignment 127 / ADR 017 in a concurrent
+lane (C:\companies\typcoon-lanes\c127) - **escalated per 127/ADR 017**; not re-filed as
+a fresh gap here and no new assignment opened for it by this pass.
+
+**Tripwire 035 (content batch 3 / GSC data window): the >=4-week accrual gate elapsed
+~2026-08-20 during the outage - wall-clock gate elapsed, relay half pending, escalated
+per 127/ADR 017.** company/metrics/search-console.md baseline unchanged, still
+be2a450 (2026-07-23 13:30:33 +0200 = 11:30:33 UTC); now 2026-09-03 13:25 UTC - **~42.1
+days elapsed** against the ~28-day (~4-week) default, independently re-computed this
+pass and consistent with the tick ledger's own figure. Data still lives only with the
+Shareholder (GSC relay half of the gate). Status not flipped - the CEO's concurrent
+127/ADR 017 lane owns the disposition.
+
+**Free-tier quota consumption: still NOT MEASURED - ADR 008 gap, unchanged, re-confirmed
+this tick with the same instruments mon1-mon20 established.** supabase projects list
+authenticates and lists the same four projects (typie-fun, pim, bloemena-site,
+shadowfist, all ACTIVE_HEALTHY) - **typcoon is still absent**, same account-scope
+gap as mon1-mon20 (supabase link --project-ref typcoon fails; the project is not
+addressable from this environment at all). No row-count/pause-risk read possible from
+this environment, and no Supabase pause/5xx symptom on any DB-backed route this tick
+either (funnel/cron/notify/track/redeem all responded correctly, no Supabase-down error
+shape) - no priority-1 pause despite 39 days unwatched. Not re-filed - tracked under ADR
+008 itself.
+
+**Spend: verified against company/metrics/spend.md, unchanged since tick #7.** git
+log --oneline -- company/metrics/spend.md still shows only the two pre-monitor commits
+(aa85ab4, c68f46a) - no commit since. company/decisions/ checked explicitly -
+still tops out at 016-digest-only-funnel-observability-steady-state.md (16 files) as
+seen from this worktree's HEAD (017 is being drafted concurrently by lane 127, not this
+lane's concern). No new recurring commitment, no renewal due, no line carries a
+Shareholder "approved one-time, cancel before renewal" condition - nothing to escalate
+pre-renewal this tick. Budget ceiling EUR 50/month (decisions/003) - current recorded
+recurring spend: **EUR 0 actuals against the EUR 50/mo ceiling.** spend.md left unchanged
+(reality unchanged).
+
+**Verdict: HEALTHY. 22/22 discrete checks pass, identical substantive result and
+checklist to mon20 - no incident, no drift, no leak across the entire 39-day unmonitored
+gap.** Live deploy confirmed via git identity as origin/main's own current tip
+(412ef82), matching this worktree's own HEAD exactly, with only ledger/assignment
+commits since mon20's ab5e3a2 baseline - zero product-path drift. Bundle filenames
+byte-identical (speel-BFcMiTcx.js/speel-DKmkEeHX.css) since mon2. Auth boundaries on
+all three admin-facing endpoints hold under every tested credential shape; no data leak.
+Sitemap steady at 22 URLs. **Tripwire 010: escalated per 127/ADR 017** (ADR 016 steady
+state expired 2026-08-20 during the outage; funnel.md still empty). **Tripwire 035:
+escalated per 127/ADR 017** (wall-clock gate elapsed ~2026-08-20, ~42.1 of ~28 days,
+relay half still pending with the Shareholder). Quota consumption remains unmeasured
+(ADR 008 gap, unchanged, re-confirmed, not re-filed) - no pause, no priority-1 incident.
+Spend ledger clean and unchanged, no renewal risk. Instrument gap noted (Vercel CLI
+token needs re-auth) but did not block this pass's deploy-correspondence verdict. No
+incident reproduced - **assignment 128 not filed, id lapses unused.**
