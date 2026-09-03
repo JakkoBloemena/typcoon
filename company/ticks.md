@@ -23,6 +23,14 @@ Entry format:
 
 ---
 
+## Tick 2026-09-03 #1 — OPEN
+- opened: 2026-09-03 15:18 (system clock; previous tick 2026-07-26 #15 closed 14:22 — **~39-day gap**. Tree clean, no OPEN entry, HEAD = 993ea84 = #15's own close commit, zero foreign commits since → proceed. Gap cause per C:\cc\logs\tick-typcoon.log: no runs 07-26 → 08-03; 32 consecutive hourly ticks 2026-08-03 13:17 → 08-04 20:17 exited 1 on "Fable 5 requires usage credits"; no runs 08-04 → 09-03 15:17 (this run). Framework/Shareholder-side outage, not a company defect.)
+- claimed: 127 (new, owner ceo, dispatcher-materialized — the two wall-clock backstops that fired unobserved during the outage: ADR 008 (c)/ADR 016 §3 dated 2026-08-20 with funnel.md still empty and no token; 035's ≥4-week GSC accrual gate, elapsed ~2026-08-20). Plus monitor heartbeat pass mon21 (stage duty; ~39 days since mon20 — grossly overdue). Full board re-read from disk at open: no needs_verification, no in_progress; 020 blocked_by [010], 021 blocked_by [020], 003/022 gate on 010, 035 gates on relay data — nothing else eligible.
+- worktrees: 127 → C:\companies\typcoon-lanes\c127 (ceo/127; writes company/decisions/017, company/assignments/127, 010 and 035 Notes only); mon21 → C:\companies\typcoon-lanes\mon21 (mon/tick2026-09-03-1; writes company/metrics/health.md + company/assignments/128 only if an incident reproduces); main checkout: dispatcher/integration only.
+- ids allocated: 127 → this CEO assignment (materialized at open); 128 → mon21 (incidents it may file); decision id 017 → lane 127. Next free assignment id after reservation: 129; next decision id: 018.
+- closed:
+- retro:
+
 ## Tick 2026-07-26 #15 — CLOSED
 - opened: 2026-07-26 14:17 (system clock; #14 closed 13:19 — ~58 min gap. Tree clean, no OPEN entry, HEAD = 7b0a794 = #14's own close commit, zero foreign commits since, main synced with origin → proceed.)
 - claimed: monitor heartbeat pass mon20 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments (no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] — blocked, owner ceo; 021 blocked_by [020]; 003/022 gate on 010 — traction relay per ADR 016 — and 035 gates on GSC accrual). funnel.md re-checked: last commit 2026-07-23 18:19 (c7f29a6), tree clean — no new Shareholder paste, tripwire 010 unevaluable as expected. mon19 closed 12:26 (~1h51m ago); due side of the ~2h cadence (one-pass-per-heartbeat precedent: 07-26 #5 at 1h53m, #7 at 1h53m, #9 at 1h51m, #11 at 1h51m, #13 at 1h56m).
