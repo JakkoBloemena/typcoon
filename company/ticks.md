@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-09-03 #8 — OPEN
+- opened: 2026-09-03 23:18 (system clock; #7 closed 22:19 — ~59 min gap. Tree clean, no OPEN entry, HEAD = 5f517ae = #7's own close commit = origin/main after fetch, zero foreign commits since → proceed.)
+- claimed: monitor heartbeat pass mon25 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments: no needs_verification, no in_progress; 020 open but blocked_by [010] (010 blocked, owner ceo, carries the ADR 017 asks); 021 blocked_by [020]; 003/022 gate on 010; 035 blocked on GSC relay (ADR 017 ask 2). Build-hold per decisions/010 (no PO scoping dispatch). funnel.md re-checked: last commit c7f29a6 (2026-07-23), still the empty template; search-console.md last commit be2a450 (2026-07-23), no dated Prestaties section — neither ADR 017 ask has landed. mon24 closed 21:23 (~1h55m ago); due side of the ~2h cadence (precedents 1h51m–1h58m).
+- worktrees: mon25 → C:\companies\typcoon-lanes\mon25 (mon/tick2026-09-03-8; writes company/metrics/health.md + company/assignments/128 only if an incident reproduces); main checkout: dispatcher/integration only. Worktree cut after this open commit (FF integration precedent).
+- ids allocated: 128 → mon25 (incidents it may file; lanes never compute ids). Next free after reservation: 129; next decision id: 018 (unreserved — no lane this tick writes ADRs).
+- closed:
+- outcomes:
+- retro:
+
 ## Tick 2026-09-03 #7 — CLOSED
 - opened: 2026-09-03 22:17 (system clock; #6 closed 21:23 — ~54 min gap. Tree clean, no OPEN entry, HEAD = 16ca1ee = #6's own close commit = origin/main after fetch, zero foreign commits since → proceed.)
 - claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] (010 blocked, owner ceo, carries the ADR 017 asks); 021 blocked_by [020]; 003/022 gate on 010; 035 blocked on the GSC relay (ADR 017 ask 2). Build-hold per decisions/010 (no PO scoping dispatch). funnel.md re-checked: last commit c7f29a6 (2026-07-23), still the empty template; search-console.md last commit be2a450 (2026-07-23), no dated Prestaties section — neither ADR 017 ask has landed. Monitor not due: mon24 closed 21:23 (~54 min ago, healthy 22/22) against the ~2h cadence (skip precedents #3 at 53 min, #5 at 53 min); zero product/deploy commits since mon24's baseline (HEAD = #6's close, ledger-only).
