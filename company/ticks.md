@@ -23,6 +23,15 @@ Entry format:
 
 ---
 
+## Tick 2026-09-04 #1 — CLOSED
+- opened: 2026-09-04 00:17 (system clock; 2026-09-03 #8 closed 23:22 — ~55 min gap. Tree clean, no OPEN entry, HEAD = 2d2b3b7 = #8's own close commit = origin/main after fetch, zero foreign commits since → proceed.)
+- claimed: none — zero eligible work at open, full board re-read from disk confirms: no needs_verification and no in_progress anywhere; 020 open but blocked_by [010] (010 blocked, owner ceo, carries the ADR 017 asks); 021 blocked_by [020]; 003/022 gate on 010 (003 parked per decisions/002); 035 blocked on the GSC relay (ADR 017 ask 2). Build-hold per decisions/010 (no PO scoping dispatch). funnel.md re-checked: last commit c7f29a6 (2026-07-23), still the empty template; search-console.md last commit be2a450 (2026-07-23), no dated Prestaties section — neither ADR 017 ask has landed. decisions/ still 17 files. Monitor not due: mon25 closed 23:22 (~55 min ago, healthy 22/22) against the ~2h cadence (skip precedents 2026-09-03 #3/#5/#7 at 53–54 min); zero product/deploy commits since mon25's baseline (HEAD = #8's close, ledger-only).
+- worktrees: none (main checkout only, ledger write)
+- ids allocated: none. Next free assignment id: 128 (reserved to mon25 last tick, lapsed unused — remains free); next decision id: 018.
+- closed: 2026-09-04 00:20 (system clock)
+- outcomes: null tick — no dispatch, no status change. Board unchanged: every remaining item (003/010/020/021/022 + 035) gates on decisions/017's Shareholder asks (funnel channel choice + GSC Prestaties relay). **Blocked on a human:** 010 (owner ceo, carries the asks; ADR 017 is the record) — nothing newly blocked this tick. Next ADR 017 backstop: 2026-10-01 (CEO records the board parked if still unanswered).
+- retro: clean — null tick between monitor heartbeats; no role can compress the external triggers. Tenth consecutive tick gated on the same two Shareholder asks (ADR 017); the recurring-bottleneck note is already on file in retro/2026-09-03 (tick #1), not re-filed.
+
 ## Tick 2026-09-03 #8 — CLOSED
 - opened: 2026-09-03 23:18 (system clock; #7 closed 22:19 — ~59 min gap. Tree clean, no OPEN entry, HEAD = 5f517ae = #7's own close commit = origin/main after fetch, zero foreign commits since → proceed.)
 - claimed: monitor heartbeat pass mon25 (stage duty, no assignment status changes — this entry is the claim). Rationale: full board re-read from disk at open confirms zero eligible assignments: no needs_verification, no in_progress; 020 open but blocked_by [010] (010 blocked, owner ceo, carries the ADR 017 asks); 021 blocked_by [020]; 003/022 gate on 010; 035 blocked on GSC relay (ADR 017 ask 2). Build-hold per decisions/010 (no PO scoping dispatch). funnel.md re-checked: last commit c7f29a6 (2026-07-23), still the empty template; search-console.md last commit be2a450 (2026-07-23), no dated Prestaties section — neither ADR 017 ask has landed. mon24 closed 21:23 (~1h55m ago); due side of the ~2h cadence (precedents 1h51m–1h58m).
