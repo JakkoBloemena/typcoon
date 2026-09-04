@@ -5599,3 +5599,101 @@ did not block this pass's deploy-correspondence verdict. The ~7h55m scheduler ga
 mon26 (03:17-08:17 local) is a framework-side observation already logged by the
 dispatcher, not a company defect — not filed as an incident. No incident reproduced —
 **128 lapses unused.**
+
+## 2026-09-04 09:21 UTC — mon28 (Tick 2026-09-04 #6: health sweep + 010/035 tripwires)
+
+Twenty-eighth monitor pass (worktree `C:\companies\typcoon-lanes\mon28`, branch
+`mon/tick2026-09-04-6`), ~2h00m since mon27 closed. Repeats mon21-mon27's 22-check
+checklist verbatim.
+
+**Deploy-correspondence check: live deployment matches current main tip exactly, zero
+product-path drift since mon27.** Main tip at dispatch is `44f0108` (this tick's own
+open commit, ledger-only), matching this worktree's own `HEAD` exactly. `git diff
+--stat b0c25f1 44f0108 -- . ':!company'` (mon27's baseline `b0c25f1` to this tick's cut)
+returns **empty** — zero product-path drift, confirmed by diff. `git log --oneline
+b0c25f1..44f0108` shows only four ledger/monitor-write commits: `ce59c9a` (mon27 health
+write), `0fe74f9` (tick #4 close), `bd62081` + `60769e0` (tick #5 null-tick + ledger
+fix), `44f0108` (this tick's own open). Live endpoint responses and bundle asset names
+(below) corroborate. Vercel CLI token still needs re-auth (`vercel whoami` started a
+fresh OAuth device-login flow, left to time out at 15s, not force-completed) — does not
+block the deploy-correspondence verdict, same as mon21-mon27.
+
+**Bundle baseline: byte-identical to mon2-mon27's, no drift.** /speel/ still references
+**speel-BFcMiTcx.js / speel-DKmkEeHX.css** — both fetched directly, both 200, sha256
+`3c9c40a9a56efccdaf4578326c8d1f3c23e4753b00422f4a2195541687bbf570` (js) /
+`0fc4a35782d303d4bb30f93c6684372605501c45d9c1ff41d4f6c0a42956fc4d` (css) this tick —
+identical to mon27's recorded hashes.
+
+**Endpoint checks (plain HTTP via curl, no secrets used, -L follows the benign
+trailing-slash redirect on /api/*):**
+
+| Check | Result |
+|---|---|
+| GET / | 200 (324ms) |
+| GET /speel/ (game) | 200 (444ms); bundle speel-BFcMiTcx.js / speel-DKmkEeHX.css — matches mon2-mon27 exactly |
+| GET /en/ | 200 (505ms) |
+| GET /leren-typen-voor-kinderen/ (nl pillar) | 200 (315ms) |
+| GET /voor-scholen/ | 200 (284ms) |
+| GET /blog/ | 200 (330ms) |
+| GET /robots.txt | 200 (281ms) |
+| GET /sitemap.xml | 200 (299ms); **22 <url>/22 <loc>/22 </url>** — unchanged, tags balanced |
+| GET /assets/speel-BFcMiTcx.js (bundle JS, fetched directly) | 200 |
+| GET /assets/speel-DKmkEeHX.css (bundle CSS, fetched directly) | 200 |
+| GET /api/admin/funnel (no token / ?token=garbage / Bearer garbage) | **401** all three, {"error":"unauthorized"}, no data leak |
+| GET /api/cron/notify (no auth / ?token=garbage / Bearer garbage) | **401** all three, {"error":"unauthorized"} |
+| POST /api/admin/notify (no auth / Bearer garbage / ?token=garbage) | **401** all three, {"error":"unauthorized"} |
+| GET /api/track | **405** (empty body) |
+| POST /api/track (empty {} body) | **204** — fails silently by design |
+| POST /api/school/redeem (bogus code) | **400** {"ok":false,"error":"malformed"} — same clean-400 path as mon27, no behavior change |
+
+**22/22 discrete checks pass** (8 page/sitemap checks, 2 direct bundle-asset fetches, 9
+auth-boundary checks across all three credential shapes on all three admin-facing
+endpoints, 2 track behavior checks, 1 redeem check) — same checklist and result as
+mon27. No 4xx/5xx surprises, no auth boundary breach under any tested credential shape,
+no data leak, no stale content.
+
+**Tripwire 010 (payments reopening): unevaluable — escalated per ADR 017 (backstop
+fired 2026-08-20), pending Shareholder channel choice; NOT FIRED as far as the board
+can see.** `company/metrics/funnel.md` re-read directly this tick — table still empty,
+last commit still `c7f29a6` (2026-07-23), no new Shareholder paste. Not re-filed; the
+CEO's decisions/017 owns the disposition, next backstop 2026-10-01.
+
+**Tripwire 035 (content batch 3 / GSC data window): blocked on GSC relay (ADR 017 ask
+2).** `company/metrics/search-console.md` re-read directly this tick — still baseline
+`be2a450` (2026-07-23), no new dated Prestaties section. No days-remaining computed
+(decisions/017 Decision 3 retired that arithmetic). Status not flipped.
+
+**Free-tier quota consumption: still NOT MEASURED — ADR 008 gap, unchanged, no new
+symptom.** `supabase projects list` authenticates and lists the same four projects
+(typie-fun, pim, bloemena-site, shadowfist, all ACTIVE_HEALTHY) — typcoon is still
+absent, same account-scope gap as mon1-mon27. No row-count/pause-risk read possible from
+this environment, and no Supabase pause/5xx symptom on any DB-backed route this tick
+either (funnel/cron/notify/track/redeem all responded correctly, no Supabase-down error
+shape) — no priority-1 pause. Not re-filed — tracked under ADR 008 itself.
+
+**Spend: verified against company/metrics/spend.md, unchanged since tick #7.** `git log
+--oneline -- company/metrics/spend.md` still shows only the two pre-monitor commits
+(aa85ab4, c68f46a) — no commit since. `company/decisions/` checked — still tops out at
+`017-funnel-channel-escalation-backstop-fired.md` (17 files), no new decision since
+mon27, no new recurring commitment, no renewal due within 30 days, no Shareholder
+"approved one-time, cancel before renewal" condition on any line — nothing to escalate
+pre-renewal this tick. Budget ceiling EUR 50/month (decisions/003) — current recorded
+recurring spend: **EUR 0 actuals against the EUR 50/mo ceiling.** spend.md left
+unchanged (reality unchanged).
+
+**Verdict: HEALTHY. 22/22 discrete checks pass, identical substantive result and
+checklist to mon27 — no incident, no drift, no leak.** Live deploy confirmed via git
+identity/diff as local main's own current tip (44f0108), matching this worktree's own
+HEAD exactly, with only ledger/monitor-write commits (company/ticks.md,
+company/metrics/health.md) since mon27's b0c25f1 baseline — zero product-path drift.
+Bundle filenames byte-identical (speel-BFcMiTcx.js/speel-DKmkEeHX.css) since mon2. Auth
+boundaries on all three admin-facing endpoints hold under every tested credential
+shape; no data leak. Sitemap steady at 22 URLs. **Tripwire 010:** unevaluable —
+escalated per ADR 017 (backstop fired 2026-08-20), pending Shareholder channel choice;
+NOT FIRED as far as the board can see (funnel.md still empty, no new paste).
+**Tripwire 035:** blocked on GSC relay (ADR 017 ask 2) (search-console.md unchanged, no
+new Prestaties section). Quota consumption remains unmeasured (ADR 008 gap, unchanged,
+re-confirmed, not re-filed) — no pause, no priority-1 incident. Spend ledger clean and
+unchanged, no renewal risk. Instrument gap noted (Vercel CLI token needs re-auth) but
+did not block this pass's deploy-correspondence verdict. No incident reproduced —
+**128 lapses unfiled.**
